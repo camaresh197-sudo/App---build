@@ -13,6 +13,7 @@ if (process.argv[2] === 'bundle') {
     const sum = crypto.createHash('sha256').update(fs.readFileSync(`dist/${name}`)).digest('hex');
     fs.writeFileSync('dist/latest.json', JSON.stringify({ version, url: name, checksum: sum }));
     fs.writeFileSync('dist/index.html', h);
+    for (const f of fs.readdirSync('.')) if (/^audio_.*\.v\d+\.ogg$/.test(f)) fs.copyFileSync(f, 'dist/' + f);   // big asset packs live beside the patch, not inside it
     console.log('bundle', name, fs.statSync(`dist/${name}`).size);
   });
   z.pipe(out); z.directory('www/', false); z.finalize();

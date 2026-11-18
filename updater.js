@@ -1,9 +1,10 @@
 /* Self-updater: runs inside the Android app only. Checks latest.json, downloads a newer game bundle,
    and applies it on the next launch. A bundle that fails to start is rolled back automatically. */
 (function () {
+  const URL_ = '__UPDATE_URL__';
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && URL_.indexOf('__') !== 0) window.PACK_BASE = URL_.replace(/[^/]*$/, '');   // audio/art packs are fetched from the patch site once, then cached
   const CU = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorUpdater;
   if (!CU) return;                                     // normal browser: nothing to do
-  const URL_ = '__UPDATE_URL__';
   const toast = (t) => { try { const d = document.createElement('div'); d.textContent = t; d.style.cssText = 'position:fixed;left:50%;top:10px;transform:translateX(-50%);background:#000c;color:#fff;font:13px sans-serif;padding:8px 14px;border-radius:14px;z-index:99999;pointer-events:none'; document.body.appendChild(d); setTimeout(() => d.remove(), 3500); } catch (e) {} };
   CU.notifyAppReady().catch(() => {});                 // tells the updater this version started fine (otherwise it rolls back)
   if (!URL_ || URL_.indexOf('__') === 0) return;
