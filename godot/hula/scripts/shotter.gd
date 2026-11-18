@@ -3,6 +3,9 @@ extends Node
 func _ready() -> void:
 	await get_tree().process_frame
 	var a := OS.get_cmdline_user_args()
+	if a.size() < 2:
+		queue_free()   # normal launch (no "-- out.png frames ..." args): this is only a test helper
+		return
 	var m = get_parent()
 	if a.size() > 2 and a[2] == "play": m.start_run()
 	if a.size() > 2 and a[2] == "secret":
