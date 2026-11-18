@@ -3,6 +3,10 @@ extends Node2D
 const FW := 772.0
 const FH := 360.0
 enum S { MENU, PLAY, OVER }
+const Save = preload("res://scripts/save.gd")
+const Menu = preload("res://scripts/menu.gd")
+var menu
+var ship_tex: Array = []
 var state := S.MENU
 var t := 0.0
 var frames: Array[Texture2D] = []
@@ -22,6 +26,9 @@ var shake := 0.0
 func _ready() -> void:
 	for i in 37:
 		frames.append(load("res://art/ship_%03d.webp" % i))
+	ship_tex = frames
+	Save.load_all()
+	menu = Menu.new(self)
 
 var touch_start := Vector2.ZERO
 var player_start := Vector2.ZERO
@@ -99,7 +106,9 @@ func _draw() -> void:
 	var off := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake * 10.0
 	draw_set_transform(off)
 	_sky(R)
-	if state == S.MENU: _menu(R)
+	if state == S.MENU:
+		if menu.in_hub: menu.hub(R, t, Callable(self, "_hero"))
+		else: menu.title(R, t, Callable(self, "_hero"), ship_tex)
 	else:
 		for s in shots: draw_rect(Rect2(s.p - Vector2(8, 2), Vector2(16, 4)), Color(1, 0.9, 0.3))
 		for sh in ships: _ship(sh)
@@ -125,6 +134,7 @@ func _sky(R: float) -> void:
 
 func _hero(p: Vector2, tm: float) -> void:
 	var bob := sin(tm * 4.0) * 3.0
+	if state == S.MENU: p.y -= 0.0
 	p += Vector2(0, bob)
 	draw_circle(p + Vector2(0, 30), 14, Color(0, 0, 0, 0.18))
 	draw_rect(Rect2(p + Vector2(-8, -4), Vector2(16, 26)), Color("c0392b"))
