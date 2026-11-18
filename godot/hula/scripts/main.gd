@@ -65,6 +65,7 @@ func start_run() -> void:
 var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
+	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
 	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
 	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
 	if not _confirmed and Time.get_ticks_msec() > 4000:
@@ -108,6 +109,14 @@ func _right() -> float:
 	var vs := get_viewport_rect().size
 	return vs.x
 
+var fps_s := 60.0
+func _fps(R: float) -> void:
+	var f := ThemeDB.fallback_font
+	var txt := "%d FPS" % int(round(fps_s))
+	var col := Color("2ecc71") if fps_s >= 50.0 else (Color("f1c40f") if fps_s >= 30.0 else Color("e74c3c"))
+	draw_rect(Rect2(R / 2 - 34, 3, 68, 16), Color(0, 0, 0, 0.55))
+	draw_string(f, Vector2(R / 2 - 28, 15), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
+
 func _draw() -> void:
 	buttons.clear()
 	var R := _right()
@@ -125,6 +134,8 @@ func _draw() -> void:
 		_hud(R)
 		if state == S.OVER: _over(R)
 	_toast(R)
+	draw_set_transform(Vector2.ZERO)
+	if Save.data.opt.fps: _fps(R)
 
 func _sky(R: float) -> void:
 	var top := Color("3b8fd9"); var mid := Color("8fcdf5"); var bot := Color("ffc98a")
