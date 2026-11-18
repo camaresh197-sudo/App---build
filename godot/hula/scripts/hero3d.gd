@@ -316,13 +316,17 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var shine := mat(Color.WHITE, 0.1); shine.emission_enabled = true; shine.emission = Color.WHITE; shine.emission_energy_multiplier = 0.8
 	var lip_m := mat(skin.albedo_color.darkened(0.3).lerp(Color("b5524a"), 0.45), 0.5)
 	var mouth_m := mat(Color("4a1411"), 0.6)
+	# soft-edged skin for the cheeks, chin and jaw muscles: the shape fades out where it meets the head, so it reads as a swelling of the same skin and not a separate lump
+	var soft_sh := Shader.new()
+	soft_sh.code = "shader_type spatial;\nrender_mode blend_mix, depth_draw_always, cull_back;\nuniform vec4 col : source_color;\nvoid fragment() {\n\tALBEDO = col.rgb;\n\tROUGHNESS = 0.55;\n\tfloat f = clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);\n\tALPHA = smoothstep(0.3, 1.0, f) * 0.9;\n}\n"
+	var soft_m := ShaderMaterial.new(); soft_m.shader = soft_sh; soft_m.set_shader_parameter("col", skin.albedo_color)
 	var teeth_m := mat(Color.WHITE, 0.4); teeth_m.albedo_texture = _teeth_tex()
 	var wet_m := mat(Color(0.78, 0.9, 1.0, 0.5), 0.04); wet_m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	wet_m.emission_enabled = true; wet_m.emission = Color(0.55, 0.75, 1.0); wet_m.emission_energy_multiplier = 0.35
 	var drop_m := mat(Color(0.85, 0.94, 1.0), 0.05); drop_m.emission_enabled = true; drop_m.emission = Color(0.7, 0.85, 1.0); drop_m.emission_energy_multiplier = 0.6
 	fr.skin_d = skin_d
 	for s: float in [-1.0, 1.0]:
-		fr["cheek_" + ("l" if s < 0 else "r")] = put(head, sphere(0.03), skin, Vector3(0.05 * s, -0.034, 0.056), Vector3(1, 0.9, 0.7))
+		fr["cheek_" + ("l" if s < 0 else "r")] = put(head, sphere(0.03), soft_m, Vector3(0.05 * s, -0.034, 0.056), Vector3(1, 0.9, 0.7))
 	# nose
 	put(head, capsule(0.011, 0.05), skin, Vector3(0, 0.0, 0.103), Vector3(1, 1, 1), Vector3(-0.35, 0, 0))
 	fr.tip = put(head, sphere(0.019), skin, Vector3(0, -0.02, 0.112), Vector3(1, 0.9, 0.95))
@@ -389,7 +393,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		fr.lipU.append(put(head, sphere(0.0038), lip_m, Vector3.ZERO, Vector3(1.2, 0.7, 0.8))); (fr.lipU[i] as Node3D).visible = false
 	for s: float in [-1.0, 1.0]:
 		fr["dim_" + ("l" if s < 0 else "r")] = put(head, sphere(0.0034), skin_d, Vector3(0.042 * s, -0.056, 0.082), Vector3(1, 1.3, 0.6))
-	fr.chin = put(head, sphere(0.026), skin, Vector3(0, -0.102, 0.054), Vector3(1.3, 0.5, 0.7))   # chin
+	fr.chin = put(head, sphere(0.026), soft_m, Vector3(0, -0.102, 0.054), Vector3(1.3, 0.5, 0.7))   # chin
 	fr.tongue = put(head, sphere(0.014), mat(Color("c0525a"), 0.45), Vector3(0, -0.075, 0.08), Vector3(1.2, 0.5, 1.0))
 	for s: float in [-1.0, 1.0]:
 		fr["fold_" + ("l" if s < 0 else "r")] = put(head, sphere(0.007), skin_d, Vector3(0.042 * s, -0.05, 0.085), Vector3(0.6, 2.2, 0.5))   # smile line (nasolabial fold)
@@ -415,9 +419,9 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	fr.bunch = put(head, sphere(0.009), skin_d, Vector3(0, 0.052, hz(0, 0.052) - 0.002), Vector3(1.0, 0.8, 0.5))
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
-		fr["puff_" + sd] = put(head, sphere(0.02), skin, Vector3(0.042 * s, -0.01, 0.088), Vector3(1.2, 0.28, 0.6))
+		fr["puff_" + sd] = put(head, sphere(0.02), soft_m, Vector3(0.042 * s, -0.01, 0.088), Vector3(1.2, 0.28, 0.6))
 		fr["corner_" + sd] = put(head, sphere(0.0035), skin_d, Vector3(0.04 * s, -0.07, 0.085), Vector3(1, 1, 0.6))
-		fr["mass_" + sd] = put(head, sphere(0.02), skin, Vector3(0.078 * s, -0.052, 0.03), Vector3(0.5, 1.0, 0.8))
+		fr["mass_" + sd] = put(head, sphere(0.02), soft_m, Vector3(0.078 * s, -0.052, 0.03), Vector3(0.5, 1.0, 0.8))
 		fr["vein_" + sd] = put(head, capsule(0.0013, 0.03), vein_m, Vector3(0.06 * s, 0.092, hz(0.06 * s, 0.092) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, 0.5 * s))
 	fr.dimple = put(head, sphere(0.006), skin_d, Vector3(0, -0.092, 0.081), Vector3(1.4, 0.8, 0.5))
 	_apply_face()
