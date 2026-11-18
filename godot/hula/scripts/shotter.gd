@@ -71,7 +71,7 @@ func _ready() -> void:
 		for nm in String(a[3]).split(","):
 			hg.gesture(nm); hg.gest_cur = nm; hg.gk = 1.0
 			for fi in 6:
-				hg._clock = 0.3 + fi * 0.26
+				hg._clock = 2.0 + fi * 0.25
 				hg.pose(0.0)
 				await get_tree().process_frame
 				await get_tree().process_frame
