@@ -115,19 +115,22 @@ func _build() -> void:
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
 		var hip := joint("hip_" + side, pel, Vector3(0.1 * s, -0.04, 0))
-		put(hip, capsule(0.095, 0.4), red, Vector3(0, -0.17, 0))
+		var thigh := joint("thigh_" + side, hip, Vector3.ZERO)          # thigh twist: knees and toes turn out / in
+		put(thigh, capsule(0.095, 0.4), red, Vector3(0, -0.17, 0))
 		put(hip, sphere(0.097), red)
-		var knee := joint("knee_" + side, hip, Vector3(0, -0.36, 0))
-		put(knee, capsule(0.078, 0.38), red, Vector3(0, -0.16, 0))
+		var knee := joint("knee_" + side, thigh, Vector3(0, -0.36, 0))
 		put(knee, sphere(0.08), red)
-		var ank := joint("ankle_" + side, knee, Vector3(0, -0.34, 0))
+		var shin := joint("shin_" + side, knee, Vector3.ZERO)          # shin twist
+		put(shin, capsule(0.078, 0.38), red, Vector3(0, -0.16, 0))
+		var ank := joint("ankle_" + side, shin, Vector3(0, -0.34, 0))
 		put(ank, capsule(0.075, 0.2), boot, Vector3(0, 0.03, 0))
-		put(ank, capsule(0.065, 0.14), boot, Vector3(0, -0.05, 0.03), Vector3(1, 1, 1.2), Vector3(PI / 2, 0, 0))
-		var toe := joint("toe_" + side, ank, Vector3(0, -0.05, 0.09))       # ball of the foot: heel lifts, toe taps
+		var foot := joint("foot_" + side, ank, Vector3(0, -0.06, -0.04))       # pivots on the heel: toe taps and flicks
+		put(foot, capsule(0.065, 0.14), boot, Vector3(0, 0.01, 0.07), Vector3(1, 1, 1.2), Vector3(PI / 2, 0, 0))
+		var toe := joint("toe_" + side, foot, Vector3(0, 0.01, 0.13))       # ball of the foot: heel lifts, toe taps
 		put(toe, capsule(0.06, 0.12), boot, Vector3(0, 0, 0.05), Vector3(1, 1, 1.1), Vector3(PI / 2, 0, 0))
 		put(toe, sphere(0.04), gold, Vector3(0, 0.02, 0.1))
 		# gold trouser stripe
-		put(hip, BoxMesh.new(), gold, Vector3(0.093 * s, -0.2, 0), Vector3(0.008, 0.4, 0.02))
+		put(thigh, BoxMesh.new(), gold, Vector3(0.093 * s, -0.2, 0), Vector3(0.008, 0.4, 0.02))
 	# torso / jacket
 	var spine := joint("spine", pel, Vector3(0, 0.07, 0))
 	put(spine, capsule(0.18, 0.52), cloth, Vector3(0, 0.22, 0), Vector3(1.0, 1.0, 0.75))
@@ -630,10 +633,14 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	if gk > 0.001: _gapply()
 	for side in ["l", "r"]:
 		var d := -1.0 if side == "l" else 1.0
-		(j["hip_" + side] as Node3D).rotation = Vector3(sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.2 - 0.06, 0, d * 0.04 - c * 0.1)
-		(j["knee_" + side] as Node3D).rotation = Vector3(0.2 + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.22, 0, 0)
-		(j["ankle_" + side] as Node3D).rotation = Vector3(-0.1 - sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.12, 0, c * 0.05)
+		var lift := maxf(0.0, c * (1.0 if side == "l" else -1.0))        # free foot: the side the pelvis is shifting away from
+		(j["hip_" + side] as Node3D).rotation = Vector3(-0.06 - 0.45 * lift + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.1, 0, d * (0.04 + 0.3 * lift) - c * 0.13)
+		(j["knee_" + side] as Node3D).rotation = Vector3(0.2 + 0.95 * lift + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.12, 0, 0)
+		(j["ankle_" + side] as Node3D).rotation = Vector3(-0.1 - 0.4 * lift, 0, c * 0.1 - d * 0.1 * lift)
 		(j["toe_" + side] as Node3D).rotation = Vector3.ZERO
+		(j["thigh_" + side] as Node3D).rotation = Vector3(0, d * (0.12 + 0.35 * lift), 0)
+		(j["shin_" + side] as Node3D).rotation = Vector3(0, -d * 0.2 * lift, 0)
+		(j["foot_" + side] as Node3D).rotation = Vector3(0.4 * lift, 0, 0)
 		(j["clav_" + side] as Node3D).rotation = Vector3.ZERO
 		if gk > 0.001: _gleg(side, d)
 		_arm(side, d, phase, bank, wave, hurt)
@@ -680,7 +687,7 @@ func _al(a: Array, b: Array, m: float) -> Array:
 
 # leg = [hip x, knee x, ankle x, hip z, toe x]; lift = how far the foot is raised (0..1)
 func _lg(d: float, lift: float, wide := 0.0) -> Array:
-	return [-0.06 - 0.65 * lift, 0.2 + 1.2 * lift, -0.1 - 0.5 * lift, d * (0.05 + wide), -0.15 * lift]
+	return [-0.06 - 0.65 * lift, 0.2 + 1.2 * lift, -0.1 - 0.5 * lift, d * (0.05 + wide + 0.22 * lift), -0.15 * lift, d * (0.12 + wide * 2.5 + 0.4 * lift), -d * 0.25 * lift, 0.5 * lift]
 
 func _gdata(n: String, t: float) -> Dictionary:
 	var G := {"px": 0.0, "py": 0.82, "pz": 0.0, "pch": 0.0, "pry": 0.0, "prz": 0.0, "sp": Vector3(0.03, 0, 0), "ch": Vector3.ZERO, "hd": Vector3.ZERO, "shl": 0.0, "shr": 0.0,
@@ -766,10 +773,14 @@ func _gapply() -> void:
 func _gleg(side: String, d: float) -> void:
 	var G := _G; var k := gk
 	var lg: Array = G["leg_" + side]
-	var hp := j["hip_" + side] as Node3D; hp.rotation = hp.rotation.lerp(Vector3(lg[0], 0, lg[3]), k)
+	var plant := -(float(G.px) / 0.82 + float(G.prz) * 0.8) * 1.0      # keep the standing foot under the body while the pelvis swings
+	var hp := j["hip_" + side] as Node3D; hp.rotation = hp.rotation.lerp(Vector3(lg[0], 0, lg[3] + plant), k)
 	var kn := j["knee_" + side] as Node3D; kn.rotation = kn.rotation.lerp(Vector3(lg[1], 0, 0), k)
 	var an := j["ankle_" + side] as Node3D; an.rotation = an.rotation.lerp(Vector3(lg[2], 0, -lg[3] * 0.7), k)
 	(j["toe_" + side] as Node3D).rotation = Vector3(lg[4] * k, 0, 0)
+	var th := j["thigh_" + side] as Node3D; th.rotation = th.rotation.lerp(Vector3(0, lg[5], 0), k)
+	var sn := j["shin_" + side] as Node3D; sn.rotation = sn.rotation.lerp(Vector3(0, lg[6], 0), k)
+	var ft := j["foot_" + side] as Node3D; ft.rotation = ft.rotation.lerp(Vector3(lg[7], 0, 0), k)
 	(j["clav_" + side] as Node3D).rotation = Vector3(0, 0, d * float(G["sh" + side]) * 2.0 * k)
 
 # upper-arm / forearm twist and the fingers. Fingers ripple in the hula (a wave runs across them); gestures set a curl (0 open .. 1 fist).

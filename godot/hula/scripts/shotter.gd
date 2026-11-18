@@ -34,6 +34,23 @@ func _ready() -> void:
 			h3.ptex().get_image().save_png("%s/f%04d.png" % [a[0], f])
 		get_tree().quit()
 		return
+	if a.size() > 2 and a[2] == "legs":
+		var hl = m.hero3d
+		m.set_process(false)
+		hl.fixed_dt = 1.0 / 30.0
+		var lg := FileAccess.open("/tmp/legs.log", FileAccess.WRITE)
+		for mode in ["hula", "dance"]:
+			hl.gesture(mode); hl.gest_cur = mode; hl.gk = 1.0 if mode != "hula" else 0.0
+			var mn := Vector3(9, 9, 9); var mx := Vector3(-9, -9, -9)
+			for f in 90:
+				hl._clock = f / 30.0
+				hl.pose(f / 30.0 * 3.2)
+				var p1: Vector3 = (hl.j["ankle_l"] as Node3D).global_position
+				mn = mn.min(p1); mx = mx.max(p1)
+			lg.store_line("%s left ankle range: x %.3f..%.3f  y %.3f..%.3f  z %.3f..%.3f" % [mode, mn.x, mx.x, mn.y, mx.y, mn.z, mx.z])
+		lg.close()
+		get_tree().quit()
+		return
 	if a.size() > 2 and a[2] == "auto":
 		# menu auto-dance test: simulate the title screen for 12 s, log gesture state
 		var ha = m.hero3d
