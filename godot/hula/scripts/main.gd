@@ -1,0 +1,251 @@
+extends Node2D
+# Hula Vaquero: Sky Ride (Godot port). Logical field 772x360 = 3088x1440 / 4.
+const FW := 772.0
+const FH := 360.0
+enum S { MENU, PLAY, OVER, SECRET }
+const Save = preload("res://scripts/save.gd")
+const Menu = preload("res://scripts/menu.gd")
+var menu
+var hero3d
+var ship_tex: Array = []
+var state := S.MENU
+var t := 0.0
+var frames: Array[Texture2D] = []
+var player := Vector2(120, 180)
+var target := Vector2(120, 180)
+var hp := 100.0
+var score := 0
+var ships: Array = []
+var shots: Array = []
+var pops: Array = []
+var fire_cd := 0.0
+var spawn_cd := 1.0
+var touch_id := -1
+var buttons: Array = []   # [Rect2, Callable]
+var shake := 0.0
+
+func _ready() -> void:
+	for i in 37:
+		frames.append(load("res://art/ship_%03d.webp" % i))
+	ship_tex = frames
+	Save.load_all()
+	menu = Menu.new(self)
+	hero3d = preload("res://scripts/hero3d.gd").new(); add_child(hero3d)
+	snd = preload("res://scripts/sound.gd").new(); add_child(snd)
+
+var snd: Node
+var _want := "?"
+var _vm := -1
+var touch_start := Vector2.ZERO
+var player_start := Vector2.ZERO
+
+func _input(e: InputEvent) -> void:
+	# touch only (the project turns mouse clicks into touches too). The hero moves by how far the finger has dragged,
+	# so tapping a spot does nothing by itself and a drag moves him the same distance, like the HTML game.
+	if e is InputEventScreenTouch:
+		var pos := _to_field(e.position)
+		if e.pressed:
+			for b in buttons:
+				if (b[0] as Rect2).has_point(pos):
+					snd.sfx("click"); (b[1] as Callable).call(); return
+			if state == S.PLAY and touch_id == -1:
+				touch_id = e.index; touch_start = pos; player_start = player; target = player
+		elif e.index == touch_id:
+			touch_id = -1; target = player
+	elif e is InputEventScreenDrag and state == S.PLAY and e.index == touch_id:
+		target = player_start + (_to_field(e.position) - touch_start)
+
+func _to_field(p: Vector2) -> Vector2:
+	return get_canvas_transform().affine_inverse() * p
+
+func start_run() -> void:
+	hero3d.arm_clear(); hero3d.mood("grin"); hero3d.gaze = Vector2.ZERO
+	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
+	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
+	snd.start_music()
+
+var _confirmed := false
+func _process(dt: float) -> void:
+	t += dt
+	hero3d.portrait_on = state == S.PLAY or state == S.OVER or (state == S.MENU and not menu.in_hub)
+	hero3d.auto_dance = state == S.MENU
+	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
+	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
+	if want != _want:
+		_want = want
+		if want == "": snd.stop_music()
+		else: snd.start_music(want)
+	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
+	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
+	if not _confirmed and Time.get_ticks_msec() > 4000:
+		_confirmed = true; Updater.confirm_good()
+	if state == S.PLAY:
+		player = player.lerp(target, 1.0 - pow(0.00001, dt))
+		player = player.clamp(Vector2(24, 24), Vector2(_right() - 24, FH - 24))
+		fire_cd -= dt
+		if fire_cd <= 0.0:
+			fire_cd = 0.22
+			shots.append({"p": player + Vector2(18, -4), "v": Vector2(560, 0)}); snd.sfx("shoot")
+		spawn_cd -= dt
+		if spawn_cd <= 0.0:
+			spawn_cd = max(0.45, 1.3 - t * 0.012)
+			ships.append({"p": Vector2(_right() + 40, randf_range(40, FH - 40)), "v": Vector2(-randf_range(70, 130), 0), "hp": 3, "ph": randf() * 6.0})
+		for s in shots: s.p += s.v * dt
+		shots = shots.filter(func(s): return s.p.x < _right() + 20)
+		for sh in ships:
+			sh.ph += dt
+			var to_p: Vector2 = (player - sh.p).normalized()
+			sh.v = sh.v.lerp(to_p * 110.0, dt * 0.8) + Vector2(0, sin(sh.ph * 2.0) * 40.0 * dt)
+			sh.p += sh.v * dt
+			if sh.p.distance_to(player) < 26.0:
+				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt"); hero3d.react("pain", 0.6); hero3d.arm_kick("flinch", 0.5)
+			for s in shots:
+				if s.p.distance_to(sh.p) < 22.0: sh.hp -= 1; s.p.x = 9999; snd.sfx("hit")
+		for sh in ships:
+			if sh.hp <= 0:
+				score += 10; snd.sfx("pop"); _combo += 1; _combo_t = 1.6
+				if _combo % 5 == 0: hero3d.react("laugh", 1.1); hero3d.arm_kick("cheer", 1.1)
+				for k in 8: pops.append({"p": sh.p, "v": Vector2.from_angle(randf() * TAU) * randf_range(40, 190), "life": 0.5})
+		ships = ships.filter(func(sh): return sh.hp > 0 and sh.p.x > -60)
+		shots = shots.filter(func(s): return s.p.x < 9000)
+		_director(dt)
+		if hp <= 0: state = S.OVER; snd.stop_music(); hero3d.mood("despair"); hero3d.arm_kick("limp", 999.0); hero3d.gaze = Vector2(0.0, -0.7)
+	for p in pops:
+		p.p += p.v * dt; p.life -= dt
+	pops = pops.filter(func(p): return p.life > 0)
+	shake = max(0.0, shake - dt)
+	queue_redraw()
+
+# the hero's face reacts to the game: looks at the nearest ship, flinches when one gets close, worries when hurt, laughs on a streak
+var _combo := 0
+var _combo_t := 0.0
+func _director(dt: float) -> void:
+	_combo_t -= dt
+	if _combo_t <= 0.0: _combo = 0
+	var nearest := Vector2.ZERO; var nd := 1e9
+	for sh in ships:
+		var d: float = sh.p.distance_to(player)
+		if sh.p.x > player.x - 40.0 and d < nd: nd = d; nearest = sh.p
+	if nd < 1e8: hero3d.gaze = Vector2(clampf((nearest.x - player.x) / 220.0, -1.0, 1.0), clampf(-(nearest.y - player.y) / 120.0, -1.0, 1.0))
+	else: hero3d.gaze = Vector2(0.6, 0.0)
+	hero3d.look = Vector2(hero3d.gaze.x * 0.5, 0.0)
+	if nd < 70.0 and hero3d.react_t <= 0.0: hero3d.react("startled", 0.35); hero3d.arm_kick("flinch", 0.3)
+	hero3d.mood("afraid" if hp <= 25.0 else ("worried" if hp <= 50.0 else ("determined" if ships.size() >= 5 else "grin")))
+
+func _right() -> float:
+	var vs := get_viewport_rect().size
+	return vs.x
+
+var fps_s := 60.0
+func _fps(R: float) -> void:
+	var f := ThemeDB.fallback_font
+	var txt := "%d FPS" % int(round(fps_s))
+	var col := Color("2ecc71") if fps_s >= 50.0 else (Color("f1c40f") if fps_s >= 30.0 else Color("e74c3c"))
+	draw_rect(Rect2(R / 2 - 34, 3, 68, 16), Color(0, 0, 0, 0.55))
+	draw_string(f, Vector2(R / 2 - 28, 15), txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
+
+func _draw() -> void:
+	buttons.clear()
+	var R := _right()
+	var off := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake * 10.0
+	draw_set_transform(off)
+	_sky(R)
+	if state == S.SECRET: menu.secret(R, t)
+	elif state == S.MENU:
+		if menu.in_hub: menu.hub(R, t, Callable(self, "_hero"))
+		else: menu.title(R, t, Callable(self, "_hero"), ship_tex)
+		if not menu.in_hub: _portrait_hud()
+	else:
+		for s in shots: draw_rect(Rect2(s.p - Vector2(8, 2), Vector2(16, 4)), Color(1, 0.9, 0.3))
+		for sh in ships: _ship(sh)
+		_hero(player, t)
+		for p in pops: draw_circle(p.p, 3.0 * p.life * 2.0, Color(0.6, 0.9, 0.3, p.life * 2.0))
+		_hud(R)
+		_portrait_hud()
+		if state == S.OVER: _over(R)
+	_toast(R)
+	draw_set_transform(Vector2.ZERO)
+	if Save.data.opt.fps: _fps(R)
+
+func _sky(R: float) -> void:
+	var top := Color("3b8fd9"); var mid := Color("8fcdf5"); var bot := Color("ffc98a")
+	for i in 36:
+		var u := i / 35.0
+		var c := top.lerp(mid, u / 0.55) if u < 0.55 else mid.lerp(bot, (u - 0.55) / 0.45)
+		draw_rect(Rect2(0, i * 10, R, 10), c)
+	for k in 7:
+		var x := fmod(k * 190.0 - t * (8 + k * 2), R + 160) - 80
+		draw_circle(Vector2(x, 60 + (k * 53) % 200), 26, Color(1, 1, 1, 0.55))
+		draw_circle(Vector2(x + 24, 66 + (k * 53) % 200), 20, Color(1, 1, 1, 0.55))
+	for k in 6:
+		var x := k * 150.0 - fmod(t * 20, 150.0)
+		draw_rect(Rect2(x, FH - 50 - (k * 17) % 40, 90, 120), Color("b5546e"))
+
+func _hero(p: Vector2, tm: float, k := 1.0) -> void:
+	# the 3D vaquero: posed, rendered in its own viewport, drawn here as a sprite (height ~ 76 field units)
+	hero3d.set_cos(int(Save.data.eq.hat), int(Save.data.eq.hoop), Save.defs.cos)
+	hero3d.pose(tm * 3.2)
+	var th: Texture2D = hero3d.tex()
+	var hh := 118.0 * k; var ww: float = hh * float(hero3d.VW) / float(hero3d.VH)
+	draw_circle(p + Vector2(0, 38 * k), 15 * k, Color(0, 0, 0, 0.16))
+	draw_texture_rect(th, Rect2(p - Vector2(ww / 2.0, hh * 0.52), Vector2(ww, hh)), false)
+
+func _ship(sh: Dictionary) -> void:
+	var d: Vector2 = sh.v.normalized()
+	var ang := rad_to_deg(acos(clamp(d.y, -1.0, 1.0)))
+	var fi := int(round(ang / 5.0))
+	var tex := frames[clampi(fi, 0, 36)]
+	var sz := 96.0
+	var r := Rect2(sh.p - Vector2(sz, sz) / 2.0, Vector2(sz, sz))
+	if d.x < 0.0:
+		draw_texture_rect(tex, Rect2(r.position + Vector2(sz, 0), Vector2(-sz, sz)), false)
+	else:
+		draw_texture_rect(tex, r, false)
+
+func _btn(r: Rect2, label: String, col: Color, fn: Callable, fs := 22) -> void:
+	buttons.append([r, fn])
+	draw_rect(Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.35))
+	draw_rect(r, col)
+	draw_rect(Rect2(r.position, Vector2(r.size.x, r.size.y * 0.45)), Color(1, 1, 1, 0.14))
+	var f := ThemeDB.fallback_font
+	var w := f.get_string_size(label, HORIZONTAL_ALIGNMENT_CENTER, -1, fs).x
+	draw_string(f, r.position + Vector2((r.size.x - w) / 2.0, r.size.y / 2.0 + fs * 0.35), label, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, Color.WHITE)
+
+func _menu(R: float) -> void:
+	var f := ThemeDB.fallback_font
+	var cx := R / 2.0 - 140.0
+	draw_string(f, Vector2(cx - 150, 90), "HULA VAQUERO", HORIZONTAL_ALIGNMENT_LEFT, -1, 52, Color("ffd32a"))
+	draw_string(f, Vector2(cx - 40, 120), "SKY RIDE · GODOT", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color.WHITE)
+	_hero(Vector2(cx + 50, 230), t)
+	_btn(Rect2(R - 300, 80, 240, 70), "RIDE!", Color("2ecc71"), start_run, 32)
+	_btn(Rect2(R - 300, 168, 240, 50), "ENDLESS", Color("8e44ad"), start_run, 22)
+	_btn(Rect2(R - 300, 232, 240, 50), "OPTIONS", Color("e67e22"), func(): pass, 22)
+
+func _toast(R: float) -> void:
+	if Updater.status != "":
+		var f := ThemeDB.fallback_font
+		var w := f.get_string_size(Updater.status, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
+		draw_rect(Rect2(R / 2 - w / 2 - 10, FH - 28, w + 20, 22), Color(0, 0, 0, 0.55))
+		draw_string(f, Vector2(R / 2 - w / 2, FH - 12), Updater.status, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
+
+func _hud(R: float) -> void:
+	var f := ThemeDB.fallback_font
+	draw_rect(Rect2(10, 8, 160, 16), Color(0, 0, 0, 0.4))
+	draw_rect(Rect2(10, 8, 160 * clamp(hp / 100.0, 0, 1), 16), Color("2ecc71"))
+	draw_string(f, Vector2(14, 21), "HP %d/100" % int(max(hp, 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	draw_string(f, Vector2(R - 130, 24), "SCORE %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("ffd32a"))
+
+func _portrait_hud() -> void:
+	# close-up of his face, bottom-left, so the emotions can be read
+	var pr := Rect2(12, FH - 124, 112, 112)
+	draw_rect(pr.grow(4), Color(0.05, 0.05, 0.12, 0.6))
+	draw_texture_rect(hero3d.ptex(), pr, false)
+	draw_rect(pr.grow(4), Color("e7b84a"), false, 2.0)
+
+func _over(R: float) -> void:
+	draw_rect(Rect2(0, 0, R, FH), Color(0.03, 0.03, 0.08, 0.7))
+	var f := ThemeDB.fallback_font
+	draw_string(f, Vector2(R / 2 - 140, 150), "KNOCKED OUT!", HORIZONTAL_ALIGNMENT_LEFT, -1, 44, Color("ff4757"))
+	draw_string(f, Vector2(R / 2 - 60, 185), "Score %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
+	_btn(Rect2(R / 2 - 110, 215, 220, 50), "AGAIN", Color("2ecc71"), start_run, 24)
+	_btn(Rect2(R / 2 - 110, 275, 220, 40), "MENU", Color("636e72"), func(): state = S.MENU, 18)
