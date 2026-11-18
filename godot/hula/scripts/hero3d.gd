@@ -159,11 +159,11 @@ func _build() -> void:
 	var hm := mat(Color("efe3c3"), 0.9); hm.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var band := mat(Color("b3121f"), 0.6); band.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var hm2 := mat(Color("f3d27a"), 0.3, 0.6); hm2.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.5, 1.0, 0.5)); var c0 := put(hat, crown, hm)
+	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.71, 1.0, 0.71)); var c0 := put(hat, crown, hm)
 	hat_mats = [hm, band, hm2]
 	put(hat, lathe([Vector2(0.1, 0.012), Vector2(0.1005, 0.05), Vector2(0.1, 0.05)]), band, Vector3.ZERO, Vector3(1.02, 1, 1.02))
 	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.032, 0), Vector3(0.1, 0.1, 0.1)); (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).inner_radius = 0.96; (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).outer_radius = 1.0
-	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.0, 0), Vector3(0.215, 0.43, 0.215)).mesh = _thin_torus()
+	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.0, 0), Vector3(0.305, 0.43, 0.305)).mesh = _thin_torus()
 	# arms (raised, waving)
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
@@ -635,7 +635,7 @@ func arm_clear() -> void:
 # reaction targets: [shoulder z, shoulder x, shoulder y, elbow z, elbow x, hand z, hand x, sway amount]
 const ARM_K := {
 	"flinch": [0.75, -0.5, 0.0, 2.3, 0.0, 0.0, 0.0, 0.0],
-	"cheer": [2.95, 0.0, 0.0, 0.3, 0.0, 0.2, 0.0, 1.0],
+	"cheer": [2.55, 0.0, 0.0, 0.3, 0.0, 0.2, 0.0, 1.0],
 	"limp": [0.28, 0.1, 0.0, 0.12, 0.1, 0.0, 0.1, 0.25],
 }
 func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void:
@@ -680,7 +680,7 @@ func _secondary(phase: float, c: float) -> void:
 	var kk := arm_k
 	if kk > 0.001:
 		match arm_n:
-			"flinch": tx += -0.35 * kk; lift += 0.03 * kk; hl += -0.35 * kk; hr += 0.35 * kk          # hat tips back and pops up, hair flares
+			"flinch": tx += -0.2 * kk; lift += 0.03 * kk; hl += -0.35 * kk; hr += 0.35 * kk          # hat tips back and pops up, hair flares
 			"cheer": tx += -0.12 * kk; tz += 0.1 * sin(_clock * 11.0) * kk; lift += 0.015 * kk; hl += -0.2 * kk; hr += 0.2 * kk
 			"limp": tx += 0.22 * kk; hl += 0.1 * kk; hr += -0.1 * kk
 	var tg := [tx, tz, hl, hr, lift, 0.0]
