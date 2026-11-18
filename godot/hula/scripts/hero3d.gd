@@ -140,9 +140,9 @@ func _build() -> void:
 	put(spine, BoxMesh.new(), gold, Vector3(0, 0.02, 0.134), Vector3(0.04, 0.035, 0.012))
 	# head
 	var neck := joint("neck", spine, Vector3(0, 0.5, 0))
-	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.1, 0), Vector3(0.115, 0.18, 0.115))      # the neck: runs from inside the collar up under the jaw
-	put(neck, sphere(0.058), skin, Vector3(0, 0.2, 0.0), Vector3(1.0, 0.8, 1.0))
-	var head := joint("head", neck, Vector3(0, 0.26, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
+	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.07, 0), Vector3(0.14, 0.14, 0.14))      # the neck: runs from inside the collar up under the jaw
+	put(neck, sphere(0.09), skin, Vector3(0, -0.02, 0.0), Vector3(1.0, 0.6, 0.85))      # wide base: neck flares into the shoulders
+	var head := joint("head", neck, Vector3(0, 0.2, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
 	put(head, sphere(0.105), skin, Vector3(0, 0.0, 0), Vector3(0.93, 1.1, 1.0))
 	fr.jaw = put(head, sphere(0.06), skin, Vector3(0, -0.06, 0.02), Vector3(0.95, 0.75, 0.9))       # jaw
 	_face(head, skin, white, black)
@@ -204,7 +204,7 @@ func _portrait() -> void:
 	pvp.world_3d = vp.world_3d; pvp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	add_child(pvp)
 	pcam = Camera3D.new(); pcam.fov = 21.0; pcam.cull_mask = 1; pvp.add_child(pcam)
-	pcam.look_at_from_position(Vector3(0.0, 1.67, 1.12), Vector3(0, 1.6, 0))
+	pcam.look_at_from_position(Vector3(0.0, 1.61, 1.12), Vector3(0, 1.54, 0))
 func ptex() -> Texture2D: return pvp.get_texture()
 
 # ---------- life: moods, reactions, where he looks, talking ----------
