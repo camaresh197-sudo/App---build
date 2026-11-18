@@ -42,7 +42,10 @@ jobs:
         run: |
           mkdir -p build
           godot --headless --import || true
-          godot --headless --export-debug Android build/HulaVaquero.apk
+          ls $ANDROID_HOME $ANDROID_HOME/build-tools $ANDROID_HOME/platforms $ANDROID_HOME/cmdline-tools || true
+          ls ~/.local/share/godot/export_templates/${GODOT_VER}.stable | head -30
+          cat ~/.config/godot/editor_settings-4.4.tres
+          godot --headless --verbose --export-debug Android build/HulaVaquero.apk
       - uses: actions/upload-artifact@v4
         with:
           name: HulaVaquero-godot-apk
