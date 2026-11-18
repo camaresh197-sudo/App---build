@@ -181,6 +181,8 @@ func _build() -> void:
 		var clav := joint("clav_" + side, chest, Vector3(0.08 * s, 0.12, 0))       # collarbone: shrugs and rolls the shoulder
 		var sh := joint("shoulder_" + side, clav, Vector3(0.14 * s, 0, 0))
 		put(sh, sphere(0.075), cloth)
+		put(sh, sphere(0.085), cloth, Vector3(0.012 * s, 0.01, 0.0), Vector3(1.0, 1.05, 1.1))                       # deltoid cap
+		put(chest, sphere(0.1), cloth, Vector3(0.095 * s, 0.185, -0.005), Vector3(1.5, 0.55, 0.95), Vector3(0, 0, -0.32 * s))   # trapezius slope from neck to shoulder
 		var ua := joint("uarm_" + side, sh, Vector3.ZERO)             # upper-arm twist
 		put(ua, capsule(0.062, 0.34), cloth, Vector3(0, -0.15, 0))
 		var el := joint("elbow_" + side, ua, Vector3(0, -0.3, 0))
@@ -303,7 +305,8 @@ func hz(x: float, y: float) -> float:
 func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMaterial3D) -> void:
 	var skin_d := mat(skin.albedo_color.darkened(0.16), 0.7)
 	var iris_m := mat(Color.WHITE, 0.3); iris_m.albedo_texture = _iris_tex(); iris_m.emission_enabled = true; iris_m.emission_texture = iris_m.albedo_texture; iris_m.emission_energy_multiplier = 0.22
-	var sclera_m := mat(Color("f7efe6"), 0.22)
+	var sclera_m := mat(Color("eadfd0"), 0.3); sclera_m.metallic_specular = 0.2
+	var lid_m := mat(skin.albedo_color.lightened(0.04), 0.9); lid_m.metallic_specular = 0.05
 	var pink_m := mat(Color("d98a86"), 0.5)
 	var shine := mat(Color.WHITE, 0.1); shine.emission_enabled = true; shine.emission = Color.WHITE; shine.emission_energy_multiplier = 0.8
 	var lip_m := mat(skin.albedo_color.darkened(0.3).lerp(Color("b5524a"), 0.45), 0.5)
@@ -337,7 +340,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		fr["shine_" + sd] = put(head, sphere(0.0034), shine, Vector3(ex + 0.006 * s, 0.03, 0.1075))
 		fr["shine2_" + sd] = put(head, sphere(0.0017), shine, Vector3(ex - 0.005 * s, 0.0195, 0.1075))
 		fr["crease_" + sd] = put(head, capsule(0.0013, 0.044), skin_d, Vector3(ex, 0.05, 0.0955), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2))
-		fr["lid_" + sd] = put(head, sphere(0.0245), skin, Vector3(ex, 0.0365, 0.0905), Vector3(1.08, 0.46, 0.6))
+		fr["lid_" + sd] = put(head, sphere(0.0245), lid_m, Vector3(ex, 0.0365, 0.0905), Vector3(1.08, 0.46, 0.6))
 		var lashn := put(head, capsule(0.0035, 0.052), black, Vector3(ex, 0.0285, 0.0975), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 - 0.12 * s))
 		fr["lash_" + sd] = lashn
 		for li in 5:       # lashes fan out from the outer half of the lid edge
@@ -425,7 +428,37 @@ func _iris_tex() -> ImageTexture:
 			img.set_pixel(x, y, Color(col.r, col.g, col.b, 1.0))
 	return ImageTexture.create_from_image(img)
 
-func _fp(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
+var fc := {}                  # couplings: what each muscle drags along with it (filled by _couple, each with its own lag)
+var _fcs := {}
+func _fp(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0)) + float(fc.get(k, 0.0))
+
+# Muscles never work alone. A smile pulls the cheeks into the eyes and drops the outer brow, an open jaw lifts the brows and flares the nose,
+# a scowl wrinkles the nose, tightens the lips and pushes the chin up, sadness bunches the chin and lifts the inner brows. Each link lags its cause a little.
+func _couple(dt: float) -> void:
+	var sm := float(fx.get("sm", 0.0)); var mo := clampf(float(fx.get("mo", 0.0)) + float(fo.get("mo", 0.0)), 0.0, 1.0)
+	var bi := float(fx.get("bi", 0.0)); var bo := float(fx.get("bo", 0.0)); var lid := float(fx.get("lid", 0.5))
+	var pf := float(fx.get("pf", 0.0)); var pu := float(fx.get("pu", 0.0)); var sq := float(fx.get("sq", 0.0))
+	var glare := maxf(pf, maxf(0.0, -bi) * 0.8)
+	var up := maxf(0.0, sm); var dn := maxf(0.0, -sm)
+	var brow_up := clampf((bi + bo) * 0.5, 0.0, 1.0)
+	var t := {
+		"bo": -up * 0.14 + mo * 0.12 + dn * 0.05,                 # smile pulls the outer brow down; a shout lifts it
+		"bi": mo * 0.1 + dn * 0.3 + glare * -0.1,                 # sadness lifts the inner brow
+		"lid": brow_up * 0.28 - glare * 0.1 - dn * 0.06 + mo * 0.06,    # raised brows open the eyes, scowls and sadness narrow them
+		"sq": glare * 0.15,
+		"ns": glare * 0.35 + dn * 0.05 + sq * 0.1,                # snarl wrinkles the nose
+		"nf": mo * 0.4 + glare * 0.2 + pu * -0.1,                 # the nostrils flare when he shouts or snarls
+		"ch": glare * 0.4 + dn * 0.55 + pu * 0.3 - mo * 0.2,      # chin pushes up under a scowl, a frown or a pucker
+		"mw": -glare * 0.15 + up * 0.12 - pu * 0.1,
+		"sm": -glare * 0.12 + mo * 0.04,
+		"hp": mo * 0.025 - dn * 0.03 + brow_up * 0.015,           # the head tips back a touch when the jaw drops, forward when sad
+		"tt": glare * 0.3 * (1.0 if mo > 0.1 else 0.0),
+	}
+	var lag := {"bo": 18.0, "bi": 18.0, "lid": 14.0, "sq": 12.0, "ns": 10.0, "nf": 10.0, "ch": 8.0, "mw": 12.0, "sm": 9.0, "hp": 6.0, "tt": 10.0}
+	for k in t:
+		var cur: float = _fcs.get(k, 0.0)
+		cur = lerpf(cur, float(t[k]), 1.0 - exp(-dt * float(lag[k])))
+		_fcs[k] = cur; fc[k] = cur
 
 # shapes every face part from the current parameters
 func _apply_face() -> void:
@@ -439,12 +472,14 @@ func _apply_face() -> void:
 		var bos := _fp("bo") + _fp("boL" if s < 0 else "boR")
 		var pf := _fp("pf")
 		var glare := maxf(pf, maxf(0.0, -bis) * 0.8)
-		var lid := clampf(_fp("lid") + _fp("lidL" if s < 0 else "lidR") - _fp("sq") * 0.08 - glare * 0.08 - maxf(0.0, _fp("sm") - 0.3) * 0.1, 0.0, 1.0)
-		lid = maxf(lid, minf(_fp("lid") + _fp("lidL" if s < 0 else "lidR"), 0.1)) * (1.0 - blink)   # a glare narrows the eye but keeps the iris visible
+		var lid := clampf(_fp("lid") + _fp("lidL" if s < 0 else "lidR") - _fp("sq") * 0.04 - glare * 0.05 - maxf(0.0, _fp("sm") - 0.3) * 0.04, 0.0, 1.0)
+		lid = maxf(lid, minf(_fp("lid") + _fp("lidL" if s < 0 else "lidR"), 0.1))   # a glare narrows the eye but keeps the iris visible
+		if lid >= 0.12: lid = maxf(lid, 0.34)        # a half-lidded look still shows most of the iris; only a deliberate near-shut eye hides it
+		lid = lid * (1.0 - blink)
 		var tilt := clampf(glare * 0.4 - maxf(0.0, bis) * 0.3, -0.4, 0.45)
 		var sy := 0.46 + maxf(0.0, 0.5 - lid) * 1.0
 		var h := 0.0245 * sy
-		var bottom := 0.0084 + lid * 0.0336
+		var bottom := minf(0.006 + 0.042 * pow(lid, 0.55), 0.046)
 		var lidn: MeshInstance3D = fr["lid_" + sd]
 		lidn.scale = Vector3(1.08, sy, 0.45); lidn.position = Vector3(ex, bottom + h, 0.089); lidn.rotation.z = s * tilt
 		var lsh: Node3D = fr["lash_" + sd]
@@ -454,7 +489,7 @@ func _apply_face() -> void:
 		# lower lid rises with squint, tears or a wet look
 		var sq := clampf(_fp("sq") + _fp("wet") * 0.15 + maxf(0.0, _fp("sm")) * 0.2, 0.0, 1.0)
 		var low: MeshInstance3D = fr["low_" + sd]
-		low.position = Vector3(ex, sq * 0.013, 0.092); low.scale = Vector3(1.1, 0.35 + sq * 0.3, 0.5)
+		low.position = Vector3(ex, sq * 0.008, 0.092); low.scale = Vector3(1.1, 0.35 + sq * 0.3, 0.5)
 		# gaze and pupil
 		var gx := _fp("gx"); var gy := _fp("gy")
 		var ir: Node3D = fr["iris_" + sd]
@@ -555,8 +590,9 @@ func _apply_face() -> void:
 	var jaw: Node3D = fr.jaw
 	jaw.position = Vector3(0, -0.06 - mo * 0.01, 0.02 + ch * 0.004)
 	var chn: Node3D = fr.chin
-	chn.position = Vector3(ch * 0.003, -0.098 - mo * 0.009 + maxf(0.0, -sm) * 0.004 - _fp("pu") * 0.002, 0.062 + ch * 0.004)
-	chn.scale = Vector3(1.1 - ch * 0.1, 0.8 + maxf(0.0, -sm) * 0.15, 0.9)
+	chn.position = Vector3(sk * 0.004, -0.098 - mo * 0.017 + ch * 0.004 + maxf(0.0, -sm) * 0.003 - _fp("pu") * 0.002, 0.062 + ch * 0.006 + mo * 0.003)
+	chn.scale = Vector3(1.1 - ch * 0.12 + mo * 0.04, 0.8 + ch * 0.2 + maxf(0.0, -sm) * 0.12 - mo * 0.08, 0.9 + ch * 0.1)
+	chn.rotation.z = sk * 0.12
 	# deeper muscles: corrugator bunch, cheek puffs, zygomatic lip-corner knots, mentalis dimple, masseter, forehead vein
 	var glr := maxf(_fp("pf"), maxf(0.0, -_fp("bi")) * 0.8)
 	var bn: Node3D = fr.bunch
@@ -635,9 +671,14 @@ func face_update() -> void:
 	if _brow_t < 0.0: _brow_t = randf_range(1.2, 3.5); _brow_k = randf_range(0.12, 0.3)
 	_brow_k = maxf(0.0, _brow_k - dt * 0.5)
 	fo["bo"] = _brow_k * (1.0 - stare); fo["bi"] = _brow_k * 0.4 * (1.0 - stare)
+	fo["boL"] = sin(_clock * 0.8) * 0.03; fo["boR"] = sin(_clock * 0.8 + 2.1) * 0.03     # the two brows never quite match
 	var breath := 0.5 + 0.5 * sin(_clock * 1.7)
 	fo["mo"] = breath * 0.018 + talk * (0.1 + 0.3 * absf(sin(_clock * 11.0)) * (0.6 + 0.4 * sin(_clock * 4.3)))
 	fo["mw"] = talk * 0.3 * sin(_clock * 6.5); fo["pu"] = talk * 0.2 * maxf(0.0, sin(_clock * 6.5 + 2.0))
+	fo["bo"] += talk * 0.12 * maxf(0.0, sin(_clock * 5.0)); fo["bi"] += talk * 0.08 * maxf(0.0, sin(_clock * 5.0 + 0.6))   # speech punctuates with the brows
+	fo["ch"] = talk * 0.25 * absf(sin(_clock * 11.0 + 0.5))                                                                  # and the chin bobs behind the jaw
+	fo["bo"] -= _blink_k * 0.05; fo["bi"] -= _blink_k * 0.04          # brows dip with each blink
+	_couple(dt)
 	# blinking: gap and length depend on the feeling (fear flutters, tiredness drags)
 	if auto_blink:
 		_blink_t -= dt
@@ -886,6 +927,10 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	(j.chest as Node3D).rotation = _spr("ch", M.ch, 15.0)
 	(j.neck as Node3D).rotation = _spr("nk", M.nk, 15.0)
 	var hd: Vector3 = _spr("hd", M.hd, 13.0) + Vector3(sin(_clock * 0.7) * 0.05, sin(_clock * 0.45) * 0.1, sin(_clock * 0.6) * 0.03) * (1.0 - gk * 0.5)       # idle: the head is never quite still
+	var tors: Vector3 = (j.chest as Node3D).rotation + pel.rotation * 0.5
+	var stab := Vector3(-tors.x * 0.35, -tors.y * 0.4, -tors.z * 0.45) * (0.6 + 0.4 * gk)       # the head fights to stay level while the torso sways under it
+	hd += stab
+	(j.chest as Node3D).scale = Vector3.ONE * (1.0 + 0.012 * sin(_clock * 1.7)) + Vector3(0.0, 0.01 * sin(_clock * 1.7), 0.01 * sin(_clock * 1.7))
 	(j.neck2 as Node3D).rotation = hd * 0.4
 	(j.head as Node3D).rotation = Vector3(0.04 + _fp("hp") * 1.0 + hd.x * 0.6, look.x * 0.4 + _fp("hy") * 0.6 + hd.y * 0.6, _fp("hr") * 0.8 + hd.z * 0.6)
 	_secondary(phase, c)
@@ -897,7 +942,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 		(j["shin_" + side] as Node3D).rotation = Vector3.ZERO
 		(j["foot_" + side] as Node3D).rotation = Vector3.ZERO
 		(j["toe_" + side] as Node3D).rotation = Vector3(-float(M["fp" + side]) * 0.6, 0, 0)
-		(j["clav_" + side] as Node3D).rotation = Vector3(0, 0, d * float(M["sh" + side]) * 2.0)
+		_shb[side] = float(M["sh" + side])
 		_arm(side, d, phase, bank, wave, hurt)
 	hoop_node.visible = gk < 0.5
 	hoop_node.position = Vector3(pp.x + c * 0.06, pp.y + 0.04, pp.z + s * 0.08)
@@ -924,6 +969,7 @@ func _hand_joints(side: String, d: float, ph: float, wave: float) -> void:
 # ---------- arms ----------
 # Flowing hula arms: a wave travels shoulder -> elbow -> wrist (each joint lags the one before), arms in counter-phase, with fore/aft swing and a little twist.
 # arm_kick(name, secs) layers a reaction on top: "flinch" (guard up), "cheer" (arms high, pumping), "limp" (arms drop). secs >= 99 holds it until arm_kick("", 0).
+var _shb := {"l": 0.0, "r": 0.0}
 var arm_n := ""
 var arm_t := 0.0
 var arm_k := 0.0
@@ -969,6 +1015,12 @@ func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: 
 		sz = lerpf(sz, kz, arm_k); sx = lerpf(sx, k[1] + sx * sway, arm_k); sy = lerpf(sy, d * k[2] + sy * sway, arm_k)
 		ez = lerpf(ez, d * k[3], arm_k); ex = lerpf(ex, k[4] + ex * sway, arm_k)
 		hz = lerpf(hz, d * k[5] + hz * sway, arm_k); hx = lerpf(hx, k[6] + hx * sway, arm_k)
+	# scapulohumeral rhythm: the collarbone rises with the arm (about a third of the lift past 30 degrees), swings forward when the arm reaches ahead and back when it pulls behind,
+	# and the whole girdle breathes. The shoulder joint rides on it, so arm and shoulder blade move as one chain.
+	var elev := clampf(absf(sz) - 0.5, 0.0, 2.4)
+	var cl := Vector3(clampf(-absf(sx) * 0.0 - sx * 0.0, -1.0, 1.0), -d * clampf(-sx * 0.28 - absf(sy) * 0.08, -0.25, 0.3), d * (_shb[side] * 2.0 + elev * 0.27 + sin(_clock * 1.7) * 0.012))
+	cl.x = clampf(-sx * 0.06, -0.08, 0.08)
+	(j["clav_" + side] as Node3D).rotation = _spr("cl" + side, cl, 22.0)
 	(j["shoulder_" + side] as Node3D).rotation = _spr("as" + side, Vector3(sx, sy, sz), 26.0)
 	(j["elbow_" + side] as Node3D).rotation = _spr("ae" + side, Vector3(ex, 0, ez), 28.0)
 	(j["hand_" + side] as Node3D).rotation = _spr("ah" + side, Vector3(hx, 0, hz), 30.0)

@@ -51,6 +51,22 @@ func _ready() -> void:
 		lg.close()
 		get_tree().quit()
 		return
+	if a.size() > 3 and a[2] == "face":
+		# a[0]=out dir, a[3]=comma list of expressions: each is held 1 s (24 fps, springs and couplings running), portrait saved at the end
+		var hf = m.hero3d
+		m.set_process(false)
+		hf.fixed_dt = 1.0 / 24.0
+		hf.portrait_on = true
+		hf.auto_blink = false
+		hf.gesture("hula")
+		for nm in a[3].split(","):
+			hf.set_expr(nm, false)
+			for f in 24:
+				hf.pose(f / 24.0)
+				await get_tree().process_frame
+			hf.ptex().get_image().save_png("%s/%s.png" % [a[0], nm])
+		get_tree().quit()
+		return
 	if a.size() > 4 and a[2] == "seq":
 		# continuous clip with the springs running: a[3]=gesture, a[4]=seconds; one png per frame at 24 fps
 		var hs = m.hero3d
