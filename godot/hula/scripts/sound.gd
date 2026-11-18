@@ -60,7 +60,7 @@ func _buses() -> void:
 			AudioServer.set_bus_name(i, nm); AudioServer.set_bus_send(i, "Master")
 	var vb := AudioServer.get_bus_index("Vox")
 	if AudioServer.get_bus_effect_count(vb) == 0:
-		var vr := AudioEffectReverb.new(); vr.room_size = 0.3; vr.damping = 0.7; vr.wet = 0.04; vr.dry = 1.0; AudioServer.add_bus_effect(vb, vr)   # sung words stay almost dry, so there is no echo on long notes
+		var vr := AudioEffectReverb.new(); vr.room_size = 0.4; vr.damping = 0.8; vr.wet = 0.11; vr.dry = 1.0; AudioServer.add_bus_effect(vb, vr)   # sung words stay almost dry, so there is no echo on long notes
 	var mb := AudioServer.get_bus_index("Music")
 	if AudioServer.get_bus_effect_count(mb) == 0:
 		var rv := AudioEffectReverb.new(); rv.room_size = 0.55; rv.damping = 0.5; rv.wet = 0.16; rv.dry = 0.9; rv.hipass = 0.1
@@ -420,7 +420,7 @@ func _vstep(st: int, dl: float) -> void:
 		elif sec == "v-F": vk = ["B0", "B1", "B6", "B7"][clampi(bar, 0, 3)]
 		if vox.has(vk):
 			play("vox/" + str(vox[vk][0]), {"v": VOX_GAIN, "dl": maxf(0.0, dd - float(vox[vk][1]) + 0.01)})
-			if vox_lo.has(vk): play("vox/" + str(vox_lo[vk][0]), {"v": VOX_GAIN * 0.55, "dl": maxf(0.0, dd - float(vox_lo[vk][1]) + 0.01)})
+			if vox_lo.has(vk): play("vox/" + str(vox_lo[vk][0]), {"v": VOX_GAIN * 0.5, "dl": maxf(0.0, dd - float(vox_lo[vk][1]) + 0.01)})
 	# --- the tune ---
 	var m: int = int(mel[s])
 	if m > 0:
