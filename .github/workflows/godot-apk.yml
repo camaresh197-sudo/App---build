@@ -1,0 +1,46 @@
+name: godot-apk
+on:
+  workflow_dispatch:
+  push:
+    branches: [godot]
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VER: 4.4.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - name: Install Godot and export templates
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_linux.x86_64.zip
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_export_templates.tpz
+          unzip -q Godot_v${GODOT_VER}-stable_linux.x86_64.zip
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VER}.stable
+          unzip -q Godot_v${GODOT_VER}-stable_export_templates.tpz -d tpl
+          mv tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VER}.stable/
+          mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot 2>/dev/null || sudo mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
+      - name: Debug keystore and editor settings
+        run: |
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.4.tres <<EOF
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/debug_keystore = "$PWD/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          EOF
+      - name: Export APK
+        working-directory: godot/hula
+        run: |
+          mkdir -p build
+          godot --headless --import || true
+          godot --headless --export-debug Android build/HulaVaquero.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HulaVaquero-godot-apk
+          path: godot/hula/build/HulaVaquero.apk
