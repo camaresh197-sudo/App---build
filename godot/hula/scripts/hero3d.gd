@@ -205,6 +205,7 @@ func _build() -> void:
 	# hoop
 	hoop_mat = mat(Color.WHITE, 0.35, 0.05)
 	hoop_mat.albedo_texture = stripe_tex(Color("1e8449"), Color("58d68d"))
+	hoop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA       # faded by gk so it never pops when a gesture takes over
 	var tm := TorusMesh.new(); tm.inner_radius = 0.54; tm.outer_radius = 0.63; tm.rings = 48; tm.ring_segments = 16
 	hoop_node = put(root, tm, hoop_mat, Vector3(0, 0.86, 0))
 
@@ -854,15 +855,15 @@ func _mix(a: Dictionary, b: Dictionary, k: float) -> Dictionary:
 func _move_hula(phase: float, bank: float) -> Dictionary:
 	var c := cos(phase); var s := sin(phase)
 	var M := _neutral()
-	M.pel = Vector3(c * 0.07, 0.815 + 0.012 * sin(phase * 2.0 + 0.5), s * 0.05)      # the hip circle
+	M.pel = Vector3(c * 0.07, 0.79 + 0.02 * sin(phase * 2.0 + 0.5), s * 0.05)      # the hip circle, with the knees kept soft under it
 	M.pr = Vector3(0, s * 0.15, -c * 0.11)
 	M.sp = Vector3(0.03, -s * 0.08, c * 0.09 + bank * 0.12)
 	M.ch = Vector3(0, -s * 0.1, 0)
 	M.nk = Vector3(0.05 * sin(phase * 2.0 + 0.8), s * 0.08, -c * 0.06)          # the neck nods with the hips and leans against the sway; the head follows a beat later
 	M.hd = Vector3(0.04 * sin(phase * 2.0 + 1.5), s * 0.07, c * 0.05)
-	var fl := maxf(0.0, c); var fr := maxf(0.0, -c)        # the foot opposite the hip's shift unweights: heel lifts a touch
-	M.fl = Vector3(-FOOT_X - 0.02 * fl, FOOT_Y + 0.03 * fl, 0); M.fpl = 0.3 * fl
-	M.fr = Vector3(FOOT_X + 0.02 * fr, FOOT_Y + 0.03 * fr, 0); M.fpr = 0.3 * fr
+	var fl := smoothstep(0.05, 0.85, maxf(0.0, c)); var fr := smoothstep(0.05, 0.85, maxf(0.0, -c))       # the foot opposite the hip's shift unweights: the heel peels, then the foot steps out and touches back down
+	M.fl = Vector3(-FOOT_X - 0.035 * fl, FOOT_Y + 0.04 * fl, 0.02 * fl); M.fpl = 0.55 * fl
+	M.fr = Vector3(FOOT_X + 0.035 * fr, FOOT_Y + 0.04 * fr, 0.02 * fr); M.fpr = 0.55 * fr
 	return M
 
 func _sd(i: int) -> float:       # alternating side per beat
@@ -880,12 +881,16 @@ func _ft(d: float, lift := 0.0, out := 0.0, wide := 0.0, fwd := 0.0) -> Vector3:
 # gesture("dance"|"hips"|"clap"|"flex"|"power"|"hula"). The move is blended over the hula (out, then in). auto_dance cycles them like the title screen.
 var gest := "hula"          # what we want
 var gest_cur := "hula"      # what is on screen
+var gest_t := 0.0           # local time of the current move: every move starts at the top of its phrase
 var gk := 0.0               # blend 0..1
 var auto_dance := false
 const GMOOD := {"hula": "grin", "dance": "joy", "hips": "smug", "clap": "delight", "flex": "proud", "power": "battle_cry"}
 var _G := {}
-var _acyc := -1
-const CYC := [["dance", ""], ["hips", ""], ["dance", ""], ["clap", ""], ["flex", ""], ["hula", "cheer"], ["dance", ""], ["power", ""], ["hula", ""]]
+var _cyclic := false
+var _cyc_i := 0
+var _cyc_t := 0.0
+# [move, arm kick, seconds to hold]: each move is held for its whole phrase, so the title screen sees complete choreography
+const CYC := [["dance", "", 8.2], ["hips", "", 3.2], ["clap", "", 3.2], ["flex", "", 3.8], ["hula", "cheer", 3.2], ["power", "", 3.0], ["dance", "", 8.2], ["hula", "", 3.2]]
 func gesture(n: String) -> void:
 	gest = n
 
@@ -895,19 +900,25 @@ func _gstep() -> void:
 	_pms = now
 	var dt := _pdt
 	if auto_dance:
-		var ci := int(_clock / 3.2) % CYC.size()
-		if ci != _acyc:
-			_acyc = ci; gest = CYC[ci][0]
-			if CYC[ci][1] != "": arm_kick(CYC[ci][1], 2.2)
-	elif _acyc != -1:
-		_acyc = -1; gest = "hula"
+		if not _cyclic:                     # (re)start the cycle from the top whenever auto-dance comes on
+			_cyclic = true; _cyc_i = 0; _cyc_t = 0.0; gest = CYC[0][0]
+			if CYC[0][1] != "": arm_kick(CYC[0][1], 2.2)
+		_cyc_t += dt
+		while _cyc_t >= float(CYC[_cyc_i][2]):
+			_cyc_t -= float(CYC[_cyc_i][2])
+			_cyc_i = (_cyc_i + 1) % CYC.size()
+			gest = CYC[_cyc_i][0]
+			if CYC[_cyc_i][1] != "": arm_kick(CYC[_cyc_i][1], 2.2)
+	elif _cyclic:
+		_cyclic = false; gest = "hula"      # back to the plain hula when auto-dance stops
 	_life(dt)
 	if auto_dance: mood("joy" if (arm_t > 0.0 and arm_n == "cheer") else GMOOD.get(gest, "grin"))      # title screen: face matches the move
 	if gest_cur != gest:
 		gk -= dt * 5.0
-		if gk <= 0.0: gk = 0.0; gest_cur = gest
+		if gk <= 0.0: gk = 0.0; gest_cur = gest; gest_t = 0.0
 	elif gest_cur != "hula": gk = minf(1.0, gk + dt * 5.0)
 	else: gk = 0.0
+	if gest_cur != "hula": gest_t += dt
 
 var _micro_t := 2.5
 const MICRO := ["wink", "cheeky", "playful", "big_grin", "laugh", "smirk", "tongue_out", "charming", "flirt", "mischief"]
@@ -934,21 +945,29 @@ func _move(n: String, t: float) -> Dictionary:
 			var bp := fmod(b, 16.0)
 			var hit := 1.0 - pow(1.0 - bf, 3.0)
 			var spk := smoothstep(11.0, 12.0, bp) * (1.0 - smoothstep(15.0, 15.8, bp))
+			var prep := smoothstep(10.4, 11.8, bp) * (1.0 - smoothstep(12.0, 12.6, bp))       # wind-up: the chest coils against the turn
+			var land := smoothstep(15.1, 15.5, bp) * (1.0 - smoothstep(15.5, 16.0, bp))       # the last beat sinks into the knees
+			var te := smoothstep(12.0, 12.3, bp) * (1.0 - smoothstep(15.0, 15.4, bp))         # the feet only leave the floor while the turn is moving
 			var wp := lerpf(_sd(bi - 1), _sd(bi), hit) * (1.0 - spk)
 			M.spin = smoothstep(12.0, 15.2, bp) * TAU
+			var pv := sin((bp - 12.0) * PI * 3.0) * te                                        # three quick pivot steps through the turn
+			var nl := 0.05 * maxf(0.0, pv); var nr := 0.05 * maxf(0.0, -pv)
 			var pi_ := int(floorf(b / 2.0)); var af := b / 2.0 - pi_
 			var ap := lerpf(_sd(pi_ - 1), _sd(pi_), smoothstep(0.0, 0.3, af))
 			var pump := pow(1.0 - bf, 2.0)
-			M.pel = Vector3(wp * 0.07, 0.80 + 0.028 * up - 0.02 * spk, 0)
+			M.pel = Vector3(wp * 0.07, 0.775 + 0.032 * up - 0.02 * spk - 0.02 * prep - 0.03 * land, 0)
 			M.pr = Vector3(0, -wp * 0.14, wp * 0.1)
 			M.sp = Vector3(0.05, wp * 0.08, -wp * 0.04)
-			M.ch = Vector3(0, wp * 0.26, wp * 0.03)
+			M.ch = Vector3(0, wp * 0.26 - 0.18 * prep, wp * 0.03)
 			M.nk = Vector3(0.04 * pump, wp * 0.1, -wp * 0.06)
-			M.hd = Vector3(0.07 * pump + 0.05 * up, -wp * 0.2 + (0.35 * (1.0 - spk) * sin(t * 0.9)), -wp * 0.08)       # chin leads the beat, the head tilts into the shift and scans the room
+			var hy := -wp * 0.2 + 0.35 * (1.0 - spk) * sin(t * 0.9) - 0.35 * prep
+			if spk > 0.001: hy += clampf(wrapf(-M.spin, -PI, PI), -1.15, 1.15) * spk       # spotting: the face holds to the front, then whips round with the body
+			M.hd = Vector3(0.07 * pump + 0.05 * up + 0.05 * land, hy, -wp * 0.08)       # chin leads the beat, the head tilts into the shift and scans the room
 			M.shr = maxf(0.0, wp) * 0.15; M.shl = maxf(0.0, -wp) * 0.15
+			M.fyl = 0.08 + 0.34 * te; M.fyr = M.fyl                                            # the feet turn out onto the balls for the turn
 			var fL := maxf(0.0, wp); var fR := maxf(0.0, -wp)
-			M.fl = _ft(-1.0, 0.05 * fL * up, 0.12 * fL * up, 0.0, 0.03 * fL * up); M.fpl = 0.45 * fL * up
-			M.fr = _ft(1.0, 0.05 * fR * up, 0.12 * fR * up, 0.0, 0.03 * fR * up); M.fpr = 0.45 * fR * up
+			M.fl = _ft(-1.0, 0.05 * fL * up + nl, 0.12 * fL * up, -0.01 * te, 0.035 * te + 0.03 * fL * up); M.fpl = 0.45 * fL * up + nl * 6.0
+			M.fr = _ft(1.0, 0.05 * fR * up + nr, 0.12 * fR * up, -0.01 * te, -0.035 * te + 0.03 * fR * up); M.fpr = 0.45 * fR * up + nr * 6.0
 			var mr0 := 0.5 + 0.5 * ap
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
@@ -960,7 +979,7 @@ func _move(n: String, t: float) -> Dictionary:
 			var hit := 1.0 - pow(1.0 - fh, 4.0)
 			var wp := lerpf(_sd(bj - 1), _sd(bj), hit)
 			var tap := sin(PI * minf(1.0, fh * 2.0))
-			M.pel = Vector3(wp * 0.06, 0.81, 0); M.pr = Vector3(0, wp * 0.06, wp * 0.13)
+			M.pel = Vector3(wp * 0.06, 0.785 - 0.014 * hit, 0); M.pr = Vector3(0, wp * 0.06, wp * 0.13)       # sink into the pop, then settle
 			M.sp = Vector3(0.03, 0, -wp * 0.06); M.ch = Vector3(0, -wp * 0.1, -wp * 0.05); M.hd = Vector3(0, -wp * 0.22, -wp * 0.08)
 			M.fl = _ft(-1.0, 0.03 * maxf(0.0, wp) * tap, 0.1 * maxf(0.0, wp) * tap); M.fr = _ft(1.0, 0.03 * maxf(0.0, -wp) * tap, 0.1 * maxf(0.0, -wp) * tap)
 			for sd in ["l", "r"]:
@@ -968,14 +987,14 @@ func _move(n: String, t: float) -> Dictionary:
 				M["arm_" + sd] = [0.1, 0, d * (0.75 + 0.1 * maxf(0.0, d * wp)), 0, -d * 1.3, 0, 0]
 			M.fing_l = 0.3; M.fing_r = 0.3
 		"clap":        # front claps on the beat with little hops, head nods along
-			var c1 := absf(cos(11.0 * t)); var hop := 1.0 - c1
-			M.pel = Vector3(0, 0.79 + 0.035 * hop, 0)
+			var c1 := absf(sin(PI * t * BPS)); var hop := 1.0 - c1        # hands meet on the beat, so the claps land with the music
+			M.pel = Vector3(0, 0.765 + 0.035 * hop, 0)
 			M.sp = Vector3(0.08 + 0.1 * hop, 0, 0); M.hd = Vector3(0.05 + 0.1 * hop, sin(3.0 * t) * 0.3, 0)
 			M.shl = 0.06 + 0.1 * hop; M.shr = M.shl
 			M.fl = _ft(-1.0, 0.07 * hop); M.fr = _ft(1.0, 0.07 * hop)
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
-				M["arm_" + sd] = [-1.55, 0, d * 0.2, 0, -d * (0.5 + 0.9 * hop), 0, 0]
+				M["arm_" + sd] = [-0.9 - 0.2 * hop, 0, d * (0.9 - 0.3 * hop), 0, -d * (1.6 + 0.2 * hop), 0, 0]       # hands open shoulder-width, elbows flared, then snap together in front of the sternum
 			M.fing_l = 0.0; M.fing_r = 0.0
 		"flex":        # alternates showing each bicep in a wide squat, torso turns into it, head turns to admire
 			var u := sin(TAU * t / 3.7)
@@ -993,7 +1012,7 @@ func _move(n: String, t: float) -> Dictionary:
 			var u := fmod(t / 2.8, 1.0)
 			var ex := clampf((u - 0.6) / 0.1, 0.0, 1.0) * (1.0 - clampf((u - 0.9) / 0.1, 0.0, 1.0)); var sw := 0.5 - 0.5 * cos(u * TAU)
 			var shk := sin(38.0 * t) * 0.04 * ex
-			M.pel = Vector3(0, 0.755, 0); M.sp = Vector3(-0.1 - 0.05 * sw + shk * 0.4, 0, 0)
+			M.pel = Vector3(0, 0.755 - 0.03 * ex, 0); M.sp = Vector3(-0.1 - 0.05 * sw + shk * 0.4, 0, 0)       # the shout drives him down into the stance
 			M.shl = 0.1 + 0.15 * sw + 0.12 * ex; M.shr = M.shl; M.hd = Vector3(-0.15, 0, 0)
 			M.fl = _ft(-1.0, 0.0, 0.0, 0.1); M.fr = _ft(1.0, 0.0, 0.0, 0.1); M.fyl = 0.4; M.fyr = 0.4
 			for sd in ["l", "r"]:
@@ -1035,7 +1054,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	_snap = snap; snap = false
 	var M := _move_hula(phase, bank)
 	if gk > 0.001:
-		_G = _move(gest_cur, _clock)
+		_G = _move(gest_cur, gest_t)
 		M = _mix(M, _G, gk)
 	else: _G = {}
 	root.rotation.y = yaw + bank * 0.35 + float(M.spin)
@@ -1064,7 +1083,8 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 		(j["toe_" + side] as Node3D).rotation = Vector3(-float(M["fp" + side]) * 0.6, 0, 0)
 		_shb[side] = float(M["sh" + side])
 		_arm(side, d, phase, bank, wave, hurt)
-	hoop_node.visible = gk < 0.5
+	hoop_node.visible = gk < 0.999
+	hoop_node.transparency = gk
 	hoop_node.position = Vector3(pp.x + c * 0.06, pp.y + 0.04, pp.z + s * 0.08)
 	hoop_node.rotation = Vector3(-s * 0.16, 0, c * 0.16)
 	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
