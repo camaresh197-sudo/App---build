@@ -617,41 +617,69 @@ func _thin_torus() -> TorusMesh:
 	var t := TorusMesh.new(); t.inner_radius = 0.985; t.outer_radius = 1.0; t.rings = 48; t.ring_segments = 6; return t
 
 # ---------- pose ----------
-# phase: hula cycle in radians. wave: 0..1 arm waving. hurt: 0..1.
-func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
-	var c := cos(phase); var s := sin(phase)
-	_gstep()
-	root.rotation.y = yaw + bank * 0.35
-	var pel: Node3D = j.pelvis
-	pel.position = Vector3(c * 0.1, 0.82 + sin(phase * 2.0) * 0.035, s * 0.08)
-	pel.rotation = Vector3(0, s * 0.17, -c * 0.12)
-	_spine_set(Vector3(0.03, -s * 0.1, c * 0.1 + bank * 0.12))
-	(j.neck as Node3D).rotation = Vector3(0, s * 0.06, -c * 0.05)
-	(j.head as Node3D).rotation = Vector3(0.04 + sin(phase * 2.0) * 0.03 + _fp("hp") * 1.0, look.x * 0.4 + s * 0.05 + _fp("hy") * 0.6, c * 0.05 + _fp("hr") * 0.8)
-	(j.chest as Node3D).rotation = Vector3(0, -s * 0.12, 0)
-	_secondary(phase, c)
-	if gk > 0.001: _gapply()
-	for side in ["l", "r"]:
-		var d := -1.0 if side == "l" else 1.0
-		var lift := maxf(0.0, c * (1.0 if side == "l" else -1.0))        # free foot: the side the pelvis is shifting away from
-		(j["hip_" + side] as Node3D).rotation = Vector3(-0.06 - 0.45 * lift + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.1, 0, d * (0.04 + 0.3 * lift) - c * 0.13)
-		(j["knee_" + side] as Node3D).rotation = Vector3(0.2 + 0.95 * lift + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.12, 0, 0)
-		(j["ankle_" + side] as Node3D).rotation = Vector3(-0.1 - 0.4 * lift, 0, c * 0.1 - d * 0.1 * lift)
-		(j["toe_" + side] as Node3D).rotation = Vector3.ZERO
-		(j["thigh_" + side] as Node3D).rotation = Vector3(0, d * (0.12 + 0.35 * lift), 0)
-		(j["shin_" + side] as Node3D).rotation = Vector3(0, -d * 0.2 * lift, 0)
-		(j["foot_" + side] as Node3D).rotation = Vector3(0.4 * lift, 0, 0)
-		(j["clav_" + side] as Node3D).rotation = Vector3.ZERO
-		if gk > 0.001: _gleg(side, d)
-		_arm(side, d, phase, bank, wave, hurt)
-	# hoop circles the waist
-	hoop_node.position = Vector3(c * 0.13, 0.86 + sin(phase * 2.0) * 0.018, s * 0.13)
-	hoop_node.rotation = Vector3(-s * 0.16, 0, c * 0.16)
-	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
-	face_update()
+# How he moves: every move is a "target" (pelvis, spine, chest, neck, head, shoulders, where each foot should be). Joints chase their targets through springs,
+# so everything has weight and follow-through. The legs are solved with two-bone IK from the pelvis down to the foot targets: feet stay planted on the floor,
+# knees and hips bend around them, and steps, taps and hops are just foot targets that move.
+const L1 := 0.36            # thigh length
+const L2 := 0.34            # shin length
+const FOOT_Y := 0.1         # ankle height of a planted foot
+const FOOT_X := 0.125       # half stance width
+const BPS := 2.0            # dance tempo: beats per second (120 bpm)
+var snap := false           # tests: jump straight to the targets, no springs
+var _snap := false
+var _sm := {}
+var _pdt := 0.016
+var _pms := 0
 
-# ---------- gestures: dance moves ported from the HTML hero ----------
-# gesture("dance"|"hips"|"clap"|"flex"|"power"|"hula"). The gesture is blended over the hula (out, then in). auto_dance cycles them like the title screen.
+func _spr(key: String, tgt, w := 16.0):
+	var st: Array = _sm.get(key, [])
+	if st.is_empty() or _snap:
+		_sm[key] = [tgt, tgt * 0.0]
+		return tgt
+	var x = st[0]; var v = st[1]
+	var n := 4; var h := _pdt / n
+	for _i in n:
+		var a = (tgt - x) * (w * w) - v * (2.0 * 0.9 * w)
+		v += a * h; x += v * h
+	st[0] = x; st[1] = v
+	return x
+
+func _neutral() -> Dictionary:
+	return {"pel": Vector3(0, 0.82, 0), "pr": Vector3.ZERO, "sp": Vector3(0.03, 0, 0), "ch": Vector3.ZERO, "nk": Vector3.ZERO, "hd": Vector3.ZERO, "shl": 0.0, "shr": 0.0,
+		"fl": Vector3(-FOOT_X, FOOT_Y, 0), "fr": Vector3(FOOT_X, FOOT_Y, 0), "fyl": 0.08, "fyr": 0.08, "fpl": 0.0, "fpr": 0.0, "spin": 0.0}
+
+const MKEYS := ["pel", "pr", "sp", "ch", "nk", "hd", "shl", "shr", "fl", "fr", "fyl", "fyr", "fpl", "fpr", "spin"]
+func _mix(a: Dictionary, b: Dictionary, k: float) -> Dictionary:
+	var o := {}
+	for key in MKEYS: o[key] = lerp(a[key], b[key], k)
+	return o
+
+func _move_hula(phase: float, bank: float) -> Dictionary:
+	var c := cos(phase); var s := sin(phase)
+	var M := _neutral()
+	M.pel = Vector3(c * 0.07, 0.815 + 0.012 * sin(phase * 2.0 + 0.5), s * 0.05)      # the hip circle
+	M.pr = Vector3(0, s * 0.15, -c * 0.11)
+	M.sp = Vector3(0.03, -s * 0.08, c * 0.09 + bank * 0.12)
+	M.ch = Vector3(0, -s * 0.1, 0)
+	M.nk = Vector3(0, s * 0.05, -c * 0.04)
+	var fl := maxf(0.0, c); var fr := maxf(0.0, -c)        # the foot opposite the hip's shift unweights: heel lifts a touch
+	M.fl = Vector3(-FOOT_X - 0.02 * fl, FOOT_Y + 0.03 * fl, 0); M.fpl = 0.3 * fl
+	M.fr = Vector3(FOOT_X + 0.02 * fr, FOOT_Y + 0.03 * fr, 0); M.fpr = 0.3 * fr
+	return M
+
+func _sd(i: int) -> float:       # alternating side per beat
+	return 1.0 if posmod(i, 2) == 0 else -1.0
+
+func _al(a: Array, b: Array, m: float) -> Array:
+	var o := []
+	for i in a.size(): o.append(lerpf(a[i], b[i], m))
+	return o
+
+func _ft(d: float, lift := 0.0, out := 0.0, wide := 0.0, fwd := 0.0) -> Vector3:      # a foot target: lift = height, out = sideways, fwd = forward
+	return Vector3(d * (FOOT_X + wide + out), FOOT_Y + lift, fwd)
+
+# ---------- gestures: dance moves ----------
+# gesture("dance"|"hips"|"clap"|"flex"|"power"|"hula"). The move is blended over the hula (out, then in). auto_dance cycles them like the title screen.
 var gest := "hula"          # what we want
 var gest_cur := "hula"      # what is on screen
 var gk := 0.0               # blend 0..1
@@ -664,7 +692,10 @@ func gesture(n: String) -> void:
 	gest = n
 
 func _gstep() -> void:
-	var dt := clampf(fixed_dt if fixed_dt > 0.0 else 0.016, 0.001, 0.1)
+	var now := Time.get_ticks_msec()
+	_pdt = fixed_dt if fixed_dt > 0.0 else clampf((now - _pms) / 1000.0, 0.001, 0.05)
+	_pms = now
+	var dt := _pdt
 	if auto_dance:
 		var ci := int(_clock / 3.2) % CYC.size()
 		if ci != _acyc:
@@ -678,122 +709,149 @@ func _gstep() -> void:
 		if gk <= 0.0: gk = 0.0; gest_cur = gest
 	elif gest_cur != "hula": gk = minf(1.0, gk + dt * 5.0)
 	else: gk = 0.0
-	if gk > 0.001: _G = _gdata(gest_cur, _clock)
 
-func _sd(i: int) -> float:       # alternating side per beat
-	return 1.0 if posmod(i, 2) == 0 else -1.0
-
-func _al(a: Array, b: Array, m: float) -> Array:
-	var o := []
-	for i in a.size(): o.append(lerpf(a[i], b[i], m))
-	return o
-
-# leg = [hip x, knee x, ankle x, hip z, toe x]; lift = how far the foot is raised (0..1)
-func _lg(d: float, lift: float, wide := 0.0) -> Array:
-	return [-0.06 - 0.65 * lift, 0.2 + 1.2 * lift, -0.1 - 0.5 * lift, d * (0.05 + wide + 0.22 * lift), -0.15 * lift, d * (0.12 + wide * 2.5 + 0.4 * lift), -d * 0.25 * lift, 0.5 * lift]
-
-func _gdata(n: String, t: float) -> Dictionary:
-	var G := {"px": 0.0, "py": 0.82, "pz": 0.0, "pch": 0.0, "pry": 0.0, "prz": 0.0, "sp": Vector3(0.03, 0, 0), "ch": Vector3.ZERO, "hd": Vector3.ZERO, "shl": 0.0, "shr": 0.0,
-		"leg_l": _lg(-1.0, 0.0), "leg_r": _lg(1.0, 0.0)}
+func _move(n: String, t: float) -> Dictionary:
+	var M := _neutral()
+	M.arm_l = [0, 0, -2.0, 0, -0.85, 0, 0]; M.arm_r = [0, 0, 2.0, 0, 0.85, 0, 0]
+	M.fing_l = 0.25; M.fing_r = 0.25
+	var b := t * BPS; var bi := int(floorf(b)); var bf := b - bi
+	var up := sin(PI * bf)
 	match n:
-		"dance":       # salsa on a beat clock: weight snaps side to side on every beat, arms hold a pose for two beats, the free foot taps between beats
-			var b := t * 2.0; var bi := int(floorf(b)); var bf := b - bi
-			var hit := 1.0 - pow(1.0 - bf, 3.0)                     # eases out: lands on the beat, then settles
-			var wp := lerpf(_sd(bi - 1), _sd(bi), hit)              # -1 .. 1: where the weight is
-			var up := sin(PI * bf)
+		"dance":       # salsa. Basic: weight rocks side to side on the beat with hip action (hips and chest counter-rotate), the free foot taps out between beats,
+			           # one arm styles high while the other holds low, swapping every two beats. Every 16 beats: a full right turn with both arms up.
+			var bp := fmod(b, 16.0)
+			var hit := 1.0 - pow(1.0 - bf, 3.0)
+			var spk := smoothstep(11.0, 12.0, bp) * (1.0 - smoothstep(15.0, 15.8, bp))
+			var wp := lerpf(_sd(bi - 1), _sd(bi), hit) * (1.0 - spk)
+			M.spin = smoothstep(12.0, 15.2, bp) * TAU
 			var pi_ := int(floorf(b / 2.0)); var af := b / 2.0 - pi_
-			var ap := lerpf(_sd(pi_ - 1), _sd(pi_), smoothstep(0.0, 0.3, af))       # which arm is high
+			var ap := lerpf(_sd(pi_ - 1), _sd(pi_), smoothstep(0.0, 0.3, af))
 			var pump := pow(1.0 - bf, 2.0)
-			G.px = wp * 0.08; G.py = 0.795 + 0.03 * up; G.pry = -wp * 0.13; G.prz = wp * 0.1
-			G.sp = Vector3(0.06, wp * 0.1, -wp * 0.05); G.ch = Vector3(0, wp * 0.28, wp * 0.04)
-			G.hd = Vector3(0.05 * pump, -wp * 0.18, -wp * 0.05)
-			G.shr = maxf(0.0, wp) * 0.16; G.shl = maxf(0.0, -wp) * 0.16
-			G.leg_l = _lg(-1.0, maxf(0.0, wp) * up * 0.7); G.leg_r = _lg(1.0, maxf(0.0, -wp) * up * 0.7)
-			var mr := 0.5 + 0.5 * ap
+			M.pel = Vector3(wp * 0.07, 0.80 + 0.028 * up - 0.02 * spk, 0)
+			M.pr = Vector3(0, -wp * 0.14, wp * 0.1)
+			M.sp = Vector3(0.05, wp * 0.08, -wp * 0.04)
+			M.ch = Vector3(0, wp * 0.26, wp * 0.03)
+			M.hd = Vector3(0.04 * pump, -wp * 0.12, -wp * 0.04)
+			M.shr = maxf(0.0, wp) * 0.15; M.shl = maxf(0.0, -wp) * 0.15
+			var fL := maxf(0.0, wp); var fR := maxf(0.0, -wp)
+			M.fl = _ft(-1.0, 0.05 * fL * up, 0.12 * fL * up, 0.0, 0.03 * fL * up); M.fpl = 0.45 * fL * up
+			M.fr = _ft(1.0, 0.05 * fR * up, 0.12 * fR * up, 0.0, 0.03 * fR * up); M.fpr = 0.45 * fR * up
+			var mr0 := 0.5 + 0.5 * ap
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
-				var m := mr if sd == "r" else 1.0 - mr
-				G["arm_" + sd] = _al([-0.5 + 0.12 * pump, 0, d * 0.5, 0, -d * 0.95, 0.2, 0], [-0.15, 0, d * (2.3 + 0.12 * pump), 0, d * 0.55, 0, d * 0.5 * (1.0 - bf)], m)
-		"hips":        # sassy: the hip pops out on each beat and holds, free foot taps, hands on hips
-			var b := t * 1.0; var bi := int(floorf(b)); var bf := b - bi
-			var hit := 1.0 - pow(1.0 - bf, 4.0)
-			var wp := lerpf(_sd(bi - 1), _sd(bi), hit)
-			var tap := sin(PI * minf(1.0, bf * 2.0)) * 0.6
-			G.px = wp * 0.06; G.py = 0.81; G.prz = wp * 0.13; G.pry = wp * 0.06
-			G.sp = Vector3(0.03, 0, -wp * 0.06); G.ch = Vector3(0, -wp * 0.1, -wp * 0.05); G.hd = Vector3(0, -wp * 0.22, -wp * 0.08)
-			G.leg_l = _lg(-1.0, maxf(0.0, wp) * tap); G.leg_r = _lg(1.0, maxf(0.0, -wp) * tap)
+				var m := lerpf(mr0 if sd == "r" else 1.0 - mr0, 1.0, spk)
+				M["arm_" + sd] = _al([-0.5 + 0.12 * pump, 0, d * 0.5, 0, -d * 0.95, 0.2, 0], [-0.15, 0, d * (2.3 + 0.12 * pump), 0, d * 0.55, 0, d * 0.5 * (1.0 - bf)], m)
+			M.fing_l = 0.12 + 0.1 * sin(9.0 * t); M.fing_r = 0.12 + 0.1 * sin(9.0 * t + 1.5)
+		"hips":        # sassy: the hip pops out on each (slow) beat and holds, the free foot touches out, hands on hips
+			var bh := t; var bj := int(floorf(bh)); var fh := bh - bj
+			var hit := 1.0 - pow(1.0 - fh, 4.0)
+			var wp := lerpf(_sd(bj - 1), _sd(bj), hit)
+			var tap := sin(PI * minf(1.0, fh * 2.0))
+			M.pel = Vector3(wp * 0.06, 0.81, 0); M.pr = Vector3(0, wp * 0.06, wp * 0.13)
+			M.sp = Vector3(0.03, 0, -wp * 0.06); M.ch = Vector3(0, -wp * 0.1, -wp * 0.05); M.hd = Vector3(0, -wp * 0.22, -wp * 0.08)
+			M.fl = _ft(-1.0, 0.03 * maxf(0.0, wp) * tap, 0.1 * maxf(0.0, wp) * tap); M.fr = _ft(1.0, 0.03 * maxf(0.0, -wp) * tap, 0.1 * maxf(0.0, -wp) * tap)
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
-				G["arm_" + sd] = [0.1, 0, d * (0.75 + 0.1 * maxf(0.0, d * wp)), 0, -d * 1.3, 0, 0]
-		"clap":        # front claps on the beat, little hops, head nods along
-			var c := absf(cos(11.0 * t)); var hop := 1.0 - c
-			G.py = 0.82 - 0.03 + 0.03 * hop; G.sp = Vector3(0.08 + 0.1 * hop, 0, 0); G.hd = Vector3(0.05 + 0.1 * hop, sin(3.0 * t) * 0.3, 0)
-			G.shl = 0.06 + 0.1 * hop; G.shr = G.shl
-			G.leg_l = _lg(-1.0, hop * 0.25); G.leg_r = _lg(1.0, hop * 0.25)
+				M["arm_" + sd] = [0.1, 0, d * (0.75 + 0.1 * maxf(0.0, d * wp)), 0, -d * 1.3, 0, 0]
+			M.fing_l = 0.3; M.fing_r = 0.3
+		"clap":        # front claps on the beat with little hops, head nods along
+			var c1 := absf(cos(11.0 * t)); var hop := 1.0 - c1
+			M.pel = Vector3(0, 0.79 + 0.035 * hop, 0)
+			M.sp = Vector3(0.08 + 0.1 * hop, 0, 0); M.hd = Vector3(0.05 + 0.1 * hop, sin(3.0 * t) * 0.3, 0)
+			M.shl = 0.06 + 0.1 * hop; M.shr = M.shl
+			M.fl = _ft(-1.0, 0.07 * hop); M.fr = _ft(1.0, 0.07 * hop)
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
-				G["arm_" + sd] = [-1.55, 0, d * 0.2, 0, -d * (0.5 + 0.9 * hop), 0, 0]
-		"flex":        # alternates showing each bicep, torso turns into it, head turns to admire
-			var u := sin(2.0 * PI * t / 3.7)
+				M["arm_" + sd] = [-1.55, 0, d * 0.2, 0, -d * (0.5 + 0.9 * hop), 0, 0]
+			M.fing_l = 0.0; M.fing_r = 0.0
+		"flex":        # alternates showing each bicep in a wide squat, torso turns into it, head turns to admire
+			var u := sin(TAU * t / 3.7)
 			var mr := smoothstep(0.05, 0.4, u); var ml := smoothstep(0.05, 0.4, -u); var dd := mr - ml
-			G.py = 0.79; G.sp = Vector3(0.0, -dd * 0.1, dd * 0.03); G.ch = Vector3(0, -dd * 0.25, dd * 0.04); G.hd = Vector3(-0.05, dd * 0.5, -dd * 0.1)
-			G.shr = mr * 0.25; G.shl = ml * 0.25
-			G.leg_l = _lg(-1.0, 0.0, 0.1); G.leg_r = _lg(1.0, 0.0, 0.1)
+			M.pel = Vector3(0, 0.765, 0); M.pr = Vector3(0, -dd * 0.08, 0)
+			M.sp = Vector3(0.0, -dd * 0.1, dd * 0.03); M.ch = Vector3(0, -dd * 0.25, dd * 0.04); M.hd = Vector3(-0.05, dd * 0.5, -dd * 0.1)
+			M.shr = mr * 0.25; M.shl = ml * 0.25
+			M.fl = _ft(-1.0, 0.0, 0.0, 0.09); M.fr = _ft(1.0, 0.0, 0.0, 0.09); M.fyl = 0.35; M.fyr = 0.35
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
 				var m := mr if sd == "r" else ml
-				G["arm_" + sd] = _al([0.1, 0, d * 0.5, 0, -d * 0.5, 0, 0], [-0.1, 0, d * 1.57, 0, d * 1.75, 0, 0], m)
-		"power":       # chest swells, then fists tight at the chest and shaking
-			var u := fmod(t / 2.8, 1.0); var ex := clampf((u - 0.6) / 0.1, 0.0, 1.0) * (1.0 - clampf((u - 0.9) / 0.1, 0.0, 1.0)); var sw := 0.5 - 0.5 * cos(u * TAU)
+				M["arm_" + sd] = _al([0.1, 0, d * 0.5, 0, -d * 0.5, 0, 0], [-0.1, 0, d * 1.57, 0, d * 1.75, 0, 0], m)
+			M.fing_r = lerpf(0.3, 1.0, mr); M.fing_l = lerpf(0.3, 1.0, ml)
+		"power":       # wide squat, chest swells, then fists tight at the chest and shaking
+			var u := fmod(t / 2.8, 1.0)
+			var ex := clampf((u - 0.6) / 0.1, 0.0, 1.0) * (1.0 - clampf((u - 0.9) / 0.1, 0.0, 1.0)); var sw := 0.5 - 0.5 * cos(u * TAU)
 			var shk := sin(38.0 * t) * 0.04 * ex
-			G.py = 0.78; G.sp = Vector3(-0.1 - 0.05 * sw + shk * 0.4, 0, 0); G.sh = 0.0; G.shl = 0.1 + 0.15 * sw + 0.12 * ex; G.shr = G.shl
-			G.hd = Vector3(-0.15, 0, 0); G.leg_l = _lg(-1.0, 0.0, 0.12); G.leg_r = _lg(1.0, 0.0, 0.12)
+			M.pel = Vector3(0, 0.755, 0); M.sp = Vector3(-0.1 - 0.05 * sw + shk * 0.4, 0, 0)
+			M.shl = 0.1 + 0.15 * sw + 0.12 * ex; M.shr = M.shl; M.hd = Vector3(-0.15, 0, 0)
+			M.fl = _ft(-1.0, 0.0, 0.0, 0.1); M.fr = _ft(1.0, 0.0, 0.0, 0.1); M.fyl = 0.4; M.fyr = 0.4
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
-				G["arm_" + sd] = [-0.7 + shk, 0, d * (0.85 + 0.1 * ex), 0, d * (1.9 + 0.1 * ex), 0, shk]
+				M["arm_" + sd] = [-0.7 + shk, 0, d * (0.85 + 0.1 * ex), 0, d * (1.9 + 0.1 * ex), 0, shk]
+			M.fing_l = 1.0; M.fing_r = 1.0
 		_:
-			for sd in ["l", "r"]:
-				var d := -1.0 if sd == "l" else 1.0
-				G["arm_" + sd] = [0, 0, d * 2.0, 0, d * 0.85, 0, 0]
-	var fv: float = {"dance": 0.05, "hips": 0.3, "clap": 0.0, "power": 1.0}.get(n, 0.25)      # finger curl per move
-	G.fing_l = fv; G.fing_r = fv
-	if n == "dance": G.fing_l = 0.12 + 0.12 * sin(14.0 * t); G.fing_r = 0.12 + 0.12 * sin(14.0 * t + 1.5)
-	if n == "flex":
-		var u2 := sin(2.0 * PI * t / 3.7)
-		G.fing_r = lerpf(0.3, 1.0, clampf(u2 * 2.0, 0.0, 1.0)); G.fing_l = lerpf(0.3, 1.0, clampf(-u2 * 2.0, 0.0, 1.0))
-	var k0 := Vector3(0.03, 0, 0)       # amplify: every swing about its rest value, bigger
-	G.px *= 1.1; G.pry *= 1.1; G.prz *= 1.1
-	G.sp = k0 + (G.sp as Vector3 - k0) * 1.1; G.ch = (G.ch as Vector3) * 1.1; G.hd = (G.hd as Vector3) * 1.0
-	G.shl *= 1.1; G.shr *= 1.1
-	return G
+			pass
+	return M
 
 func _spine_set(r: Vector3) -> void:       # the bend is shared between the lumbar and the mid-spine
 	(j.spine as Node3D).rotation = r * 0.5
 	(j.spine2 as Node3D).rotation = r * 0.5
 
-func _gapply() -> void:
-	var k := gk; var G := _G
-	var pel: Node3D = j.pelvis
-	pel.position = pel.position.lerp(Vector3(G.px, G.py, G.pz), k)
-	pel.rotation = pel.rotation.lerp(Vector3(G.pch, G.pry, G.prz), k)
-	_spine_set(((j.spine as Node3D).rotation * 2.0).lerp(G.sp, k))
-	var ch := j.chest as Node3D; ch.rotation = ch.rotation.lerp(G.ch, k)
-	var hd := j.head as Node3D; hd.rotation = hd.rotation + (G.hd as Vector3) * k * 0.6
-	(j.neck2 as Node3D).rotation = (G.hd as Vector3) * k * 0.4
-	hoop_node.visible = k < 0.5
+# two-bone leg IK: hip -> knee -> ankle reaches the foot target (in root space). Knee points forward (turned out by `out`), the foot is kept flat (pitch = toe down).
+func _leg_ik(side: String, d: float, tgt: Vector3, out: float, pitch: float) -> void:
+	var hip := j["hip_" + side] as Node3D
+	var kn := j["knee_" + side] as Node3D
+	var ank := j["ankle_" + side] as Node3D
+	var hp := hip.global_position
+	var v := root.to_global(tgt) - hp
+	var dist := clampf(v.length(), 0.2, L1 + L2 - 0.002)
+	var vh := v.normalized()
+	var ang := acos(clampf((L1 * L1 + dist * dist - L2 * L2) / (2.0 * L1 * dist), -1.0, 1.0))
+	var pole := (root.global_basis * Vector3(0, 0, 1)).rotated(vh, -d * out)
+	pole = (pole - vh * pole.dot(vh)).normalized()
+	var dir := (vh * cos(ang) + pole * sin(ang)).normalized()
+	var yv := -dir
+	var zv := (pole - dir * pole.dot(dir)).normalized()
+	var xv := yv.cross(zv).normalized()
+	hip.global_basis = Basis(xv, yv, zv)
+	var shin := ((hp + vh * dist) - (hp + dir * L1)).normalized()
+	kn.rotation = Vector3(acos(clampf(dir.dot(shin), -1.0, 1.0)), 0, 0)
+	ank.global_basis = root.global_basis * Basis(Vector3.UP, d * out) * Basis(Vector3.RIGHT, pitch)
 
-func _gleg(side: String, d: float) -> void:
-	var G := _G; var k := gk
-	var lg: Array = G["leg_" + side]
-	var plant := -(float(G.px) / 0.82 + float(G.prz) * 0.8) * 1.0      # keep the standing foot under the body while the pelvis swings
-	var hp := j["hip_" + side] as Node3D; hp.rotation = hp.rotation.lerp(Vector3(lg[0], 0, lg[3] + plant), k)
-	var kn := j["knee_" + side] as Node3D; kn.rotation = kn.rotation.lerp(Vector3(lg[1], 0, 0), k)
-	var an := j["ankle_" + side] as Node3D; an.rotation = an.rotation.lerp(Vector3(lg[2], 0, -lg[3] * 0.7), k)
-	(j["toe_" + side] as Node3D).rotation = Vector3(lg[4] * k, 0, 0)
-	var th := j["thigh_" + side] as Node3D; th.rotation = th.rotation.lerp(Vector3(0, lg[5], 0), k)
-	var sn := j["shin_" + side] as Node3D; sn.rotation = sn.rotation.lerp(Vector3(0, lg[6], 0), k)
-	var ft := j["foot_" + side] as Node3D; ft.rotation = ft.rotation.lerp(Vector3(lg[7], 0, 0), k)
-	(j["clav_" + side] as Node3D).rotation = Vector3(0, 0, d * float(G["sh" + side]) * 2.0 * k)
+func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
+	var c := cos(phase); var s := sin(phase)
+	_gstep()
+	_snap = snap; snap = false
+	var M := _move_hula(phase, bank)
+	if gk > 0.001:
+		_G = _move(gest_cur, _clock)
+		M = _mix(M, _G, gk)
+	else: _G = {}
+	root.rotation.y = yaw + bank * 0.35 + float(M.spin)
+	var pel: Node3D = j.pelvis
+	var pp: Vector3 = _spr("pel", M.pel, 18.0)
+	pel.position = pp
+	pel.rotation = _spr("pr", M.pr, 16.0)
+	_spine_set(_spr("sp", M.sp, 14.0))
+	(j.chest as Node3D).rotation = _spr("ch", M.ch, 15.0)
+	(j.neck as Node3D).rotation = _spr("nk", M.nk, 15.0)
+	var hd: Vector3 = _spr("hd", M.hd, 13.0)
+	(j.neck2 as Node3D).rotation = hd * 0.4
+	(j.head as Node3D).rotation = Vector3(0.04 + _fp("hp") * 1.0 + hd.x * 0.6, look.x * 0.4 + _fp("hy") * 0.6 + hd.y * 0.6, _fp("hr") * 0.8 + hd.z * 0.6)
+	_secondary(phase, c)
+	for side in ["l", "r"]:
+		var d := -1.0 if side == "l" else 1.0
+		var ft: Vector3 = _spr("f" + side, M["f" + side], 34.0)
+		_leg_ik(side, d, ft, float(M["fy" + side]), float(M["fp" + side]))
+		(j["thigh_" + side] as Node3D).rotation = Vector3.ZERO
+		(j["shin_" + side] as Node3D).rotation = Vector3.ZERO
+		(j["foot_" + side] as Node3D).rotation = Vector3.ZERO
+		(j["toe_" + side] as Node3D).rotation = Vector3(-float(M["fp" + side]) * 0.6, 0, 0)
+		(j["clav_" + side] as Node3D).rotation = Vector3(0, 0, d * float(M["sh" + side]) * 2.0)
+		_arm(side, d, phase, bank, wave, hurt)
+	hoop_node.visible = gk < 0.5
+	hoop_node.position = Vector3(pp.x + c * 0.06, pp.y + 0.04, pp.z + s * 0.08)
+	hoop_node.rotation = Vector3(-s * 0.16, 0, c * 0.16)
+	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
+	face_update()
 
 # upper-arm / forearm twist and the fingers. Fingers ripple in the hula (a wave runs across them); gestures set a curl (0 open .. 1 fist).
 func _hand_joints(side: String, d: float, ph: float, wave: float) -> void:
@@ -859,9 +917,9 @@ func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: 
 		sz = lerpf(sz, kz, arm_k); sx = lerpf(sx, k[1] + sx * sway, arm_k); sy = lerpf(sy, d * k[2] + sy * sway, arm_k)
 		ez = lerpf(ez, d * k[3], arm_k); ex = lerpf(ex, k[4] + ex * sway, arm_k)
 		hz = lerpf(hz, d * k[5] + hz * sway, arm_k); hx = lerpf(hx, k[6] + hx * sway, arm_k)
-	(j["shoulder_" + side] as Node3D).rotation = Vector3(sx, sy, sz)
-	(j["elbow_" + side] as Node3D).rotation = Vector3(ex, 0, ez)
-	(j["hand_" + side] as Node3D).rotation = Vector3(hx, 0, hz)
+	(j["shoulder_" + side] as Node3D).rotation = _spr("as" + side, Vector3(sx, sy, sz), 26.0)
+	(j["elbow_" + side] as Node3D).rotation = _spr("ae" + side, Vector3(ex, 0, ez), 28.0)
+	(j["hand_" + side] as Node3D).rotation = _spr("ah" + side, Vector3(hx, 0, hz), 30.0)
 
 # ---------- secondary motion: the hat and the hair lag behind the body and get thrown by the arms ----------
 var _hs := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]    # spring positions: hat x, hat z, hair l, hair r, hat lift, (spare)

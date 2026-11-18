@@ -51,6 +51,37 @@ func _ready() -> void:
 		lg.close()
 		get_tree().quit()
 		return
+	if a.size() > 4 and a[2] == "seq":
+		# continuous clip with the springs running: a[3]=gesture, a[4]=seconds; one png per frame at 24 fps
+		var hs = m.hero3d
+		m.set_process(false)
+		hs.fixed_dt = 1.0 / 24.0
+		hs.vp.size = Vector2i(420, 570)
+		hs.gesture(a[3])
+		var nf := int(float(a[4]) * 24.0)
+		for f in nf:
+			hs.pose(f / 24.0 * 3.2)
+			await get_tree().process_frame
+			hs.tex().get_image().save_png("%s/f%04d.png" % [a[0], f])
+		get_tree().quit()
+		return
+	if a.size() > 3 and a[2] == "views":
+		# a[3] = gesture; renders front / side / back / three-quarter at time a[4]
+		var hv = m.hero3d
+		m.set_process(false)
+		hv.fixed_dt = 1.0 / 30.0
+		hv.vp.size = Vector2i(600, 800)
+		hv.gesture(a[3]); hv.gest_cur = a[3]; hv.gk = 1.0 if a[3] != "hula" else 0.0
+		var k := 0
+		for yw in [0.0, 1.57, 3.14, -0.8]:
+			hv.yaw = yw
+			hv._clock = float(a[4]) if a.size() > 4 else 2.4
+			hv.snap = true; hv.pose(float(a[4]) * 3.2 if a.size() > 4 else 1.0)
+			await get_tree().process_frame
+			await get_tree().process_frame
+			hv.tex().get_image().save_png("%s/v%d.png" % [a[0], k]); k += 1
+		get_tree().quit()
+		return
 	if a.size() > 2 and a[2] == "auto":
 		# menu auto-dance test: simulate the title screen for 12 s, log gesture state
 		var ha = m.hero3d
@@ -72,7 +103,7 @@ func _ready() -> void:
 			hg.gesture(nm); hg.gest_cur = nm; hg.gk = 1.0
 			for fi in 6:
 				hg._clock = 2.0 + fi * 0.25
-				hg.pose(0.0)
+				hg.snap = true; hg.pose(0.0)
 				await get_tree().process_frame
 				await get_tree().process_frame
 				hg.tex().get_image().save_png("%s/%s_%d.png" % [a[0], nm, fi])
