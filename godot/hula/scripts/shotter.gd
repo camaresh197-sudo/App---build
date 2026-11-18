@@ -8,5 +8,11 @@ func _ready() -> void:
 	if a.size() > 3 and a[2] == "hub": m.menu.open_hub(int(a[3]))
 	var n := int(a[1])
 	for i in n: await get_tree().process_frame
-	get_viewport().get_texture().get_image().save_png(a[0])
+	if a.size() > 2 and a[2] == "herotex":
+		m.hero3d.pose(float(a[3]))
+		await get_tree().process_frame
+		await get_tree().process_frame
+		m.hero3d.tex().get_image().save_png(a[0])
+	else:
+		get_viewport().get_texture().get_image().save_png(a[0])
 	get_tree().quit()

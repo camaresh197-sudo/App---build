@@ -94,7 +94,7 @@ func title(R: float, t: float, hero: Callable, ship_tex: Array) -> void:
 	rrect(Rect2(rx, 92, 224, 30), Color("c0182f"), 4); rframe(Rect2(rx, 92, 224, 30), Color("ffd32a"), 1.5, 4)
 	ctxt(hx, 112, "SKY RIDE · DELUXE", 15, Color.WHITE)
 	# hero and orbiting ships
-	hero.call(Vector2(hx, 226), t)
+	hero.call(Vector2(hx, 214), t, 1.75)
 	for k in 6:
 		var a := t * 0.5 + k * TAU / 6.0
 		var p := Vector2(hx + cos(a) * 130, 230 + sin(a) * 38)
@@ -168,7 +168,7 @@ func pager(ox: float, pages: int) -> void:
 
 func wardrobe(ox: float, t: float, hero: Callable) -> void:
 	c.draw_circle(Vector2(ox + 120, 170), 90, Color(1, 0.7, 0.28, 0.28))
-	hero.call(Vector2(ox + 120, 200), t)
+	hero.call(Vector2(ox + 120, 190), t, 1.7)
 	var secs := [["hat", "SOMBREROS", 74], ["hoop", "HOOPS", 160], ["trail", "TRAILS", 246]]
 	for sc in secs:
 		var kind: String = sc[0]

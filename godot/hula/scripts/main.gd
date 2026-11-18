@@ -6,6 +6,7 @@ enum S { MENU, PLAY, OVER }
 const Save = preload("res://scripts/save.gd")
 const Menu = preload("res://scripts/menu.gd")
 var menu
+var hero3d
 var ship_tex: Array = []
 var state := S.MENU
 var t := 0.0
@@ -29,6 +30,7 @@ func _ready() -> void:
 	ship_tex = frames
 	Save.load_all()
 	menu = Menu.new(self)
+	hero3d = preload("res://scripts/hero3d.gd").new(); add_child(hero3d)
 
 var touch_start := Vector2.ZERO
 var player_start := Vector2.ZERO
@@ -132,15 +134,14 @@ func _sky(R: float) -> void:
 		var x := k * 150.0 - fmod(t * 20, 150.0)
 		draw_rect(Rect2(x, FH - 50 - (k * 17) % 40, 90, 120), Color("b5546e"))
 
-func _hero(p: Vector2, tm: float) -> void:
-	var bob := sin(tm * 4.0) * 3.0
-	if state == S.MENU: p.y -= 0.0
-	p += Vector2(0, bob)
-	draw_circle(p + Vector2(0, 30), 14, Color(0, 0, 0, 0.18))
-	draw_rect(Rect2(p + Vector2(-8, -4), Vector2(16, 26)), Color("c0392b"))
-	draw_circle(p + Vector2(0, -12), 8, Color("a8744f"))
-	draw_colored_polygon(PackedVector2Array([p + Vector2(-20, -16), p + Vector2(20, -16), p + Vector2(8, -24), p + Vector2(-8, -24)]), Color("f1e6c8"))
-	draw_arc(p + Vector2(0, 8), 19, 0, TAU, 28, Color("2ecc71"), 3.0)
+func _hero(p: Vector2, tm: float, k := 1.0) -> void:
+	# the 3D vaquero: posed, rendered in its own viewport, drawn here as a sprite (height ~ 76 field units)
+	hero3d.set_cos(int(Save.data.eq.hat), int(Save.data.eq.hoop), Save.defs.cos)
+	hero3d.pose(tm * 3.2)
+	var th: Texture2D = hero3d.tex()
+	var hh := 118.0 * k; var ww: float = hh * float(hero3d.VW) / float(hero3d.VH)
+	draw_circle(p + Vector2(0, 38 * k), 15 * k, Color(0, 0, 0, 0.16))
+	draw_texture_rect(th, Rect2(p - Vector2(ww / 2.0, hh * 0.52), Vector2(ww, hh)), false)
 
 func _ship(sh: Dictionary) -> void:
 	var d: Vector2 = sh.v.normalized()
