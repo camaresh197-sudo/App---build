@@ -949,11 +949,11 @@ func _move(n: String, t: float) -> Dictionary:
 			var land := smoothstep(15.1, 15.5, bp) * (1.0 - smoothstep(15.5, 16.0, bp))       # the last beat sinks into the knees
 			var te := smoothstep(12.0, 12.3, bp) * (1.0 - smoothstep(15.0, 15.4, bp))         # the feet only leave the floor while the turn is moving
 			var wp := lerpf(_sd(bi - 1), _sd(bi), hit) * (1.0 - spk)
-			M.spin = smoothstep(12.0, 15.2, bp) * TAU
+			M.spin = smoothstep(12.15, 14.9, bp) * TAU
 			var pv := sin((bp - 12.0) * PI * 3.0) * te                                        # three quick pivot steps through the turn
 			var nl := 0.05 * maxf(0.0, pv); var nr := 0.05 * maxf(0.0, -pv)
 			var pi_ := int(floorf(b / 2.0)); var af := b / 2.0 - pi_
-			var ap := lerpf(_sd(pi_ - 1), _sd(pi_), smoothstep(0.0, 0.3, af))
+			var ap := lerpf(_sd(pi_ - 1), _sd(pi_), smoothstep(0.65, 1.0, af))       # the styling arm leads the beat: it arrives as the beat lands
 			var pump := pow(1.0 - bf, 2.0)
 			M.pel = Vector3(wp * 0.07, 0.775 + 0.032 * up - 0.02 * spk - 0.02 * prep - 0.03 * land, 0)
 			M.pr = Vector3(0, -wp * 0.14, wp * 0.1)
