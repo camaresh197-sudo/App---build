@@ -131,7 +131,8 @@ func _build() -> void:
 	# torso / jacket
 	var spine := joint("spine", pel, Vector3(0, 0.07, 0))
 	put(spine, capsule(0.18, 0.52), cloth, Vector3(0, 0.22, 0), Vector3(1.0, 1.0, 0.75))
-	var chest := joint("chest", spine, Vector3(0, 0.3, 0))        # upper body twists on this, above the waist joint
+	var spine2 := joint("spine2", spine, Vector3(0, 0.15, 0))      # mid-spine: the back curves through three joints instead of two
+	var chest := joint("chest", spine2, Vector3(0, 0.15, 0))        # upper body twists on this, above the waist joint
 	put(chest, capsule(0.2, 0.3), cloth, Vector3(0, 0.03, 0), Vector3(1.08, 0.8, 0.72))
 	# collar & buttons
 	put(chest, TorusMesh.new(), gold, Vector3(0, 0.2, 0), Vector3(0.1, 0.1, 0.1))
@@ -145,7 +146,8 @@ func _build() -> void:
 	var neck := joint("neck", chest, Vector3(0, 0.2, 0))
 	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.07, 0), Vector3(0.14, 0.14, 0.14))      # the neck: runs from inside the collar up under the jaw
 	put(neck, sphere(0.09), skin, Vector3(0, -0.02, 0.0), Vector3(1.0, 0.6, 0.85))      # wide base: neck flares into the shoulders
-	var head := joint("head", neck, Vector3(0, 0.2, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
+	var neck2 := joint("neck2", neck, Vector3(0, 0.1, 0))       # upper neck: the head turns on this, the neck bends in two places
+	var head := joint("head", neck2, Vector3(0, 0.1, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
 	put(head, sphere(0.105), skin, Vector3(0, 0.0, 0), Vector3(0.93, 1.1, 1.0))
 	fr.jaw = put(head, sphere(0.06), skin, Vector3(0, -0.06, 0.02), Vector3(0.95, 0.75, 0.9))       # jaw
 	_face(head, skin, white, black)
@@ -174,16 +176,25 @@ func _build() -> void:
 		var clav := joint("clav_" + side, chest, Vector3(0.08 * s, 0.12, 0))       # collarbone: shrugs and rolls the shoulder
 		var sh := joint("shoulder_" + side, clav, Vector3(0.14 * s, 0, 0))
 		put(sh, sphere(0.075), cloth)
-		put(sh, capsule(0.062, 0.34), cloth, Vector3(0, -0.15, 0))
-		var el := joint("elbow_" + side, sh, Vector3(0, -0.3, 0))
+		var ua := joint("uarm_" + side, sh, Vector3.ZERO)             # upper-arm twist
+		put(ua, capsule(0.062, 0.34), cloth, Vector3(0, -0.15, 0))
+		var el := joint("elbow_" + side, ua, Vector3(0, -0.3, 0))
 		put(el, sphere(0.058), cloth)
-		put(el, capsule(0.052, 0.3), cloth, Vector3(0, -0.13, 0))
-		put(el, CylinderMesh.new(), white, Vector3(0, -0.27, 0), Vector3(0.062, 0.04, 0.062))
-		put(el, CylinderMesh.new(), gold, Vector3(0, -0.245, 0), Vector3(0.066, 0.012, 0.066))
-		var hd := joint("hand_" + side, el, Vector3(0, -0.3, 0))
+		var fo_ := joint("fore_" + side, el, Vector3.ZERO)             # forearm twist (palm turns)
+		put(fo_, capsule(0.052, 0.3), cloth, Vector3(0, -0.13, 0))
+		put(fo_, CylinderMesh.new(), white, Vector3(0, -0.27, 0), Vector3(0.062, 0.04, 0.062))
+		put(fo_, CylinderMesh.new(), gold, Vector3(0, -0.245, 0), Vector3(0.066, 0.012, 0.066))
+		var hd := joint("hand_" + side, fo_, Vector3(0, -0.3, 0))      # wrist
 		put(hd, sphere(0.052), skin, Vector3(0, -0.04, 0), Vector3(1.0, 1.15, 0.7))
-		for f in 4: put(hd, capsule(0.012, 0.07), skin, Vector3((-0.03 + f * 0.02), -0.1, 0), Vector3(1, 1, 1), Vector3(0, 0, (f - 1.5) * 0.12))
-		put(hd, capsule(0.013, 0.06), skin, Vector3(0.045 * s, -0.05, 0.01), Vector3(1, 1, 1), Vector3(0, 0, -0.9 * s))
+		for f in 4:            # four fingers, two joints each
+			var f1 := joint("fg%d_%s" % [f, side], hd, Vector3(-0.03 + f * 0.02, -0.075, 0))
+			f1.rotation = Vector3(0, 0, (f - 1.5) * 0.12)
+			put(f1, capsule(0.012, 0.045 + (0.008 if f == 1 or f == 2 else 0.0)), skin, Vector3(0, -0.024, 0))
+			var f2 := joint("fh%d_%s" % [f, side], f1, Vector3(0, -0.048, 0))
+			put(f2, capsule(0.011, 0.04), skin, Vector3(0, -0.02, 0))
+		var tb := joint("thumb_" + side, hd, Vector3(0.04 * s, -0.045, 0.012))   # thumb
+		tb.rotation = Vector3(0, 0, -0.9 * s)
+		put(tb, capsule(0.013, 0.05), skin, Vector3(0, -0.026, 0))
 	# hoop
 	hoop_mat = mat(Color.WHITE, 0.35, 0.05)
 	hoop_mat.albedo_texture = stripe_tex(Color("1e8449"), Color("58d68d"))
@@ -609,19 +620,19 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	_gstep()
 	root.rotation.y = yaw + bank * 0.35
 	var pel: Node3D = j.pelvis
-	pel.position = Vector3(c * 0.06, 0.82 + sin(phase * 2.0) * 0.018, s * 0.05)
-	pel.rotation = Vector3(0, s * 0.1, -c * 0.08)
-	(j.spine as Node3D).rotation = Vector3(0.03, -s * 0.08, c * 0.075 + bank * 0.12)
-	(j.neck as Node3D).rotation = Vector3(0, s * 0.05, -c * 0.04)
+	pel.position = Vector3(c * 0.1, 0.82 + sin(phase * 2.0) * 0.035, s * 0.08)
+	pel.rotation = Vector3(0, s * 0.24, -c * 0.17)
+	_spine_set(Vector3(0.03 + 0.05 * sin(phase * 2.0 + 0.6), -s * 0.14, c * 0.15 + bank * 0.12))
+	(j.neck as Node3D).rotation = Vector3(0, s * 0.09, -c * 0.08)
 	(j.head as Node3D).rotation = Vector3(0.04 + sin(phase * 2.0) * 0.03 + _fp("hp") * 1.0, look.x * 0.4 + s * 0.05 + _fp("hy") * 0.6, c * 0.05 + _fp("hr") * 0.8)
-	(j.chest as Node3D).rotation = Vector3(0, -s * 0.03, 0)
+	(j.chest as Node3D).rotation = Vector3(0, -s * 0.2, c * 0.04)
 	_secondary(phase, c)
 	if gk > 0.001: _gapply()
 	for side in ["l", "r"]:
 		var d := -1.0 if side == "l" else 1.0
-		(j["hip_" + side] as Node3D).rotation = Vector3(sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.07 - 0.04, 0, d * 0.03 - c * 0.04)
-		(j["knee_" + side] as Node3D).rotation = Vector3(0.1 + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.1, 0, 0)
-		(j["ankle_" + side] as Node3D).rotation = Vector3(-0.05, 0, 0)
+		(j["hip_" + side] as Node3D).rotation = Vector3(sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.2 - 0.06, 0, d * 0.04 - c * 0.1)
+		(j["knee_" + side] as Node3D).rotation = Vector3(0.2 + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.22, 0, 0)
+		(j["ankle_" + side] as Node3D).rotation = Vector3(-0.1 - sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.12, 0, c * 0.05)
 		(j["toe_" + side] as Node3D).rotation = Vector3.ZERO
 		(j["clav_" + side] as Node3D).rotation = Vector3.ZERO
 		if gk > 0.001: _gleg(side, d)
@@ -638,6 +649,7 @@ var gest := "hula"          # what we want
 var gest_cur := "hula"      # what is on screen
 var gk := 0.0               # blend 0..1
 var auto_dance := false
+const GMOOD := {"hula": "grin", "dance": "joy", "hips": "smug", "clap": "delight", "flex": "proud", "power": "battle_cry"}
 var _G := {}
 var _acyc := -1
 const CYC := [["dance", ""], ["hips", ""], ["dance", ""], ["clap", ""], ["flex", ""], ["hula", "cheer"], ["dance", ""], ["power", ""], ["hula", ""]]
@@ -653,6 +665,7 @@ func _gstep() -> void:
 			if CYC[ci][1] != "": arm_kick(CYC[ci][1], 2.2)
 	elif _acyc != -1:
 		_acyc = -1; gest = "hula"
+	if auto_dance: mood("joy" if (arm_t > 0.0 and arm_n == "cheer") else GMOOD.get(gest, "grin"))      # title screen: face matches the move
 	if gest_cur != gest:
 		gk -= dt * 5.0
 		if gk <= 0.0: gk = 0.0; gest_cur = gest
@@ -667,7 +680,7 @@ func _al(a: Array, b: Array, m: float) -> Array:
 
 # leg = [hip x, knee x, ankle x, hip z, toe x]; lift = how far the foot is raised (0..1)
 func _lg(d: float, lift: float, wide := 0.0) -> Array:
-	return [-0.05 - 0.4 * lift, 0.15 + 0.85 * lift, -0.1 - 0.35 * lift, d * (0.04 + wide), -0.1 * lift]
+	return [-0.06 - 0.65 * lift, 0.2 + 1.2 * lift, -0.1 - 0.5 * lift, d * (0.05 + wide), -0.15 * lift]
 
 func _gdata(n: String, t: float) -> Dictionary:
 	var G := {"px": 0.0, "py": 0.82, "pz": 0.0, "pch": 0.0, "pry": 0.0, "prz": 0.0, "sp": Vector3(0.03, 0, 0), "ch": Vector3.ZERO, "hd": Vector3.ZERO, "shl": 0.0, "shr": 0.0,
@@ -723,16 +736,31 @@ func _gdata(n: String, t: float) -> Dictionary:
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
 				G["arm_" + sd] = [0, 0, d * 2.0, 0, d * 0.85, 0, 0]
+	var fv: float = {"dance": 0.05, "hips": 0.3, "clap": 0.0, "power": 1.0}.get(n, 0.25)      # finger curl per move
+	G.fing_l = fv; G.fing_r = fv
+	if n == "dance": G.fing_l = 0.12 + 0.12 * sin(14.0 * t); G.fing_r = 0.12 + 0.12 * sin(14.0 * t + 1.5)
+	if n == "flex":
+		var u2 := sin(2.0 * PI * t / 3.7)
+		G.fing_r = lerpf(0.3, 1.0, clampf(u2 * 2.0, 0.0, 1.0)); G.fing_l = lerpf(0.3, 1.0, clampf(-u2 * 2.0, 0.0, 1.0))
+	var k0 := Vector3(0.03, 0, 0)       # amplify: every swing about its rest value, bigger
+	G.px *= 1.45; G.pry *= 1.5; G.prz *= 1.5
+	G.sp = k0 + (G.sp as Vector3 - k0) * 1.5; G.ch = (G.ch as Vector3) * 1.5; G.hd = (G.hd as Vector3) * 1.35
+	G.shl *= 1.5; G.shr *= 1.5
 	return G
+
+func _spine_set(r: Vector3) -> void:       # the bend is shared between the lumbar and the mid-spine
+	(j.spine as Node3D).rotation = r * 0.5
+	(j.spine2 as Node3D).rotation = r * 0.5
 
 func _gapply() -> void:
 	var k := gk; var G := _G
 	var pel: Node3D = j.pelvis
 	pel.position = pel.position.lerp(Vector3(G.px, G.py, G.pz), k)
 	pel.rotation = pel.rotation.lerp(Vector3(G.pch, G.pry, G.prz), k)
-	var sp := j.spine as Node3D; sp.rotation = sp.rotation.lerp(G.sp, k)
+	_spine_set(((j.spine as Node3D).rotation * 2.0).lerp(G.sp, k))
 	var ch := j.chest as Node3D; ch.rotation = ch.rotation.lerp(G.ch, k)
-	var hd := j.head as Node3D; hd.rotation = hd.rotation + (G.hd as Vector3) * k
+	var hd := j.head as Node3D; hd.rotation = hd.rotation + (G.hd as Vector3) * k * 0.6
+	(j.neck2 as Node3D).rotation = (G.hd as Vector3) * k * 0.4
 	hoop_node.visible = k < 0.5
 
 func _gleg(side: String, d: float) -> void:
@@ -743,6 +771,22 @@ func _gleg(side: String, d: float) -> void:
 	var an := j["ankle_" + side] as Node3D; an.rotation = an.rotation.lerp(Vector3(lg[2], 0, -lg[3] * 0.7), k)
 	(j["toe_" + side] as Node3D).rotation = Vector3(lg[4] * k, 0, 0)
 	(j["clav_" + side] as Node3D).rotation = Vector3(0, 0, d * float(G["sh" + side]) * 2.0 * k)
+
+# upper-arm / forearm twist and the fingers. Fingers ripple in the hula (a wave runs across them); gestures set a curl (0 open .. 1 fist).
+func _hand_joints(side: String, d: float, ph: float, wave: float) -> void:
+	var tw := wave * (1.0 - gk)
+	(j["uarm_" + side] as Node3D).rotation = Vector3(0, d * 0.35 * sin(ph - 0.3) * tw, 0)
+	(j["fore_" + side] as Node3D).rotation = Vector3(0, d * 0.7 * sin(ph - 1.0) * tw, 0)
+	var curl := 0.25
+	if gk > 0.001 and _G.has("fing_" + side): curl = lerpf(curl, _G["fing_" + side], gk)
+	if arm_k > 0.001 and arm_n == "cheer": curl = lerpf(curl, 0.0, arm_k)        # cheering: hands wide open
+	elif arm_k > 0.001 and arm_n == "flinch": curl = lerpf(curl, 0.7, arm_k)
+	for f in 4:
+		var rip := (sin(ph * 2.0 - f * 0.55) * 0.5 + 0.5) * (1.0 - curl) * 0.5 * (1.0 - gk * 0.5) if wave > 0.01 else 0.0
+		var a := -(curl * 1.45 + rip)       # negative x curls toward the front
+		(j["fg%d_%s" % [f, side]] as Node3D).rotation = Vector3(a, 0, (f - 1.5) * 0.12 * (1.0 + (1.0 - curl) * 0.8))
+		(j["fh%d_%s" % [f, side]] as Node3D).rotation = Vector3(a * 1.15, 0, 0)
+	(j["thumb_" + side] as Node3D).rotation = Vector3(-curl * 0.6, 0, -0.9 * d * (1.0 - curl * 0.4))
 
 # ---------- arms ----------
 # Flowing hula arms: a wave travels shoulder -> elbow -> wrist (each joint lags the one before), arms in counter-phase, with fore/aft swing and a little twist.
@@ -764,19 +808,20 @@ const ARM_K := {
 func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void:
 	var ph := phase + (0.0 if side == "l" else PI)
 	var a_sw := sin(ph); var a_el := sin(ph - 0.7); var a_hd := sin(ph - 1.4)
-	var sz_a := 2.0 + 0.25 * a_sw * wave - bank * 0.25 * d
-	var sx := 0.32 * sin(ph - 0.5) * wave + 0.04 * sin(_clock * 1.6 + (0.0 if side == "l" else 1.0))
-	var sy := d * 0.28 * cos(ph) * wave
-	var ez_a := 0.55 + 0.2 * (0.5 + 0.5 * a_el) * wave + 0.3 * wave
+	var sz_a := 2.0 + 0.4 * a_sw * wave - bank * 0.25 * d
+	var sx := 0.55 * sin(ph - 0.5) * wave + 0.04 * sin(_clock * 1.6 + (0.0 if side == "l" else 1.0))
+	var sy := d * 0.45 * cos(ph) * wave
+	var ez_a := 0.5 + 0.35 * (0.5 + 0.5 * a_el) * wave + 0.3 * wave
 	ez_a = minf(ez_a, (PI - sz_a) - 0.1)       # forearm never leans in past vertical: keeps the hands outside the hat brim
 	var sz := d * sz_a
 	var ez := d * ez_a
-	var ex := 0.25 * hurt + 0.22 * a_el * wave
-	var hz := d * 0.55 * a_hd * wave
-	var hx := 0.4 * sin(ph - 2.0) * wave
+	var ex := 0.25 * hurt + 0.4 * a_el * wave
+	var hz := d * 0.8 * a_hd * wave
+	var hx := 0.6 * sin(ph - 2.0) * wave
 	if gk > 0.001 and _G.has("arm_" + side):       # gesture arms
 		var ga: Array = _G["arm_" + side]       # [shoulder x, y, z, elbow x, z, hand x, z]
 		sx = lerpf(sx, ga[0], gk); sy = lerpf(sy, ga[1], gk); sz = lerpf(sz, ga[2], gk); ex = lerpf(ex, ga[3], gk); ez = lerpf(ez, ga[4], gk); hx = lerpf(hx, ga[5], gk); hz = lerpf(hz, ga[6], gk)
+	_hand_joints(side, d, ph, wave)
 	# reaction blend
 	var dt := clampf(fixed_dt if fixed_dt > 0.0 else 0.016, 0.001, 0.1)
 	if side == "l":                     # advance once per frame
