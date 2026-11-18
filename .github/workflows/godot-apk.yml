@@ -26,7 +26,7 @@ jobs:
           mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot 2>/dev/null || sudo mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
       - name: Debug keystore and editor settings
         run: |
-          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+          cp godot/debug.keystore debug.keystore   # fixed key, so every new APK installs over the last one
           mkdir -p ~/.config/godot godot_tmp
           (cd godot/hula && godot --headless --import || true)
           cat > ~/.config/godot/editor_settings-4.4.tres <<EOF
