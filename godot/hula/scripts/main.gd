@@ -59,7 +59,7 @@ func _to_field(p: Vector2) -> Vector2:
 	return get_canvas_transform().affine_inverse() * p
 
 func start_run() -> void:
-	hero3d.mood("grin"); hero3d.gaze = Vector2.ZERO
+	hero3d.arm_clear(); hero3d.mood("grin"); hero3d.gaze = Vector2.ZERO
 	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
 	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
 	snd.start_music()
@@ -98,18 +98,18 @@ func _process(dt: float) -> void:
 			sh.v = sh.v.lerp(to_p * 110.0, dt * 0.8) + Vector2(0, sin(sh.ph * 2.0) * 40.0 * dt)
 			sh.p += sh.v * dt
 			if sh.p.distance_to(player) < 26.0:
-				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt"); hero3d.react("pain", 0.6)
+				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt"); hero3d.react("pain", 0.6); hero3d.arm_kick("flinch", 0.5)
 			for s in shots:
 				if s.p.distance_to(sh.p) < 22.0: sh.hp -= 1; s.p.x = 9999; snd.sfx("hit")
 		for sh in ships:
 			if sh.hp <= 0:
 				score += 10; snd.sfx("pop"); _combo += 1; _combo_t = 1.6
-				if _combo % 5 == 0: hero3d.react("laugh", 1.1)
+				if _combo % 5 == 0: hero3d.react("laugh", 1.1); hero3d.arm_kick("cheer", 1.1)
 				for k in 8: pops.append({"p": sh.p, "v": Vector2.from_angle(randf() * TAU) * randf_range(40, 190), "life": 0.5})
 		ships = ships.filter(func(sh): return sh.hp > 0 and sh.p.x > -60)
 		shots = shots.filter(func(s): return s.p.x < 9000)
 		_director(dt)
-		if hp <= 0: state = S.OVER; snd.stop_music(); hero3d.mood("despair"); hero3d.gaze = Vector2(0.0, -0.7)
+		if hp <= 0: state = S.OVER; snd.stop_music(); hero3d.mood("despair"); hero3d.arm_kick("limp", 999.0); hero3d.gaze = Vector2(0.0, -0.7)
 	for p in pops:
 		p.p += p.v * dt; p.life -= dt
 	pops = pops.filter(func(p): return p.life > 0)
@@ -129,7 +129,7 @@ func _director(dt: float) -> void:
 	if nd < 1e8: hero3d.gaze = Vector2(clampf((nearest.x - player.x) / 220.0, -1.0, 1.0), clampf(-(nearest.y - player.y) / 120.0, -1.0, 1.0))
 	else: hero3d.gaze = Vector2(0.6, 0.0)
 	hero3d.look = Vector2(hero3d.gaze.x * 0.5, 0.0)
-	if nd < 70.0 and hero3d.react_t <= 0.0: hero3d.react("startled", 0.35)
+	if nd < 70.0 and hero3d.react_t <= 0.0: hero3d.react("startled", 0.35); hero3d.arm_kick("flinch", 0.3)
 	hero3d.mood("afraid" if hp <= 25.0 else ("worried" if hp <= 50.0 else ("determined" if ships.size() >= 5 else "grin")))
 
 func _right() -> float:

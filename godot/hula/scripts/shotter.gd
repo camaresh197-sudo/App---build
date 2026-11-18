@@ -34,6 +34,22 @@ func _ready() -> void:
 			h3.ptex().get_image().save_png("%s/f%04d.png" % [a[0], f])
 		get_tree().quit()
 		return
+	if a.size() > 2 and a[2] == "arms":
+		# arm test: a[0]=out dir. Four phases of the hula sweep, then each reaction held, one png (whole body) per pose.
+		var h4 = m.hero3d
+		m.set_process(false)
+		h4.fixed_dt = 1.0 / 30.0
+		h4.vp.size = Vector2i(420, 570)
+		var poses := [["w0", "", 0.0], ["w1", "", 1.57], ["w2", "", 3.14], ["w3", "", 4.71], ["flinch", "flinch", 0.0], ["cheer", "cheer", 0.0], ["limp", "limp", 0.0]]
+		for ps in poses:
+			h4.arm_kick(ps[1], 999.0 if ps[1] != "" else 0.0)
+			for i in 40:
+				h4.pose(ps[2])
+			await get_tree().process_frame
+			await get_tree().process_frame
+			h4.tex().get_image().save_png("%s/%s.png" % [a[0], ps[0]])
+		get_tree().quit()
+		return
 	if a.size() > 2 and a[2] == "portrait":
 		var h2 = m.hero3d
 		m.start_run()

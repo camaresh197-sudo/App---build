@@ -612,15 +612,57 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 		(j["hip_" + side] as Node3D).rotation = Vector3(sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.07 - 0.04, 0, d * 0.03 - c * 0.04)
 		(j["knee_" + side] as Node3D).rotation = Vector3(0.1 + sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.1, 0, 0)
 		(j["ankle_" + side] as Node3D).rotation = Vector3(-0.05, 0, 0)
-		var w := sin(phase * 1.0 + (0.0 if side == "l" else PI)) * wave
-		(j["shoulder_" + side] as Node3D).rotation = Vector3(0.0, 0, d * (2.45 + w * 0.2))
-		(j["elbow_" + side] as Node3D).rotation = Vector3(0.25 * hurt, 0, d * (0.6 + (0.5 + 0.5 * w) * 0.4 * wave))
-		(j["hand_" + side] as Node3D).rotation = Vector3(0, 0, d * w * 0.35)
+		_arm(side, d, phase, bank, wave, hurt)
 	# hoop circles the waist
 	hoop_node.position = Vector3(c * 0.13, 0.86 + sin(phase * 2.0) * 0.018, s * 0.13)
 	hoop_node.rotation = Vector3(-s * 0.16, 0, c * 0.16)
 	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
 	face_update()
+
+# ---------- arms ----------
+# Flowing hula arms: a wave travels shoulder -> elbow -> wrist (each joint lags the one before), arms in counter-phase, with fore/aft swing and a little twist.
+# arm_kick(name, secs) layers a reaction on top: "flinch" (guard up), "cheer" (arms high, pumping), "limp" (arms drop). secs >= 99 holds it until arm_kick("", 0).
+var arm_n := ""
+var arm_t := 0.0
+var arm_k := 0.0
+func arm_kick(n: String, secs := 0.6) -> void:
+	arm_n = n; arm_t = secs
+func arm_clear() -> void:
+	arm_t = 0.0
+
+# reaction targets: [shoulder z, shoulder x, shoulder y, elbow z, elbow x, hand z, hand x, sway amount]
+const ARM_K := {
+	"flinch": [0.75, -0.5, 0.0, 2.3, 0.0, 0.0, 0.0, 0.0],
+	"cheer": [2.95, 0.0, 0.0, 0.3, 0.0, 0.2, 0.0, 1.0],
+	"limp": [0.28, 0.1, 0.0, 0.12, 0.1, 0.0, 0.1, 0.25],
+}
+func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void:
+	var ph := phase + (0.0 if side == "l" else PI)
+	var a_sw := sin(ph); var a_el := sin(ph - 0.7); var a_hd := sin(ph - 1.4)
+	var sz := d * (2.2 + 0.3 * a_sw * wave) - d * bank * 0.25
+	var sx := 0.32 * sin(ph - 0.5) * wave + 0.04 * sin(_clock * 1.6 + (0.0 if side == "l" else 1.0))
+	var sy := d * 0.28 * cos(ph) * wave
+	var ez := d * (0.55 + 0.2 * (0.5 + 0.5 * a_el) * wave + 0.3 * wave)
+	var ex := 0.25 * hurt + 0.22 * a_el * wave
+	var hz := d * 0.55 * a_hd * wave
+	var hx := 0.4 * sin(ph - 2.0) * wave
+	# reaction blend
+	var dt := clampf(fixed_dt if fixed_dt > 0.0 else 0.016, 0.001, 0.1)
+	if side == "l":                     # advance once per frame
+		if arm_t > 0.0: arm_t -= dt if arm_t < 99.0 else 0.0
+		var tgt := 1.0 if arm_t > 0.0 and ARM_K.has(arm_n) else 0.0
+		arm_k = move_toward(arm_k, tgt, dt * (9.0 if tgt > arm_k else 3.5))
+	if arm_k > 0.001 and ARM_K.has(arm_n):
+		var k: Array = ARM_K[arm_n]
+		var sway: float = k[7]
+		var pump := sin(_clock * 11.0 + (0.0 if side == "l" else PI)) * 0.18 if arm_n == "cheer" else sin(_clock * 1.4 + (0.0 if side == "l" else PI)) * 0.06
+		var kz: float = d * (k[0] + pump)
+		sz = lerpf(sz, kz, arm_k); sx = lerpf(sx, k[1] + sx * sway, arm_k); sy = lerpf(sy, d * k[2] + sy * sway, arm_k)
+		ez = lerpf(ez, d * k[3], arm_k); ex = lerpf(ex, k[4] + ex * sway, arm_k)
+		hz = lerpf(hz, d * k[5] + hz * sway, arm_k); hx = lerpf(hx, k[6] + hx * sway, arm_k)
+	(j["shoulder_" + side] as Node3D).rotation = Vector3(sx, sy, sz)
+	(j["elbow_" + side] as Node3D).rotation = Vector3(ex, 0, ez)
+	(j["hand_" + side] as Node3D).rotation = Vector3(hx, 0, hz)
 
 func set_hoop(col_a: Color, col_b: Color) -> void:
 	hoop_mat.albedo_texture = stripe_tex(col_a, col_b)
