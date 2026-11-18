@@ -27,7 +27,8 @@ jobs:
       - name: Debug keystore and editor settings
         run: |
           keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android -keystore debug.keystore -storepass android -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
-          mkdir -p ~/.config/godot
+          mkdir -p ~/.config/godot godot_tmp
+          (cd godot/hula && godot --headless --import || true)
           cat > ~/.config/godot/editor_settings-4.4.tres <<EOF
           [gd_resource type="EditorSettings" format=3]
           [resource]
@@ -41,11 +42,7 @@ jobs:
         working-directory: godot/hula
         run: |
           mkdir -p build
-          godot --headless --import || true
-          ls $ANDROID_HOME $ANDROID_HOME/build-tools $ANDROID_HOME/platforms $ANDROID_HOME/cmdline-tools || true
-          ls ~/.local/share/godot/export_templates/${GODOT_VER}.stable | head -30
-          cat ~/.config/godot/editor_settings-4.4.tres
-          godot --headless --verbose --export-debug Android build/HulaVaquero.apk
+          godot --headless --export-debug Android build/HulaVaquero.apk
       - uses: actions/upload-artifact@v4
         with:
           name: HulaVaquero-godot-apk
