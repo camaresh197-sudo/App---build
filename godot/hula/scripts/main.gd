@@ -31,7 +31,10 @@ func _ready() -> void:
 	Save.load_all()
 	menu = Menu.new(self)
 	hero3d = preload("res://scripts/hero3d.gd").new(); add_child(hero3d)
+	snd = preload("res://scripts/sound.gd").new(); add_child(snd)
 
+var snd: Node
+var _vm := -1
 var touch_start := Vector2.ZERO
 var player_start := Vector2.ZERO
 
@@ -43,7 +46,7 @@ func _input(e: InputEvent) -> void:
 		if e.pressed:
 			for b in buttons:
 				if (b[0] as Rect2).has_point(pos):
-					(b[1] as Callable).call(); return
+					snd.sfx("click"); (b[1] as Callable).call(); return
 			if state == S.PLAY and touch_id == -1:
 				touch_id = e.index; touch_start = pos; player_start = player; target = player
 		elif e.index == touch_id:
@@ -57,10 +60,13 @@ func _to_field(p: Vector2) -> Vector2:
 func start_run() -> void:
 	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
 	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
+	snd.start_music()
 
 var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
+	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
+	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
 	if not _confirmed and Time.get_ticks_msec() > 4000:
 		_confirmed = true; Updater.confirm_good()
 	if state == S.PLAY:
@@ -69,7 +75,7 @@ func _process(dt: float) -> void:
 		fire_cd -= dt
 		if fire_cd <= 0.0:
 			fire_cd = 0.22
-			shots.append({"p": player + Vector2(18, -4), "v": Vector2(560, 0)})
+			shots.append({"p": player + Vector2(18, -4), "v": Vector2(560, 0)}); snd.sfx("shoot")
 		spawn_cd -= dt
 		if spawn_cd <= 0.0:
 			spawn_cd = max(0.45, 1.3 - t * 0.012)
@@ -82,16 +88,16 @@ func _process(dt: float) -> void:
 			sh.v = sh.v.lerp(to_p * 110.0, dt * 0.8) + Vector2(0, sin(sh.ph * 2.0) * 40.0 * dt)
 			sh.p += sh.v * dt
 			if sh.p.distance_to(player) < 26.0:
-				sh.hp = 0; hp -= 12.0; shake = 0.25
+				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt")
 			for s in shots:
-				if s.p.distance_to(sh.p) < 22.0: sh.hp -= 1; s.p.x = 9999
+				if s.p.distance_to(sh.p) < 22.0: sh.hp -= 1; s.p.x = 9999; snd.sfx("hit")
 		for sh in ships:
 			if sh.hp <= 0:
-				score += 10
+				score += 10; snd.sfx("pop")
 				for k in 8: pops.append({"p": sh.p, "v": Vector2.from_angle(randf() * TAU) * randf_range(40, 190), "life": 0.5})
 		ships = ships.filter(func(sh): return sh.hp > 0 and sh.p.x > -60)
 		shots = shots.filter(func(s): return s.p.x < 9000)
-		if hp <= 0: state = S.OVER
+		if hp <= 0: state = S.OVER; snd.stop_music()
 	for p in pops:
 		p.p += p.v * dt; p.life -= dt
 	pops = pops.filter(func(p): return p.life > 0)
