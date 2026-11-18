@@ -119,6 +119,12 @@ func _on_done(result: int, code: int, _h: PackedStringArray, body: PackedByteArr
 func _plan() -> void:
 	if int(_manifest.get("build", 0)) < build and build > 0:
 		return   # this APK is newer than the published packs
+	# packs are compiled by a specific engine build and only load in an APK built with that same one.
+	# an older APK must ignore them and keep playing instead of downloading something it cannot mount.
+	var want: String = str(_manifest.get("engine", ""))
+	var have: String = str(Engine.get_version_info().get("string", ""))
+	if want != "" and not have.begins_with(want):
+		return
 	_queue.clear()
 	for p in _manifest.get("packs", []):
 		var n: String = p.name; var sha: String = p.sha

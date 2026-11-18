@@ -64,11 +64,12 @@ jobs:
           cd godot/hula/build
           N=${{ github.run_number }}
           AH=$(cd ../art 2>/dev/null && find . -type f | sort | xargs sha256sum | sha256sum | cut -c1-12)
+          EV=$(godot --version | cut -d. -f1-3)   # packs only load in an APK built with the same engine
           mv code.pck code-$N.pck
           mv assets.pck assets-$AH.pck
           CS=$(sha256sum code-$N.pck | cut -d' ' -f1); AS=$(sha256sum assets-$AH.pck | cut -d' ' -f1)
           BASE="https://github.com/${{ github.repository }}/releases/download/godot-latest"
-          printf '{"build":%s,"packs":[{"name":"code-%s.pck","sha":"%s","url":"%s/code-%s.pck"},{"name":"assets-%s.pck","sha":"%s","url":"%s/assets-%s.pck"}]}' "$N" "$N" "$CS" "$BASE" "$N" "$AH" "$AS" "$BASE" "$AH" > latest.json
+          printf '{"build":%s,"engine":"%s","packs":[{"name":"code-%s.pck","sha":"%s","url":"%s/code-%s.pck"},{"name":"assets-%s.pck","sha":"%s","url":"%s/assets-%s.pck"}]}' "$N" "$EV" "$N" "$CS" "$BASE" "$N" "$AH" "$AS" "$BASE" "$AH" > latest.json
           cat latest.json
           gh release delete godot-latest --yes --cleanup-tag --repo ${{ github.repository }} || true
           gh release create godot-latest --repo ${{ github.repository }} --prerelease --title "Godot update packs (build $N)" --notes "Packs the Godot app downloads on its own. Not for manual install." latest.json code-$N.pck assets-$AH.pck
