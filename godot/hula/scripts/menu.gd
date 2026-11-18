@@ -119,6 +119,8 @@ func title(R: float, t: float, hero: Callable, ship_tex: Array) -> void:
 	pill(Rect2(bxr + 112, 262, 112, 26)); ctxt(bxr + 168, 280, "NO RUNS YET" if Save.data.stats.runs == 0 else "RUNS %d" % Save.data.stats.runs, 11, Color.WHITE)
 	ctxt(bxr + 112, 312, "Drag to fly. Your weapons fire by themselves.", 11, Color(1, 1, 1, 0.8))
 	ctxt(bxr + 112, 332, "Normal difficulty", 12, Color(1, 1, 1, 0.85))
+	var vf := FileAccess.open("res://version.txt", FileAccess.READ)
+	txt(Vector2(8, 352), "update " + (vf.get_as_text() if vf else "dev"), 11, Color(1, 1, 1, 0.55))
 
 # ---------- hub ----------
 func hub(R: float, t: float, hero: Callable) -> void:

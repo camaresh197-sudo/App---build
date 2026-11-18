@@ -27,7 +27,9 @@ jobs:
           mv tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VER}.stable/
           mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot 2>/dev/null || sudo mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
       - name: Stamp the build number
-        run: echo -n "${{ github.run_number }}" > godot/hula/build.txt
+        run: |
+          echo -n "${{ github.run_number }}" > godot/hula/build.txt
+          echo -n "${{ github.run_number }}" > godot/hula/version.txt
       - name: Debug keystore and editor settings
         run: |
           cp godot/debug.keystore debug.keystore   # fixed key, so every new APK installs over the last one
