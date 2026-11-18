@@ -144,17 +144,8 @@ func _build() -> void:
 	var head := joint("head", neck, Vector3(0, 0.15, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
 	put(head, sphere(0.105), skin, Vector3(0, 0.0, 0), Vector3(0.93, 1.1, 1.0))
 	put(head, sphere(0.06), skin, Vector3(0, -0.06, 0.02), Vector3(0.95, 0.75, 0.9))       # jaw
-	put(head, sphere(0.02), skin, Vector3(0, -0.01, 0.105))                                    # nose
+	_face(head, skin, white, black)
 	put(head, sphere(0.02), skin, Vector3(-0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8)); put(head, sphere(0.02), skin, Vector3(0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8))
-	for s in [-1, 1]:
-		put(head, sphere(0.022), white, Vector3(0.04 * s, 0.025, 0.088), Vector3(1, 0.8, 0.5))
-		var iris := put(head, sphere(0.012), black, Vector3(0.04 * s, 0.024, 0.099), Vector3(1, 1, 0.5)); iris.name = "iris_" + ("l" if s < 0 else "r")
-		put(head, capsule(0.008, 0.07), black, Vector3(0.043 * s, 0.058, 0.093), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 + 0.12 * s))   # brow
-	# mustache + smile
-	for s in [-1, 1]:
-		put(head, capsule(0.014, 0.075), black, Vector3(0.036 * s, -0.04, 0.1), Vector3(1, 1, 0.7), Vector3(0, 0, PI / 2 + 0.35 * s))
-	var smile := put(head, TorusMesh.new(), mat(Color("5a1f1a"), 0.6), Vector3(0, -0.066, 0.092), Vector3(0.05, 0.03, 0.02), Vector3(PI / 2, 0, 0))
-	(smile.mesh as TorusMesh).inner_radius = 0.7; (smile.mesh as TorusMesh).outer_radius = 1.0
 	# hair: long dark locks either side + back
 	for s in [-1, 1]:
 		put(head, capsule(0.04, 0.3), black, Vector3(0.1 * s, -0.1, -0.03), Vector3(0.9, 1, 0.9), Vector3(0, 0, 0.08 * s))
@@ -191,6 +182,58 @@ func _build() -> void:
 	hoop_mat.albedo_texture = stripe_tex(Color("1e8449"), Color("58d68d"))
 	var tm := TorusMesh.new(); tm.inner_radius = 0.54; tm.outer_radius = 0.63; tm.rings = 48; tm.ring_segments = 16
 	hoop_node = put(root, tm, hoop_mat, Vector3(0, 0.86, 0))
+
+# ---------- face ----------
+func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMaterial3D) -> void:
+	var skin_d := mat(skin.albedo_color.darkened(0.16), 0.7)
+	var iris_m := mat(Color("4a2c17"), 0.35)
+	var shine := mat(Color.WHITE, 0.1); shine.emission_enabled = true; shine.emission = Color.WHITE; shine.emission_energy_multiplier = 0.8
+	var lip_m := mat(skin.albedo_color.darkened(0.3).lerp(Color("b5524a"), 0.45), 0.5)
+	var mouth_m := mat(Color("4a1411"), 0.6)
+	var teeth_m := mat(Color("fbf6ea"), 0.4)
+	# cheeks + brow ridge give the face some shape
+	for s: float in [-1.0, 1.0]:
+		put(head, sphere(0.03), skin, Vector3(0.05 * s, -0.034, 0.056), Vector3(1, 0.9, 0.7))
+	# nose: bridge, tip, wings, nostrils
+	put(head, capsule(0.011, 0.05), skin, Vector3(0, 0.0, 0.103), Vector3(1, 1, 1), Vector3(-0.35, 0, 0))
+	put(head, sphere(0.019), skin, Vector3(0, -0.02, 0.112), Vector3(1, 0.9, 0.95))
+	for s: float in [-1.0, 1.0]:
+		put(head, sphere(0.011), skin, Vector3(0.016 * s, -0.022, 0.104), Vector3(1, 0.9, 0.8))
+		put(head, sphere(0.0055), skin_d, Vector3(0.0085 * s, -0.03, 0.111), Vector3(1, 0.7, 0.5))
+	# eyes: almond white, brown iris + pupil + catchlight, upper lid, lash line
+	for s: float in [-1.0, 1.0]:
+		var ex: float = 0.04 * s
+		put(head, sphere(0.023), white, Vector3(ex, 0.025, 0.088), Vector3(1.05, 0.72, 0.5))
+		var iris := put(head, sphere(0.0125), iris_m, Vector3(ex + 0.002 * s, 0.024, 0.0985), Vector3(1, 1, 0.5)); iris.name = "iris_" + ("l" if s < 0 else "r")
+		put(iris, sphere(0.006), black, Vector3(0, 0, 0.007), Vector3(1, 1, 0.6)).name = "pupil"
+		put(head, sphere(0.003), shine, Vector3(ex + 0.006 * s, 0.03, 0.1075))
+		put(head, sphere(0.0245), skin, Vector3(ex, 0.0365, 0.0885), Vector3(1.08, 0.46, 0.55))
+		put(head, capsule(0.0035, 0.052), black, Vector3(ex, 0.0285, 0.0975), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 - 0.12 * s))
+		put(head, sphere(0.02), skin_d, Vector3(ex, 0.0, 0.092), Vector3(1.1, 0.35, 0.5))   # soft under-eye
+	# brows: two-piece arch, rising to the middle, soft and friendly
+	for s: float in [-1.0, 1.0]:
+		put(head, capsule(0.0085, 0.036), black, Vector3(0.028 * s, 0.063, 0.087), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 + 0.1 * s))
+		put(head, capsule(0.0075, 0.036), black, Vector3(0.058 * s, 0.059, 0.074), Vector3(1, 1, 0.6), Vector3(0, 0.45 * s, PI / 2 - 0.42 * s))
+	# charro mustache: thick middle, tapering and curling up at the tips
+	for s: float in [-1.0, 1.0]:
+		var n := 18
+		for i in n:
+			var t := float(i) / (n - 1)
+			var x := 0.004 + t * 0.064
+			var y := -0.04 - sin(t * PI) * 0.006 + maxf(0.0, t - 0.55) * 0.05
+			var z := 0.105 * 0.95 * sqrt(maxf(0.02, 1.0 - pow(x / 0.0977, 2.0))) + 0.007
+			var r := lerpf(0.0165, 0.0065, pow(t, 0.8))
+			put(head, sphere(r), black, Vector3(x * s, y, z), Vector3(1.15, 0.9, 0.9))
+	# mouth: open smile with teeth and full lower lip
+	put(head, sphere(0.03), mouth_m, Vector3(0, -0.068, 0.083), Vector3(1.0, 0.46, 0.3))
+	put(head, BoxMesh.new(), teeth_m, Vector3(0, -0.0625, 0.0925), Vector3(0.046, 0.008, 0.004))
+	for i in 17:
+		var t := float(i) / 16.0 * 2.0 - 1.0
+		var x := t * 0.036
+		put(head, sphere(0.0042), lip_m, Vector3(x, -0.074 - (1.0 - t * t) * 0.007 + t * t * 0.01, 0.0895 - absf(t) * 0.006), Vector3(1.2, 0.8, 0.8))
+	for s: float in [-1.0, 1.0]:
+		put(head, sphere(0.0055), skin_d, Vector3(0.042 * s, -0.056, 0.082), Vector3(1, 1.3, 0.6))   # smile-line dimple
+	put(head, sphere(0.024), skin, Vector3(0, -0.098, 0.062), Vector3(1.1, 0.8, 0.9))   # chin
 
 func _thin_torus() -> TorusMesh:
 	var t := TorusMesh.new(); t.inner_radius = 0.985; t.outer_radius = 1.0; t.rings = 48; t.ring_segments = 6; return t
