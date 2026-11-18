@@ -34,6 +34,21 @@ func _ready() -> void:
 			h3.ptex().get_image().save_png("%s/f%04d.png" % [a[0], f])
 		get_tree().quit()
 		return
+	if a.size() > 3 and a[2] == "gest":
+		# gesture test: a[0]=out dir, a[3]=gesture names; 6 frames across 1.3 s each, one png per frame
+		var hg = m.hero3d
+		m.set_process(false)
+		hg.fixed_dt = 1.0 / 30.0
+		for nm in String(a[3]).split(","):
+			hg.gesture(nm); hg.gest_cur = nm; hg.gk = 1.0
+			for fi in 6:
+				hg._clock = 0.3 + fi * 0.26
+				hg.pose(0.0)
+				await get_tree().process_frame
+				await get_tree().process_frame
+				hg.tex().get_image().save_png("%s/%s_%d.png" % [a[0], nm, fi])
+		get_tree().quit()
+		return
 	if a.size() > 2 and a[2] == "arms":
 		# arm test: a[0]=out dir. Four phases of the hula sweep, then each reaction held, one png (whole body) per pose.
 		var h4 = m.hero3d

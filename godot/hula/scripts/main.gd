@@ -68,6 +68,7 @@ var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
 	hero3d.portrait_on = state == S.PLAY or state == S.OVER
+	hero3d.auto_dance = state == S.MENU
 	if state == S.MENU: hero3d.mood("grin")
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
 	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
