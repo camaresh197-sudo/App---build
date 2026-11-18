@@ -177,7 +177,8 @@ func _process(dt: float) -> void:
 			if cur == "menu": _tstep(step, next_t - now)
 			elif cur == "victory": _vstep(step, next_t - now)
 			else: _step(step, next_t - now)
-			step += 1; next_t += E; guard += 1
+			step += 1; next_t += (TE if cur == "menu" else (VE if cur == "victory" else E)); guard += 1
+			if cur == "victory" and step % 16 == 8 and int(vic[(step / 16) % vic.size()][17]) == 1: step += 8   # a half bar (a held word's ring-out) plays 8 steps, then the next section starts on the beat
 		if guard >= 4: next_t = now
 
 func _harmony(m: int, v: Array, r: int) -> int:
