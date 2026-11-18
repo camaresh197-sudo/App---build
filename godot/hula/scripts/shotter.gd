@@ -11,9 +11,19 @@ func _ready() -> void:
 			m.menu.song_test = a[3]; m.snd.vox_only = a.size() > 4 and a[4] == "voxonly"; m.snd.start_music(a[3])
 	if a.size() > 3 and a[2] == "hub": m.menu.open_hub(int(a[3]))
 	var n := int(a[1])
+	if a.size() > 2 and a[2] == "portrait":
+		var h2 = m.hero3d
+		m.start_run()
+		if a.size() > 3: h2.set_expr(a[3], true)
+		for i in n:
+			await get_tree().process_frame
+		h2.ptex().get_image().save_png(a[0])
+		get_tree().quit()
+		return
 	if a.size() > 3 and a[2] == "sheet":
 		# face sheet: a[0]=out dir, a[3]=comma-separated expression names; one png per expression (hat hidden, face close-up)
 		var h = m.hero3d
+		m.set_process(false)   # the game loop would keep setting the menu mood
 		h.auto_blink = false
 		h.vp.size = Vector2i(400, 400)
 		h.cam.look_at_from_position(Vector3(0.0, 1.57, 1.1), Vector3(0, 1.5, 0))

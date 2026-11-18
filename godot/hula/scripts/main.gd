@@ -59,6 +59,7 @@ func _to_field(p: Vector2) -> Vector2:
 	return get_canvas_transform().affine_inverse() * p
 
 func start_run() -> void:
+	hero3d.mood("grin"); hero3d.gaze = Vector2.ZERO
 	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
 	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
 	snd.start_music()
@@ -66,6 +67,8 @@ func start_run() -> void:
 var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
+	hero3d.portrait_on = state == S.PLAY or state == S.OVER
+	if state == S.MENU: hero3d.mood("grin")
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
 	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
 	if want != _want:
@@ -95,21 +98,39 @@ func _process(dt: float) -> void:
 			sh.v = sh.v.lerp(to_p * 110.0, dt * 0.8) + Vector2(0, sin(sh.ph * 2.0) * 40.0 * dt)
 			sh.p += sh.v * dt
 			if sh.p.distance_to(player) < 26.0:
-				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt")
+				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt"); hero3d.react("pain", 0.6)
 			for s in shots:
 				if s.p.distance_to(sh.p) < 22.0: sh.hp -= 1; s.p.x = 9999; snd.sfx("hit")
 		for sh in ships:
 			if sh.hp <= 0:
-				score += 10; snd.sfx("pop")
+				score += 10; snd.sfx("pop"); _combo += 1; _combo_t = 1.6
+				if _combo % 5 == 0: hero3d.react("laugh", 1.1)
 				for k in 8: pops.append({"p": sh.p, "v": Vector2.from_angle(randf() * TAU) * randf_range(40, 190), "life": 0.5})
 		ships = ships.filter(func(sh): return sh.hp > 0 and sh.p.x > -60)
 		shots = shots.filter(func(s): return s.p.x < 9000)
-		if hp <= 0: state = S.OVER; snd.stop_music()
+		_director(dt)
+		if hp <= 0: state = S.OVER; snd.stop_music(); hero3d.mood("despair"); hero3d.gaze = Vector2(0.0, -0.7)
 	for p in pops:
 		p.p += p.v * dt; p.life -= dt
 	pops = pops.filter(func(p): return p.life > 0)
 	shake = max(0.0, shake - dt)
 	queue_redraw()
+
+# the hero's face reacts to the game: looks at the nearest ship, flinches when one gets close, worries when hurt, laughs on a streak
+var _combo := 0
+var _combo_t := 0.0
+func _director(dt: float) -> void:
+	_combo_t -= dt
+	if _combo_t <= 0.0: _combo = 0
+	var nearest := Vector2.ZERO; var nd := 1e9
+	for sh in ships:
+		var d: float = sh.p.distance_to(player)
+		if sh.p.x > player.x - 40.0 and d < nd: nd = d; nearest = sh.p
+	if nd < 1e8: hero3d.gaze = Vector2(clampf((nearest.x - player.x) / 220.0, -1.0, 1.0), clampf(-(nearest.y - player.y) / 120.0, -1.0, 1.0))
+	else: hero3d.gaze = Vector2(0.6, 0.0)
+	hero3d.look = Vector2(hero3d.gaze.x * 0.5, 0.0)
+	if nd < 70.0 and hero3d.react_t <= 0.0: hero3d.react("startled", 0.35)
+	hero3d.mood("afraid" if hp <= 25.0 else ("worried" if hp <= 50.0 else ("determined" if ships.size() >= 5 else "grin")))
 
 func _right() -> float:
 	var vs := get_viewport_rect().size
@@ -139,6 +160,7 @@ func _draw() -> void:
 		_hero(player, t)
 		for p in pops: draw_circle(p.p, 3.0 * p.life * 2.0, Color(0.6, 0.9, 0.3, p.life * 2.0))
 		_hud(R)
+		_portrait_hud()
 		if state == S.OVER: _over(R)
 	_toast(R)
 	draw_set_transform(Vector2.ZERO)
@@ -211,6 +233,13 @@ func _hud(R: float) -> void:
 	draw_rect(Rect2(10, 8, 160 * clamp(hp / 100.0, 0, 1), 16), Color("2ecc71"))
 	draw_string(f, Vector2(14, 21), "HP %d/100" % int(max(hp, 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
 	draw_string(f, Vector2(R - 130, 24), "SCORE %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("ffd32a"))
+
+func _portrait_hud() -> void:
+	# close-up of his face, bottom-left, so the emotions can be read
+	var pr := Rect2(12, FH - 96, 84, 84)
+	draw_rect(pr.grow(4), Color(0.05, 0.05, 0.12, 0.6))
+	draw_texture_rect(hero3d.ptex(), pr, false)
+	draw_rect(pr.grow(4), Color("e7b84a"), false, 2.0)
 
 func _over(R: float) -> void:
 	draw_rect(Rect2(0, 0, R, FH), Color(0.03, 0.03, 0.08, 0.7))

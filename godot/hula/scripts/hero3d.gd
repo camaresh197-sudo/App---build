@@ -19,10 +19,10 @@ func _ready() -> void:
 	vp.size = Vector2i(VW, VH)
 	vp.transparent_bg = true
 	vp.msaa_3d = Viewport.MSAA_4X
-	vp.own_world_3d = true
+	vp.world_3d = World3D.new()   # explicit, so the portrait camera can share it
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
-	_world(); _build(); _load_expr()
+	_world(); _build(); _layer(j.hat, 2); _portrait(); _load_expr()
 
 func tex() -> Texture2D: return vp.get_texture()
 
@@ -143,7 +143,7 @@ func _build() -> void:
 	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.02, 0), Vector3(0.05, 0.07, 0.05))
 	var head := joint("head", neck, Vector3(0, 0.15, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
 	put(head, sphere(0.105), skin, Vector3(0, 0.0, 0), Vector3(0.93, 1.1, 1.0))
-	put(head, sphere(0.06), skin, Vector3(0, -0.06, 0.02), Vector3(0.95, 0.75, 0.9))       # jaw
+	fr.jaw = put(head, sphere(0.06), skin, Vector3(0, -0.06, 0.02), Vector3(0.95, 0.75, 0.9))       # jaw
 	_face(head, skin, white, black)
 	put(head, sphere(0.02), skin, Vector3(-0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8)); put(head, sphere(0.02), skin, Vector3(0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8))
 	# hair: long dark locks either side + back
@@ -183,6 +183,50 @@ func _build() -> void:
 	var tm := TorusMesh.new(); tm.inner_radius = 0.54; tm.outer_radius = 0.63; tm.rings = 48; tm.ring_segments = 16
 	hoop_node = put(root, tm, hoop_mat, Vector3(0, 0.86, 0))
 
+# ---------- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable ----------
+const PS := 160
+var pvp: SubViewport
+var pcam: Camera3D
+var portrait_on := false:
+	set(v):
+		portrait_on = v
+		if pvp: pvp.render_target_update_mode = SubViewport.UPDATE_ALWAYS if v else SubViewport.UPDATE_DISABLED
+
+func _layer(n: Node, layer: int) -> void:
+	if n is VisualInstance3D: (n as VisualInstance3D).layers = layer
+	for c in n.get_children(): _layer(c, layer)
+
+func _portrait() -> void:
+	pvp = SubViewport.new(); pvp.size = Vector2i(PS, PS); pvp.transparent_bg = true; pvp.msaa_3d = Viewport.MSAA_4X
+	pvp.world_3d = vp.world_3d; pvp.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	add_child(pvp)
+	pcam = Camera3D.new(); pcam.fov = 21.0; pcam.cull_mask = 1; pvp.add_child(pcam)
+	pcam.look_at_from_position(Vector3(0.0, 1.56, 1.12), Vector3(0, 1.49, 0))
+func ptex() -> Texture2D: return pvp.get_texture()
+
+# ---------- life: moods, reactions, where he looks, talking ----------
+var base_expr := "grin"       # the face he returns to
+var react_n := ""
+var react_t := 0.0
+var gaze := Vector2.ZERO      # where the eyes look: x right, y up, -1..1 (the game sets this)
+var talk := 0.0               # 0..1 while he speaks: the jaw and lips flap
+var fo := {}                  # extra offsets on top of the blended expression (eye darts, brow flicks, breathing, talking)
+var _gz := Vector2.ZERO
+var _sac := Vector2.ZERO
+var _sac_t := 1.0
+var _brow_t := 2.0
+var _brow_k := 0.0
+const BLINK := {"joy": 3.2, "smug": 4.2, "anger": 5.2, "fear": 1.6, "sad": 2.6, "disgust": 2.8, "surprise": 6.5, "thought": 3.6, "fatigue": 2.4, "pain": 2.2, "calm": 3.4}
+
+func mood(n: String) -> void:
+	if n == base_expr: return
+	base_expr = n
+	if react_t <= 0.0: _set_target(n)
+
+# a short reaction (pain, delight...) that falls back to the mood
+func react(n: String, secs := 0.7) -> void:
+	react_n = n; react_t = secs; _set_target(n)
+
 # ---------- face ----------
 # The face is a rig of named parts (fr) driven by blended parameters (fx), set with set_expr(name) and eased in pose().
 # Parameter names match the HTML game's expression tables (data_expr.json): mo mw sm sk tt pu pf bo bi boL boR biL biR lid lidL lidR sq ew gx gy hr hp hy,
@@ -213,6 +257,10 @@ func _load_expr() -> void:
 func expr_names() -> Array: return expr_db.keys()
 
 func set_expr(name: String, snap := false) -> void:
+	base_expr = name; react_t = 0.0
+	_set_target(name, snap)
+
+func _set_target(name: String, snap := false) -> void:
 	if not expr_db.has(name): name = "neutral"
 	expr_name = name
 	fx_t = fx_def.duplicate()
@@ -235,19 +283,19 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var drop_m := mat(Color(0.85, 0.94, 1.0), 0.05); drop_m.emission_enabled = true; drop_m.emission = Color(0.7, 0.85, 1.0); drop_m.emission_energy_multiplier = 0.6
 	fr.skin_d = skin_d
 	for s: float in [-1.0, 1.0]:
-		put(head, sphere(0.03), skin, Vector3(0.05 * s, -0.034, 0.056), Vector3(1, 0.9, 0.7))
+		fr["cheek_" + ("l" if s < 0 else "r")] = put(head, sphere(0.03), skin, Vector3(0.05 * s, -0.034, 0.056), Vector3(1, 0.9, 0.7))
 	# nose
 	put(head, capsule(0.011, 0.05), skin, Vector3(0, 0.0, 0.103), Vector3(1, 1, 1), Vector3(-0.35, 0, 0))
 	fr.tip = put(head, sphere(0.019), skin, Vector3(0, -0.02, 0.112), Vector3(1, 0.9, 0.95))
 	for s: float in [-1.0, 1.0]:
-		put(head, sphere(0.011), skin, Vector3(0.016 * s, -0.022, 0.104), Vector3(1, 0.9, 0.8))
-		put(head, sphere(0.0055), skin_d, Vector3(0.0085 * s, -0.03, 0.111), Vector3(1, 0.7, 0.5))
+		fr["wing_" + ("l" if s < 0 else "r")] = put(head, sphere(0.011), skin, Vector3(0.016 * s, -0.022, 0.104), Vector3(1, 0.9, 0.8))
+		fr["nost_" + ("l" if s < 0 else "r")] = put(head, sphere(0.0055), skin_d, Vector3(0.0085 * s, -0.03, 0.111), Vector3(1, 0.7, 0.5))
 	# eyes: white, iris + pupil + catchlight, upper lid (moves + stretches), lash line, lower lid, wet band, tear streak and drop
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
 		var ex: float = 0.04 * s
 		fr["ex_" + sd] = ex
-		put(head, sphere(0.023), white, Vector3(ex, 0.025, 0.088), Vector3(1.05, 0.72, 0.5))
+		fr["white_" + sd] = put(head, sphere(0.023), white, Vector3(ex, 0.025, 0.088), Vector3(1.05, 0.72, 0.5))
 		var iris := put(head, sphere(0.0125), iris_m, Vector3(ex + 0.002 * s, 0.024, 0.0985), Vector3(1, 1, 0.5)); iris.name = "iris_" + sd
 		fr["iris_" + sd] = iris
 		fr["pupil_" + sd] = put(iris, sphere(0.006), black, Vector3(0, 0, 0.007), Vector3(1, 1, 0.6))
@@ -263,7 +311,9 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		var sd := "l" if s < 0 else "r"
 		fr["bi_" + sd] = put(head, capsule(0.0085, 0.036), black, Vector3(0.028 * s, 0.063, 0.087), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 + 0.1 * s))
 		fr["bo_" + sd] = put(head, capsule(0.0075, 0.036), black, Vector3(0.058 * s, 0.059, 0.074), Vector3(1, 1, 0.6), Vector3(0, 0.45 * s, PI / 2 - 0.42 * s))
-	# charro mustache (static; hides the upper lip)
+	# charro mustache: moves with the smile, the nose and the jaw
+	var must: Array = []
+	fr.must = must
 	for s: float in [-1.0, 1.0]:
 		var n := 18
 		for i in n:
@@ -272,7 +322,8 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 			var y := -0.04 - sin(t * PI) * 0.006 + maxf(0.0, t - 0.55) * 0.05
 			var z := 0.105 * 0.95 * sqrt(maxf(0.02, 1.0 - pow(x / 0.0977, 2.0))) + 0.007
 			var r := lerpf(0.0165, 0.0065, pow(t, 0.8))
-			put(head, sphere(r), black, Vector3(x * s, y, z), Vector3(1.15, 0.9, 0.9))
+			var mn := put(head, sphere(r), black, Vector3(x * s, y, z), Vector3(1.15, 0.9, 0.9))
+			must.append([mn, mn.position, t, s])
 	# mouth: dark cavity, teeth, upper and lower lip rows (shaped every frame), smile-line dimples
 	fr.cav = put(head, sphere(0.03), mouth_m, Vector3(0, -0.068, 0.083), Vector3(1.0, 0.46, 0.3))
 	fr.teeth = put(head, BoxMesh.new(), teeth_m, Vector3(0, -0.0625, 0.0925), Vector3(0.046, 0.008, 0.004))
@@ -282,10 +333,29 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		fr.lipU.append(put(head, sphere(0.0038), lip_m, Vector3.ZERO, Vector3(1.2, 0.7, 0.8)))
 	for s: float in [-1.0, 1.0]:
 		fr["dim_" + ("l" if s < 0 else "r")] = put(head, sphere(0.0055), skin_d, Vector3(0.042 * s, -0.056, 0.082), Vector3(1, 1.3, 0.6))
-	put(head, sphere(0.024), skin, Vector3(0, -0.098, 0.062), Vector3(1.1, 0.8, 0.9))   # chin
+	fr.chin = put(head, sphere(0.024), skin, Vector3(0, -0.098, 0.062), Vector3(1.1, 0.8, 0.9))   # chin
+	fr.tongue = put(head, sphere(0.014), mat(Color("c0525a"), 0.45), Vector3(0, -0.075, 0.08), Vector3(1.2, 0.5, 1.0))
+	for s: float in [-1.0, 1.0]:
+		fr["fold_" + ("l" if s < 0 else "r")] = put(head, sphere(0.007), skin_d, Vector3(0.042 * s, -0.05, 0.085), Vector3(0.6, 2.2, 0.5))   # smile line (nasolabial fold)
+
+	# skin details that appear with expression: forehead lines, the furrow between the brows, crow's feet
+	var line_m := mat(skin.albedo_color.darkened(0.3), 0.8)
+	fr.fore = []
+	for i in 3:
+		var yy := 0.08 + i * 0.011
+		fr.fore.append(put(head, capsule(0.0012, 0.05), line_m, Vector3(0, yy, hz(0, yy) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, PI / 2)))
+	fr.glab = []
+	for s: float in [-1.0, 1.0]:
+		fr.glab.append(put(head, capsule(0.0012, 0.02), line_m, Vector3(0.007 * s, 0.054, hz(0.007 * s, 0.054) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, 0.12 * s)))
+	fr.crow = []
+	for s: float in [-1.0, 1.0]:
+		for a in [-0.55, 0.0, 0.55]:
+			var cx: float = 0.066 * s + 0.007 * s * cos(a); var cy: float = 0.022 + 0.008 * sin(a)
+			var nd := put(head, capsule(0.0011, 0.014), line_m, Vector3(cx, cy, hz(cx, cy) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, atan2(-s * cos(a), sin(a))))
+			fr.crow.append(nd)
 	_apply_face()
 
-func _fp(k: String) -> float: return float(fx.get(k, 0.0))
+func _fp(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
 
 # shapes every face part from the current parameters
 func _apply_face() -> void:
@@ -295,15 +365,24 @@ func _apply_face() -> void:
 		var sd := "l" if s < 0 else "r"
 		var ex: float = fr["ex_" + sd]
 		# upper lid: its lower edge sits at 0.0084 (closed) .. 0.042 (wide); below half-open it grows taller so it can cover the eye
-		var lid := clampf(_fp("lid") + _fp("lidL" if s < 0 else "lidR") - _fp("sq") * 0.12, 0.0, 1.0) * (1.0 - blink)
+		var bis := _fp("bi") + _fp("biL" if s < 0 else "biR")
+		var bos := _fp("bo") + _fp("boL" if s < 0 else "boR")
+		var pf := _fp("pf")
+		var glare := maxf(pf, maxf(0.0, -bis) * 0.8)
+		var lid := clampf(_fp("lid") + _fp("lidL" if s < 0 else "lidR") - _fp("sq") * 0.08 - glare * 0.08 - maxf(0.0, _fp("sm") - 0.3) * 0.1, 0.0, 1.0)
+		lid = maxf(lid, minf(_fp("lid") + _fp("lidL" if s < 0 else "lidR"), 0.1)) * (1.0 - blink)   # a glare narrows the eye but keeps the iris visible
+		var tilt := clampf(glare * 0.4 - maxf(0.0, bis) * 0.3, -0.4, 0.45)
 		var sy := 0.46 + maxf(0.0, 0.5 - lid) * 1.0
 		var h := 0.0245 * sy
 		var bottom := 0.0084 + lid * 0.0336
 		var lidn: MeshInstance3D = fr["lid_" + sd]
-		lidn.scale = Vector3(1.08, sy, 0.45); lidn.position = Vector3(ex, bottom + h, 0.089)
-		(fr["lash_" + sd] as Node3D).position = Vector3(ex, bottom + 0.0035, 0.0975)
+		lidn.scale = Vector3(1.08, sy, 0.45); lidn.position = Vector3(ex, bottom + h, 0.089); lidn.rotation.z = s * tilt
+		var lsh: Node3D = fr["lash_" + sd]
+		lsh.position = Vector3(ex, bottom + 0.0035, 0.0975); lsh.rotation.z = PI / 2 - 0.12 * s + s * tilt
+		var ew := _fp("ew")
+		(fr["white_" + sd] as Node3D).scale = Vector3(1.05 + ew * 0.1, 0.72 + ew * 0.12, 0.5)
 		# lower lid rises with squint, tears or a wet look
-		var sq := clampf(_fp("sq") + _fp("wet") * 0.15, 0.0, 1.0)
+		var sq := clampf(_fp("sq") + _fp("wet") * 0.15 + maxf(0.0, _fp("sm")) * 0.2, 0.0, 1.0)
 		var low: MeshInstance3D = fr["low_" + sd]
 		low.position = Vector3(ex, sq * 0.013, 0.092); low.scale = Vector3(1.1, 0.35 + sq * 0.3, 0.5)
 		# gaze and pupil
@@ -337,16 +416,14 @@ func _apply_face() -> void:
 			var dy := -0.004 - ln * ph
 			drop.position = Vector3(x, dy, hz(x, dy) + 0.003)
 			drop.scale = Vector3(1, 1.5, 1) * (0.7 + te * 0.5) * (1.0 - ph * 0.4)
-		# brows
-		var bis := _fp("bi") + _fp("biL" if s < 0 else "biR")
-		var bos := _fp("bo") + _fp("boL" if s < 0 else "boR")
-		var pf := _fp("pf")
+		# brows: raise, lower and tilt (inner higher = sad/worried, inner lower = angry), pinch together, overhang the eye when scowling
+		var bdrop := maxf(0.0, -bis)
 		var bi: MeshInstance3D = fr["bi_" + sd]
-		bi.position = Vector3(0.028 * s - 0.009 * pf * s, 0.063 + 0.013 * bis - 0.008 * pf, 0.087)
-		bi.rotation = Vector3(0, 0, PI / 2 + s * (0.1 + 0.45 * (bos - bis) + 0.35 * pf))
+		bi.position = Vector3(0.028 * s - 0.012 * pf * s - 0.006 * bdrop * s, 0.063 + 0.02 * bis - 0.012 * pf, 0.087 + 0.004 * glare)
+		bi.rotation = Vector3(0, 0, PI / 2 + s * clampf(0.1 + 0.6 * (bos - bis) + 0.4 * pf, -0.85, 0.95))
 		var bo: MeshInstance3D = fr["bo_" + sd]
-		bo.position = Vector3(0.058 * s - 0.004 * pf * s, 0.059 + 0.012 * bos - 0.005 * pf, 0.074)
-		bo.rotation = Vector3(0, 0.45 * s, PI / 2 + s * (-0.42 + 0.36 * (bos - bis) + 0.3 * pf))
+		bo.position = Vector3(0.058 * s - 0.005 * pf * s, 0.059 + 0.016 * bos - 0.006 * pf - 0.006 * bdrop, 0.074 + 0.003 * glare)
+		bo.rotation = Vector3(0, 0.45 * s, PI / 2 + s * clampf(-0.42 + 0.5 * (bos - bis) + 0.35 * pf, -0.9, 0.7))
 	# mouth: half-width w, smile sm lifts corners (frown drops them), mo opens the jaw, pu puckers, sk skews
 	var sm := _fp("sm"); var mo := clampf(_fp("mo"), 0.0, 1.0)
 	var w := 0.036 * (1.0 + 0.5 * _fp("mw")) * (1.0 - 0.45 * _fp("pu"))
@@ -359,7 +436,7 @@ func _apply_face() -> void:
 		var skw := sk * 0.008 * t
 		var zz := 0.0895 - absf(t) * 0.006
 		var yl := -0.0735 - mo * 0.03 * (1.0 - 0.5 * t2) + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
-		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw
+		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _fp("ns") * 0.004
 		(fr.lipL[i] as Node3D).position = Vector3(x, yl, zz)
 		(fr.lipU[i] as Node3D).position = Vector3(x, yu, zz)
 	var cav: MeshInstance3D = fr.cav
@@ -368,10 +445,54 @@ func _apply_face() -> void:
 	var tn: MeshInstance3D = fr.teeth
 	var show := maxf(_fp("tt") * 0.9, mo * 1.2)
 	tn.visible = show > 0.18
-	tn.position = Vector3(0, -0.0615, 0.0925); tn.scale = Vector3(w * 1.25, 0.008 + minf(1.0, show) * 0.004, 0.004)
+	tn.position = Vector3(0, -0.0615 + _fp("ns") * 0.004, 0.0925); tn.scale = Vector3(w * 1.25, 0.008 + minf(1.0, show) * 0.004, 0.004)
 	for s: float in [-1.0, 1.0]:
 		var d: Node3D = fr["dim_" + ("l" if s < 0 else "r")]
 		d.position = Vector3((w + 0.006) * s, -0.0735 - mo * 0.03 * 0.5 + A * 0.5 + 0.012 + sm * 0.01, 0.082)
+
+	# facial muscles: cheeks lift with a smile or squint, the nose wrinkles and flares, the mustache rides the upper lip, the jaw drops, the tongue shows
+	var sq2 := _fp("sq"); var ns := _fp("ns"); var nf := _fp("nf"); var ch := _fp("ch"); var tg := _fp("tg")
+	for s: float in [-1.0, 1.0]:
+		var sd := "l" if s < 0 else "r"
+		var ck: Node3D = fr["cheek_" + sd]
+		var up := maxf(0.0, sm) * 0.7 + sq2 * 0.8
+		ck.position = Vector3(0.05 * s, -0.034 + up * 0.011 - maxf(0.0, -sm) * 0.004, 0.056 + up * 0.004)
+		ck.scale = Vector3(1.0 + up * 0.18, 0.9 + up * 0.25, 0.7 + up * 0.15)
+		var wg: Node3D = fr["wing_" + sd]
+		wg.position = Vector3(0.016 * s * (1.0 + nf * 0.35), -0.022 + ns * 0.005, 0.104)
+		wg.scale = Vector3(1.0 + nf * 0.3, 0.9 - ns * 0.15, 0.8)
+		var nt: Node3D = fr["nost_" + sd]
+		nt.position = Vector3(0.0085 * s * (1.0 + nf * 0.5), -0.03 + ns * 0.005, 0.111)
+		nt.scale = Vector3(1.0 + nf * 0.5, 0.7 + nf * 0.6, 0.5)
+		var fd: Node3D = fr["fold_" + sd]
+		fd.position = Vector3((w + 0.008) * s, -0.052 + maxf(0.0, sm) * 0.012 + ns * 0.004 - mo * 0.008, 0.085)
+		fd.scale = Vector3(0.6, 1.6 + maxf(0.0, sm) * 1.5 + ns * 1.0, 0.5)
+	(fr.tip as Node3D).position = Vector3(0, -0.02 + ns * 0.004 - maxf(0.0, _fp("pu")) * 0.002, 0.112 + nf * 0.002)
+	for m in fr.must:
+		var nd: Node3D = m[0]; var b: Vector3 = m[1]; var mt: float = m[2]; var ms: float = m[3]
+		var dy := maxf(0.0, sm) * 0.007 * mt * mt + ns * 0.005 - maxf(0.0, -sm) * 0.006 * mt * mt - mo * 0.006 * (1.0 - mt) + sk * 0.003 * ms * mt
+		var dx := _fp("mw") * 0.01 * mt * ms - _fp("pu") * 0.012 * mt * ms
+		nd.position = b + Vector3(dx, dy, 0.0)
+	var jaw: Node3D = fr.jaw
+	jaw.position = Vector3(0, -0.06 - mo * 0.01, 0.02 + ch * 0.004)
+	var chn: Node3D = fr.chin
+	chn.position = Vector3(ch * 0.003, -0.098 - mo * 0.009 + maxf(0.0, -sm) * 0.004 - _fp("pu") * 0.002, 0.062 + ch * 0.004)
+	chn.scale = Vector3(1.1 - ch * 0.1, 0.8 + maxf(0.0, -sm) * 0.15, 0.9)
+	# skin details: forehead lines with raised brows, the furrow with a scowl, crow's feet with a big smile or squint
+	var rz := (_fp("bo") + _fp("bi") + _fp("boL") + _fp("boR") + _fp("biL") + _fp("biR")) * 0.5
+	for i in 3:
+		var n3: Node3D = fr.fore[i]; var am := clampf((rz - 0.25 - i * 0.14) * 3.0, 0.0, 1.0)
+		n3.visible = am > 0.05; n3.scale = Vector3(1, maxf(am, 0.01) * (1.3 - i * 0.15), 0.5)
+	var gl := clampf((maxf(_fp("pf"), maxf(0.0, -_fp("bi")) * 0.8) - 0.2) * 1.6, 0.0, 1.0)
+	for n3 in fr.glab:
+		(n3 as Node3D).visible = gl > 0.05; (n3 as Node3D).scale = Vector3(1, maxf(gl, 0.01), 0.5)
+	var cr := clampf((maxf(0.0, sm) * 0.6 + sq2 * 0.8 - 0.35) * 1.6, 0.0, 1.0)
+	for n3 in fr.crow:
+		(n3 as Node3D).visible = cr > 0.05; (n3 as Node3D).scale = Vector3(1, maxf(cr, 0.01), 0.5)
+	var tn2: MeshInstance3D = fr.tongue
+	tn2.visible = tg > 0.08 and mo > 0.12
+	tn2.position = Vector3(0, -0.0715 - mo * 0.014, 0.082 + tg * 0.012)
+	tn2.scale = Vector3(1.2, 0.5 + tg * 0.2, 1.0 + tg * 0.8)
 
 # eases the face toward its target; called from pose() (uses real time, so no extra plumbing in main.gd)
 func face_update() -> void:
@@ -379,15 +500,39 @@ func face_update() -> void:
 	var now := Time.get_ticks_msec()
 	var dt := clampf((now - _last_ms) / 1000.0, 0.001, 0.1) if _last_ms > 0 else 0.016
 	_last_ms = now; _clock += dt
+	if react_t > 0.0:
+		react_t -= dt
+		if react_t <= 0.0: _set_target(base_expr)
 	var k := 1.0 - exp(-dt * 11.0)
 	for key in fx_t: fx[key] = lerpf(float(fx.get(key, 0.0)), float(fx_t[key]), k)
-	# blinking: random gaps, ~0.15 s long, slower and longer when the face is tired
+	var fam: String = expr_fam.get(expr_name, "calm")
+	# eyes: follow the gaze target, with small darting jumps (not while staring)
+	var stare := clampf(_fp_raw("fix"), 0.0, 1.0)
+	_sac_t -= dt
+	if _sac_t < 0.0:
+		_sac_t = randf_range(0.5, 2.2) * (1.8 if fam == "fatigue" else 1.0)
+		_sac = Vector2(randf_range(-0.28, 0.28), randf_range(-0.2, 0.2)) * (1.0 - stare)
+	_gz = _gz.lerp(gaze, 1.0 - exp(-dt * 14.0))
+	fo["gx"] = clampf(_gz.x * 0.9 + _sac.x, -1.2, 1.2) * (1.0 - stare * 0.6)
+	fo["gy"] = clampf(_gz.y * 0.8 + _sac.y, -1.2, 1.2) * (1.0 - stare * 0.6)
+	# brows: now and then one lifts a little; breathing nudges the mouth and chest-driven head bob
+	_brow_t -= dt
+	if _brow_t < 0.0: _brow_t = randf_range(1.2, 3.5); _brow_k = randf_range(0.12, 0.3)
+	_brow_k = maxf(0.0, _brow_k - dt * 0.5)
+	fo["bo"] = _brow_k * (1.0 - stare); fo["bi"] = _brow_k * 0.4 * (1.0 - stare)
+	var breath := 0.5 + 0.5 * sin(_clock * 1.7)
+	fo["mo"] = breath * 0.018 + talk * (0.1 + 0.3 * absf(sin(_clock * 11.0)) * (0.6 + 0.4 * sin(_clock * 4.3)))
+	fo["mw"] = talk * 0.3 * sin(_clock * 6.5); fo["pu"] = talk * 0.2 * maxf(0.0, sin(_clock * 6.5 + 2.0))
+	# blinking: gap and length depend on the feeling (fear flutters, tiredness drags)
 	if auto_blink:
 		_blink_t -= dt
-		if _blink_t < 0.0: _blink_t = randf_range(2.2, 4.8) if expr_fam.get(expr_name, "calm") != "fear" else randf_range(1.0, 2.0)
-		_blink_k = clampf(1.0 - absf(_blink_t) / 0.075, 0.0, 1.0) if _blink_t > -0.15 and _blink_t < 0.0 else 0.0
+		var half := 0.14 if fam == "fatigue" else 0.075
+		if _blink_t < 0.0: _blink_t = BLINK.get(fam, 3.4) * randf_range(0.7, 1.3)
+		_blink_k = clampf(1.0 - absf(_blink_t + half) / half, 0.0, 1.0) if _blink_t > -2.0 * half and _blink_t < 0.0 else 0.0
 	else: _blink_k = 0.0
 	_apply_face()
+
+func _fp_raw(k: String) -> float: return float(fx.get(k, 0.0))
 
 func _thin_torus() -> TorusMesh:
 	var t := TorusMesh.new(); t.inner_radius = 0.985; t.outer_radius = 1.0; t.rings = 48; t.ring_segments = 6; return t
