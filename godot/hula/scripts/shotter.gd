@@ -11,6 +11,29 @@ func _ready() -> void:
 			m.menu.song_test = a[3]; m.snd.vox_only = a.size() > 4 and a[4] == "voxonly"; m.snd.start_music(a[3])
 	if a.size() > 3 and a[2] == "hub": m.menu.open_hub(int(a[3]))
 	var n := int(a[1])
+	if a.size() > 2 and a[2] == "anim":
+		# record the face: a[0]=out dir, a[3]=fps. Timeline of expressions below; one png per frame.
+		var h3 = m.hero3d
+		m.set_process(false)
+		var fps := int(a[3])
+		h3.fixed_dt = 1.0 / fps
+		h3.pvp.size = Vector2i(360, 360)
+		h3.portrait_on = true
+		var tl := [[0.0, "grin"], [1.2, "laugh"], [2.6, "worried"], [3.8, "sob"], [5.6, "rage"], [7.0, "smug"], [8.2, "surprise"], [9.2, "grin"]]
+		var total := 10.4
+		var idx := 0
+		for f in int(total * fps):
+			var tt: float = float(f) / fps
+			while idx < tl.size() and tl[idx][0] <= tt:
+				h3.set_expr(tl[idx][1]); idx += 1
+			h3.gaze = Vector2(sin(tt * 0.9) * 0.7, sin(tt * 0.6) * 0.3)
+			h3.talk = 1.0 if tt > 9.3 else 0.0
+			h3.pose(tt * 3.2)
+			await get_tree().process_frame
+			await get_tree().process_frame
+			h3.ptex().get_image().save_png("%s/f%04d.png" % [a[0], f])
+		get_tree().quit()
+		return
 	if a.size() > 2 and a[2] == "portrait":
 		var h2 = m.hero3d
 		m.start_run()

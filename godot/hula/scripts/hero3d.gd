@@ -243,6 +243,7 @@ var _blink_t := 2.0
 var _blink_k := 0.0
 var _last_ms := 0
 var fx_v := {}
+var fixed_dt := 0.0
 const SPR := {"lid": [26.0, 1.0], "lidL": [26.0, 1.0], "lidR": [26.0, 1.0], "sq": [22.0, 1.0], "gx": [30.0, 1.0], "gy": [30.0, 1.0], "ew": [24.0, 0.9], "pd": [10.0, 1.0],
 	"bo": [16.0, 0.75], "bi": [16.0, 0.75], "boL": [16.0, 0.75], "boR": [16.0, 0.75], "biL": [16.0, 0.75], "biR": [16.0, 0.75], "pf": [15.0, 0.8],
 	"mo": [15.0, 0.6], "mw": [13.0, 0.7], "sm": [12.0, 0.75], "sk": [12.0, 0.8], "tt": [14.0, 0.9], "pu": [13.0, 0.8], "tg": [14.0, 0.7],
@@ -547,6 +548,7 @@ func face_update() -> void:
 	if fx.is_empty(): return
 	var now := Time.get_ticks_msec()
 	var dt := clampf((now - _last_ms) / 1000.0, 0.001, 0.1) if _last_ms > 0 else 0.016
+	if fixed_dt > 0.0: dt = fixed_dt     # recording: fixed time step
 	_last_ms = now; _clock += dt
 	if react_t > 0.0:
 		react_t -= dt
