@@ -140,8 +140,9 @@ func _build() -> void:
 	put(spine, BoxMesh.new(), gold, Vector3(0, 0.02, 0.134), Vector3(0.04, 0.035, 0.012))
 	# head
 	var neck := joint("neck", spine, Vector3(0, 0.5, 0))
-	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.02, 0), Vector3(0.05, 0.07, 0.05))
-	var head := joint("head", neck, Vector3(0, 0.15, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
+	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.1, 0), Vector3(0.115, 0.18, 0.115))      # the neck: runs from inside the collar up under the jaw
+	put(neck, sphere(0.058), skin, Vector3(0, 0.2, 0.0), Vector3(1.0, 0.8, 1.0))
+	var head := joint("head", neck, Vector3(0, 0.26, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
 	put(head, sphere(0.105), skin, Vector3(0, 0.0, 0), Vector3(0.93, 1.1, 1.0))
 	fr.jaw = put(head, sphere(0.06), skin, Vector3(0, -0.06, 0.02), Vector3(0.95, 0.75, 0.9))       # jaw
 	_face(head, skin, white, black)
@@ -159,11 +160,11 @@ func _build() -> void:
 	var hm := mat(Color("efe3c3"), 0.9); hm.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var band := mat(Color("b3121f"), 0.6); band.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var hm2 := mat(Color("f3d27a"), 0.3, 0.6); hm2.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.71, 1.0, 0.71)); var c0 := put(hat, crown, hm, Vector3.ZERO, Vector3(0.88, 1.0, 0.88))
+	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.68, 1.0, 0.68)); var c0 := put(hat, crown, hm, Vector3.ZERO, Vector3(0.88, 1.0, 0.88))
 	hat_mats = [hm, band, hm2]
 	put(hat, lathe([Vector2(0.1, 0.012), Vector2(0.1005, 0.05), Vector2(0.1, 0.05)]), band, Vector3.ZERO, Vector3(0.9, 1, 0.9))
 	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.032, 0), Vector3(0.089, 0.1, 0.089)); (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).inner_radius = 0.96; (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).outer_radius = 1.0
-	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.055, 0), Vector3(0.298, 0.43, 0.298)).mesh = _thin_torus()
+	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.055, 0), Vector3(0.286, 0.43, 0.286)).mesh = _thin_torus()
 	# arms (raised, waving)
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
@@ -203,7 +204,7 @@ func _portrait() -> void:
 	pvp.world_3d = vp.world_3d; pvp.render_target_update_mode = SubViewport.UPDATE_DISABLED
 	add_child(pvp)
 	pcam = Camera3D.new(); pcam.fov = 21.0; pcam.cull_mask = 1; pvp.add_child(pcam)
-	pcam.look_at_from_position(Vector3(0.0, 1.56, 1.12), Vector3(0, 1.49, 0))
+	pcam.look_at_from_position(Vector3(0.0, 1.67, 1.12), Vector3(0, 1.6, 0))
 func ptex() -> Texture2D: return pvp.get_texture()
 
 # ---------- life: moods, reactions, where he looks, talking ----------
@@ -641,10 +642,13 @@ const ARM_K := {
 func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void:
 	var ph := phase + (0.0 if side == "l" else PI)
 	var a_sw := sin(ph); var a_el := sin(ph - 0.7); var a_hd := sin(ph - 1.4)
-	var sz := d * (2.2 + 0.3 * a_sw * wave) - d * bank * 0.25
+	var sz_a := 2.0 + 0.25 * a_sw * wave - bank * 0.25 * d
 	var sx := 0.32 * sin(ph - 0.5) * wave + 0.04 * sin(_clock * 1.6 + (0.0 if side == "l" else 1.0))
 	var sy := d * 0.28 * cos(ph) * wave
-	var ez := d * (0.55 + 0.2 * (0.5 + 0.5 * a_el) * wave + 0.3 * wave)
+	var ez_a := 0.55 + 0.2 * (0.5 + 0.5 * a_el) * wave + 0.3 * wave
+	ez_a = minf(ez_a, (PI - sz_a) - 0.1)       # forearm never leans in past vertical: keeps the hands outside the hat brim
+	var sz := d * sz_a
+	var ez := d * ez_a
 	var ex := 0.25 * hurt + 0.22 * a_el * wave
 	var hz := d * 0.55 * a_hd * wave
 	var hx := 0.4 * sin(ph - 2.0) * wave
