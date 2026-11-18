@@ -153,17 +153,17 @@ func _build() -> void:
 		put(lock, capsule(0.04, 0.3), black, Vector3(0, -0.14, 0), Vector3(0.9, 1, 0.9))
 	put(head, sphere(0.108), black, Vector3(0, 0.02, -0.03), Vector3(0.95, 1.0, 0.95))
 	# sombrero
-	var hat := joint("hat", head, Vector3(0, 0.1, -0.01))
+	var hat := joint("hat", head, Vector3(0, 0.07, -0.012))
 	var brim := lathe([Vector2(0.09, 0.0), Vector2(0.20, -0.005), Vector2(0.30, 0.0), Vector2(0.40, 0.03), Vector2(0.43, 0.065), Vector2(0.425, 0.07), Vector2(0.395, 0.04), Vector2(0.30, 0.012), Vector2(0.20, 0.005), Vector2(0.09, 0.012)])
 	var crown := lathe([Vector2(0.1, 0.0), Vector2(0.098, 0.06), Vector2(0.088, 0.13), Vector2(0.074, 0.178), Vector2(0.05, 0.198), Vector2(0.0, 0.205)])
 	var hm := mat(Color("efe3c3"), 0.9); hm.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var band := mat(Color("b3121f"), 0.6); band.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var hm2 := mat(Color("f3d27a"), 0.3, 0.6); hm2.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.71, 1.0, 0.71)); var c0 := put(hat, crown, hm)
+	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.71, 1.0, 0.71)); var c0 := put(hat, crown, hm, Vector3.ZERO, Vector3(0.88, 1.0, 0.88))
 	hat_mats = [hm, band, hm2]
-	put(hat, lathe([Vector2(0.1, 0.012), Vector2(0.1005, 0.05), Vector2(0.1, 0.05)]), band, Vector3.ZERO, Vector3(1.02, 1, 1.02))
-	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.032, 0), Vector3(0.1, 0.1, 0.1)); (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).inner_radius = 0.96; (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).outer_radius = 1.0
-	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.0, 0), Vector3(0.305, 0.43, 0.305)).mesh = _thin_torus()
+	put(hat, lathe([Vector2(0.1, 0.012), Vector2(0.1005, 0.05), Vector2(0.1, 0.05)]), band, Vector3.ZERO, Vector3(0.9, 1, 0.9))
+	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.032, 0), Vector3(0.089, 0.1, 0.089)); (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).inner_radius = 0.96; (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).outer_radius = 1.0
+	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.055, 0), Vector3(0.298, 0.43, 0.298)).mesh = _thin_torus()
 	# arms (raised, waving)
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
@@ -693,7 +693,7 @@ func _secondary(phase: float, c: float) -> void:
 			var a: float = w * w * (tg[i] - _hs[i]) - 2.0 * Z[i] * w * _hv[i]
 			_hv[i] += a * dt / sub; _hs[i] += _hv[i] * dt / sub
 	(j.hat as Node3D).rotation = Vector3(_hs[0], 0, _hs[1])
-	(j.hat as Node3D).position = Vector3(0, 0.1 + _hs[4], -0.01)
+	(j.hat as Node3D).position = Vector3(0, 0.07 + _hs[4], -0.012)
 	(j.hair_l as Node3D).rotation = Vector3(0, 0, _hs[2])
 	(j.hair_r as Node3D).rotation = Vector3(0, 0, _hs[3])
 
