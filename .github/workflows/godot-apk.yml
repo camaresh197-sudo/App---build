@@ -1,4 +1,6 @@
 name: godot-apk
+permissions:
+  contents: write
 on:
   workflow_dispatch:
   push:
@@ -24,6 +26,8 @@ jobs:
           unzip -q Godot_v${GODOT_VER}-stable_export_templates.tpz -d tpl
           mv tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VER}.stable/
           mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot 2>/dev/null || sudo mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
+      - name: Stamp the build number
+        run: echo -n "${{ github.run_number }}" > godot/hula/build.txt
       - name: Debug keystore and editor settings
         run: |
           cp godot/debug.keystore debug.keystore   # fixed key, so every new APK installs over the last one
@@ -45,6 +49,27 @@ jobs:
           sed -i "s#KEYSTORE_PATH#$GITHUB_WORKSPACE/debug.keystore#" export_presets.cfg
           ls -la $GITHUB_WORKSPACE/debug.keystore; grep -n keystore ~/.config/godot/editor_settings-4.4.tres export_presets.cfg
           godot --headless --verbose --export-debug Android build/HulaVaquero.apk
+      - name: Export update packs
+        working-directory: godot/hula
+        run: |
+          godot --headless --export-pack Code build/code.pck
+          godot --headless --export-pack Assets build/assets.pck
+          ls -la build
+      - name: Publish update packs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd godot/hula/build
+          N=${{ github.run_number }}
+          AH=$(cd ../art 2>/dev/null && find . -type f | sort | xargs sha256sum | sha256sum | cut -c1-12)
+          mv code.pck code-$N.pck
+          mv assets.pck assets-$AH.pck
+          CS=$(sha256sum code-$N.pck | cut -d' ' -f1); AS=$(sha256sum assets-$AH.pck | cut -d' ' -f1)
+          BASE="https://github.com/${{ github.repository }}/releases/download/godot-latest"
+          printf '{"build":%s,"packs":[{"name":"code-%s.pck","sha":"%s","url":"%s/code-%s.pck"},{"name":"assets-%s.pck","sha":"%s","url":"%s/assets-%s.pck"}]}' "$N" "$N" "$CS" "$BASE" "$N" "$AH" "$AS" "$BASE" "$AH" > latest.json
+          cat latest.json
+          gh release delete godot-latest --yes --cleanup-tag --repo ${{ github.repository }} || true
+          gh release create godot-latest --repo ${{ github.repository }} --prerelease --title "Godot update packs (build $N)" --notes "Packs the Godot app downloads on its own. Not for manual install." latest.json code-$N.pck assets-$AH.pck
       - uses: actions/upload-artifact@v4
         with:
           name: HulaVaquero-godot-apk

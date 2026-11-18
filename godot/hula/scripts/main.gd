@@ -49,8 +49,11 @@ func start_run() -> void:
 	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
 	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
 
+var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
+	if not _confirmed and Time.get_ticks_msec() > 4000:
+		_confirmed = true; Updater.confirm_good()
 	if state == S.PLAY:
 		player = player.lerp(target, 1.0 - pow(0.00001, dt))
 		player = player.clamp(Vector2(24, 24), Vector2(_right() - 24, FH - 24))
@@ -104,6 +107,7 @@ func _draw() -> void:
 		for p in pops: draw_circle(p.p, 3.0 * p.life * 2.0, Color(0.6, 0.9, 0.3, p.life * 2.0))
 		_hud(R)
 		if state == S.OVER: _over(R)
+	_toast(R)
 
 func _sky(R: float) -> void:
 	var top := Color("3b8fd9"); var mid := Color("8fcdf5"); var bot := Color("ffc98a")
@@ -158,6 +162,13 @@ func _menu(R: float) -> void:
 	_btn(Rect2(R - 300, 80, 240, 70), "RIDE!", Color("2ecc71"), start_run, 32)
 	_btn(Rect2(R - 300, 168, 240, 50), "ENDLESS", Color("8e44ad"), start_run, 22)
 	_btn(Rect2(R - 300, 232, 240, 50), "OPTIONS", Color("e67e22"), func(): pass, 22)
+
+func _toast(R: float) -> void:
+	if Updater.status != "":
+		var f := ThemeDB.fallback_font
+		var w := f.get_string_size(Updater.status, HORIZONTAL_ALIGNMENT_CENTER, -1, 13).x
+		draw_rect(Rect2(R / 2 - w / 2 - 10, FH - 28, w + 20, 22), Color(0, 0, 0, 0.55))
+		draw_string(f, Vector2(R / 2 - w / 2, FH - 12), Updater.status, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color.WHITE)
 
 func _hud(R: float) -> void:
 	var f := ThemeDB.fallback_font
