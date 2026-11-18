@@ -23,6 +23,7 @@ var spawn_cd := 1.0
 var touch_id := -1
 var buttons: Array = []   # [Rect2, Callable]
 var shake := 0.0
+var _restart_t := 0.0         # seconds spent at the title screen while a downloaded update waits
 
 func _ready() -> void:
 	for i in 37:
@@ -114,6 +115,15 @@ func _process(dt: float) -> void:
 		p.p += p.v * dt; p.life -= dt
 	pops = pops.filter(func(p): return p.life > 0)
 	shake = max(0.0, shake - dt)
+	# a downloaded update is waiting: close the app once the player is safely at the title screen, so the
+	# packs are mounted on the next launch. one tap on the icon and the new build is running.
+	# get() instead of a direct read: this script ships in packs, so it also runs inside APKs whose updater
+	# predates the flag, and those must keep behaving exactly as before.
+	if Updater.get("ready_to_apply") == true and OS.has_feature("mobile") and state == S.MENU and not menu.in_hub:
+		_restart_t += dt
+		if _restart_t > 2.5: get_tree().quit()
+	else:
+		_restart_t = 0.0
 	queue_redraw()
 
 # the hero's face reacts to the game: looks at the nearest ship, flinches when one gets close, worries when hurt, laughs on a streak

@@ -11,6 +11,7 @@ const STATE := "user://packs/state.json"
 var build := 0                # the build number baked into this APK (res://build.txt)
 var status := ""              # shown by the game as a small toast
 var status_t := 0.0
+var ready_to_apply := false   # packs are downloaded and waiting: the game closes itself when it is safe
 var state := {"good": {}, "pending": {}, "bad": [], "trying": {}, "build": 0}   # {name: sha} maps
 var _trying := {}
 var _queue: Array = []
@@ -138,7 +139,9 @@ func _plan() -> void:
 
 func _next() -> void:
 	if _queue.is_empty():
-		if not (state.pending as Dictionary).is_empty(): _say("Update ready: restart the app to apply it", 600.0)
+		if not (state.pending as Dictionary).is_empty():
+			ready_to_apply = true
+			_say("Update ready — closing to apply", 600.0)
 		return
 	var p: Dictionary = _queue.pop_front()
 	_cur = {"kind": "pack", "name": p.name, "sha": p.sha, "path": "%s/%s" % [DIR, p.name]}
