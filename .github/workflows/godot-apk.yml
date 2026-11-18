@@ -42,7 +42,9 @@ jobs:
         working-directory: godot/hula
         run: |
           mkdir -p build
-          godot --headless --export-debug Android build/HulaVaquero.apk
+          sed -i "s#KEYSTORE_PATH#$GITHUB_WORKSPACE/debug.keystore#" export_presets.cfg
+          ls -la $GITHUB_WORKSPACE/debug.keystore; grep -n keystore ~/.config/godot/editor_settings-4.4.tres export_presets.cfg
+          godot --headless --verbose --export-debug Android build/HulaVaquero.apk
       - uses: actions/upload-artifact@v4
         with:
           name: HulaVaquero-godot-apk
