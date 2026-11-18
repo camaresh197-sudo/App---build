@@ -101,6 +101,7 @@ func _build() -> void:
 	var skin := mat(Color("a9714b"), 0.55)
 	var cloth := mat(Color.WHITE, 0.85); cloth.albedo_texture = jacket_tex()
 	var red := mat(Color("a3121c"), 0.85)
+	var red_nc := mat(Color("a3121c"), 0.85); red_nc.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var gold := mat(Color("e7b84a"), 0.35, 0.8)
 	var silver := mat(Color("d8dde6"), 0.25, 0.9)
 	var leather := mat(Color("8a5a2b"), 0.6)
@@ -116,12 +117,12 @@ func _build() -> void:
 		var side := "l" if s < 0 else "r"
 		var hip := joint("hip_" + side, pel, Vector3(0.1 * s, -0.04, 0))
 		var thigh := joint("thigh_" + side, hip, Vector3.ZERO)          # thigh twist: knees and toes turn out / in
-		put(thigh, capsule(0.095, 0.4), red, Vector3(0, -0.17, 0))
+		put(thigh, lathe([Vector2(0.095, 0.05), Vector2(0.104, -0.02), Vector2(0.101, -0.1), Vector2(0.09, -0.21), Vector2(0.079, -0.31), Vector2(0.076, -0.37)], 32), red_nc)
 		put(hip, sphere(0.097), red)
 		var knee := joint("knee_" + side, thigh, Vector3(0, -0.36, 0))
 		put(knee, sphere(0.08), red)
 		var shin := joint("shin_" + side, knee, Vector3.ZERO)          # shin twist
-		put(shin, capsule(0.078, 0.38), red, Vector3(0, -0.16, 0))
+		put(shin, lathe([Vector2(0.076, 0.02), Vector2(0.084, -0.05), Vector2(0.086, -0.11), Vector2(0.074, -0.2), Vector2(0.06, -0.29), Vector2(0.056, -0.34)], 32), red_nc)
 		var ank := joint("ankle_" + side, shin, Vector3(0, -0.34, 0))
 		put(ank, capsule(0.075, 0.2), boot, Vector3(0, 0.03, 0))
 		var foot := joint("foot_" + side, ank, Vector3(0, -0.06, -0.04))       # pivots on the heel: toe taps and flicks
@@ -130,7 +131,7 @@ func _build() -> void:
 		put(toe, capsule(0.06, 0.12), boot, Vector3(0, 0, 0.05), Vector3(1, 1, 1.1), Vector3(PI / 2, 0, 0))
 		put(toe, sphere(0.04), gold, Vector3(0, 0.02, 0.1))
 		# gold trouser stripe
-		put(thigh, BoxMesh.new(), gold, Vector3(0.093 * s, -0.2, 0), Vector3(0.008, 0.4, 0.02))
+		put(thigh, BoxMesh.new(), gold, Vector3(0.088 * s, -0.19, 0), Vector3(0.008, 0.34, 0.02), Vector3(0, 0, -s * 0.045))
 	# torso / jacket
 	var spine := joint("spine", pel, Vector3(0, 0.07, 0))
 	put(spine, capsule(0.18, 0.52), cloth, Vector3(0, 0.22, 0), Vector3(1.0, 1.0, 0.75))
@@ -159,7 +160,8 @@ func _build() -> void:
 	for s in [-1, 1]:
 		var lock := joint("hair_" + ("l" if s < 0 else "r"), head, Vector3(0.1 * s, 0.04, -0.03))      # pivots at the top so the lock can swing
 		lock.rotation = Vector3(0, 0, 0.08 * s)
-		put(lock, capsule(0.04, 0.3), black, Vector3(0, -0.14, 0), Vector3(0.9, 1, 0.9))
+		var black_nc := mat(Color("120c09"), 0.5); black_nc.cull_mode = BaseMaterial3D.CULL_DISABLED
+		put(lock, lathe([Vector2(0.03, 0.02), Vector2(0.046, -0.02), Vector2(0.05, -0.09), Vector2(0.043, -0.17), Vector2(0.028, -0.25), Vector2(0.01, -0.31), Vector2(0.0015, -0.325)], 24), black_nc)
 	put(head, sphere(0.108), black, Vector3(0, 0.02, -0.03), Vector3(0.95, 1.0, 0.95))
 	# sombrero
 	var hat := joint("hat", head, Vector3(0, 0.07, -0.012))
@@ -300,7 +302,9 @@ func hz(x: float, y: float) -> float:
 
 func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMaterial3D) -> void:
 	var skin_d := mat(skin.albedo_color.darkened(0.16), 0.7)
-	var iris_m := mat(Color("4a2c17"), 0.35)
+	var iris_m := mat(Color.WHITE, 0.3); iris_m.albedo_texture = _iris_tex(); iris_m.emission_enabled = true; iris_m.emission_texture = iris_m.albedo_texture; iris_m.emission_energy_multiplier = 0.22
+	var sclera_m := mat(Color("f7efe6"), 0.22)
+	var pink_m := mat(Color("d98a86"), 0.5)
 	var shine := mat(Color.WHITE, 0.1); shine.emission_enabled = true; shine.emission = Color.WHITE; shine.emission_energy_multiplier = 0.8
 	var lip_m := mat(skin.albedo_color.darkened(0.3).lerp(Color("b5524a"), 0.45), 0.5)
 	var mouth_m := mat(Color("4a1411"), 0.6)
@@ -322,13 +326,23 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		var sd := "l" if s < 0 else "r"
 		var ex: float = 0.04 * s
 		fr["ex_" + sd] = ex
-		fr["white_" + sd] = put(head, sphere(0.023), white, Vector3(ex, 0.025, 0.088), Vector3(1.05, 0.72, 0.5))
-		var iris := put(head, sphere(0.0125), iris_m, Vector3(ex + 0.002 * s, 0.024, 0.0985), Vector3(1, 1, 0.5)); iris.name = "iris_" + sd
+		fr["soc_" + sd] = put(head, sphere(0.027), skin_d, Vector3(ex, 0.025, 0.083), Vector3(1.18, 0.95, 0.4))        # socket: soft shadow ring round the eye
+		fr["white_" + sd] = put(head, sphere(0.023), sclera_m, Vector3(ex, 0.025, 0.088), Vector3(1.05, 0.72, 0.5))
+		put(head, sphere(0.0052), pink_m, Vector3(ex - 0.0215 * s, 0.021, 0.0935), Vector3(1.0, 0.85, 0.6))           # tear duct
+		var iris := joint("iris_" + sd, head, Vector3(ex + 0.002 * s, 0.024, 0.0985))      # iris: a textured disc (limbal ring, amber collar, fibres)
 		fr["iris_" + sd] = iris
-		fr["pupil_" + sd] = put(iris, sphere(0.006), black, Vector3(0, 0, 0.007), Vector3(1, 1, 0.6))
-		fr["shine_" + sd] = put(head, sphere(0.003), shine, Vector3(ex + 0.006 * s, 0.03, 0.1075))
+		var disc := CylinderMesh.new(); disc.top_radius = 0.0142; disc.bottom_radius = 0.0142; disc.height = 0.0015; disc.radial_segments = 36; disc.rings = 1
+		put(iris, disc, iris_m, Vector3.ZERO, Vector3.ONE, Vector3(PI / 2, 0, 0))
+		fr["pupil_" + sd] = put(iris, sphere(0.006), black, Vector3(0, 0, 0.0025), Vector3(1, 1, 0.5))
+		fr["shine_" + sd] = put(head, sphere(0.0034), shine, Vector3(ex + 0.006 * s, 0.03, 0.1075))
+		fr["shine2_" + sd] = put(head, sphere(0.0017), shine, Vector3(ex - 0.005 * s, 0.0195, 0.1075))
+		fr["crease_" + sd] = put(head, capsule(0.0013, 0.044), skin_d, Vector3(ex, 0.05, 0.0955), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2))
 		fr["lid_" + sd] = put(head, sphere(0.0245), skin, Vector3(ex, 0.0365, 0.0905), Vector3(1.08, 0.46, 0.6))
-		fr["lash_" + sd] = put(head, capsule(0.0035, 0.052), black, Vector3(ex, 0.0285, 0.0975), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 - 0.12 * s))
+		var lashn := put(head, capsule(0.0035, 0.052), black, Vector3(ex, 0.0285, 0.0975), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 - 0.12 * s))
+		fr["lash_" + sd] = lashn
+		for li in 5:       # lashes fan out from the outer half of the lid edge
+			var ly := -s * (0.002 + li * 0.0062)
+			put(lashn, capsule(0.0011, 0.011 + li * 0.002), black, Vector3(0.006, ly, 0.0), Vector3(1, 1, 1), Vector3(0, 0, PI / 2 + s * (0.1 + li * 0.2)))
 		fr["low_" + sd] = put(head, sphere(0.02), skin_d, Vector3(ex, 0.0, 0.092), Vector3(1.1, 0.35, 0.5))
 		fr["wet_" + sd] = put(head, sphere(0.02), wet_m, Vector3(ex, 0.006, 0.0975), Vector3(1.0, 0.2, 0.5))
 		fr["streak_" + sd] = put(head, capsule(0.0024, 0.04), wet_m, Vector3(ex * 1.12, -0.025, hz(ex * 1.12, -0.025) + 0.0015), Vector3(1, 1, 0.7))
@@ -394,6 +408,23 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	fr.dimple = put(head, sphere(0.006), skin_d, Vector3(0, -0.092, 0.081), Vector3(1.4, 0.8, 0.5))
 	_apply_face()
 
+func _iris_tex() -> ImageTexture:
+	var n := 128
+	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var dark := Color("2a150a"); var mid := Color("6b3d1b"); var light := Color("c4893c"); var amber := Color("e0aa55"); var limb := Color("160a05")
+	for y in n:
+		for x in n:
+			var u := (x + 0.5) / n * 2.0 - 1.0; var v := (y + 0.5) / n * 2.0 - 1.0
+			var r := sqrt(u * u + v * v); var a := atan2(v, u)
+			var fib := 0.5 + 0.5 * sin(a * 31.0 + sin(a * 9.0) * 1.7) * (0.55 + 0.45 * sin(a * 13.0 + r * 5.0))        # radial fibres
+			var col := mid.lerp(light, clampf(fib * (1.0 - r) * 1.6, 0.0, 1.0))
+			col = col.lerp(dark, smoothstep(0.55, 0.9, r) * 0.55)
+			col = col.lerp(amber, (1.0 - smoothstep(0.32, 0.55, r)) * 0.75)         # amber collar round the pupil
+			col = col.lerp(limb, smoothstep(0.78, 0.96, r))                         # dark limbal ring
+			if r < 0.3: col = Color("0b0604")
+			img.set_pixel(x, y, Color(col.r, col.g, col.b, 1.0))
+	return ImageTexture.create_from_image(img)
+
 func _fp(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
 
 # shapes every face part from the current parameters
@@ -426,12 +457,17 @@ func _apply_face() -> void:
 		low.position = Vector3(ex, sq * 0.013, 0.092); low.scale = Vector3(1.1, 0.35 + sq * 0.3, 0.5)
 		# gaze and pupil
 		var gx := _fp("gx"); var gy := _fp("gy")
-		var ir: MeshInstance3D = fr["iris_" + sd]
+		var ir: Node3D = fr["iris_" + sd]
 		ir.position = Vector3(ex + 0.002 * s + gx * 0.008, 0.024 + gy * 0.0055, 0.0985 - absf(gx) * 0.002)
 		var sh: Node3D = fr["shine_" + sd]
 		var shy := minf(0.03 + gy * 0.0055, bottom - 0.003)   # the catchlight slides down under the lid edge
 		sh.position = Vector3(ex + 0.006 * s + gx * 0.008, shy, 0.1075)
 		sh.visible = shy > 0.016
+		var sh2: Node3D = fr["shine2_" + sd]
+		sh2.position = Vector3(ex - 0.005 * s + gx * 0.008, 0.0195 + gy * 0.0055, 0.1075); sh2.visible = lid > 0.35
+		var cr: Node3D = fr["crease_" + sd]        # the lid crease rides above the lid edge and deepens when the eye opens wide
+		cr.position = Vector3(ex, bottom + h * 1.7 + 0.002, 0.0955); cr.rotation.z = PI / 2 + s * tilt * 1.0
+		cr.visible = lid > 0.2
 		ir.visible = lid > 0.05
 		ir.position.z -= clampf(0.5 - lid, 0.0, 0.5) * 0.01    # iris sinks behind a drooped lid
 		var pd := 1.0 + _fp("pd") * 0.6 + _fp("ew") * 0.35
@@ -661,7 +697,8 @@ func _move_hula(phase: float, bank: float) -> Dictionary:
 	M.pr = Vector3(0, s * 0.15, -c * 0.11)
 	M.sp = Vector3(0.03, -s * 0.08, c * 0.09 + bank * 0.12)
 	M.ch = Vector3(0, -s * 0.1, 0)
-	M.nk = Vector3(0, s * 0.05, -c * 0.04)
+	M.nk = Vector3(0.05 * sin(phase * 2.0 + 0.8), s * 0.08, -c * 0.06)          # the neck nods with the hips and leans against the sway; the head follows a beat later
+	M.hd = Vector3(0.04 * sin(phase * 2.0 + 1.5), s * 0.07, c * 0.05)
 	var fl := maxf(0.0, c); var fr := maxf(0.0, -c)        # the foot opposite the hip's shift unweights: heel lifts a touch
 	M.fl = Vector3(-FOOT_X - 0.02 * fl, FOOT_Y + 0.03 * fl, 0); M.fpl = 0.3 * fl
 	M.fr = Vector3(FOOT_X + 0.02 * fr, FOOT_Y + 0.03 * fr, 0); M.fpr = 0.3 * fr
@@ -703,12 +740,26 @@ func _gstep() -> void:
 			if CYC[ci][1] != "": arm_kick(CYC[ci][1], 2.2)
 	elif _acyc != -1:
 		_acyc = -1; gest = "hula"
+	_life(dt)
 	if auto_dance: mood("joy" if (arm_t > 0.0 and arm_n == "cheer") else GMOOD.get(gest, "grin"))      # title screen: face matches the move
 	if gest_cur != gest:
 		gk -= dt * 5.0
 		if gk <= 0.0: gk = 0.0; gest_cur = gest
 	elif gest_cur != "hula": gk = minf(1.0, gk + dt * 5.0)
 	else: gk = 0.0
+
+var _micro_t := 2.5
+const MICRO := ["wink", "cheeky", "playful", "big_grin", "laugh", "smirk", "tongue_out", "charming", "flirt", "mischief"]
+func _life(dt: float) -> void:
+	if auto_dance:                  # title screen: the eyes roam, he shouts on the accents, and little expressions flash across his face
+		gaze = Vector2(sin(_clock * 0.9) * 0.7 + sin(_clock * 2.3) * 0.15, 0.2 * sin(_clock * 1.3))
+		var bb := _clock * BPS
+		var accent := (int(floorf(bb)) % 4 == 0) and (bb - floorf(bb) < 0.6) and gest_cur != "hula"
+		talk = lerpf(talk, 0.85 if accent else 0.0, 1.0 - exp(-dt * 14.0))
+	_micro_t -= dt
+	if _micro_t < 0.0:
+		_micro_t = randf_range(2.2, 5.0)
+		if react_t <= 0.0 and (auto_dance or base_expr == "grin"): react(MICRO[randi() % MICRO.size()], randf_range(0.6, 1.1))
 
 func _move(n: String, t: float) -> Dictionary:
 	var M := _neutral()
@@ -731,7 +782,8 @@ func _move(n: String, t: float) -> Dictionary:
 			M.pr = Vector3(0, -wp * 0.14, wp * 0.1)
 			M.sp = Vector3(0.05, wp * 0.08, -wp * 0.04)
 			M.ch = Vector3(0, wp * 0.26, wp * 0.03)
-			M.hd = Vector3(0.04 * pump, -wp * 0.12, -wp * 0.04)
+			M.nk = Vector3(0.04 * pump, wp * 0.1, -wp * 0.06)
+			M.hd = Vector3(0.07 * pump + 0.05 * up, -wp * 0.2 + (0.35 * (1.0 - spk) * sin(t * 0.9)), -wp * 0.08)       # chin leads the beat, the head tilts into the shift and scans the room
 			M.shr = maxf(0.0, wp) * 0.15; M.shl = maxf(0.0, -wp) * 0.15
 			var fL := maxf(0.0, wp); var fR := maxf(0.0, -wp)
 			M.fl = _ft(-1.0, 0.05 * fL * up, 0.12 * fL * up, 0.0, 0.03 * fL * up); M.fpl = 0.45 * fL * up
@@ -833,7 +885,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	_spine_set(_spr("sp", M.sp, 14.0))
 	(j.chest as Node3D).rotation = _spr("ch", M.ch, 15.0)
 	(j.neck as Node3D).rotation = _spr("nk", M.nk, 15.0)
-	var hd: Vector3 = _spr("hd", M.hd, 13.0)
+	var hd: Vector3 = _spr("hd", M.hd, 13.0) + Vector3(sin(_clock * 0.7) * 0.05, sin(_clock * 0.45) * 0.1, sin(_clock * 0.6) * 0.03) * (1.0 - gk * 0.5)       # idle: the head is never quite still
 	(j.neck2 as Node3D).rotation = hd * 0.4
 	(j.head as Node3D).rotation = Vector3(0.04 + _fp("hp") * 1.0 + hd.x * 0.6, look.x * 0.4 + _fp("hy") * 0.6 + hd.y * 0.6, _fp("hr") * 0.8 + hd.z * 0.6)
 	_secondary(phase, c)

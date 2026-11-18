@@ -67,7 +67,7 @@ func start_run() -> void:
 var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
-	hero3d.portrait_on = state == S.PLAY or state == S.OVER
+	hero3d.portrait_on = state == S.PLAY or state == S.OVER or (state == S.MENU and not menu.in_hub)
 	hero3d.auto_dance = state == S.MENU
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
 	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
@@ -154,6 +154,7 @@ func _draw() -> void:
 	elif state == S.MENU:
 		if menu.in_hub: menu.hub(R, t, Callable(self, "_hero"))
 		else: menu.title(R, t, Callable(self, "_hero"), ship_tex)
+		if not menu.in_hub: _portrait_hud()
 	else:
 		for s in shots: draw_rect(Rect2(s.p - Vector2(8, 2), Vector2(16, 4)), Color(1, 0.9, 0.3))
 		for sh in ships: _ship(sh)
@@ -236,7 +237,7 @@ func _hud(R: float) -> void:
 
 func _portrait_hud() -> void:
 	# close-up of his face, bottom-left, so the emotions can be read
-	var pr := Rect2(12, FH - 96, 84, 84)
+	var pr := Rect2(12, FH - 124, 112, 112)
 	draw_rect(pr.grow(4), Color(0.05, 0.05, 0.12, 0.6))
 	draw_texture_rect(hero3d.ptex(), pr, false)
 	draw_rect(pr.grow(4), Color("e7b84a"), false, 2.0)
