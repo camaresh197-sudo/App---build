@@ -23,30 +23,36 @@ func _ready() -> void:
 	for i in 37:
 		frames.append(load("res://art/ship_%03d.webp" % i))
 
+var touch_start := Vector2.ZERO
+var player_start := Vector2.ZERO
+
 func _input(e: InputEvent) -> void:
-	if e is InputEventScreenTouch or e is InputEventMouseButton:
-		var pos: Vector2 = get_global_mouse_position() if e is InputEventMouseButton else _to_field(e.position)
-		var down: bool = e.pressed
-		if down:
+	# touch only (the project turns mouse clicks into touches too). The hero moves by how far the finger has dragged,
+	# so tapping a spot does nothing by itself and a drag moves him the same distance, like the HTML game.
+	if e is InputEventScreenTouch:
+		var pos := _to_field(e.position)
+		if e.pressed:
 			for b in buttons:
 				if (b[0] as Rect2).has_point(pos):
 					(b[1] as Callable).call(); return
-			if state == S.PLAY: target = pos
-	if state == S.PLAY and (e is InputEventScreenDrag or e is InputEventMouseMotion):
-		if e is InputEventScreenDrag or (e.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
-			target = _to_field(e.position) if e is InputEventScreenDrag else get_global_mouse_position()
+			if state == S.PLAY and touch_id == -1:
+				touch_id = e.index; touch_start = pos; player_start = player; target = player
+		elif e.index == touch_id:
+			touch_id = -1; target = player
+	elif e is InputEventScreenDrag and state == S.PLAY and e.index == touch_id:
+		target = player_start + (_to_field(e.position) - touch_start)
 
 func _to_field(p: Vector2) -> Vector2:
 	return get_canvas_transform().affine_inverse() * p
 
 func start_run() -> void:
 	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
-	player = Vector2(120, 180); target = player; t = 0.0
+	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
 
 func _process(dt: float) -> void:
 	t += dt
 	if state == S.PLAY:
-		player = player.lerp(target, 1.0 - pow(0.001, dt))
+		player = player.lerp(target, 1.0 - pow(0.00001, dt))
 		player = player.clamp(Vector2(24, 24), Vector2(_right() - 24, FH - 24))
 		fire_cd -= dt
 		if fire_cd <= 0.0:
