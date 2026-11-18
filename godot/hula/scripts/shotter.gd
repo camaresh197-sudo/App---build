@@ -34,6 +34,18 @@ func _ready() -> void:
 			h3.ptex().get_image().save_png("%s/f%04d.png" % [a[0], f])
 		get_tree().quit()
 		return
+	if a.size() > 2 and a[2] == "auto":
+		# menu auto-dance test: simulate the title screen for 12 s, log gesture state
+		var ha = m.hero3d
+		m.set_process(false)
+		ha.fixed_dt = 1.0 / 30.0; ha.auto_dance = true
+		var lg := FileAccess.open("/tmp/auto.log", FileAccess.WRITE)
+		for f in 360:
+			ha.pose(f / 30.0 * 3.2)
+			if f % 15 == 0: lg.store_line("t=%.1f clock=%.2f want=%s cur=%s gk=%.2f" % [f / 30.0, ha._clock, ha.gest, ha.gest_cur, ha.gk])
+		lg.close()
+		get_tree().quit()
+		return
 	if a.size() > 3 and a[2] == "gest":
 		# gesture test: a[0]=out dir, a[3]=gesture names; 6 frames across 1.3 s each, one png per frame
 		var hg = m.hero3d

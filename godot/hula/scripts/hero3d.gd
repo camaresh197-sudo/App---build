@@ -640,14 +640,14 @@ var gk := 0.0               # blend 0..1
 var auto_dance := false
 var _G := {}
 var _acyc := -1
-const CYC := [["hula", ""], ["flex", ""], ["hula", "cheer"], ["hips", ""], ["dance", ""], ["clap", ""], ["power", ""], ["dance", ""]]
+const CYC := [["dance", ""], ["hips", ""], ["dance", ""], ["clap", ""], ["flex", ""], ["hula", "cheer"], ["dance", ""], ["power", ""], ["hula", ""]]
 func gesture(n: String) -> void:
 	gest = n
 
 func _gstep() -> void:
 	var dt := clampf(fixed_dt if fixed_dt > 0.0 else 0.016, 0.001, 0.1)
 	if auto_dance:
-		var ci := int(_clock / 2.6) % CYC.size()
+		var ci := int(_clock / 3.2) % CYC.size()
 		if ci != _acyc:
 			_acyc = ci; gest = CYC[ci][0]
 			if CYC[ci][1] != "": arm_kick(CYC[ci][1], 2.2)
