@@ -57,6 +57,7 @@ func _ready() -> void:
 		m.set_process(false)
 		hf.fixed_dt = 1.0 / 24.0
 		hf.portrait_on = true
+		hf.pvp.size = Vector2i(640, 640)
 		hf.auto_blink = false
 		hf.gesture("hula")
 		for nm in a[3].split(","):

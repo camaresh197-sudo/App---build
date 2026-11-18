@@ -304,7 +304,7 @@ func hz(x: float, y: float) -> float:
 
 func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMaterial3D) -> void:
 	var skin_d := mat(skin.albedo_color.darkened(0.16), 0.7)
-	var iris_m := mat(Color.WHITE, 0.3); iris_m.albedo_texture = _iris_tex(); iris_m.emission_enabled = true; iris_m.emission_texture = iris_m.albedo_texture; iris_m.emission_energy_multiplier = 0.22
+	var iris_m := mat(Color.WHITE, 0.3); iris_m.albedo_texture = _iris_tex(); iris_m.emission_enabled = true; iris_m.emission_texture = iris_m.albedo_texture; iris_m.emission_energy_multiplier = 0.45
 	var sclera_m := mat(Color("eadfd0"), 0.3); sclera_m.metallic_specular = 0.2
 	var lid_m := mat(skin.albedo_color.lightened(0.04), 0.9); lid_m.metallic_specular = 0.05
 	var pink_m := mat(Color("d98a86"), 0.5)
@@ -330,22 +330,20 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		var ex: float = 0.04 * s
 		fr["ex_" + sd] = ex
 		fr["soc_" + sd] = put(head, sphere(0.027), skin_d, Vector3(ex, 0.025, 0.083), Vector3(1.18, 0.95, 0.4))        # socket: soft shadow ring round the eye
-		fr["white_" + sd] = put(head, sphere(0.023), sclera_m, Vector3(ex, 0.025, 0.088), Vector3(1.05, 0.72, 0.5))
+		fr["white_" + sd] = put(head, sphere(0.03), sclera_m, Vector3(ex, 0.025, 0.088), Vector3(1.12, 0.84, 0.36))
 		put(head, sphere(0.0052), pink_m, Vector3(ex - 0.0215 * s, 0.021, 0.0935), Vector3(1.0, 0.85, 0.6))           # tear duct
-		var iris := joint("iris_" + sd, head, Vector3(ex + 0.002 * s, 0.024, 0.0985))      # iris: a textured disc (limbal ring, amber collar, fibres)
+		var iris := joint("iris_" + sd, head, Vector3(ex + 0.002 * s, 0.025, 0.0995))      # iris: a textured disc (limbal ring, amber collar, fibres)
 		fr["iris_" + sd] = iris
-		var disc := CylinderMesh.new(); disc.top_radius = 0.0142; disc.bottom_radius = 0.0142; disc.height = 0.0015; disc.radial_segments = 36; disc.rings = 1
+		var disc := CylinderMesh.new(); disc.top_radius = 0.0185; disc.bottom_radius = 0.0185; disc.height = 0.0015; disc.radial_segments = 36; disc.rings = 1
 		put(iris, disc, iris_m, Vector3.ZERO, Vector3.ONE, Vector3(PI / 2, 0, 0))
-		fr["pupil_" + sd] = put(iris, sphere(0.006), black, Vector3(0, 0, 0.0025), Vector3(1, 1, 0.5))
-		fr["shine_" + sd] = put(head, sphere(0.0034), shine, Vector3(ex + 0.006 * s, 0.03, 0.1075))
-		fr["shine2_" + sd] = put(head, sphere(0.0017), shine, Vector3(ex - 0.005 * s, 0.0195, 0.1075))
-		fr["crease_" + sd] = put(head, capsule(0.0013, 0.044), skin_d, Vector3(ex, 0.05, 0.0955), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2))
+		fr["pupil_" + sd] = put(iris, sphere(0.0072), black, Vector3(0, 0, 0.0025), Vector3(1, 1, 0.5))
+		fr["shine_" + sd] = put(head, sphere(0.0048), shine, Vector3(ex + 0.006 * s, 0.03, 0.1075))
+		fr["shine2_" + sd] = put(head, sphere(0.0024), shine, Vector3(ex - 0.005 * s, 0.0195, 0.1075))
+		fr["crease_" + sd] = put(head, capsule(0.0013, 0.056), skin_d, Vector3(ex, 0.05, 0.0955), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2))
 		fr["lid_" + sd] = put(head, sphere(0.0245), lid_m, Vector3(ex, 0.0365, 0.0905), Vector3(1.08, 0.46, 0.6))
-		var lashn := put(head, capsule(0.0035, 0.052), black, Vector3(ex, 0.0285, 0.0975), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 - 0.12 * s))
+		var lashn := put(head, capsule(0.0032, 0.064), black, Vector3(ex, 0.0285, 0.0975), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 - 0.12 * s))
 		fr["lash_" + sd] = lashn
-		for li in 5:       # lashes fan out from the outer half of the lid edge
-			var ly := -s * (0.002 + li * 0.0062)
-			put(lashn, capsule(0.0011, 0.011 + li * 0.002), black, Vector3(0.006, ly, 0.0), Vector3(1, 1, 1), Vector3(0, 0, PI / 2 + s * (0.1 + li * 0.2)))
+		put(lashn, capsule(0.0016, 0.016), black, Vector3(0.002, -s * 0.0275, 0.0), Vector3(1, 1, 1), Vector3(0, 0, s * 0.95))       # a flick at the outer corner
 		fr["low_" + sd] = put(head, sphere(0.02), skin_d, Vector3(ex, 0.0, 0.092), Vector3(1.1, 0.35, 0.5))
 		fr["wet_" + sd] = put(head, sphere(0.02), wet_m, Vector3(ex, 0.006, 0.0975), Vector3(1.0, 0.2, 0.5))
 		fr["streak_" + sd] = put(head, capsule(0.0024, 0.04), wet_m, Vector3(ex * 1.12, -0.025, hz(ex * 1.12, -0.025) + 0.0015), Vector3(1, 1, 0.7))
@@ -414,17 +412,17 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 func _iris_tex() -> ImageTexture:
 	var n := 128
 	var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
-	var dark := Color("2a150a"); var mid := Color("6b3d1b"); var light := Color("c4893c"); var amber := Color("e0aa55"); var limb := Color("160a05")
+	var dark := Color("4a2810"); var mid := Color("96592a"); var light := Color("dba24a"); var amber := Color("f2c570"); var limb := Color("2a1508")
 	for y in n:
 		for x in n:
 			var u := (x + 0.5) / n * 2.0 - 1.0; var v := (y + 0.5) / n * 2.0 - 1.0
 			var r := sqrt(u * u + v * v); var a := atan2(v, u)
 			var fib := 0.5 + 0.5 * sin(a * 31.0 + sin(a * 9.0) * 1.7) * (0.55 + 0.45 * sin(a * 13.0 + r * 5.0))        # radial fibres
 			var col := mid.lerp(light, clampf(fib * (1.0 - r) * 1.6, 0.0, 1.0))
-			col = col.lerp(dark, smoothstep(0.55, 0.9, r) * 0.55)
+			col = col.lerp(dark, smoothstep(0.6, 0.92, r) * 0.45)
 			col = col.lerp(amber, (1.0 - smoothstep(0.32, 0.55, r)) * 0.75)         # amber collar round the pupil
-			col = col.lerp(limb, smoothstep(0.78, 0.96, r))                         # dark limbal ring
-			if r < 0.3: col = Color("0b0604")
+			col = col.lerp(limb, smoothstep(0.86, 0.98, r) * 0.8)                         # dark limbal ring
+			if r < 0.34: col = Color("0b0604")
 			img.set_pixel(x, y, Color(col.r, col.g, col.b, 1.0))
 	return ImageTexture.create_from_image(img)
 
@@ -476,16 +474,16 @@ func _apply_face() -> void:
 		lid = maxf(lid, minf(_fp("lid") + _fp("lidL" if s < 0 else "lidR"), 0.1))   # a glare narrows the eye but keeps the iris visible
 		if lid >= 0.12: lid = maxf(lid, 0.34)        # a half-lidded look still shows most of the iris; only a deliberate near-shut eye hides it
 		lid = lid * (1.0 - blink)
-		var tilt := clampf(glare * 0.4 - maxf(0.0, bis) * 0.3, -0.4, 0.45)
+		var tilt := clampf(glare * 0.55 - maxf(0.0, bis) * 0.5 - maxf(0.0, -_fp("sm")) * 0.25, -0.6, 0.6)
 		var sy := 0.46 + maxf(0.0, 0.5 - lid) * 1.0
 		var h := 0.0245 * sy
-		var bottom := minf(0.006 + 0.042 * pow(lid, 0.55), 0.046)
+		var bottom := minf(0.004 + 0.05 * pow(lid, 0.6), 0.054)
 		var lidn: MeshInstance3D = fr["lid_" + sd]
-		lidn.scale = Vector3(1.08, sy, 0.45); lidn.position = Vector3(ex, bottom + h, 0.089); lidn.rotation.z = s * tilt
+		lidn.scale = Vector3(1.08, sy, 0.55); lidn.position = Vector3(ex, bottom + h, 0.0895); lidn.rotation.z = s * tilt
 		var lsh: Node3D = fr["lash_" + sd]
 		lsh.position = Vector3(ex, bottom + 0.0035, 0.0975); lsh.rotation.z = PI / 2 - 0.12 * s + s * tilt
 		var ew := _fp("ew")
-		(fr["white_" + sd] as Node3D).scale = Vector3(1.05 + ew * 0.1, 0.72 + ew * 0.12, 0.5)
+		(fr["white_" + sd] as Node3D).scale = Vector3(1.12 + ew * 0.1, 0.84 + ew * 0.12, 0.36)
 		# lower lid rises with squint, tears or a wet look
 		var sq := clampf(_fp("sq") + _fp("wet") * 0.15 + maxf(0.0, _fp("sm")) * 0.2, 0.0, 1.0)
 		var low: MeshInstance3D = fr["low_" + sd]
@@ -493,13 +491,13 @@ func _apply_face() -> void:
 		# gaze and pupil
 		var gx := _fp("gx"); var gy := _fp("gy")
 		var ir: Node3D = fr["iris_" + sd]
-		ir.position = Vector3(ex + 0.002 * s + gx * 0.008, 0.024 + gy * 0.0055, 0.0985 - absf(gx) * 0.002)
+		ir.position = Vector3(ex + 0.002 * s + gx * 0.011, 0.025 + gy * 0.007, 0.0995 - absf(gx) * 0.002)
 		var sh: Node3D = fr["shine_" + sd]
-		var shy := minf(0.03 + gy * 0.0055, bottom - 0.003)   # the catchlight slides down under the lid edge
-		sh.position = Vector3(ex + 0.006 * s + gx * 0.008, shy, 0.1075)
+		var shy := minf(0.0325 + gy * 0.007, bottom - 0.004)   # the catchlight slides down under the lid edge
+		sh.position = Vector3(ex + 0.007 * s + gx * 0.011, shy, 0.1075)
 		sh.visible = shy > 0.016
 		var sh2: Node3D = fr["shine2_" + sd]
-		sh2.position = Vector3(ex - 0.005 * s + gx * 0.008, 0.0195 + gy * 0.0055, 0.1075); sh2.visible = lid > 0.35
+		sh2.position = Vector3(ex - 0.006 * s + gx * 0.011, 0.019 + gy * 0.007, 0.1075); sh2.visible = lid > 0.35
 		var cr: Node3D = fr["crease_" + sd]        # the lid crease rides above the lid edge and deepens when the eye opens wide
 		cr.position = Vector3(ex, bottom + h * 1.7 + 0.002, 0.0955); cr.rotation.z = PI / 2 + s * tilt * 1.0
 		cr.visible = lid > 0.2
@@ -570,7 +568,7 @@ func _apply_face() -> void:
 		var sd := "l" if s < 0 else "r"
 		var ck: Node3D = fr["cheek_" + sd]
 		var up := maxf(0.0, sm) * 0.7 + sq2 * 0.8
-		ck.position = Vector3(0.05 * s, -0.034 + up * 0.011 - maxf(0.0, -sm) * 0.004, 0.056 + up * 0.004)
+		ck.position = Vector3(0.05 * s, -0.034 + up * 0.006 - maxf(0.0, -sm) * 0.004, 0.056 + up * 0.004)
 		ck.scale = Vector3(1.0 + up * 0.18, 0.9 + up * 0.25, 0.7 + up * 0.15)
 		var wg: Node3D = fr["wing_" + sd]
 		wg.position = Vector3(0.016 * s * (1.0 + nf * 0.35), -0.022 + ns * 0.005, 0.104)
