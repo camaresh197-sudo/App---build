@@ -148,7 +148,9 @@ func _build() -> void:
 	put(head, sphere(0.02), skin, Vector3(-0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8)); put(head, sphere(0.02), skin, Vector3(0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8))
 	# hair: long dark locks either side + back
 	for s in [-1, 1]:
-		put(head, capsule(0.04, 0.3), black, Vector3(0.1 * s, -0.1, -0.03), Vector3(0.9, 1, 0.9), Vector3(0, 0, 0.08 * s))
+		var lock := joint("hair_" + ("l" if s < 0 else "r"), head, Vector3(0.1 * s, 0.04, -0.03))      # pivots at the top so the lock can swing
+		lock.rotation = Vector3(0, 0, 0.08 * s)
+		put(lock, capsule(0.04, 0.3), black, Vector3(0, -0.14, 0), Vector3(0.9, 1, 0.9))
 	put(head, sphere(0.108), black, Vector3(0, 0.02, -0.03), Vector3(0.95, 1.0, 0.95))
 	# sombrero
 	var hat := joint("hat", head, Vector3(0, 0.1, -0.01))
@@ -157,11 +159,11 @@ func _build() -> void:
 	var hm := mat(Color("efe3c3"), 0.9); hm.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var band := mat(Color("b3121f"), 0.6); band.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var hm2 := mat(Color("f3d27a"), 0.3, 0.6); hm2.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.98, 1.0, 0.98)); var c0 := put(hat, crown, hm)
+	var b0 := put(hat, brim, hm, Vector3.ZERO, Vector3(0.5, 1.0, 0.5)); var c0 := put(hat, crown, hm)
 	hat_mats = [hm, band, hm2]
 	put(hat, lathe([Vector2(0.1, 0.012), Vector2(0.1005, 0.05), Vector2(0.1, 0.05)]), band, Vector3.ZERO, Vector3(1.02, 1, 1.02))
 	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.032, 0), Vector3(0.1, 0.1, 0.1)); (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).inner_radius = 0.96; (hat.get_child(hat.get_child_count() - 1).mesh as TorusMesh).outer_radius = 1.0
-	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.0, 0), Vector3(0.43, 0.43, 0.43)).mesh = _thin_torus()
+	put(hat, TorusMesh.new(), hm2, Vector3(0, 0.0, 0), Vector3(0.215, 0.43, 0.215)).mesh = _thin_torus()
 	# arms (raised, waving)
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
@@ -606,7 +608,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	(j.spine as Node3D).rotation = Vector3(0.03, -s * 0.08, c * 0.075 + bank * 0.12)
 	(j.neck as Node3D).rotation = Vector3(0, s * 0.05, -c * 0.04)
 	(j.head as Node3D).rotation = Vector3(0.04 + sin(phase * 2.0) * 0.03 + _fp("hp") * 1.0, look.x * 0.4 + s * 0.05 + _fp("hy") * 0.6, c * 0.05 + _fp("hr") * 0.8)
-	(j.hat as Node3D).rotation = Vector3(-0.16, 0, c * 0.05)
+	_secondary(phase, c)
 	for side in ["l", "r"]:
 		var d := -1.0 if side == "l" else 1.0
 		(j["hip_" + side] as Node3D).rotation = Vector3(sin(phase * 2.0 + (0.0 if side == "l" else 1.2)) * 0.07 - 0.04, 0, d * 0.03 - c * 0.04)
@@ -663,6 +665,37 @@ func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: 
 	(j["shoulder_" + side] as Node3D).rotation = Vector3(sx, sy, sz)
 	(j["elbow_" + side] as Node3D).rotation = Vector3(ex, 0, ez)
 	(j["hand_" + side] as Node3D).rotation = Vector3(hx, 0, hz)
+
+# ---------- secondary motion: the hat and the hair lag behind the body and get thrown by the arms ----------
+var _hs := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]    # spring positions: hat x, hat z, hair l, hair r, hat lift, (spare)
+var _hv := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+func _secondary(phase: float, c: float) -> void:
+	var dt := clampf(fixed_dt if fixed_dt > 0.0 else 0.016, 0.001, 0.05)
+	var sway := sin(phase)
+	var tx := -0.16 - 0.05 * sin(phase * 2.0 - 0.8)       # nods with the hips
+	var tz := c * 0.05 - 0.13 * sway                         # leans against the sway
+	var hl := 0.0; var hr := 0.0; var lift := 0.0
+	hl = 0.08 * -1.0 + 0.16 * sway + 0.06 * sin(phase * 2.0)
+	hr = 0.08 * 1.0 + 0.16 * sway - 0.06 * sin(phase * 2.0)
+	var kk := arm_k
+	if kk > 0.001:
+		match arm_n:
+			"flinch": tx += -0.35 * kk; lift += 0.03 * kk; hl += -0.35 * kk; hr += 0.35 * kk          # hat tips back and pops up, hair flares
+			"cheer": tx += -0.12 * kk; tz += 0.1 * sin(_clock * 11.0) * kk; lift += 0.015 * kk; hl += -0.2 * kk; hr += 0.2 * kk
+			"limp": tx += 0.22 * kk; hl += 0.1 * kk; hr += -0.1 * kk
+	var tg := [tx, tz, hl, hr, lift, 0.0]
+	var K := [34.0, 34.0, 20.0, 20.0, 60.0, 1.0]
+	var Z := [0.45, 0.45, 0.35, 0.35, 0.4, 1.0]
+	var sub := 6
+	for _s in sub:
+		for i in 5:
+			var w: float = K[i]
+			var a: float = w * w * (tg[i] - _hs[i]) - 2.0 * Z[i] * w * _hv[i]
+			_hv[i] += a * dt / sub; _hs[i] += _hv[i] * dt / sub
+	(j.hat as Node3D).rotation = Vector3(_hs[0], 0, _hs[1])
+	(j.hat as Node3D).position = Vector3(0, 0.1 + _hs[4], -0.01)
+	(j.hair_l as Node3D).rotation = Vector3(0, 0, _hs[2])
+	(j.hair_r as Node3D).rotation = Vector3(0, 0, _hs[3])
 
 func set_hoop(col_a: Color, col_b: Color) -> void:
 	hoop_mat.albedo_texture = stripe_tex(col_a, col_b)
