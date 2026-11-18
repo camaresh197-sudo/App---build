@@ -20,6 +20,8 @@ var now := 0.0
 var last := {}
 var song: Array = []
 var title: Array = []
+var vic: Array = []
+var vox: Dictionary = {}
 var cur := "game"
 var boost := 1.0              # the title song is written quieter than the game song
 var playing := false
@@ -37,6 +39,10 @@ func _ready() -> void:
 		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0)
 	var f := FileAccess.open("res://data_song.json", FileAccess.READ)
 	if f: song = JSON.parse_string(f.get_as_text())
+	var f4 := FileAccess.open("res://data_vox.json", FileAccess.READ)
+	if f4: vox = JSON.parse_string(f4.get_as_text())
+	var f3 := FileAccess.open("res://data_victory.json", FileAccess.READ)
+	if f3: vic = JSON.parse_string(f3.get_as_text())
 	var f2 := FileAccess.open("res://data_title.json", FileAccess.READ)
 	if f2: title = JSON.parse_string(f2.get_as_text())
 	for i in song.size():
@@ -137,10 +143,11 @@ func sfx(n: String, vol := 1.0) -> void:
 func start_music(track := "game") -> void:
 	if not have: return
 	if track == "menu" and title.is_empty(): return
+	if track == "victory" and vic.is_empty(): return
 	if track == "game" and song.is_empty(): return
 	if playing and cur == track: return
 	if playing: stop_music()
-	cur = track; boost = 1.25 if track == "menu" else 0.8; playing = true; step = 0; next_t = now + 0.08
+	cur = track; boost = 1.25 if track == "menu" else (1.1 if track == "victory" else 0.8); playing = true; step = 0; next_t = now + 0.08
 
 func stop_music() -> void:
 	playing = false
@@ -168,6 +175,7 @@ func _process(dt: float) -> void:
 		var guard := 0
 		while now >= next_t and guard < 4:
 			if cur == "menu": _tstep(step, next_t - now)
+			elif cur == "victory": _vstep(step, next_t - now)
 			else: _step(step, next_t - now)
 			step += 1; next_t += E; guard += 1
 		if guard >= 4: next_t = now
@@ -315,3 +323,100 @@ func _tstep(st: int, dl: float) -> void:
 		note("bell", int(cv[((s >> 1) + bar * 2) % cv.size()]) + (24 if hy >= 2 else 12), TE * 2.2, 0.02 * (0.85 + hy * 0.1), 0.02, dd)
 	if s == 15 and not is_end and nxr != r: note("bass", nxr + (-1 if nxr > r else 1), TE * 0.9, 0.1 * hv, 0.17, dd)
 	if first and s == 0 and hy >= 2: play("impact", {"v": 0.1 / 0.1 * SMP_MUS, "dl": dd})
+
+# ---------- victory fanfare (instrumental: the tune is carried by the lead instruments) ----------
+const VE := 0.105
+const VOX_GAIN := 1.4
+var have_vox := true
+const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-tag": 0.0}
+func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void:
+	for x in cv: note("trumpet", int(x) + add, dur, v, 0.05, dl)
+
+func _vstep(st: int, dl: float) -> void:
+	var nb := vic.size()
+	var bi := (st / 16) % nb
+	var s := st % 16
+	var B: Array = vic[bi]
+	var r: int = B[0]; var f: int = B[1]; var cv: Array = B[2]; var mel: Array = B[3]; var lead: String = B[4]
+	var hy: int = B[5]; var sec: String = B[6]; var bar: int = B[7]; var n: int = B[8]
+	var first: bool = B[9] == 1; var is_end: bool = B[10] == 1; var hold: bool = B[11] == 1; var of: String = B[12]
+	var fin: bool = B[13] == 1; var last: bool = B[14] == 1; var nxr: int = B[15]; var pre: bool = B[16] == 1
+	var hv := 0.9 + randf() * 0.2
+	var dd := maxf(0.0, dl)
+	var thin := last
+	var gd := not (thin and s > 0)
+	if s == 0 and first and not hold: hit("cymbal", dd, 0.05, 0.05)
+	if hy == 0:
+		if s == 0: hit("kick", dd, 0.17, 0.17)
+		if s == 8: play("tom", {"v": 0.12 / 0.14 * SMP_MUS, "rate": 95.0 / 110.0, "dl": dd})
+		if s == 12 or s == 14: play("tom", {"v": 0.09 / 0.14 * SMP_MUS, "rate": 120.0 / 110.0, "dl": dd})
+	elif s % 4 == 0 and gd: hit("kick", dd, 0.14 + 0.02 * hy, 0.17)
+	if hy >= 1 and (s == 4 or s == 12) and gd:
+		hit("snare", dd, 0.05 + 0.01 * hy, 0.07)
+		if hy >= 2: hit("clap", dd, 0.05, 0.05)
+	if gd:
+		if hy >= 1: hit("hat", dd, 0.026 if s % 2 == 1 else 0.04, 0.04)
+		elif s % 4 == 2: hit("shaker", dd, 0.04, 0.05)
+	if hy >= 3 and s % 2 == 1 and gd: hit("hat", dd, 0.022, 0.04)
+	if s % 4 == 0 and (hy >= 1 or s == 0) and not (thin and s % 8 != 0): note("bass", r if s % 8 == 0 else f, VE * 3.0, (0.15 if hy == 0 else 0.19) * hv, 0.17, dd)
+	if s % 4 == 2 and hy >= 1 and not thin: _strum(cv, dd, (s >> 2) % 2 == 0, 0.055 * hv)
+	if hy == 0 and s == 0: _strum(cv, dd, true, 0.07 * hv)
+	if s == 0 or (s == 8 and hy >= 1): _vtrp(cv, 12, VE * (7.0 if hy == 0 else 2.6), 0.04 if hy == 0 else 0.03, dd)
+	if hy >= 2 and s % 2 == 0: note("bell", int(cv[(s >> 1) % cv.size()]) + 24, VE * 1.5, 0.012, 0.02, dd)
+	if hy >= 3 and s == 4: _vtrp(cv, 24, VE * 2.0, 0.02, dd)
+	if sec == "v-tag" and bar == 0 and s == 4: hit("clap", dd, 0.06, 0.05)
+	# --- how sections join: fills, pickups, arrivals, held chords, final ring-out ---
+	var sc := of if hold else sec
+	var fs: float = VFILL.get(sc, 0.0)
+	var sx := s + 8 if hold else s
+	var half := n >= 8 and bar == n / 2 - 1 and not hold
+	if (hold or (is_end and not pre)) and fs > 0.0 and not last:
+		if sx == 6 or sx == 8: play("tom", {"v": (0.07 + 0.02 * fs) * minf(1.0, fs + 0.3) / 0.14 * SMP_MUS, "rate": (130.0 - (sx - 6) * 10.0) / 110.0, "dl": dd})
+		if sx == 10 and fs >= 0.8: play("tom", {"v": 0.08 * fs / 0.14 * SMP_MUS, "rate": 112.0 / 110.0, "dl": dd})
+		if sx >= 12:
+			hit("snare", dd, (0.03 + (sx - 12) * 0.014) * fs, 0.07)
+			if fs >= 1.0 and sx % 2 == 1: play("tom", {"v": 0.07 * fs / 0.14 * SMP_MUS, "rate": (100.0 - (sx - 12) * 6.0) / 110.0, "dl": dd})
+		if sx == 14 and fs >= 1.2: hit("snare", dd + VE * 0.5, 0.075, 0.07)
+	elif half and s >= 14: hit("snare", dd, 0.03 + (s - 14) * 0.015, 0.07)
+	if ((hold and s == 6) or (is_end and not pre and s == 14)) and not last and nxr != r: note("bass", nxr, VE * 1.6, 0.15, 0.17, dd)
+	if first and s == 0 and sc != "v-intro" and not hold:
+		var big := 0.3
+		if sc == "v-B" or sc == "v-F": big = 1.0 if fin else 0.8
+		elif sc == "v-C": big = 0.7
+		elif sc == "v-A": big = 0.4
+		if big >= 0.7:
+			hit("cymbal", dd, 0.03 * big, 0.05); hit("clap", dd, 0.05 * big, 0.05); _vtrp(cv, 12, VE * 4.0, 0.03 * big, dd)
+		if sc == "v-B" or sc == "v-F" or sc == "v-C" or sc == "v-tag": play("impact", {"v": (0.12 if fin else 0.09) / 0.1 * SMP_MUS, "dl": dd})
+	if hy >= 1 and bar % 2 == 1 and s == 10 and not is_end and not hold: hit("kick", dd, 0.1, 0.17)
+	if hy >= 2 and bar % 4 == 3 and s == 6 and not is_end and not hold:
+		hit("hat", dd, 0.05, 0.04); hit("hat", dd + VE * 0.5, 0.04, 0.04)
+	if hold and s == 0 and not last:
+		_vtrp(cv, 0, VE * 7.0, 0.028, dd); _vtrp(cv, 12, VE * 6.0, 0.018, dd)
+		if sc != "v-tag": hit("cymbal", dd, 0.03, 0.05)
+	if last:
+		if s == 0:
+			play("impact", {"v": 0.12 / 0.1 * SMP_MUS, "dl": dd}); hit("cymbal", dd, 0.07, 0.05); hit("clap", dd, 0.07, 0.05); hit("kick", dd, 0.18, 0.17)
+			_strum(cv, dd, true, 0.1); _vtrp(cv, 12, VE * 38.0, 0.05, dd); _vtrp(cv, 0, VE * 34.0, 0.04, dd); note("bass", r, VE * 28.0, 0.2, 0.17, dd)
+		if s == 4: _strum(cv, dd, false, 0.05)
+	# --- the sung line (one clip per lyric line, starting on the line's first bar) ---
+	if s == 0 and not hold and have_vox:
+		var vk := ""
+		if sec == "v-A": vk = "A%d" % bar
+		elif sec == "v-B": vk = "B%d" % bar
+		elif sec == "v-C": vk = "C%d" % bar
+		elif sec == "v-tag": vk = "tag%d" % bar
+		elif sec == "v-F": vk = ["B0", "B1", "B6", "B7"][clampi(bar, 0, 3)]
+		if vox.has(vk):
+			play("vox/" + str(vox[vk][0]), {"v": VOX_GAIN, "dl": maxf(0.0, dd - float(vox[vk][1]) + 0.01)})
+	# --- the tune ---
+	var m: int = int(mel[s])
+	if m > 0:
+		var holds := 0
+		while s + 1 + holds < 16 and (int(mel[s + 1 + holds]) == -1 or (int(mel[s + 1 + holds]) == 0 and holds < 3)): holds += 1
+		_lead(lead, m, (1 + holds) * VE * 0.9, dd, cv)
+	# --- arrangement layer: pad + bell sparkle + bass approach ---
+	var brk := sec.ends_with("intro")
+	if s == 0 and not hold: for x in cv: note("pad", int(x), VE * 16, (0.009 + 0.004 * hy) * (1.6 if brk else 1.0), 0.009, dd, VE * 16 * 0.28)
+	if hy >= 1 and s % 4 == 1 and not (m > 0) and not hold and randf() < 0.6:
+		note("bell", int(cv[((s >> 1) + bar * 2) % cv.size()]) + (24 if hy >= 2 else 12), VE * 2.2, 0.02 * (0.85 + hy * 0.1), 0.02, dd)
+	if s == 15 and not is_end and nxr != r: note("bass", nxr + (-1 if nxr > r else 1), VE * 0.9, 0.1 * hv, 0.17, dd)

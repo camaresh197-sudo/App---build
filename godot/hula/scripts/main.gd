@@ -2,7 +2,7 @@ extends Node2D
 # Hula Vaquero: Sky Ride (Godot port). Logical field 772x360 = 3088x1440 / 4.
 const FW := 772.0
 const FH := 360.0
-enum S { MENU, PLAY, OVER }
+enum S { MENU, PLAY, OVER, SECRET }
 const Save = preload("res://scripts/save.gd")
 const Menu = preload("res://scripts/menu.gd")
 var menu
@@ -67,7 +67,7 @@ var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
-	var want := "menu" if state == S.MENU else ("game" if state == S.PLAY else "")
+	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
 	if want != _want:
 		_want = want
 		if want == "": snd.stop_music()
@@ -129,7 +129,8 @@ func _draw() -> void:
 	var off := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake * 10.0
 	draw_set_transform(off)
 	_sky(R)
-	if state == S.MENU:
+	if state == S.SECRET: menu.secret(R, t)
+	elif state == S.MENU:
 		if menu.in_hub: menu.hub(R, t, Callable(self, "_hero"))
 		else: menu.title(R, t, Callable(self, "_hero"), ship_tex)
 	else:
