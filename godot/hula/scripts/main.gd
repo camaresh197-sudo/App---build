@@ -34,6 +34,7 @@ func _ready() -> void:
 	snd = preload("res://scripts/sound.gd").new(); add_child(snd)
 
 var snd: Node
+var _want := "?"
 var _vm := -1
 var touch_start := Vector2.ZERO
 var player_start := Vector2.ZERO
@@ -66,6 +67,11 @@ var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
+	var want := "menu" if state == S.MENU else ("game" if state == S.PLAY else "")
+	if want != _want:
+		_want = want
+		if want == "": snd.stop_music()
+		else: snd.start_music(want)
 	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
 	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
 	if not _confirmed and Time.get_ticks_msec() > 4000:

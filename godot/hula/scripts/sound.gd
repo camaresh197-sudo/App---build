@@ -12,11 +12,16 @@ const NVOICE := 40
 var voices: Array = []        # AudioStreamPlayer pool
 var vstop: Array = []         # per voice: time to release (0 = none)
 var vbase: Array = []         # per voice: base volume db
+var vstart: Array = []        # per voice: start time
+var vatt: Array = []          # per voice: attack (fade-in) seconds
 var cache := {}
 var later: Array = []         # [time, Callable]
 var now := 0.0
 var last := {}
 var song: Array = []
+var title: Array = []
+var cur := "game"
+var boost := 1.0              # the title song is written quieter than the game song
 var playing := false
 var step := 0
 var next_t := 0.0
@@ -29,9 +34,11 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_buses()
 	for i in NVOICE:
-		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0)
+		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0)
 	var f := FileAccess.open("res://data_song.json", FileAccess.READ)
 	if f: song = JSON.parse_string(f.get_as_text())
+	var f2 := FileAccess.open("res://data_title.json", FileAccess.READ)
+	if f2: title = JSON.parse_string(f2.get_as_text())
 	for i in song.size():
 		if song[i][7] == 0: loop_from = i; break
 	have = ResourceLoader.exists("res://audio/kick.ogg")
@@ -45,8 +52,6 @@ func _buses() -> void:
 	if AudioServer.get_bus_effect_count(mb) == 0:
 		var rv := AudioEffectReverb.new(); rv.room_size = 0.55; rv.damping = 0.5; rv.wet = 0.16; rv.dry = 0.9; rv.hipass = 0.1
 		AudioServer.add_bus_effect(mb, rv)
-		var comp := AudioEffectCompressor.new(); comp.threshold = -14.0; comp.ratio = 3.0; comp.gain = 2.0
-		AudioServer.add_bus_effect(mb, comp)
 	if AudioServer.get_bus_effect_count(0) == 0 and ClassDB.class_exists("AudioEffectHardLimiter"):
 		var lim = ClassDB.instantiate("AudioEffectHardLimiter"); lim.pre_gain_db = 0.0; lim.ceiling_db = -0.5
 		AudioServer.add_bus_effect(0, lim)
@@ -98,13 +103,16 @@ func play(name: String, o := {}) -> void:
 	p.pitch_scale = pow(2.0, (midi - pk[1]) / 12.0) * o.get("rate", 1.0) if midi >= 0 and pk[1] > 0 else o.get("rate", 1.0)
 	var v: float = o.get("v", 1.0) * TRIM.get(name, 1.0)
 	p.bus = o.get("bus", "Music")
+	if p.bus == "Music": v *= boost
 	vbase[oi] = linear_to_db(maxf(0.0001, v)); p.volume_db = vbase[oi]
 	var dur: float = o.get("dur", 0.0)
 	vstop[oi] = (now + dur) if dur > 0.0 else 0.0
+	vstart[oi] = now; vatt[oi] = o.get("att", 0.0)
+	if vatt[oi] > 0.0: p.volume_db = vbase[oi] - 40.0
 	p.play()
 
-func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0) -> void:
-	play(name, {"midi": midi, "dur": dur, "v": v / ref * SMP_MUS, "dl": dl})
+func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void:
+	play(name, {"midi": midi, "dur": dur, "v": v / ref * SMP_MUS, "dl": dl, "att": att})
 func hit(name: String, dl: float, v: float, ref: float) -> void:
 	play(name, {"v": v / ref * SMP_MUS, "dl": dl})
 
@@ -126,10 +134,13 @@ func sfx(n: String, vol := 1.0) -> void:
 	play(nm, {"v": SFX_REL.get(n, 0.7) * vol, "rate": 0.94 + randf() * 0.12, "bus": "SFX"})
 
 # ---------- music ----------
-func start_music() -> void:
-	if song.is_empty() or not have: return
-	if playing: return
-	playing = true; step = 0; next_t = now + 0.05
+func start_music(track := "game") -> void:
+	if not have: return
+	if track == "menu" and title.is_empty(): return
+	if track == "game" and song.is_empty(): return
+	if playing and cur == track: return
+	if playing: stop_music()
+	cur = track; boost = 1.25 if track == "menu" else 0.8; playing = true; step = 0; next_t = now + 0.08
 
 func stop_music() -> void:
 	playing = false
@@ -144,14 +155,21 @@ func _process(dt: float) -> void:
 		else: i += 1
 	for k in voices.size():   # short release so held notes end without a click
 		var p: AudioStreamPlayer = voices[k]
-		if not p.playing or vstop[k] <= 0.0: continue
-		var left: float = vstop[k] - now
-		if left <= 0.0: p.stop(); vstop[k] = 0.0
-		elif left < 0.08: p.volume_db = vbase[k] + linear_to_db(maxf(0.01, left / 0.08))
+		if not p.playing: continue
+		var db: float = vbase[k]
+		if vatt[k] > 0.0 and now - vstart[k] < vatt[k]:
+			db += linear_to_db(maxf(0.01, (now - vstart[k]) / vatt[k]))
+		if vstop[k] > 0.0:
+			var left: float = vstop[k] - now
+			if left <= 0.0: p.stop(); vstop[k] = 0.0; continue
+			elif left < 0.08: db += linear_to_db(maxf(0.01, left / 0.08))
+		p.volume_db = db
 	if playing:
 		var guard := 0
 		while now >= next_t and guard < 4:
-			_step(step, next_t - now); step += 1; next_t += E; guard += 1
+			if cur == "menu": _tstep(step, next_t - now)
+			else: _step(step, next_t - now)
+			step += 1; next_t += E; guard += 1
 		if guard >= 4: next_t = now
 
 func _harmony(m: int, v: Array, r: int) -> int:
@@ -235,3 +253,65 @@ func _step(st: int, dl: float) -> void:
 		for j in 2:
 			var rn: int = int(ct2[maxi(0, ct2.size() - 1 - ((slot - 3) * 2 + j))]) + 12
 			note("guitar", rn, 0.2, 0.07, 0.11, dd + j * 0.5 * E)
+
+# ---------- title song (ranchera polka, 16 sixteenth-steps per bar) ----------
+const TE := 0.125
+func _lead(kind: String, m: int, dur: float, dl: float, v: Array) -> void:
+	if kind == "horn" or kind == "trump":
+		note("trumpet", m, dur, 0.05, 0.05, dl); note("trumpet", _harmony(m, v, 0), dur, 0.03, 0.05, dl)
+	elif kind == "violin": play("violin", {"midi": m, "dur": dur, "v": 0.048 / 0.048 * SMP_MUS, "dl": dl, "att": 0.04})
+	elif kind == "duet":
+		note("trumpet", m, dur, 0.04, 0.05, dl); play("violin", {"midi": m, "dur": dur, "v": 0.035 / 0.048 * SMP_MUS, "dl": dl, "att": 0.04}); note("trumpet", _harmony(m, v, 0), dur, 0.024, 0.05, dl)
+	elif kind == "gtr":
+		note("guitar", m, maxf(0.1, dur), 0.11, 0.11, dl); note("guitar", m + 12, 0.1, 0.03, 0.11, dl)
+
+func _tstep(st: int, dl: float) -> void:
+	var nb := title.size()
+	var bi := (st / 16) % nb
+	var s := st % 16
+	var B: Array = title[bi]
+	var r: int = B[0]; var f: int = B[1]; var cv: Array = B[2]; var mel: Array = B[3]; var lead: String = B[4]
+	var hy: int = B[5]; var sec: String = B[6]; var bar: int = B[7]; var n: int = B[8]; var first: bool = B[9] == 1; var is_end: bool = B[10] == 1; var nxr: int = B[11]
+	var hv := 0.9 + randf() * 0.2
+	var dd := maxf(0.0, dl)
+	if s == 0 and first: hit("cymbal", dd, 0.05, 0.05)
+	var quiet := lead == "gtr" or (lead == "violin" and sec.ends_with("break"))
+	if hy == 0 and sec == "t-intro":
+		if s == 0 and bar >= 2: hit("kick", dd, 0.15, 0.17)
+		if s == 8 and bar >= 2: play("tom", {"v": 0.1 / 0.14 * SMP_MUS, "rate": 100.0 / 110.0, "dl": dd})
+		if bar == 3 and s >= 12: hit("snare", dd, 0.03 + (s - 12) * 0.012, 0.07)
+		if s == 0:
+			for x in cv: note("trumpet", int(x) + 12, TE * 5, 0.03, 0.05, dd)
+	elif sec == "t-break":
+		if s % 4 == 0: hit("kick", dd, 0.07, 0.17)
+		if s % 4 == 2: _strum(cv, dd, (s >> 2) % 2 == 0, 0.035 * hv)
+		if bar == 3 and s >= 8: hit("snare", dd, 0.025 + (s - 8) * 0.008, 0.07)
+	else:
+		if s % 8 == 0: hit("kick", dd, 0.15 + 0.02 * hy, 0.17)
+		if s == 4 or s == 12:
+			hit("snare", dd, 0.05 + 0.01 * hy, 0.07); hit("clap", dd, 0.04, 0.05)
+		hit("hat", dd, 0.02 if s % 2 == 1 else 0.034, 0.04)
+	if not (hy == 0 or sec == "t-break") or (sec == "t-intro" and bar >= 2):
+		if s % 4 == 0: note("bass", r if s % 8 == 0 else f, TE * 2.3, (0.19 if hy >= 1 else 0.14) * hv, 0.17, dd)
+		if hy >= 1 and s % 4 == 2: _strum(cv, dd, (s >> 2) % 2 == 0, 0.052 * hv)
+	if hy >= 2 and (s == 0 or s == 8):
+		for x in cv: note("trumpet", int(x) + 12, TE * 2.4, 0.024, 0.05, dd)
+	if hy >= 3 and s % 2 == 0: play("violin", {"midi": int(cv[(s >> 1) % cv.size()]) + 24, "dur": TE * 1.6, "v": 0.012 / 0.048 * SMP_MUS, "dl": dd, "att": 0.04})
+	if hy >= 2 and s % 4 == 3 and randf() < 0.5: note("bell", int(cv[(s >> 2) % cv.size()]) + 24, TE * 2, 0.016, 0.02, dd)
+	if is_end and s >= 12 and hy >= 1: hit("snare", dd, 0.04 + (s - 12) * 0.012, 0.07)
+	if is_end and sec == "t-C" and s == 0:
+		_strum(cv, dd, true, 0.09)
+		for x in cv: note("trumpet", int(x), 1.4, 0.04, 0.05, dd)
+	# melody lead (the guitar / violin leads keep playing through the quiet sections)
+	var m: int = int(mel[s])
+	if m > 0 and (not quiet or lead == "gtr" or lead == "violin"):
+		var holds := 0
+		while s + 1 + holds < 16 and (int(mel[s + 1 + holds]) == -1 or (int(mel[s + 1 + holds]) == 0 and holds < 3)): holds += 1
+		_lead(lead, m, (1 + holds) * TE * 0.9, dd, cv)
+	# arrangement layer: string pad, bell sparkle, bass approach into the next chord, section hit
+	if s == 0:
+		for x in cv: note("pad", int(x), TE * 16, (0.009 + 0.004 * hy) * (1.6 if (sec.ends_with("break") or sec.ends_with("intro")) else 1.0), 0.009, dd, TE * 16 * 0.28)
+	if hy >= 1 and s % 4 == 1 and not (m > 0) and randf() < 0.6:
+		note("bell", int(cv[((s >> 1) + bar * 2) % cv.size()]) + (24 if hy >= 2 else 12), TE * 2.2, 0.02 * (0.85 + hy * 0.1), 0.02, dd)
+	if s == 15 and not is_end and nxr != r: note("bass", nxr + (-1 if nxr > r else 1), TE * 0.9, 0.1 * hv, 0.17, dd)
+	if first and s == 0 and hy >= 2: play("impact", {"v": 0.1 / 0.1 * SMP_MUS, "dl": dd})
