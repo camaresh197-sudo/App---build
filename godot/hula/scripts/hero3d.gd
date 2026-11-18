@@ -242,6 +242,11 @@ var auto_blink := true
 var _blink_t := 2.0
 var _blink_k := 0.0
 var _last_ms := 0
+var fx_v := {}
+const SPR := {"lid": [26.0, 1.0], "lidL": [26.0, 1.0], "lidR": [26.0, 1.0], "sq": [22.0, 1.0], "gx": [30.0, 1.0], "gy": [30.0, 1.0], "ew": [24.0, 0.9], "pd": [10.0, 1.0],
+	"bo": [16.0, 0.75], "bi": [16.0, 0.75], "boL": [16.0, 0.75], "boR": [16.0, 0.75], "biL": [16.0, 0.75], "biR": [16.0, 0.75], "pf": [15.0, 0.8],
+	"mo": [15.0, 0.6], "mw": [13.0, 0.7], "sm": [12.0, 0.75], "sk": [12.0, 0.8], "tt": [14.0, 0.9], "pu": [13.0, 0.8], "tg": [14.0, 0.7],
+	"hp": [9.0, 0.8], "hr": [9.0, 0.8], "hy": [9.0, 0.8], "ns": [18.0, 0.9], "nf": [18.0, 0.9], "ch": [16.0, 0.8], "te": [3.0, 1.0], "wet": [4.0, 1.0], "fix": [10.0, 1.0]}
 var _clock := 0.0
 const LIP_N := 17
 
@@ -265,7 +270,7 @@ func _set_target(name: String, snap := false) -> void:
 	expr_name = name
 	fx_t = fx_def.duplicate()
 	for k in expr_db[name]: fx_t[k] = expr_db[name][k]
-	if snap: fx = fx_t.duplicate()
+	if snap: fx = fx_t.duplicate(); fx_v.clear()
 
 # z of the head surface at (x, y) in head space (head sphere r 0.105 scaled 0.93, 1.1, 1)
 func hz(x: float, y: float) -> float:
@@ -311,6 +316,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		var sd := "l" if s < 0 else "r"
 		fr["bi_" + sd] = put(head, capsule(0.0085, 0.036), black, Vector3(0.028 * s, 0.063, 0.087), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 + 0.1 * s))
 		fr["bo_" + sd] = put(head, capsule(0.0075, 0.036), black, Vector3(0.058 * s, 0.059, 0.074), Vector3(1, 1, 0.6), Vector3(0, 0.45 * s, PI / 2 - 0.42 * s))
+		fr["bm_" + sd] = put(head, capsule(0.008, 0.034), black, Vector3(0.043 * s, 0.062, 0.081), Vector3(1, 1, 0.6), Vector3(0, 0.25 * s, PI / 2 - 0.1 * s))
 	# charro mustache: moves with the smile, the nose and the jaw
 	var must: Array = []
 	fr.must = must
@@ -353,6 +359,17 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 			var cx: float = 0.066 * s + 0.007 * s * cos(a); var cy: float = 0.022 + 0.008 * sin(a)
 			var nd := put(head, capsule(0.0011, 0.014), line_m, Vector3(cx, cy, hz(cx, cy) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, atan2(-s * cos(a), sin(a))))
 			fr.crow.append(nd)
+
+	# more muscles: brow bunch between the brows, cheek puffs, lip-corner knots, chin dimple, jaw (masseter) bulges, forehead vein
+	var vein_m := mat(Color(0.55, 0.22, 0.2), 0.7)
+	fr.bunch = put(head, sphere(0.009), skin_d, Vector3(0, 0.052, hz(0, 0.052) - 0.002), Vector3(1.0, 0.8, 0.5))
+	for s: float in [-1.0, 1.0]:
+		var sd := "l" if s < 0 else "r"
+		fr["puff_" + sd] = put(head, sphere(0.02), skin, Vector3(0.042 * s, -0.01, 0.088), Vector3(1.2, 0.28, 0.6))
+		fr["corner_" + sd] = put(head, sphere(0.0055), skin_d, Vector3(0.04 * s, -0.07, 0.085), Vector3(1, 1, 0.6))
+		fr["mass_" + sd] = put(head, sphere(0.02), skin, Vector3(0.078 * s, -0.052, 0.03), Vector3(0.5, 1.0, 0.8))
+		fr["vein_" + sd] = put(head, capsule(0.0013, 0.03), vein_m, Vector3(0.06 * s, 0.092, hz(0.06 * s, 0.092) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, 0.5 * s))
+	fr.dimple = put(head, sphere(0.006), skin_d, Vector3(0, -0.092, 0.081), Vector3(1.4, 0.8, 0.5))
 	_apply_face()
 
 func _fp(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
@@ -424,6 +441,10 @@ func _apply_face() -> void:
 		var bo: MeshInstance3D = fr["bo_" + sd]
 		bo.position = Vector3(0.058 * s - 0.005 * pf * s, 0.059 + 0.016 * bos - 0.006 * pf - 0.006 * bdrop, 0.074 + 0.003 * glare)
 		bo.rotation = Vector3(0, 0.45 * s, PI / 2 + s * clampf(-0.42 + 0.5 * (bos - bis) + 0.35 * pf, -0.9, 0.7))
+		var bm: MeshInstance3D = fr["bm_" + sd]
+		var arch := 0.003 + 0.004 * clampf((bos + bis) * 0.5, -0.5, 1.0) - 0.004 * glare       # the brow arches when raised and flattens when scowling
+		bm.position = Vector3(0.043 * s - 0.008 * pf * s, (bi.position.y + bo.position.y) * 0.5 + arch, 0.081 + 0.004 * glare)
+		bm.rotation = Vector3(0, 0.25 * s, PI / 2 + s * ((bi.rotation.z + bo.rotation.z) * 0.5 - PI / 2))
 	# mouth: half-width w, smile sm lifts corners (frown drops them), mo opens the jaw, pu puckers, sk skews
 	var sm := _fp("sm"); var mo := clampf(_fp("mo"), 0.0, 1.0)
 	var w := 0.036 * (1.0 + 0.5 * _fp("mw")) * (1.0 - 0.45 * _fp("pu"))
@@ -437,7 +458,7 @@ func _apply_face() -> void:
 		var zz := 0.0895 - absf(t) * 0.006
 		var yl := -0.0735 - mo * 0.03 * (1.0 - 0.5 * t2) + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
 		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _fp("ns") * 0.004
-		(fr.lipL[i] as Node3D).position = Vector3(x, yl, zz)
+		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _fp("pu") * 0.003, zz + _fp("pu") * 0.006 * (1.0 - 0.5 * t2))
 		(fr.lipU[i] as Node3D).position = Vector3(x, yu, zz)
 	var cav: MeshInstance3D = fr.cav
 	cav.position = Vector3(0, -0.0685 - mo * 0.012, 0.083)
@@ -478,6 +499,33 @@ func _apply_face() -> void:
 	var chn: Node3D = fr.chin
 	chn.position = Vector3(ch * 0.003, -0.098 - mo * 0.009 + maxf(0.0, -sm) * 0.004 - _fp("pu") * 0.002, 0.062 + ch * 0.004)
 	chn.scale = Vector3(1.1 - ch * 0.1, 0.8 + maxf(0.0, -sm) * 0.15, 0.9)
+	# deeper muscles: corrugator bunch, cheek puffs, zygomatic lip-corner knots, mentalis dimple, masseter, forehead vein
+	var glr := maxf(_fp("pf"), maxf(0.0, -_fp("bi")) * 0.8)
+	var bn: Node3D = fr.bunch
+	bn.visible = glr > 0.35
+	bn.scale = Vector3(0.45 + glr * 0.35, 1.0 + glr * 0.9, 0.35 + glr * 0.2)
+	var twa := _fp("tw1"); var twb := _fp("tw2")
+	for s: float in [-1.0, 1.0]:
+		var sd := "l" if s < 0 else "r"
+		var up2 := maxf(0.0, sm) * 0.6 + sq2 * 0.7 + _fp("wet") * 0.3
+		var pf2: Node3D = fr["puff_" + sd]
+		pf2.position = Vector3(0.042 * s, -0.012 + up2 * 0.011, 0.088 + up2 * 0.002)
+		pf2.scale = Vector3(1.2, 0.28 + up2 * 0.32, 0.6)
+		var cn: Node3D = fr["corner_" + sd]
+		var cy: float = (fr.lipL[LIP_N - 1 if s > 0.0 else 0] as Node3D).position.y
+		cn.position = Vector3((w + 0.003) * s, cy + 0.002 + twa * 0.0008 * s, 0.085)
+		cn.scale = Vector3(1.0 + absf(sm) * 0.5 + _fp("mw") * 0.3, 1.0 + absf(sm) * 0.5, 0.6)
+		var ms: Node3D = fr["mass_" + sd]
+		var cl := clampf(ch * 0.8 + glr * 0.4 + _fp("tt") * 0.15 - mo * 0.2, 0.0, 1.0)
+		ms.position = Vector3(0.082 * s, -0.05 - mo * 0.006, 0.012)
+		ms.scale = Vector3(0.32 + cl * 0.2, 1.0 + cl * 0.1, 0.7 + cl * 0.1)
+		var vn: Node3D = fr["vein_" + sd]
+		var rage := clampf(glr + sq2 * 0.5 + ns * 0.4 - 1.25, 0.0, 1.0) * 2.5
+		vn.visible = rage > 0.1; vn.scale = Vector3(1, minf(1.4, rage), 0.5)
+	var dm: Node3D = fr.dimple
+	var mn := clampf(maxf(0.0, -sm) * 0.6 + _fp("pu") * 0.7 + ch * 0.4 - mo * 0.7, 0.0, 1.0)
+	dm.visible = mn > 0.15
+	dm.position = Vector3(0, -0.092 - mo * 0.009 + mn * 0.003, 0.081); dm.scale = Vector3(1.4 + mn * 0.6, 0.8 + mn * 0.5, 0.5)
 	# skin details: forehead lines with raised brows, the furrow with a scowl, crow's feet with a big smile or squint
 	var rz := (_fp("bo") + _fp("bi") + _fp("boL") + _fp("boR") + _fp("biL") + _fp("biR")) * 0.5
 	for i in 3:
@@ -503,8 +551,16 @@ func face_update() -> void:
 	if react_t > 0.0:
 		react_t -= dt
 		if react_t <= 0.0: _set_target(base_expr)
-	var k := 1.0 - exp(-dt * 11.0)
-	for key in fx_t: fx[key] = lerpf(float(fx.get(key, 0.0)), float(fx_t[key]), k)
+	# every muscle group is a damped spring with its own speed: eyes snap, brows and mouth follow with a little overshoot, the jaw bounces, tears build slowly
+	var steps := 2
+	var hh := dt / steps
+	for _i in steps:
+		for key in fx_t:
+			var pr: Array = SPR.get(key, [12.0, 1.0])
+			var x: float = fx.get(key, 0.0); var v: float = fx_v.get(key, 0.0)
+			v += ((float(fx_t[key]) - x) * pr[0] * pr[0] - 2.0 * pr[1] * pr[0] * v) * hh
+			fx[key] = x + v * hh; fx_v[key] = v
+	fo["tw1"] = sin(_clock * 3.1) * sin(_clock * 1.3 + 1.0); fo["tw2"] = sin(_clock * 2.3 + 2.0) * sin(_clock * 0.9)
 	var fam: String = expr_fam.get(expr_name, "calm")
 	# eyes: follow the gaze target, with small darting jumps (not while staring)
 	var stare := clampf(_fp_raw("fix"), 0.0, 1.0)
