@@ -22,6 +22,8 @@ var song: Array = []
 var title: Array = []
 var vic: Array = []
 var vox: Dictionary = {}
+var vox_lo: Dictionary = {}   # the octave-down double that sings under the synth-style lines
+var vox_only := false         # test switch: only the sung clips play
 var cur := "game"
 var boost := 1.0              # the title song is written quieter than the game song
 var playing := false
@@ -39,6 +41,8 @@ func _ready() -> void:
 		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0)
 	var f := FileAccess.open("res://data_song.json", FileAccess.READ)
 	if f: song = JSON.parse_string(f.get_as_text())
+	var f5 := FileAccess.open("res://data_vox_lo.json", FileAccess.READ)
+	if f5: vox_lo = JSON.parse_string(f5.get_as_text())
 	var f4 := FileAccess.open("res://data_vox.json", FileAccess.READ)
 	if f4: vox = JSON.parse_string(f4.get_as_text())
 	var f3 := FileAccess.open("res://data_victory.json", FileAccess.READ)
@@ -50,10 +54,13 @@ func _ready() -> void:
 	have = ResourceLoader.exists("res://audio/kick.ogg")
 
 func _buses() -> void:
-	for nm in ["Music", "SFX"]:
+	for nm in ["Music", "SFX", "Vox"]:
 		if AudioServer.get_bus_index(nm) < 0:
 			AudioServer.add_bus(); var i := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(i, nm); AudioServer.set_bus_send(i, "Master")
+	var vb := AudioServer.get_bus_index("Vox")
+	if AudioServer.get_bus_effect_count(vb) == 0:
+		var vr := AudioEffectReverb.new(); vr.room_size = 0.3; vr.damping = 0.7; vr.wet = 0.04; vr.dry = 1.0; AudioServer.add_bus_effect(vb, vr)   # sung words stay almost dry, so there is no echo on long notes
 	var mb := AudioServer.get_bus_index("Music")
 	if AudioServer.get_bus_effect_count(mb) == 0:
 		var rv := AudioEffectReverb.new(); rv.room_size = 0.55; rv.damping = 0.5; rv.wet = 0.16; rv.dry = 0.9; rv.hipass = 0.1
@@ -66,6 +73,8 @@ func set_volumes(music10: int, sfx10: int) -> void:
 	vol_music = music10 / 10.0; vol_sfx = sfx10 / 10.0
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), linear_to_db(maxf(0.0001, vol_music * 0.7)))
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SFX"), linear_to_db(maxf(0.0001, vol_sfx)))
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Vox"), linear_to_db(maxf(0.0001, vol_music * 0.7)))
+	AudioServer.set_bus_mute(AudioServer.get_bus_index("Vox"), music10 <= 0)
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("Music"), music10 <= 0)
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("SFX"), sfx10 <= 0)
 
@@ -94,6 +103,7 @@ func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
 # one voice: v = linear gain already scaled; delay in s; dur = hold time (0 = play whole sample)
 func play(name: String, o := {}) -> void:
 	if not have: return
+	if vox_only and not name.begins_with("vox/"): return
 	var dl: float = o.get("dl", 0.0)
 	if dl > 0.0:
 		later.append([now + dl, play.bind(name, o.merged({"dl": 0.0}, true))]); return
@@ -109,7 +119,8 @@ func play(name: String, o := {}) -> void:
 	p.pitch_scale = pow(2.0, (midi - pk[1]) / 12.0) * o.get("rate", 1.0) if midi >= 0 and pk[1] > 0 else o.get("rate", 1.0)
 	var v: float = o.get("v", 1.0) * TRIM.get(name, 1.0)
 	p.bus = o.get("bus", "Music")
-	if p.bus == "Music": v *= boost
+	if name.begins_with("vox/"): p.bus = "Vox"
+	if p.bus == "Music" or p.bus == "Vox": v *= boost
 	vbase[oi] = linear_to_db(maxf(0.0001, v)); p.volume_db = vbase[oi]
 	var dur: float = o.get("dur", 0.0)
 	vstop[oi] = (now + dur) if dur > 0.0 else 0.0
@@ -409,6 +420,7 @@ func _vstep(st: int, dl: float) -> void:
 		elif sec == "v-F": vk = ["B0", "B1", "B6", "B7"][clampi(bar, 0, 3)]
 		if vox.has(vk):
 			play("vox/" + str(vox[vk][0]), {"v": VOX_GAIN, "dl": maxf(0.0, dd - float(vox[vk][1]) + 0.01)})
+			if vox_lo.has(vk): play("vox/" + str(vox_lo[vk][0]), {"v": VOX_GAIN * 0.55, "dl": maxf(0.0, dd - float(vox_lo[vk][1]) + 0.01)})
 	# --- the tune ---
 	var m: int = int(mel[s])
 	if m > 0:
