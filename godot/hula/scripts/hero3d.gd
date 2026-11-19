@@ -319,7 +319,7 @@ func _apply_glb() -> void:
 # the control rig, because a loaded skinned mesh is static geometry.
 const RIG_GLB := "res://art/character_skinned.glb"
 const RIG_REF := "res://art/character_rig.json"   # the joint transforms the .glb was exported from
-const PROC_PARTS := ["lidu_l_0", "lidu_r_0", "lidl_l_0", "lidl_r_0"]
+const PROC_PARTS := []
 var rig_scene: Node3D
 var rig_skel: Skeleton3D
 var rig_bone := {}            # bone name -> skeleton bone index
