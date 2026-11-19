@@ -11,6 +11,11 @@ godot/hula/art/): a .blend inside res:// makes Godot try to import it, and when
 Blender is not configured (headless / CI) that failure aborts the WHOLE import
 pass - nothing is imported, so the game loses all audio and textures.
 
+This is a one-time scaffold: it builds the rig and a base mesh. Once
+blender/character_rigged.blend exists it is the MASTER - edit the mesh there and
+run blend_to_glb.py to publish; do not re-run the code->glb export, which would
+clobber the Blender edits.
+
     blender --background --factory-startup --python rig_to_armature.py -- <in.glb> <out.blend>
 """
 import sys

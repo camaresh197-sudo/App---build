@@ -1,5 +1,9 @@
 """Export the rigged .blend back out as a skinned glTF (.glb).
 
+blender/character_rigged.blend is the MASTER for the character's mesh: edit it
+in Blender and run this to publish. Do not regenerate the mesh from code (the
+shotter "glb" export is frozen) - that would clobber the Blender edits.
+
 The .blend lives outside the Godot project (see rig_to_armature.py): a .blend
 inside res:// makes Godot's import abort when Blender is unavailable, which
 leaves the game with no audio and no textures.
