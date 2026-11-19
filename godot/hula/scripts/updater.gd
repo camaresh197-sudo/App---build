@@ -144,8 +144,8 @@ func _on_done(result: int, code: int, _h: PackedStringArray, body: PackedByteArr
 		_next()
 
 func _plan() -> void:
-	if int(_manifest.get("build", 0)) < build and build > 0:
-		return   # this APK is newer than the published packs
+	if int(_manifest.get("build", 0)) <= build and build > 0:
+		return   # this APK is at least as new as the published packs: its own content is already current
 	# packs are compiled by a specific engine build and only load in an APK built with that same one.
 	# an older APK must ignore them and keep playing instead of downloading something it cannot mount.
 	var want: String = str(_manifest.get("engine", ""))
