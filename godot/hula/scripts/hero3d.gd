@@ -1693,7 +1693,7 @@ func _secondary(phase: float, c: float) -> void:
 	if kk > 0.001:
 		match arm_n:
 			"flinch": tx += -0.2 * kk; lift += 0.03 * kk; hl += -0.35 * kk; hr += 0.35 * kk          # hat tips back and pops up, hair flares
-			"cheer": tx += -0.12 * kk; tz += 0.1 * sin(_clock * 11.0) * kk; lift += 0.06 * kk; hl += -0.2 * kk; hr += 0.2 * kk    # increased lift to clear arms
+			"cheer": tx += 0.15 * kk; tz += 0.1 * sin(_clock * 11.0) * kk; lift += 0.06 * kk; hl += -0.2 * kk; hr += 0.2 * kk    # tilt back + lift to clear arm swings
 			"limp": tx += 0.22 * kk; hl += 0.1 * kk; hr += -0.1 * kk
 	var tg := [tx, tz, hl, hr, lift, 0.0]
 	var K := [34.0, 34.0, 20.0, 20.0, 60.0, 1.0]
