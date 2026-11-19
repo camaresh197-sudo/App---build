@@ -268,19 +268,21 @@ func _ready() -> void:
 		for i in 4:
 			hx.pose(0.0)
 			await get_tree().process_frame
-		# Drop the invisible helper parts (the lip / mustache bead rows) before exporting. They carry no visible
-		# geometry, but a hidden node makes Godot write the KHR_node_visibility extension into extensionsRequired,
-		# and Blender does not implement that extension, so it refuses the file and opens an empty scene.
+		# Drop the hidden parts before exporting. A hidden node is a part's on/off switch, so prune its whole subtree.
+		# They carry no visible geometry, but a hidden node makes Godot write KHR_node_visibility into
+		# extensionsRequired, and Blender does not implement that extension, so it refuses the file.
 		var doomed: Array = []
 		var stack: Array = [hx.root]
 		while not stack.is_empty():
 			var nd: Node = stack.pop_back()
-			if nd is Node3D and not (nd as Node3D).visible and nd.get_child_count() == 0: doomed.append(nd)
+			if nd is Node3D and not (nd as Node3D).visible:
+				doomed.append(nd)
+				continue                     # its children are hidden with it
 			for c in nd.get_children(): stack.append(c)
 		for nd in doomed:
 			nd.get_parent().remove_child(nd)
 			nd.free()
-		print("glb: pruned %d hidden helper nodes" % doomed.size())
+		print("glb: pruned %d hidden parts" % doomed.size())
 		var doc := GLTFDocument.new()
 		var st := GLTFState.new()
 		var ae := doc.append_from_scene(hx.root, st)
