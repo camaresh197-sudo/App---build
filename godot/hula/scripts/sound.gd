@@ -26,6 +26,8 @@ var title: Array = []
 var vic: Array = []
 var vox: Dictionary = {}
 var vox_only := false         # test switch: only the sung clips play
+var solo_grunt := false       # test switch: only the grunt ad-libs play
+var mute_grunt := false       # test switch: mute the grunt ad-libs (vocal-ducking QA)
 var cur := "game"
 var boost := 1.0              # per-track gain, set in start_music() so the three songs are equally loud
 var playing := false
@@ -57,16 +59,23 @@ func _ready() -> void:
 	have = ResourceLoader.exists("res://audio/kick.ogg")
 
 func _buses() -> void:
-	for nm in ["Music", "SFX", "Vox"]:
+	for nm in ["Music", "SFX", "Vox", "VoxGrunt"]:
 		if AudioServer.get_bus_index(nm) < 0:
 			AudioServer.add_bus(); var i := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(i, nm); AudioServer.set_bus_send(i, "Master")
 	var vb := AudioServer.get_bus_index("Vox")
 	if AudioServer.get_bus_effect_count(vb) == 0:
 		# catch only the loudest peaks (the clips are already compressed per line), so VOX_GAIN stays predictable
-		var vc := AudioEffectCompressor.new(); vc.threshold = -10.0; vc.ratio = 2.0; vc.attack_us = 12000.0; vc.release_ms = 180.0; vc.gain = 0.0; AudioServer.add_bus_effect(vb, vc)
+		var vc := AudioEffectCompressor.new(); vc.threshold = -10.0; vc.ratio = 1.5; vc.attack_us = 12000.0; vc.release_ms = 180.0; vc.gain = 0.0; AudioServer.add_bus_effect(vb, vc)
 		# a little room so the ensemble reads as a choir, but still short enough that held words do not echo
 		var vr := AudioEffectReverb.new(); vr.room_size = 0.5; vr.damping = 0.6; vr.wet = 0.15; vr.dry = 1.0; AudioServer.add_bus_effect(vb, vr)
+	var gb := AudioServer.get_bus_index("VoxGrunt")
+	if AudioServer.get_bus_effect_count(gb) == 0:
+		# The grunts get their own bus: the Vox compressor only sees the sung line, so a grunt can no
+		# longer duck the vocal. The compressor here keeps the grunt's peaks off the master limiter.
+		var gc := AudioEffectCompressor.new(); gc.threshold = -4.0; gc.ratio = 2.5; gc.attack_us = 5000.0; gc.release_ms = 120.0; gc.gain = 0.0; AudioServer.add_bus_effect(gb, gc)
+		# the same room as Vox, a little drier, so the ad-lib still belongs to the performance
+		var gr := AudioEffectReverb.new(); gr.room_size = 0.5; gr.damping = 0.6; gr.wet = 0.10; gr.dry = 1.0; AudioServer.add_bus_effect(gb, gr)
 	var mb := AudioServer.get_bus_index("Music")
 	if AudioServer.get_bus_effect_count(mb) == 0:
 		var rv := AudioEffectReverb.new(); rv.room_size = 0.55; rv.damping = 0.5; rv.wet = 0.16; rv.dry = 0.9; rv.hipass = 0.1
@@ -80,7 +89,9 @@ func set_volumes(music10: int, sfx10: int) -> void:
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Music"), linear_to_db(maxf(0.0001, vol_music * 0.7)))
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("SFX"), linear_to_db(maxf(0.0001, vol_sfx)))
 	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("Vox"), linear_to_db(maxf(0.0001, vol_music * 0.7)))
+	AudioServer.set_bus_volume_db(AudioServer.get_bus_index("VoxGrunt"), linear_to_db(maxf(0.0001, vol_music * 0.7)))
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("Vox"), music10 <= 0)
+	AudioServer.set_bus_mute(AudioServer.get_bus_index("VoxGrunt"), music10 <= 0)
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("Music"), music10 <= 0)
 	AudioServer.set_bus_mute(AudioServer.get_bus_index("SFX"), sfx10 <= 0)
 
@@ -110,6 +121,8 @@ func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
 func play(name: String, o := {}) -> void:
 	if not have: return
 	if vox_only and not name.begins_with("vox/"): return
+	if solo_grunt and name != "grunt": return
+	if mute_grunt and name == "grunt": return
 	var dl: float = o.get("dl", 0.0)
 	if dl > 0.0:
 		later.append([now + dl, play.bind(name, o.merged({"dl": 0.0}, true))]); return
@@ -126,7 +139,7 @@ func play(name: String, o := {}) -> void:
 	var v: float = o.get("v", 1.0) * o.get("trim", TRIM.get(name, 1.0))
 	p.bus = o.get("bus", "Music")
 	if name.begins_with("vox/"): p.bus = "Vox"
-	if p.bus == "Music" or p.bus == "Vox": v *= boost
+	if p.bus == "Music" or p.bus == "Vox" or p.bus == "VoxGrunt": v *= boost
 	vbase[oi] = linear_to_db(maxf(0.0001, v)); p.volume_db = vbase[oi]
 	var dur: float = o.get("dur", 0.0)
 	vstop[oi] = (now + dur) if dur > 0.0 else 0.0
@@ -389,7 +402,7 @@ const VGRUNT := [["v-A", 3, 14], ["v-A", 7, 12], ["v-A", 7, 14],
 	["v-C", 3, 14], ["v-C", 5, 12], ["v-C", 5, 14], ["v-C", 7, 14],
 	["v-tag", 1, 14], ["v-tag", 3, 14],
 	["v-F", 1, 12], ["v-F", 3, 14]]
-const VGRUNT_V := 2.6   # grunt level (linear, before the Vox bus); hotter than the sung line on purpose
+const VGRUNT_V := 4.2   # grunt level (linear, before the Vox bus); the body is pre-normalized in the sample bank
 func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void:
 	for x in cv: note("trumpet", int(x) + add, dur, v, 0.05, dl)
 
@@ -475,7 +488,7 @@ func _vstep(st: int, dl: float) -> void:
 	if not hold and not last:
 		for g in VGRUNT:
 			if sec == g[0] and bar == g[1] and s == g[2]:
-				play("grunt", {"midi": r, "dur": 0.34, "v": VGRUNT_V, "bus": "Vox", "dl": dd})
+				play("grunt", {"midi": r, "dur": 0.34, "v": VGRUNT_V, "bus": "VoxGrunt", "dl": dd})
 				break
 	# --- the tune ---
 	var m: int = int(mel[s])

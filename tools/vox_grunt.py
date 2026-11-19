@@ -81,7 +81,8 @@ def _grunt(root_midi, seed=0, variant=0):
     # the belt's brass drive and a hard tanh squash so the body stays loud and dirty
     x = V._drive(x, 2.6, 0.55)
     x = np.tanh(x * (1.6 / (np.max(np.abs(x)) + 1e-9))) / np.tanh(1.6)
-    # fixed body loudness (RMS ~-12.5 dB, not the old buried -19):
+    # fixed body loudness before the consonant (the body is re-normalized after
+    # the 'h' below, so this only sets a stable starting point):
     x = x / (np.sqrt(np.mean(x ** 2)) + 1e-9) * (10.0 ** (-12.5 / 20.0))
     # hard 'h' plosive on the very front: a short bright burst that owns the 0.98
     # peak, so the hit reads as a consonant + vowel and pokes out of the mix.
@@ -91,6 +92,28 @@ def _grunt(root_midi, seed=0, variant=0):
     click /= (np.max(np.abs(click)) + 1e-9)
     fade = np.linspace(1.0, 0.0, hl) ** 1.5
     x[:hl] = x[:hl] * (1.0 - fade) + click * 0.98
+    x = x / (np.max(np.abs(x)) + 1e-9) * 0.98
+    # Body loudness: the 'h' owns the peak, so a peak-normalized take leaves the
+    # vowel ~12 dB down and the Vox bus compressor + master limiter then duck it
+    # (the click retriggers them for the whole word). Scale the vowel body itself
+    # to a fixed RMS after the consonant, so the *body* survives the gain chain.
+    body = x[hl:].copy()
+    bpk = np.max(np.abs(body)) + 1e-9
+    body = np.tanh(body / bpk * 2.5) / np.tanh(2.5)     # flatten the AM peaks a little
+    body *= (10.0 ** (-6.0 / 20.0)) / (np.sqrt(np.mean(body ** 2)) + 1e-9)
+    body = np.clip(body, -0.99, 0.99)                    # keep every root's vowel body at the same RMS
+    x[hl:] = body
+    x = np.clip(x, -0.99, 0.99)
+    # The old bank's 16 kHz hiss came from the broken high shelf; the hard tanh and
+    # the 'h' still leave a fizzy top octave. The formants live below 4 kHz, so a
+    # gentle 9-12 kHz low-pass keeps the body and removes the fizz/hiss.
+    X = np.fft.rfft(x)
+    fr = np.fft.rfftfreq(len(x), 1.0 / SR)
+    w = np.ones_like(fr)
+    w[fr >= 12000.0] = 0.0
+    tr = (fr > 9000.0) & (fr < 12000.0)
+    w[tr] = 0.5 * (1.0 + np.cos(np.pi * (fr[tr] - 9000.0) / 3000.0))
+    x = np.fft.irfft(X * w, n=len(x))
     x = x / (np.max(np.abs(x)) + 1e-9) * 0.98
     # a touch of width (a close, centred ad-lib, not a wide double)
     dl = int(SR * (0.004 + 0.001 * variant))

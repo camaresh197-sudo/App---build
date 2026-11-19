@@ -327,18 +327,32 @@ func _ready() -> void:
 		var mpost_cap := AudioEffectCapture.new(); mpost_cap.buffer_length = 4.0
 		AudioServer.add_bus_effect(mb, mpre_cap, 0)   # the Music bus in front of its reverb
 		AudioServer.add_bus_effect(mb, mpost_cap)     # and behind it, to see how much the reverb adds
+		var vbx := AudioServer.get_bus_index("Vox")
+		var vpre_cap := AudioEffectCapture.new(); vpre_cap.buffer_length = 4.0
+		var vpost_cap := AudioEffectCapture.new(); vpost_cap.buffer_length = 4.0
+		AudioServer.add_bus_effect(vbx, vpre_cap, 0)  # Vox bus input, in front of the compressor
+		AudioServer.add_bus_effect(vbx, vpost_cap, 2) # after the compressor, in front of the reverb
 		m.set_process(false)
 		m.snd.set_volumes(8, 8)                     # pin the mix buses so runs stay comparable
 		m.snd.start_music(track)
-		if a.size() > 6 and a[6] == "vocals":        # isolate the sung line + ad-libs (mute the band and SFX)
+		if (a.size() > 5 and a[5] == "vocals") or (a.size() > 6 and a[6] == "vocals"):   # isolate the sung line + ad-libs (mute the band and SFX)
 			AudioServer.set_bus_mute(mb, true)
 			AudioServer.set_bus_mute(AudioServer.get_bus_index("SFX"), true)
+		if (a.size() > 5 and a[5] == "gruntonly") or (a.size() > 6 and a[6] == "gruntonly"):  # QA: only the grunt ad-libs
+			AudioServer.set_bus_mute(mb, true)
+			AudioServer.set_bus_mute(AudioServer.get_bus_index("SFX"), true)
+			m.snd.solo_grunt = true
+		if (a.size() > 5 and a[5] == "voxnogrunt") or (a.size() > 6 and a[6] == "voxnogrunt"):  # QA: sung line with the grunts muted
+			AudioServer.set_bus_mute(mb, true)
+			AudioServer.set_bus_mute(AudioServer.get_bus_index("SFX"), true)
+			m.snd.mute_grunt = true
 		if a.size() > 5 and a[5] == "play":         # end-to-end: let the real game run so music and SFX overlap
 			m.set_process(true)
 			m.start_run()
 		Engine.max_fps = 60                         # steady dt keeps the sequencer timing repeatable
 		var pre := PackedVector2Array(); var post := PackedVector2Array()
 		var mpre := PackedVector2Array(); var mpost := PackedVector2Array()
+		var vpre := PackedVector2Array(); var vpost := PackedVector2Array()
 		var t0 := Time.get_ticks_msec()
 		while Time.get_ticks_msec() - t0 < int(secs * 1000.0):
 			await get_tree().process_frame
@@ -350,12 +364,21 @@ func _ready() -> void:
 			if n3 > 0: mpre.append_array(mpre_cap.get_buffer(n3))
 			var n4 := mpost_cap.get_frames_available()
 			if n4 > 0: mpost.append_array(mpost_cap.get_buffer(n4))
+			var n5 := vpre_cap.get_frames_available()
+			if n5 > 0: vpre.append_array(vpre_cap.get_buffer(n5))
+			var n6 := vpost_cap.get_frames_available()
+			if n6 > 0: vpost.append_array(vpost_cap.get_buffer(n6))
 		var sr := AudioServer.get_mix_rate()
 		_audio_report("PRE ", pre, sr)
 		_audio_report("POST", post, sr)
 		_audio_report("Mpre", mpre, sr)
 		_audio_report("Mpst", mpost, sr)
-		if a[0] != "-": _audio_wav(a[0], post, sr)
+		_audio_report("Vpre", vpre, sr)
+		_audio_report("Vpst", vpost, sr)
+		if a[0] != "-":
+			_audio_wav(a[0], post, sr)
+			_audio_wav(a[0].get_basename() + "_voxpre.wav", vpre, sr)
+			_audio_wav(a[0].get_basename() + "_voxpost.wav", vpost, sr)
 		print("mix: track=%s secs=%.1f sr=%d frames=%d" % [track, secs, sr, post.size()])
 		get_tree().quit()
 		return
