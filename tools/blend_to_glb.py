@@ -1,5 +1,9 @@
 """Export the rigged .blend back out as a skinned glTF (.glb).
 
+The .blend lives outside the Godot project (see rig_to_armature.py): a .blend
+inside res:// makes Godot's import abort when Blender is unavailable, which
+leaves the game with no audio and no textures.
+
     blender --background --factory-startup --python blend_to_glb.py -- <in.blend> <out.glb>
 """
 import sys
