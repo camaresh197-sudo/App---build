@@ -379,7 +379,18 @@ func _load_rig() -> void:
 					cm.layers = 0
 				else:
 					g.layers = cm.layers         # the glb mesh inherits the control mesh's render layer (e.g. the hat)
-					g.material_override = cm.material_override   # the file carries geometry; the code keeps its materials
+					if cm == fr.get("head"):
+						# the head now carries the joined lip surfaces; keep the skin material for the
+						# rest of the head and the code's lip colour for the surface tagged lip_mouth
+						var gm: Mesh = g.mesh
+						var lm: Material = fr.get("lip_m")
+						for si in gm.get_surface_count():
+							var sm: Material = gm.surface_get_material(si)
+							var is_lip: bool = sm != null and sm.resource_name.to_lower().contains("lip")
+							g.set_surface_override_material(si, lm if (is_lip and lm != null) else cm.material_override)
+						g.material_override = null
+					else:
+						g.material_override = cm.material_override   # the file carries geometry; the code keeps its materials
 					cm.layers = 0                # ...and the control mesh stops drawing
 					rig_mesh[cm] = g
 					rig_parts += 1
@@ -391,6 +402,12 @@ func _load_rig() -> void:
 		var nd2: Node = hide.pop_back()
 		if nd2 is MeshInstance3D: (nd2 as MeshInstance3D).layers = 0
 		for c in nd2.get_children(): hide.append(c)
+	# the merged master has no tooth meshes, so the glb cannot supply them; keep the
+	# procedural control teeth visible. Their bones are posed and visibility-toggled each frame.
+	for nm in ["tooth_u", "tooth_l"]:
+		for bone in fr.get(nm, []):
+			for c in (bone as Node3D).get_children():
+				if c is MeshInstance3D: (c as MeshInstance3D).layers = 1
 	print("hero3d: rig from %s: %d bones, %d parts" % [RIG_GLB, rig_skel.get_bone_count(), rig_parts])
 
 # copy the control rig onto the loaded skeleton, and carry each part's visibility across
@@ -493,13 +510,16 @@ const EYE_Z := 0.0725
 const EYE_R := 0.0235
 const TOOTH_U := 6            # upper teeth in the visible row
 const TOOTH_L := 6            # lower teeth (only shown when the mouth is really open)
-const TOOTH_H := 0.0105       # tooth height
+const TOOTH_H := 0.0085       # tooth height
 const TOOTH_D := 0.005        # tooth depth (front to back)
 # The mouth is posed, not drawn: the jaw is a bone, and the parts that belong to it (lower lip, chin, tongue, its corner
 # knots) hang off it. JAW_P is the hinge in head space and JAW_OPEN the angle at mo = 1, picked so the lower lip drops the
 # same 0.03 the old per-part translation used to, so the mouth reads the same but the opening now comes from one bone.
 const JAW_P := Vector3(0, -0.05, -0.045)
 const JAW_OPEN := 0.23
+# The mouth sits too low on the head: lift the whole lip/teeth/mustache assembly so the chin has room
+# below it. The jaw hinge (JAW_P) stays put; only the mouth's rest line moves.
+const MOUTH_DY := 0.010
 
 func _load_expr() -> void:
 	var f := FileAccess.open("res://data_expr.json", FileAccess.READ)
@@ -615,6 +635,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var lid_m := mat(skin.albedo_color.lightened(0.04), 0.9); lid_m.metallic_specular = 0.05
 	var shine := mat(Color.WHITE, 0.1); shine.emission_enabled = true; shine.emission = Color.WHITE; shine.emission_energy_multiplier = 0.8
 	var lip_m := mat(skin.albedo_color.darkened(0.34).lerp(Color("b5524a"), 0.58), 0.5)
+	fr.lip_m = lip_m
 	var mouth_m := mat(Color("64211a"), 0.6)
 	# soft-edged skin for the cheeks, chin and jaw muscles: the shape fades out where it meets the head, so it reads as a swelling of the same skin and not a separate lump
 	var soft_sh := Shader.new()
@@ -684,23 +705,24 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		for i in n:
 			var t := float(i) / (n - 1)
 			var x := 0.003 + t * 0.048
-			var y := -0.043 - sin(t * PI) * 0.004 + maxf(0.0, t - 0.6) * 0.019
-			var z := hz(x, y) + 0.002
+			var y := -0.046 + MOUTH_DY - sin(t * PI) * 0.004 + maxf(0.0, t - 0.6) * 0.019
+			var z := hz(x, y) - 0.0002
 			var r := lerpf(0.0130, 0.0050, pow(t, 0.85))
 			var mn := _fb("must_%s_%d" % [msd, i], head, Vector3(x * s, y, z))
 			put(mn, sphere(r), black, Vector3.ZERO, Vector3(1.2, 0.9, 0.9))
 			mn.visible = false
+			mn.scale = Vector3(0.88, 0.88, 0.88)     # slightly thinner tube, tucked against the lip
 			must.append([mn, mn.position, t, s])
 	# mouth: dark cavity, two rows of separate teeth (laid along the mouth arc every frame), upper and lower lip
 	# rows (shaped every frame), smile-line dimples
-	put(_fb("mouth_cav", head, Vector3(0, -0.068, 0.083)), sphere(0.03), mouth_m); fr.cav = b("mouth_cav")
+	put(_fb("mouth_cav", head, Vector3(0, -0.068 + MOUTH_DY, 0.083)), sphere(0.03), mouth_m); fr.cav = b("mouth_cav")
 	var tbox := BoxMesh.new(); tbox.size = Vector3.ONE
 	fr.tooth_u = []; fr.tooth_l = []
 	for i in TOOTH_U:
-		put(_fb("tooth_u_%d" % i, head, Vector3(0, -0.0625, 0.0925)), tbox, teeth_m)
+		put(_fb("tooth_u_%d" % i, head, Vector3(0, -0.0625 + MOUTH_DY, 0.0925)), tbox, teeth_m)
 		var tu := b("tooth_u_%d" % i); tu.visible = false; fr.tooth_u.append(tu)
 	for i in TOOTH_L:
-		put(_fb("tooth_l_%d" % i, J, Vector3(0, -0.0735, 0.0895) - JAW_P), tbox, teeth_m)
+		put(_fb("tooth_l_%d" % i, J, Vector3(0, -0.0735 + MOUTH_DY, 0.0895) - JAW_P), tbox, teeth_m)
 		var tl := b("tooth_l_%d" % i); tl.visible = false; fr.tooth_l.append(tl)
 	var tube_m := lip_m.duplicate(); tube_m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var must_m := mat(Color("0d0908"), 0.75); must_m.cull_mode = BaseMaterial3D.CULL_DISABLED; must_m.rim_enabled = true; must_m.rim = 0.25; must_m.rim_tint = 0.0
@@ -711,8 +733,12 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	for i in LIP_N:
 		var bl := _fb("lipL_%d" % i, J, Vector3.ZERO); put(bl, sphere(0.0042), lip_m, Vector3.ZERO, Vector3(1.2, 0.8, 0.8)); bl.visible = false; fr.lipL.append(bl)
 		var bu := _fb("lipU_%d" % i, head, Vector3.ZERO); put(bu, sphere(0.0038), lip_m, Vector3.ZERO, Vector3(1.2, 0.7, 0.8)); bu.visible = false; fr.lipU.append(bu)
+	# Pull the glb mouth tubes in towards their bead centres. The tubes read as thick sausages on the
+	# face; a narrower cross-section keeps them sitting on the skin instead of hanging off it.
+	for bu in fr.lipU: (bu as Node3D).scale = Vector3.ONE
+	for bl in fr.lipL: (bl as Node3D).scale = Vector3.ONE
 	put(_fb("chin", J, Vector3(0, -0.100, 0.036) - JAW_P), sphere(0.025), soft_m); fr.chin = b("chin")   # chin, on the jaw bone
-	put(_fb("tongue", J, Vector3(0, -0.075, 0.08) - JAW_P), sphere(0.014), mat(Color("c0525a"), 0.45)); fr.tongue = b("tongue")
+	put(_fb("tongue", J, Vector3(0, -0.075 + MOUTH_DY, 0.08) - JAW_P), sphere(0.014), mat(Color("c0525a"), 0.45)); fr.tongue = b("tongue")
 	for s: float in [-1.0, 1.0]:
 		var fsd := "l" if s < 0 else "r"
 		put(_fb("fold_" + fsd, head, Vector3(0.042 * s, -0.05, 0.085)), sphere(0.005), skin_d); fr["fold_" + fsd] = b("fold_" + fsd)   # smile line (nasolabial fold)
@@ -1044,12 +1070,12 @@ func _apply_face() -> void:
 		var t2 := t * t
 		var x := t * w
 		var skw := sk * 0.008 * t
-		var yl := -0.0735 + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
-		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _pose_v("ns") * 0.004 + _pose_v("ul") * 0.008
+		var yl := -0.0735 + MOUTH_DY + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
+		var yu := -0.0635 + MOUTH_DY + A * 0.5 * (t2 - 0.5) + skw + _pose_v("ns") * 0.004 + _pose_v("ul") * 0.008
 		# the lips sit on the face: their depth follows the head surface, so they curve back at the corners instead of
 		# hanging in the air, and the jaw's drop keeps the lower lip on the receding chin
-		var zl := hz(x, yl) + 0.0022 + _pose_v("pu") * 0.006 * (1.0 - 0.5 * t2)
-		var zu := hz(x, yu) + 0.0022
+		var zl := hz(x, yl) + 0.0008 + _pose_v("pu") * 0.006 * (1.0 - 0.5 * t2)
+		var zu := hz(x, yu) + 0.0008
 		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _pose_v("pu") * 0.003, zl) - JAW_P
 		(fr.lipU[i] as Node3D).position = Vector3(x, yu, zu)
 	var cav: Node3D = fr.cav
@@ -1057,22 +1083,22 @@ func _apply_face() -> void:
 	# the lower one). The dark interior, the teeth and the tongue are all sized to that gap, so nothing can spill out
 	# around a lip and the lips stay the thing you read the expression from.
 	var th := JAW_OPEN * mo
-	var zu_c := hz(0.0, -0.0635 - 0.25 * A) + 0.0022
-	var zl_c := hz(0.0, -0.0735 - 0.5 * A) + 0.0022
+	var zu_c := hz(0.0, -0.0635 + MOUTH_DY - 0.25 * A) + 0.0008
+	var zl_c := hz(0.0, -0.0735 + MOUTH_DY - 0.5 * A) + 0.0008
 	var rl_c := 0.0034 + 0.0042
-	var y_top := (-0.0635 - 0.25 * A) - 0.0062 + _pose_v("ul") * 0.008                                    # upper lip's lower edge
-	var y_bot := -0.05 + (-0.0735 - 0.5 * A + 0.05) * cos(th) - (zl_c + 0.045) * sin(th) + rl_c     # lower lip's upper edge, after the jaw swing
+	var y_top := (-0.0635 + MOUTH_DY - 0.25 * A) - 0.0062 + _pose_v("ul") * 0.008                                    # upper lip's lower edge
+	var y_bot := -0.05 + (-0.0735 + MOUTH_DY - 0.5 * A + 0.05) * cos(th) - (zl_c + 0.045) * sin(th) + rl_c     # lower lip's upper edge, after the jaw swing
 	var h_win := maxf(0.004, y_top - y_bot)
 	var zt := minf(zu_c, zl_c) + 0.0035
 	cav.position = Vector3(0, (y_top + y_bot) * 0.5, minf(zu_c, zl_c))
-	cav.scale = Vector3(w * 0.94 / 0.03, h_win * 0.55 / 0.03, 0.10)
+	cav.scale = Vector3(w * 0.86 / 0.03, h_win * 0.44 / 0.03, 0.06)
 	# teeth: two rows of separate teeth laid along the mouth arc, the upper row hanging from the upper lip and the
 	# lower row standing on the lower lip. The gaps between them (and the per-tooth texture) are what make them read
 	# as teeth instead of one white plate.
 	var show := maxf(_pose_v("tt") * 0.9, mo * 1.2)
 	var showk := clampf(show, 0.0, 1.0)
 	var t_on := show > 0.18
-	var spanw := w * 0.70
+	var spanw := w * 0.64
 	var tth := minf(TOOTH_H * (0.88 + 0.12 * showk), h_win * 0.75)      # the upper row fills most of the opening
 	var tth_l := minf(TOOTH_H * (0.88 + 0.12 * showk), h_win * 0.5)     # the lower row takes the rest, just behind it
 	for k in TOOTH_U:
@@ -1080,7 +1106,7 @@ func _apply_face() -> void:
 		tu.visible = t_on
 		if t_on:
 			var ft := (float(k) + 0.5) / TOOTH_U * 2.0 - 1.0
-			var yu := -0.0635 + A * 0.5 * (ft * ft - 0.5) + sk * 0.008 * ft + _pose_v("ns") * 0.004
+			var yu := -0.0635 + MOUTH_DY + A * 0.5 * (ft * ft - 0.5) + sk * 0.008 * ft + _pose_v("ns") * 0.004
 			# hang the row off the upper lip's lower edge (its tube radius tapers towards the corners), so a wide open
 			# mouth shows the teeth instead of tucking them up behind the lip
 			var bt := absf(ft) * 0.7
@@ -1094,7 +1120,7 @@ func _apply_face() -> void:
 		tl.visible = l_on
 		if l_on:
 			var ft := (float(k) + 0.5) / TOOTH_L * 2.0 - 1.0
-			var yl := -0.0735 + A * (ft * ft - 0.5) + sk * 0.008 * ft - maxf(0.0, -sm) * 0.008 * ft * ft
+			var yl := -0.0735 + MOUTH_DY + A * (ft * ft - 0.5) + sk * 0.008 * ft - maxf(0.0, -sm) * 0.008 * ft * ft
 			var rl := 0.0034 + 0.0042 * (1.0 - ft * ft)
 			tl.position = Vector3(ft * spanw, yl + rl + tth_l * 0.5 + 0.0004, zt - 0.001) - JAW_P
 			tl.scale = Vector3(2.0 * spanw / TOOTH_L * 0.88, tth_l, TOOTH_D)
@@ -1146,7 +1172,7 @@ func _apply_face() -> void:
 		(n3 as Node3D).visible = cr > 0.05; (n3 as Node3D).scale = Vector3(1, maxf(cr, 0.01), 0.5)
 	var tn2: Node3D = fr.tongue
 	tn2.visible = tg > 0.08 and mo > 0.12
-	tn2.position = Vector3(0, -0.0715, minf(zu_c, zl_c) - 0.001) - JAW_P
+	tn2.position = Vector3(0, -0.0715 + MOUTH_DY, minf(zu_c, zl_c) - 0.001) - JAW_P
 	tn2.scale = Vector3(1.2, 0.5 + tg * 0.2, 0.45 + tg * 0.25)
 	# The fleshy expressions come from the file's blendshapes (sculpted in Blender), riding on top of the bones. This
 	# is the shape-key path: a real smile/squint sculpt instead of bone-rotated blobs.
@@ -1164,6 +1190,8 @@ func _apply_face() -> void:
 		if bi2 >= 0: hg.set_blend_shape_value(bi2, clampf(maxf(_pose_v("bo"), _pose_v("bi")), 0.0, 1.0))
 		var ni := hg.find_blend_shape_by_name("snarl")
 		if ni >= 0: hg.set_blend_shape_value(ni, clampf(_pose_v("ns"), 0.0, 1.0))
+		var ui := hg.find_blend_shape_by_name("lip_up")
+		if ui >= 0: hg.set_blend_shape_value(ui, clampf(_pose_v("ul"), 0.0, 1.0))
 
 # eases the face toward its target; called from pose() (uses real time, so no extra plumbing in main.gd)
 func face_update() -> void:
