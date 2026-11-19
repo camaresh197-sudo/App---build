@@ -22,7 +22,7 @@ func _ready() -> void:
 	vp.world_3d = World3D.new()   # explicit, so the portrait camera can share it
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
-	_world(); _build(); _layer(j.hat, 2); _portrait(); _load_expr()
+	_world(); _rig(); _build(); _layer(j.hat, 2); _portrait(); _load_expr()
 
 func tex() -> Texture2D: return vp.get_texture()
 
@@ -42,8 +42,71 @@ func mat(col: Color, rough := 0.7, metal := 0.0) -> StandardMaterial3D:
 func put(parent: Node3D, mesh: Mesh, m: Material, pos := Vector3.ZERO, scl := Vector3.ONE, rot := Vector3.ZERO) -> MeshInstance3D:
 	var n := MeshInstance3D.new(); n.mesh = mesh; n.material_override = m; n.position = pos; n.scale = scl; n.rotation = rot; parent.add_child(n); return n
 
-func joint(name: String, parent: Node3D, pos: Vector3) -> Node3D:
-	var n := Node3D.new(); n.name = name; n.position = pos; parent.add_child(n); j[name] = n; return n
+# ---------- the skeleton ----------
+# The rig is declared once, here: [name, parent, rest position, rest rotation]. _rig() builds every bone from this list
+# before a single mesh is added, so a bone's parent, its rest pose and its length live in exactly one place and every mesh
+# then hangs off a bone. Nothing about the shape is declared here, and the choreography never names a mesh.
+# Poses are deltas from this rest (see _muscle): the bones carry the pose, the muscles trail it.
+# The two sides and the fingers are mirrored, so the list is built instead of written out twice.
+func _declare_bones() -> Array:
+	var out: Array = [
+		["root", "", Vector3.ZERO],
+		["pelvis", "root", Vector3(0, 0.82, 0)],
+		["spine", "pelvis", Vector3(0, 0.07, 0)],
+		["spine2", "spine", Vector3(0, 0.15, 0)],           # mid-spine: the back curves through three joints instead of two
+		["chest", "spine2", Vector3(0, 0.15, 0)],           # upper body twists on this, above the waist joint
+		["neck", "chest", Vector3(0, 0.2, 0)],
+		["neck2", "neck", Vector3(0, 0.1, 0)],              # upper neck: the head turns on this, the neck bends in two places
+		["head", "neck2", Vector3(0, 0.1, 0)],
+		["jaw", "head", Vector3(0, -0.05, -0.045)],         # the jaw hinge: the mouth opens by turning this bone, not by moving the lips
+		["hat", "head", Vector3(0, 0.07, -0.012)],
+	]
+	for s in [-1, 1]:
+		var side := "l" if s < 0 else "r"
+		out.append_array([
+			["hip_" + side, "pelvis", Vector3(0.1 * s, -0.04, 0)],
+			["thigh_" + side, "hip_" + side, Vector3.ZERO],          # thigh twist: knees and toes turn out / in
+			["knee_" + side, "thigh_" + side, Vector3(0, -0.36, 0)],
+			["shin_" + side, "knee_" + side, Vector3.ZERO],          # shin twist
+			["ankle_" + side, "shin_" + side, Vector3(0, -0.34, 0)],
+			["foot_" + side, "ankle_" + side, Vector3(0, -0.06, -0.04)],   # pivots on the heel: toe taps and flicks
+			["toe_" + side, "foot_" + side, Vector3(0, 0.01, 0.13)],       # ball of the foot: heel lifts, toe taps
+			["clav_" + side, "chest", Vector3(0.08 * s, 0.12, 0)],   # collarbone: shrugs and rolls the shoulder
+			["shoulder_" + side, "clav_" + side, Vector3(0.14 * s, 0, 0)],
+			["uarm_" + side, "shoulder_" + side, Vector3.ZERO],      # upper-arm twist
+			["elbow_" + side, "uarm_" + side, Vector3(0, -0.3, 0)],
+			["fore_" + side, "elbow_" + side, Vector3.ZERO],         # forearm twist (palm turns)
+			["hand_" + side, "fore_" + side, Vector3(0, -0.3, 0)],   # wrist
+			["thumb_" + side, "hand_" + side, Vector3(0.04 * s, -0.045, 0.012), Vector3(0, 0, -0.9 * s)],
+			["hair_" + side, "head", Vector3(0.1 * s, 0.04, -0.03), Vector3(0, 0, 0.08 * s)],   # pivots at the top so the lock can swing
+			# eyes: a real ball that turns inside two lids, so the iris can never slide off the eye
+			["white_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],
+			["iris_" + side, "white_" + side, Vector3.ZERO],
+			["pupil_" + side, "iris_" + side, Vector3.ZERO],
+			["lidu_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],     # upper lid
+			["lidl_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],     # lower lid
+		])
+		for f in 4:            # four fingers, two joints each
+			out.append(["fg%d_%s" % [f, side], "hand_" + side, Vector3(-0.03 + f * 0.02, -0.075, 0)])
+			out.append(["fh%d_%s" % [f, side], "fg%d_%s" % [f, side], Vector3(0, -0.048, 0)])
+	return out
+
+var rig := {}                 # name -> {parent, rest, rot}: what _declare_bones() asked for
+func _rig() -> void:
+	for e in _declare_bones():
+		var n := String(e[0]); var p := String(e[1])
+		var nd := Node3D.new(); nd.name = n; nd.position = e[2]
+		if e.size() > 3: nd.rotation = e[3]
+		if p == "": root = nd; vp.add_child(nd)
+		else: (j[p] as Node3D).add_child(nd)
+		j[n] = nd
+		rig[n] = {"parent": p, "rest": nd.position, "rot": nd.rotation}
+
+# the bone a mesh hangs off, by name. The rig is the only thing that knows where a bone sits.
+func b(name: String) -> Node3D:
+	var n: Node3D = j.get(name)
+	if n == null: push_error("rig: no bone named " + name)
+	return n
 
 func capsule(r: float, h: float) -> CapsuleMesh:
 	var c := CapsuleMesh.new(); c.radius = r; c.height = h; c.radial_segments = 24; c.rings = 8; return c
@@ -97,7 +160,7 @@ func jacket_tex() -> ImageTexture:
 
 # ---------- the model ----------
 func _build() -> void:
-	root = Node3D.new(); vp.add_child(root)
+	# the skeleton is already standing (see _rig): this only hangs meshes off it
 	var skin := mat(Color("a9714b"), 0.55)
 	var cloth := mat(Color.WHITE, 0.85); cloth.albedo_texture = jacket_tex()
 	var red := mat(Color("a3121c"), 0.85)
@@ -111,32 +174,32 @@ func _build() -> void:
 	var felt := mat(Color("efe3c3"), 0.9)
 	mats = {"felt": felt, "skin": skin}
 	# pelvis & legs
-	var pel := joint("pelvis", root, Vector3(0, 0.82, 0))
+	var pel := b("pelvis")
 	put(pel, capsule(0.12, 0.34), red, Vector3(0, 0.02, 0), Vector3(1.25, 0.5, 0.9), Vector3(0, 0, PI / 2))
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
-		var hip := joint("hip_" + side, pel, Vector3(0.1 * s, -0.04, 0))
-		var thigh := joint("thigh_" + side, hip, Vector3.ZERO)          # thigh twist: knees and toes turn out / in
+		var hip := b("hip_" + side)
+		var thigh := b("thigh_" + side)          # thigh twist: knees and toes turn out / in
 		put(thigh, lathe([Vector2(0.095, 0.05), Vector2(0.104, -0.02), Vector2(0.101, -0.1), Vector2(0.09, -0.21), Vector2(0.079, -0.31), Vector2(0.076, -0.37)], 32), red_nc)
 		put(hip, sphere(0.097), red)
-		var knee := joint("knee_" + side, thigh, Vector3(0, -0.36, 0))
+		var knee := b("knee_" + side)
 		put(knee, sphere(0.08), red)
-		var shin := joint("shin_" + side, knee, Vector3.ZERO)          # shin twist
+		var shin := b("shin_" + side)          # shin twist
 		put(shin, lathe([Vector2(0.076, 0.02), Vector2(0.084, -0.05), Vector2(0.086, -0.11), Vector2(0.074, -0.2), Vector2(0.06, -0.29), Vector2(0.056, -0.34)], 32), red_nc)
-		var ank := joint("ankle_" + side, shin, Vector3(0, -0.34, 0))
+		var ank := b("ankle_" + side)
 		put(ank, capsule(0.075, 0.2), boot, Vector3(0, 0.03, 0))
-		var foot := joint("foot_" + side, ank, Vector3(0, -0.06, -0.04))       # pivots on the heel: toe taps and flicks
+		var foot := b("foot_" + side)       # pivots on the heel: toe taps and flicks
 		put(foot, capsule(0.065, 0.14), boot, Vector3(0, 0.01, 0.07), Vector3(1, 1, 1.2), Vector3(PI / 2, 0, 0))
-		var toe := joint("toe_" + side, foot, Vector3(0, 0.01, 0.13))       # ball of the foot: heel lifts, toe taps
+		var toe := b("toe_" + side)       # ball of the foot: heel lifts, toe taps
 		put(toe, capsule(0.06, 0.12), boot, Vector3(0, 0, 0.05), Vector3(1, 1, 1.1), Vector3(PI / 2, 0, 0))
 		put(toe, sphere(0.04), gold, Vector3(0, 0.02, 0.1))
 		# gold trouser stripe
 		put(thigh, BoxMesh.new(), gold, Vector3(0.088 * s, -0.19, 0), Vector3(0.008, 0.34, 0.02), Vector3(0, 0, -s * 0.045))
 	# torso / jacket
-	var spine := joint("spine", pel, Vector3(0, 0.07, 0))
+	var spine := b("spine")
 	put(spine, capsule(0.18, 0.52), cloth, Vector3(0, 0.22, 0), Vector3(1.0, 1.0, 0.75))
-	var spine2 := joint("spine2", spine, Vector3(0, 0.15, 0))      # mid-spine: the back curves through three joints instead of two
-	var chest := joint("chest", spine2, Vector3(0, 0.15, 0))        # upper body twists on this, above the waist joint
+	var spine2 := b("spine2")      # mid-spine: the back curves through three joints instead of two
+	var chest := b("chest")        # upper body twists on this, above the waist joint
 	put(chest, capsule(0.2, 0.3), cloth, Vector3(0, 0.03, 0), Vector3(1.08, 0.8, 0.72))
 	# collar & buttons
 	put(chest, TorusMesh.new(), gold, Vector3(0, 0.2, 0), Vector3(0.1, 0.1, 0.1))
@@ -147,24 +210,24 @@ func _build() -> void:
 	put(spine, BoxMesh.new(), silver, Vector3(0, 0.02, 0.122), Vector3(0.07, 0.06, 0.02))
 	put(spine, BoxMesh.new(), gold, Vector3(0, 0.02, 0.134), Vector3(0.04, 0.035, 0.012))
 	# head
-	var neck := joint("neck", chest, Vector3(0, 0.2, 0))
+	var neck := b("neck")
 	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.07, 0), Vector3(0.14, 0.14, 0.14))      # the neck: runs from inside the collar up under the jaw
 	put(neck, sphere(0.09), skin, Vector3(0, -0.02, 0.0), Vector3(1.0, 0.6, 0.85))      # wide base: neck flares into the shoulders
-	var neck2 := joint("neck2", neck, Vector3(0, 0.1, 0))       # upper neck: the head turns on this, the neck bends in two places
-	var head := joint("head", neck2, Vector3(0, 0.1, 0)); head.scale = Vector3(1.22, 1.22, 1.22)
+	var neck2 := b("neck2")       # upper neck: the head turns on this, the neck bends in two places
+	var head := b("head"); head.scale = Vector3(1.22, 1.22, 1.22)
 	put(head, sphere(0.105), skin, Vector3(0, 0.0, 0), Vector3(0.93, 1.1, 1.0))
-	fr.jaw = put(head, sphere(0.06), skin, Vector3(0, -0.06, 0.02), Vector3(0.95, 0.75, 0.9))       # jaw
+	fr.jaw = put(b("jaw"), sphere(0.06), skin, Vector3(0, -0.06, 0.02) - JAW_P, Vector3(0.95, 0.75, 0.9))       # jaw, on the jaw bone
 	_face(head, skin, white, black)
 	put(head, sphere(0.02), skin, Vector3(-0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8)); put(head, sphere(0.02), skin, Vector3(0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8))
 	# hair: long dark locks either side + back
 	for s in [-1, 1]:
-		var lock := joint("hair_" + ("l" if s < 0 else "r"), head, Vector3(0.1 * s, 0.04, -0.03))      # pivots at the top so the lock can swing
+		var lock := b("hair_" + ("l" if s < 0 else "r"))      # pivots at the top so the lock can swing
 		lock.rotation = Vector3(0, 0, 0.08 * s)
 		var black_nc := mat(Color("120c09"), 0.5); black_nc.cull_mode = BaseMaterial3D.CULL_DISABLED
 		put(lock, lathe([Vector2(0.03, 0.02), Vector2(0.046, -0.02), Vector2(0.05, -0.09), Vector2(0.043, -0.17), Vector2(0.028, -0.25), Vector2(0.01, -0.31), Vector2(0.0015, -0.325)], 24), black_nc)
 	put(head, sphere(0.108), black, Vector3(0, 0.02, -0.03), Vector3(0.95, 1.0, 0.95))
 	# sombrero
-	var hat := joint("hat", head, Vector3(0, 0.07, -0.012))
+	var hat := b("hat")
 	var brim := lathe([Vector2(0.09, 0.0), Vector2(0.20, -0.005), Vector2(0.30, 0.0), Vector2(0.40, 0.03), Vector2(0.43, 0.065), Vector2(0.425, 0.07), Vector2(0.395, 0.04), Vector2(0.30, 0.012), Vector2(0.20, 0.005), Vector2(0.09, 0.012)])
 	var crown := lathe([Vector2(0.1, 0.0), Vector2(0.098, 0.06), Vector2(0.088, 0.13), Vector2(0.074, 0.178), Vector2(0.05, 0.198), Vector2(0.0, 0.205)])
 	var hm := mat(Color("efe3c3"), 0.9); hm.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -178,28 +241,28 @@ func _build() -> void:
 	# arms (raised, waving)
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
-		var clav := joint("clav_" + side, chest, Vector3(0.08 * s, 0.12, 0))       # collarbone: shrugs and rolls the shoulder
-		var sh := joint("shoulder_" + side, clav, Vector3(0.14 * s, 0, 0))
+		var clav := b("clav_" + side)       # collarbone: shrugs and rolls the shoulder
+		var sh := b("shoulder_" + side)
 		put(sh, sphere(0.075), cloth)
 		put(sh, sphere(0.085), cloth, Vector3(0.012 * s, 0.01, 0.0), Vector3(1.0, 1.05, 1.1))                       # deltoid cap
 		put(chest, sphere(0.1), cloth, Vector3(0.095 * s, 0.185, -0.005), Vector3(1.5, 0.55, 0.95), Vector3(0, 0, -0.32 * s))   # trapezius slope from neck to shoulder
-		var ua := joint("uarm_" + side, sh, Vector3.ZERO)             # upper-arm twist
+		var ua := b("uarm_" + side)             # upper-arm twist
 		put(ua, capsule(0.062, 0.34), cloth, Vector3(0, -0.15, 0))
-		var el := joint("elbow_" + side, ua, Vector3(0, -0.3, 0))
+		var el := b("elbow_" + side)
 		put(el, sphere(0.058), cloth)
-		var fo_ := joint("fore_" + side, el, Vector3.ZERO)             # forearm twist (palm turns)
+		var fo_ := b("fore_" + side)             # forearm twist (palm turns)
 		put(fo_, capsule(0.052, 0.3), cloth, Vector3(0, -0.13, 0))
 		put(fo_, CylinderMesh.new(), white, Vector3(0, -0.27, 0), Vector3(0.062, 0.04, 0.062))
 		put(fo_, CylinderMesh.new(), gold, Vector3(0, -0.245, 0), Vector3(0.066, 0.012, 0.066))
-		var hd := joint("hand_" + side, fo_, Vector3(0, -0.3, 0))      # wrist
+		var hd := b("hand_" + side)      # wrist
 		put(hd, sphere(0.052), skin, Vector3(0, -0.04, 0), Vector3(1.0, 1.15, 0.7))
 		for f in 4:            # four fingers, two joints each
-			var f1 := joint("fg%d_%s" % [f, side], hd, Vector3(-0.03 + f * 0.02, -0.075, 0))
+			var f1 := b("fg%d_%s" % [f, side])
 			f1.rotation = Vector3(0, 0, (f - 1.5) * 0.12)
 			put(f1, capsule(0.012, 0.045 + (0.008 if f == 1 or f == 2 else 0.0)), skin, Vector3(0, -0.024, 0))
-			var f2 := joint("fh%d_%s" % [f, side], f1, Vector3(0, -0.048, 0))
+			var f2 := b("fh%d_%s" % [f, side])
 			put(f2, capsule(0.011, 0.04), skin, Vector3(0, -0.02, 0))
-		var tb := joint("thumb_" + side, hd, Vector3(0.04 * s, -0.045, 0.012))   # thumb
+		var tb := b("thumb_" + side)   # thumb
 		tb.rotation = Vector3(0, 0, -0.9 * s)
 		put(tb, capsule(0.013, 0.05), skin, Vector3(0, -0.026, 0))
 	# hoop
@@ -277,6 +340,11 @@ const SPR := {"lid": [26.0, 1.0], "lidL": [26.0, 1.0], "lidR": [26.0, 1.0], "sq"
 var _clock := 0.0
 const LIP_N := 17
 const EYE_R := 0.027
+# The mouth is posed, not drawn: the jaw is a bone, and the parts that belong to it (lower lip, chin, tongue, its corner
+# knots) hang off it. JAW_P is the hinge in head space and JAW_OPEN the angle at mo = 1, picked so the lower lip drops the
+# same 0.03 the old per-part translation used to, so the mouth reads the same but the opening now comes from one bone.
+const JAW_P := Vector3(0, -0.05, -0.045)
+const JAW_OPEN := 0.23
 
 func _load_expr() -> void:
 	var f := FileAccess.open("res://data_expr.json", FileAccess.READ)
@@ -305,6 +373,7 @@ func hz(x: float, y: float) -> float:
 	return 0.105 * sqrt(maxf(0.02, 1.0 - pow(x / 0.0977, 2.0) - pow(y / 0.1155, 2.0)))
 
 func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMaterial3D) -> void:
+	var J := b("jaw")       # the lower jaw: everything below the mouth line hangs off this bone
 	var skin_d := mat(skin.albedo_color.darkened(0.16), 0.7)
 	var iris_m := mat(Color.WHITE, 0.3); iris_m.albedo_texture = _iris_tex(); iris_m.emission_enabled = true; iris_m.emission_texture = iris_m.albedo_texture; iris_m.emission_energy_multiplier = 0.45
 	iris_m.cull_mode = BaseMaterial3D.CULL_DISABLED
@@ -342,21 +411,21 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		var ec := Vector3(ex, 0.025, 0.0725)         # eyeball centre: a real ball that turns inside two lids, so the iris can never slide off the eye
 		fr["ec_" + sd] = ec
 		fr["soc_" + sd] = put(head, sphere(0.027), skin_d, Vector3(ex, 0.025, 0.083), Vector3(1.18, 0.95, 0.4))        # socket shadow
-		var ball := joint("white_" + sd, head, ec)
+		var ball := b("white_" + sd)
 		fr["white_" + sd] = ball
 		put(ball, sphere(EYE_R), sclera_m)
 		put(head, sphere(0.0052), pink_m, Vector3(ex - 0.0235 * s, 0.0215, 0.0875), Vector3(1.0, 0.85, 0.6))           # tear duct
-		var iris := joint("iris_" + sd, ball, Vector3.ZERO)
+		var iris := b("iris_" + sd)
 		fr["iris_" + sd] = iris
 		put(iris, _cap(EYE_R * 1.002, asin(0.0145 / EYE_R), true), iris_m)
-		var pup := joint("pupil_" + sd, iris, Vector3.ZERO)
+		var pup := b("pupil_" + sd)
 		fr["pupil_" + sd] = pup
 		put(pup, _cap(EYE_R * 1.004, asin(0.0052 / EYE_R), false), black_nc2)
 		fr["shine_" + sd] = put(head, sphere(0.0036), shine, ec, Vector3(1, 1, 0.35))
 		fr["shine2_" + sd] = put(head, sphere(0.0016), shine, ec, Vector3(1, 1, 0.35))
-		var lu := joint("lidu_" + sd, head, ec); fr["lid_" + sd] = lu
+		var lu := b("lidu_" + sd); fr["lid_" + sd] = lu
 		put(lu, _lidmesh(EYE_R + 0.0022, true, lid_base, skin_d.albedo_color), lidv_m)
-		var ll := joint("lidl_" + sd, head, ec); fr["low_" + sd] = ll
+		var ll := b("lidl_" + sd); fr["low_" + sd] = ll
 		put(ll, _lidmesh(EYE_R + 0.0022, false, lid_base, skin_d.albedo_color), lidv_m)
 		fr["wet_" + sd] = put(head, sphere(0.02), wet_m, Vector3(ex, 0.006, 0.0975), Vector3(1.0, 0.2, 0.5))
 		fr["streak_" + sd] = put(head, capsule(0.0024, 0.04), wet_m, Vector3(ex * 1.12, -0.025, hz(ex * 1.12, -0.025) + 0.0015), Vector3(1, 1, 0.7))
@@ -387,15 +456,16 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var tube_m := lip_m.duplicate(); tube_m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var must_m := mat(Color("0d0908"), 0.45); must_m.cull_mode = BaseMaterial3D.CULL_DISABLED; must_m.rim_enabled = true; must_m.rim = 0.25; must_m.rim_tint = 0.0
 	for nm in ["lipUm", "lipLm", "mustm_l", "mustm_r"]:
-		var mi := MeshInstance3D.new(); mi.mesh = ArrayMesh.new(); mi.material_override = (must_m if nm.begins_with("must") else tube_m); head.add_child(mi); fr[nm] = mi
+		var mi := MeshInstance3D.new(); mi.mesh = ArrayMesh.new(); mi.material_override = (must_m if nm.begins_with("must") else tube_m)
+		(J if nm == "lipLm" else head).add_child(mi); fr[nm] = mi
 	fr.lipU = []; fr.lipL = []
 	for i in LIP_N:
-		fr.lipL.append(put(head, sphere(0.0042), lip_m, Vector3.ZERO, Vector3(1.2, 0.8, 0.8))); (fr.lipL[i] as Node3D).visible = false
+		fr.lipL.append(put(J, sphere(0.0042), lip_m, Vector3.ZERO, Vector3(1.2, 0.8, 0.8))); (fr.lipL[i] as Node3D).visible = false
 		fr.lipU.append(put(head, sphere(0.0038), lip_m, Vector3.ZERO, Vector3(1.2, 0.7, 0.8))); (fr.lipU[i] as Node3D).visible = false
 	for s: float in [-1.0, 1.0]:
 		fr["dim_" + ("l" if s < 0 else "r")] = put(head, sphere(0.0034), skin_d, Vector3(0.042 * s, -0.056, 0.082), Vector3(1, 1.3, 0.6))
-	fr.chin = put(head, sphere(0.026), soft_m, Vector3(0, -0.102, 0.054), Vector3(1.3, 0.5, 0.7))   # chin
-	fr.tongue = put(head, sphere(0.014), mat(Color("c0525a"), 0.45), Vector3(0, -0.075, 0.08), Vector3(1.2, 0.5, 1.0))
+	fr.chin = put(J, sphere(0.026), soft_m, Vector3(0, -0.102, 0.054) - JAW_P, Vector3(1.3, 0.5, 0.7))   # chin, on the jaw bone
+	fr.tongue = put(J, sphere(0.014), mat(Color("c0525a"), 0.45), Vector3(0, -0.075, 0.08) - JAW_P, Vector3(1.2, 0.5, 1.0))
 	for s: float in [-1.0, 1.0]:
 		fr["fold_" + ("l" if s < 0 else "r")] = put(head, sphere(0.007), skin_d, Vector3(0.042 * s, -0.05, 0.085), Vector3(0.6, 2.2, 0.5))   # smile line (nasolabial fold)
 
@@ -421,10 +491,10 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
 		fr["puff_" + sd] = put(head, sphere(0.02), soft_m, Vector3(0.042 * s, -0.01, 0.088), Vector3(1.2, 0.28, 0.6))
-		fr["corner_" + sd] = put(head, sphere(0.0035), skin_d, Vector3(0.04 * s, -0.07, 0.085), Vector3(1, 1, 0.6))
+		fr["corner_" + sd] = put(J, sphere(0.0035), skin_d, Vector3(0.04 * s, -0.07, 0.085) - JAW_P, Vector3(1, 1, 0.6))
 		fr["mass_" + sd] = put(head, sphere(0.02), soft_m, Vector3(0.078 * s, -0.052, 0.03), Vector3(0.5, 1.0, 0.8))
 		fr["vein_" + sd] = put(head, capsule(0.0013, 0.03), vein_m, Vector3(0.06 * s, 0.092, hz(0.06 * s, 0.092) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, 0.5 * s))
-	fr.dimple = put(head, sphere(0.006), skin_d, Vector3(0, -0.092, 0.081), Vector3(1.4, 0.8, 0.5))
+	fr.dimple = put(J, sphere(0.006), skin_d, Vector3(0, -0.092, 0.081) - JAW_P, Vector3(1.4, 0.8, 0.5))
 	_apply_face()
 
 # a spherical cap facing +Z (the iris and pupil): polar-disc UVs so a round texture fits it
@@ -639,8 +709,11 @@ func _apply_face() -> void:
 		var arch := 0.003 + 0.004 * clampf((bos + bis) * 0.5, -0.5, 1.0) - 0.004 * glare       # the brow arches when raised and flattens when scowling
 		bm.position = Vector3(0.043 * s - 0.008 * pf * s, (bi.position.y + bo.position.y) * 0.5 + arch, 0.081 + 0.004 * glare)
 		bm.rotation = Vector3(0, 0.25 * s, PI / 2 + s * ((bi.rotation.z + bo.rotation.z) * 0.5 - PI / 2))
-	# mouth: half-width w, smile sm lifts corners (frown drops them), mo opens the jaw, pu puckers, sk skews
+	# mouth: half-width w, smile sm lifts corners (frown drops them), pu puckers, sk skews. The jaw bone does the opening
+	# (mo), so the lower lip only carries its own shape here and the corner knots ride the jaw with it.
 	var sm := _fp("sm"); var mo := clampf(_fp("mo"), 0.0, 1.0)
+	var jb: Node3D = b("jaw")
+	jb.rotation = Vector3(JAW_OPEN * mo, 0, 0)
 	var w := 0.036 * (1.0 + 0.5 * _fp("mw")) * (1.0 - 0.45 * _fp("pu"))
 	var A := 0.010 + sm * (0.016 if sm > 0.0 else 0.022)
 	var sk := _fp("sk")
@@ -650,9 +723,9 @@ func _apply_face() -> void:
 		var x := t * w
 		var skw := sk * 0.008 * t
 		var zz := 0.0895 - absf(t) * 0.006
-		var yl := -0.0735 - mo * 0.03 * (1.0 - 0.5 * t2) + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
+		var yl := -0.0735 + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
 		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _fp("ns") * 0.004
-		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _fp("pu") * 0.003, zz + _fp("pu") * 0.006 * (1.0 - 0.5 * t2))
+		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _fp("pu") * 0.003, zz + _fp("pu") * 0.006 * (1.0 - 0.5 * t2)) - JAW_P
 		(fr.lipU[i] as Node3D).position = Vector3(x, yu, zz)
 	var cav: MeshInstance3D = fr.cav
 	cav.position = Vector3(0, -0.0685 - mo * 0.012, 0.083)
@@ -690,9 +763,9 @@ func _apply_face() -> void:
 		nd.position = b + Vector3(dx, dy, 0.0)
 	_mouth_meshes()
 	var jaw: Node3D = fr.jaw
-	jaw.position = Vector3(0, -0.06 - mo * 0.01, 0.02 + ch * 0.004)
+	jaw.position = Vector3(0, -0.06 + ch * 0.004, 0.02) - JAW_P
 	var chn: Node3D = fr.chin
-	chn.position = Vector3(sk * 0.004, -0.102 - mo * 0.016 + ch * 0.004 + maxf(0.0, -sm) * 0.003 - _fp("pu") * 0.002, 0.054 + ch * 0.005 + mo * 0.003)
+	chn.position = Vector3(sk * 0.004, -0.102 + ch * 0.004 + maxf(0.0, -sm) * 0.003 - _fp("pu") * 0.002, 0.054 + ch * 0.005) - JAW_P
 	chn.scale = Vector3(1.25 - ch * 0.14 + mo * 0.05, 0.55 + ch * 0.18 + maxf(0.0, -sm) * 0.1 - mo * 0.06, 0.75 + ch * 0.1)
 	chn.rotation.z = sk * 0.12
 	# deeper muscles: corrugator bunch, cheek puffs, zygomatic lip-corner knots, mentalis dimple, masseter, forehead vein
@@ -709,7 +782,7 @@ func _apply_face() -> void:
 		pf2.scale = Vector3(1.2, 0.28 + up2 * 0.32, 0.6)
 		var cn: Node3D = fr["corner_" + sd]
 		var cy: float = (fr.lipL[LIP_N - 1 if s > 0.0 else 0] as Node3D).position.y
-		cn.position = Vector3((w + 0.003) * s, cy + 0.002 + twa * 0.0008 * s, 0.085)
+		cn.position = Vector3((w + 0.003) * s, cy + 0.002 + twa * 0.0008 * s, 0.085 - JAW_P.z)
 		cn.scale = Vector3(1.0 + absf(sm) * 0.5 + _fp("mw") * 0.3, 1.0 + absf(sm) * 0.5, 0.6)
 		var ms: Node3D = fr["mass_" + sd]
 		var cl := clampf(ch * 0.8 + glr * 0.4 + _fp("tt") * 0.15 - mo * 0.2, 0.0, 1.0)
@@ -721,7 +794,7 @@ func _apply_face() -> void:
 	var dm: Node3D = fr.dimple
 	var mn := clampf(maxf(0.0, -sm) * 0.6 + _fp("pu") * 0.7 + ch * 0.4 - mo * 0.7, 0.0, 1.0)
 	dm.visible = mn > 0.15
-	dm.position = Vector3(0, -0.092 - mo * 0.009 + mn * 0.003, 0.081); dm.scale = Vector3(1.4 + mn * 0.6, 0.8 + mn * 0.5, 0.5)
+	dm.position = Vector3(0, -0.092 + mn * 0.003, 0.081) - JAW_P; dm.scale = Vector3(1.4 + mn * 0.6, 0.8 + mn * 0.5, 0.5)
 	# skin details: forehead lines with raised brows, the furrow with a scowl, crow's feet with a big smile or squint
 	var rz := (_fp("bo") + _fp("bi") + _fp("boL") + _fp("boR") + _fp("biL") + _fp("biR")) * 0.5
 	for i in 3:
@@ -735,7 +808,7 @@ func _apply_face() -> void:
 		(n3 as Node3D).visible = cr > 0.05; (n3 as Node3D).scale = Vector3(1, maxf(cr, 0.01), 0.5)
 	var tn2: MeshInstance3D = fr.tongue
 	tn2.visible = tg > 0.08 and mo > 0.12
-	tn2.position = Vector3(0, -0.0715 - mo * 0.014, 0.082 + tg * 0.012)
+	tn2.position = Vector3(0, -0.0715, 0.082 + tg * 0.012) - JAW_P
 	tn2.scale = Vector3(1.2, 0.5 + tg * 0.2, 1.0 + tg * 0.8)
 
 # eases the face toward its target; called from pose() (uses real time, so no extra plumbing in main.gd)
@@ -815,9 +888,25 @@ func _thin_torus() -> TorusMesh:
 	var t := TorusMesh.new(); t.inner_radius = 0.985; t.outer_radius = 1.0; t.rings = 48; t.ring_segments = 6; return t
 
 # ---------- pose ----------
-# How he moves: every move is a "target" (pelvis, spine, chest, neck, head, shoulders, where each foot should be). Joints chase their targets through springs,
-# so everything has weight and follow-through. The legs are solved with two-bone IK from the pelvis down to the foot targets: feet stay planted on the floor,
-# knees and hips bend around them, and steps, taps and hops are just foot targets that move.
+# Two layers, and only two.
+#
+# BONES carry the pose. A move is a "target" (pelvis, spine, chest, neck, head, shoulders, where each foot should be) and
+# the bone does exactly that: a hand lands on the beat, a foot lands where it was put, and the pose he holds at the end of
+# a move is the target, not something the springs drifted to. The legs are solved with two-bone IK from the pelvis down to
+# the foot targets: feet stay planted on the floor, knees and hips bend around them, and steps, taps and hops are just foot
+# targets that move.
+#
+# MUSCLES are the layer on top: flesh that trails the bone it hangs on. _muscle() springs toward the bone's exact value and
+# gives back that value plus a fraction of how far the spring is behind, so the flesh only shows while he is moving and the
+# bone's pose is never moved by it. That is why the dance no longer needs leads like the old CLAP_LEAD (0.1094 beat) to
+# compensate for springs arriving late: the target *is* the pose. Gains are the knob, and they are per bone: 0 means the
+# part is all bone and tendon (hands, feet), and anything above it is how much soft tissue shows.
+const MUSCLE := {           # bone family -> [stiffness, gain]
+	"pelvis": [15.0, 0.12], "spine": [16.0, 0.08], "chest": [17.0, 0.14],
+	"neck": [18.0, 0.10], "head": [19.0, 0.16],
+	"clav": [20.0, 0.08], "shoulder": [22.0, 0.08], "elbow": [26.0, 0.04], "hand": [30.0, 0.0],
+	"ankle": [34.0, 0.0],   # the foot target the legs are solved to: a foot is put down, it does not drift
+}
 const L1 := 0.36            # thigh length
 const L2 := 0.34            # shin length
 const FOOT_Y := 0.1         # ankle height of a planted foot
@@ -827,25 +916,29 @@ const BAR := 4.0            # beats per bar (the menu theme is 4/4): gesture phr
 const SALSA_BEATS := 16.0   # the salsa phrase: 16 beats (4 bars of 4/4), with the turn at beats 12.15-14.9 of it
 const FLEX_BEATS := 8.0     # flex: one full left/right show-off cycle every 8 beats (2 bars)
 const POWER_BEATS := 6.0    # power: swell, then the shout, every 6 beats
-const CLAP_LEAD := 0.1094   # the arm springs need ~0.11 beat to arrive, so the clap phase leads by that much and the visible contact lands on the beat
-var snap := false           # tests: jump straight to the targets, no springs
+var snap := false           # tests: no muscle trail at all (the bones' pose, nothing on top)
 var _snap := false
 var _sm := {}
 var _pdt := 0.016
 var _pms := 0
 
-func _spr(key: String, tgt, w := 16.0):
+func _muscle(key: String, fam: String, exact: Vector3) -> Vector3:
+	var pr: Array = MUSCLE.get(fam, [16.0, 0.0])
+	if _snap or float(pr[1]) <= 0.0:
+		_sm.erase(key)
+		return exact
+	var w: float = pr[0]
 	var st: Array = _sm.get(key, [])
-	if st.is_empty() or _snap:
-		_sm[key] = [tgt, tgt * 0.0]
-		return tgt
+	if st.is_empty():
+		_sm[key] = [exact, exact * 0.0]
+		return exact
 	var x = st[0]; var v = st[1]
 	var n := 4; var h := _pdt / n
 	for _i in n:
-		var a = (tgt - x) * (w * w) - v * (2.0 * 0.9 * w)
+		var a = (exact - x) * (w * w) - v * (2.0 * 0.9 * w)
 		v += a * h; x += v * h
 	st[0] = x; st[1] = v
-	return x
+	return exact + (x - exact) * float(pr[1])
 
 func _neutral() -> Dictionary:
 	return {"pel": Vector3(0, 0.82, 0), "pr": Vector3.ZERO, "sp": Vector3(0.03, 0, 0), "ch": Vector3.ZERO, "nk": Vector3.ZERO, "hd": Vector3.ZERO, "shl": 0.0, "shr": 0.0,
@@ -1010,8 +1103,7 @@ func _move(n: String, b: float) -> Dictionary:       # b = the move's local beat
 				M["arm_" + sd] = [0.1, 0, d * (0.75 + 0.1 * maxf(0.0, d * wp)), 0, -d * 1.3, 0, 0]
 			M.fing_l = 0.3; M.fing_r = 0.3
 		"clap":        # front claps on the beat with little hops, head nods along
-			var lead := CLAP_LEAD if beat_on else 0.0       # the lead only exists with music, so the offline fallback stays bit-exact
-			var c1 := absf(sin(PI * (b + lead))); var hop := 1.0 - c1        # the target leads so the sprung hands land on the beat
+			var c1 := absf(sin(PI * b)); var hop := 1.0 - c1     # the hands are the pose now, so the contact is the beat with no lead
 			M.pel = Vector3(0, 0.765 + 0.035 * hop, 0)
 			M.sp = Vector3(0.08 + 0.1 * hop, 0, 0); M.hd = Vector3(0.05 + 0.1 * hop, sin(1.5 * b) * 0.3, 0)
 			M.shl = 0.06 + 0.1 * hop; M.shr = M.shl
@@ -1087,13 +1179,13 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	else: _G = {}
 	root.rotation.y = yaw + bank * 0.35 + float(M.spin)
 	var pel: Node3D = j.pelvis
-	var pp: Vector3 = _spr("pel", M.pel, 18.0)
+	var pp: Vector3 = _muscle("pel", "pelvis", M.pel)
 	pel.position = pp
-	pel.rotation = _spr("pr", M.pr, 16.0)
-	_spine_set(_spr("sp", M.sp, 14.0))
-	(j.chest as Node3D).rotation = _spr("ch", M.ch, 15.0)
-	(j.neck as Node3D).rotation = _spr("nk", M.nk, 15.0)
-	var hd: Vector3 = _spr("hd", M.hd, 13.0) + Vector3(sin(_clock * 0.7) * 0.05, sin(_clock * 0.45) * 0.1, sin(_clock * 0.6) * 0.03) * (1.0 - gk * 0.5)       # idle: the head is never quite still
+	pel.rotation = _muscle("pr", "pelvis", M.pr)
+	_spine_set(_muscle("sp", "spine", M.sp))
+	(j.chest as Node3D).rotation = _muscle("ch", "chest", M.ch)
+	(j.neck as Node3D).rotation = _muscle("nk", "neck", M.nk)
+	var hd: Vector3 = _muscle("hd", "head", M.hd + Vector3(sin(_clock * 0.7) * 0.05, sin(_clock * 0.45) * 0.1, sin(_clock * 0.6) * 0.03) * (1.0 - gk * 0.5))       # idle: the head is never quite still
 	var tors: Vector3 = (j.chest as Node3D).rotation + pel.rotation * 0.5
 	var stab := Vector3(-tors.x * 0.35, -tors.y * 0.4, -tors.z * 0.45) * (0.6 + 0.4 * gk)       # the head fights to stay level while the torso sways under it
 	hd += stab
@@ -1103,7 +1195,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	_secondary(phase, c)
 	for side in ["l", "r"]:
 		var d := -1.0 if side == "l" else 1.0
-		var ft: Vector3 = _spr("f" + side, M["f" + side], 34.0)
+		var ft: Vector3 = _muscle("f" + side, "ankle", M["f" + side])
 		_leg_ik(side, d, ft, float(M["fy" + side]), float(M["fp" + side]))
 		(j["thigh_" + side] as Node3D).rotation = Vector3.ZERO
 		(j["shin_" + side] as Node3D).rotation = Vector3.ZERO
@@ -1189,10 +1281,10 @@ func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: 
 	var elev := clampf(absf(sz) - 0.5, 0.0, 2.4)
 	var cl := Vector3(clampf(-absf(sx) * 0.0 - sx * 0.0, -1.0, 1.0), -d * clampf(-sx * 0.28 - absf(sy) * 0.08, -0.25, 0.3), d * (_shb[side] * 2.0 + elev * 0.27 + sin(_clock * 1.7) * 0.012))
 	cl.x = clampf(-sx * 0.06, -0.08, 0.08)
-	(j["clav_" + side] as Node3D).rotation = _spr("cl" + side, cl, 22.0)
-	(j["shoulder_" + side] as Node3D).rotation = _spr("as" + side, Vector3(sx, sy, sz), 26.0)
-	(j["elbow_" + side] as Node3D).rotation = _spr("ae" + side, Vector3(ex, 0, ez), 28.0)
-	(j["hand_" + side] as Node3D).rotation = _spr("ah" + side, Vector3(hx, 0, hz), 30.0)
+	(j["clav_" + side] as Node3D).rotation = _muscle("cl" + side, "clav", cl)
+	(j["shoulder_" + side] as Node3D).rotation = _muscle("as" + side, "shoulder", Vector3(sx, sy, sz))
+	(j["elbow_" + side] as Node3D).rotation = _muscle("ae" + side, "elbow", Vector3(ex, 0, ez))
+	(j["hand_" + side] as Node3D).rotation = _muscle("ah" + side, "hand", Vector3(hx, 0, hz))
 
 # ---------- secondary motion: the hat and the hair lag behind the body and get thrown by the arms ----------
 var _hs := [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]    # spring positions: hat x, hat z, hair l, hair r, hat lift, (spare)
