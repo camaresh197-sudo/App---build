@@ -1,118 +1,82 @@
-# AGENTS.md — Hula Vaquero: Sky Ride
+# Hula Vaquero: Sky Ride — AGENTS.md
 
-A Godot 4.6 game (desktop + Android + a web wrapper) about a dancing vaquero, with a
-small Blender character pipeline and a Python audio pipeline.
+Godot 4.6 game: dancing vaquero (desktop/Android/web). ~7 GDScript files + 12 tools + Blender rig + Python audio.
 
-**The code is tiny (~7 GDScript files, 12 tools). The assets are huge.** Read this file,
-then open only what you need. Task detail lives in two child docs:
+**Task docs:** `docs/AUDIO.md` (music/SFX), `docs/CHARACTER.md` (rig/anim).
 
-- **Music, SFX, samples** → `docs/AUDIO.md`
-- **Mesh, rig, face, animation** → `docs/CHARACTER.md`
+## Quick start
+1. This file
+2. `godot/hula/project.godot` + `main.tscn` (autoloads, wiring)
+3. `docs/CODEMAP.md` → read only the slice you need
+4. Task doc (audio/character) if needed
+5. `data_*.json` for music/menu tasks
 
-## Read in this order
+## Files
 
-1. This file.
-2. `godot/hula/project.godot` + `godot/hula/main.tscn` (autoloads, scene wiring). Both are tiny.
-3. `docs/CODEMAP.md` for line anchors, then **read only the slice** of the script you need.
-4. The one task doc above, if the task touches audio or the character.
-5. `godot/hula/data_*.json` only for music / menu content tasks.
-
-## Repo map
-
-| Path | What it is | Scan? |
-|---|---|---|
-| `godot/hula/scripts/main.gd` | Game loop, state machine, scoring, input, 2D field (772×360 logical) | yes |
-| `godot/hula/scripts/hero3d.gd` | Real-time 3D vaquero: procedural rig, poses/gestures, face expressions, SubViewport sprite | yes |
-| `godot/hula/scripts/sound.gd` | Sample-bank music sequencer for 3 songs, SFX, mixer buses | yes |
-| `godot/hula/scripts/menu.gd` | Title screen + options hub (skills/wardrobe/trophies/stats/settings) | yes |
-| `godot/hula/scripts/save.gd` | `user://save.json` persistence + `data_menu.json` statics | yes |
-| `godot/hula/scripts/updater.gd` | Autoload "Updater": mounts downloaded packs, self-update on next launch | yes |
-| `godot/hula/scripts/shotter.gd` | Test harness: screenshots, clips, GLB export, audio QA. No-op on normal launch | yes |
-| `docs/CODEMAP.md` | Generated line-number index of the 7 scripts (~2.9k tokens vs ~49k whole) | yes |
-| `docs/AUDIO.md` | Music/SFX pipeline, song data shapes, sample banks, audio tools | yes |
-| `docs/CHARACTER.md` | Blender master, GLB publish, runtime rig, face shape keys | yes |
-| `godot/hula/data_song.json` | Main game song (6/8 mariachi), 6-step bars | data |
-| `godot/hula/data_title.json` | Title song (ranchera polka), 16-step bars | data |
-| `godot/hula/data_victory.json` | Victory fanfare, 16-step bars + held half-bars | data |
-| `godot/hula/data_vox.json` | Victory lyric clips: line id → `[clip, lead-in]` | data |
-| `godot/hula/data_menu.json`, `data_expr.json` | Menu statics; face expression keyframes | data |
-| `godot/hula/audio/` | ~400 Ogg samples. Generated bank; `.import` files are not tracked | **no** |
-| `godot/hula/art/` | `.glb`, albedo PNGs, screenshots. Binary | **no** |
-| `godot/hula/.godot/` | Godot import cache. Generated | **no** |
-| `tools/` | Python: Blender character passes + audio synthesis | yes |
-| `blender/character_rigged.blend` | **Master** character mesh/rig (6 MB). Edit in Blender only | no |
-| `reference/audio/` | Older tracked web asset packs (`audio_*.v1.ogg`) used only by `prepare.mjs` | no |
-| `reference/release.yml` | Stale duplicate; GitHub only runs `.github/workflows/release.yml` | no |
-| `index.html` | 1.4 MB minified web game bundle (source artifact, not generated here) | **no** |
-| `updater.js`, `prepare.mjs`, `native-setup.mjs` | Web/Capacitor packaging + self-updater | yes |
-| `build.ps1` | Local build: smoke test → import → Code/Assets packs → optional APK | yes |
-| `build/`, `dist/`, `www/`, `node_modules/` | Build output. Ignored | **no** |
-
-Outside the repo: `..\preview\` holds reference renders/screenshots (untracked).
+| Path | Purpose |
+|---|---|
+| **godot/hula/scripts/** | |
+| `main.gd` | Game loop, scoring, input, 2D field (772×360) |
+| `hero3d.gd` | 3D rig, poses, face expressions, sprite export |
+| `sound.gd` | Music sequencer (3 songs), SFX, mixer |
+| `menu.gd` | Title + menus (skills/wardrobe/trophies/stats) |
+| `save.gd` | Persistence, menu statics |
+| `updater.gd` | Autoload: pack mounting, self-update |
+| `shotter.gd` | Test harness (screenshots, GLB, audio QA) |
+| **docs/** | |
+| `CODEMAP.md` | Line anchors for 7 scripts (~2.9k tokens) |
+| `AUDIO.md` | Music/SFX pipeline, song data, tools |
+| `CHARACTER.md` | Blender, GLB, rig, face keys |
+| **godot/hula/data_*.json** | Song data (main/title/victory), menu statics, expressions |
+| **godot/hula/audio/** | ~400 Ogg samples (generated, .import untracked) |
+| **godot/hula/art/** | GLBs, PNGs, screenshots (binary) |
+| **tools/** | Python: Blender passes, audio synthesis |
+| **blender/character_rigged.blend** | Master rig (edit in Blender only) |
+| **reference/audio/** | Old web asset packs (prepare.mjs only) |
+| **reference/release.yml** | Stale (use `.github/workflows/release.yml`) |
+| **updater.js, prepare.mjs, native-setup.mjs** | Web/Capacitor packaging |
+| **build.ps1** | Local: test → import → packs → APK |
+| **build/, dist/, www/, node_modules/** | Generated (ignored) |
 
 ## Commands
 
-```powershell
-$godot = "C:\Users\Camden\AppData\Local\Programs\Godot\4.6.3\Godot_v4.6.3-stable_win64_console.exe"
-$proj  = "C:\Users\Camden\Documents\Default Project\godot-build\godot\hula"
+Set `$godot` and `$proj` paths, then:
+- **Smoke test** (3 s): `& $godot --path $proj --resolution 800x600 main.tscn --quit-after 180 -- --smoke`
+- **Import** (checks parse): `& $godot --headless --path $proj --import`
+- **Build packs/APK**: `powershell -File .\build.ps1`
+- **Regenerate codemap**: `py tools\codemap.py`
 
-# 3 s boot smoke test (must show 0 SCRIPT ERROR / Parse Error)
-& $godot --path $proj --resolution 800x600 main.tscn --quit-after 180 -- --smoke
+### Test harness (`shotter.gd` — args after `--`)
 
-# Import assets; also the fastest full parse check (regenerates the audio .import files)
-& $godot --headless --path $proj --import
+Format: `main.tscn -- <output> <frames> [mode] [args]`
 
-# Build update packs (and the debug APK with -Apk)
-powershell -File .\build.ps1
+| Mode | Args | Output |
+|---|---|---|
+| (default) | `out.png 1` | Screenshot |
+| `play` | `out.png 1` | Screenshot after game runs |
+| `mix` | `wav 1 victory 30` | Audio mix (victory song, 30 s) |
+| `mix sfx` | `- 1 sfx coin,click,hit` | SFX levels |
+| `secret` | `- 1 victory [voxonly]` | Jump to song ± vocals |
+| `face` | `face.png 1 face 3.2` | Face pose + GLB export |
 
-# Regenerate the code map after moving functions
-py tools\codemap.py
-```
+Add `seed=NNN` anywhere for repeatable audio/poses.
 
-### Test harness (`shotter.gd`)
+## Notes
 
-Only runs when args follow `--`. First arg is output, second is frames. Useful modes:
+- `res://` paths case-sensitive; sample names must match bank exactly
+- Never hand-edit `*.import`/`*.uid`; rerun `--import` (audio .import untracked, art tracked)
+- Web build: `reference/audio/*.v1.ogg`; Godot build: `godot/hula/audio/` — don't mix
+- Web bundle: `index.html` + `prepare.mjs` → `updater.js` + copies audio to `dist/`
+- Generated: `build/`, `dist/`, `www/`, `node_modules/`, `.godot/`, `__pycache__/`
+- Check commit history for intent/measurements: `git log -1 --format=%B <commit>`
 
-```powershell
-# screenshot (append "play" to let the game run first)
-& $godot --path $proj main.tscn -- out.png 1
-# audio QA: play one track in real time, print PRE/POST + music-bus levels, write a wav
-& $godot --path $proj main.tscn -- "$env:TEMP\vic.wav" 1 mix victory 30
-# SFX-only levels
-& $godot --path $proj main.tscn -- "-" 1 mix sfx coin,click,hit
-# jump straight into a song (optional 4th arg "voxonly")
-& $godot --path $proj main.tscn -- "-" 1 secret victory
-# face pose render, GLB export, menu hub tab
-& $godot --path $proj main.tscn -- face.png 1 face 3.2
-```
+## Token tips
 
-Harness runs are seeded (`seed=NNN` anywhere in the args) so audio/pose logs are repeatable.
+- `.ignore` filters assets; `.gitattributes` marks binary (keep both)
+- Read slices: `hero3d.gd` ~26k, `sound.gd` ~7k. Use CODEMAP.md → `offset`/`limit`
+- `grep --include/--path` faster than recursive scan
+- For audio search, pass explicit path (not glob)
 
-## Conventions and gotchas
+## Skip these
 
-- `res://` paths are case-sensitive; sample names must match the bank exactly.
-- Never hand-edit `*.import` or `*.uid`; rerun `--import` instead. Audio `.import` files
-  are intentionally untracked (all settings are defaults); art `.import` files are tracked.
-- Web build uses the `reference/audio/*.v1.ogg` packs (served under `reference/audio/`);
-  the Godot build uses `godot/hula/audio/`. Don't mix the two.
-- The web bundle is `index.html`; `prepare.mjs` injects `updater.js` and copies the
-  reference audio packs into `dist/`.
-- `build/`, `dist/`, `www/`, `node_modules/`, `.godot/`, `__pycache__/` are generated.
-- Commit messages in history are detailed; `git log -1 --format=%B` on a relevant commit
-  often documents intent and measurements. Prefer history over guessing.
-
-## Token hygiene
-
-- `.ignore` filters assets out of ripgrep/grep. Do not delete it or add asset globs back;
-  if you must search audio, pass an explicit path. (`glob` still walks assets — use a
-  specific pattern.)
-- `.gitattributes` marks binary assets so `git diff`/`git show` never dump them.
-- Read slices, not whole files: `hero3d.gd` is ~26k tokens, `sound.gd` ~7k. Use
-  `docs/CODEMAP.md` for the line, then `offset`/`limit`.
-- Prefer `grep` with `include`/`path` over recursive scans.
-
-## Do not scan
-
-`godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `reference/audio/`,
-`index.html`, `build/`, `dist/`, `www/`, `node_modules/`, `*.import`, `*.uid`, `*.glb`,
-`*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`.
+`godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `reference/audio/`, `index.html`, `build/`, `dist/`, `www/`, `node_modules/`, plus `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`
