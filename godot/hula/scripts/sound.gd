@@ -6,7 +6,7 @@ const SMP_MUS := 0.25
 const TRIM := {"guitar": 0.8, "bass": 1.39, "trumpet": 0.37, "violin": 0.23, "accordion": 0.27, "pad": 0.11, "choir": 0.47, "bell": 0.4, "kick": 1.5, "snare": 0.36, "hat": 0.07, "shaker": 0.26, "clap": 0.07, "cymbal": 0.14, "tom": 1.27, "sfx_coin": 0.13, "sfx_buy": 0.1, "sfx_power": 0.09, "sfx_level": 0.16, "sfx_trophy": 0.15, "sfx_trumpet": 0.05, "sfx_beat": 0.11, "sfx_boss": 0.22, "sfx_click": 0.21, "sfx_shield": 0.05, "impact": 1.43, "riser": 0.5, "crowd": 0.69}
 const SFX_REL := {"shoot": 0.35, "hit": 0.4, "pop": 0.5, "coin": 0.5, "click": 0.4, "beat": 0.8}
 # melodic instruments: [lowest root, highest root], roots every 2 semitones; each root has a second take "_2"
-const RANGE := {"guitar": [40, 88], "bass": [28, 64], "trumpet": [52, 88], "violin": [55, 99], "accordion": [48, 84], "pad": [40, 80], "choir": [48, 84], "bell": [60, 100]}
+const RANGE := {"guitar": [40, 88], "bass": [28, 64], "trumpet": [52, 88], "violin": [55, 99], "accordion": [48, 84], "pad": [40, 80], "choir": [48, 84], "bell": [60, 100], "grunt": [40, 50]}
 const NVOICE := 40
 
 var voices: Array = []        # AudioStreamPlayer pool
@@ -376,6 +376,11 @@ const VE := 0.105
 const VOX_GAIN := 2.4
 var have_vox := true
 const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-tag": 0.0}
+# Sparse vocal ad-libs for the chorus singer: a deep, in-character grunt on the bar's chord root (r),
+# placed on a strong beat or the last step of a bar before a section change, and never on every bar.
+# [section, bar, step]; the grunt is pitched to r so it sits on a chord tone.
+const VGRUNT := [["v-A", 7, 14], ["v-B", 3, 12], ["v-B", 7, 14], ["v-C", 7, 14], ["v-tag", 3, 14], ["v-F", 3, 14]]
+const VGRUNT_V := 1.0   # grunt level (linear, before the Vox bus); tuned to sit just under the sung line
 func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void:
 	for x in cv: note("trumpet", int(x) + add, dur, v, 0.05, dl)
 
@@ -457,6 +462,12 @@ func _vstep(st: int, dl: float) -> void:
 			# one clip per line: each clip is pre-rendered as a small detuned ensemble (choir), so a separate
 			# unison double is no longer played here (two takes at the same pitch comb-filtered into a metallic edge).
 			play("vox/" + str(vox[vk][0]), {"v": VOX_GAIN, "dl": maxf(0.0, dd - float(vox[vk][1]) + 0.01)})
+	# --- sparse vocal ad-libs: a deep grunt from the same singer, on the bar's chord root (r) ---
+	if not hold and not last:
+		for g in VGRUNT:
+			if sec == g[0] and bar == g[1] and s == g[2]:
+				play("grunt", {"midi": r, "dur": 0.22, "v": VGRUNT_V, "bus": "Vox", "dl": dd})
+				break
 	# --- the tune ---
 	var m: int = int(mel[s])
 	if m > 0:
