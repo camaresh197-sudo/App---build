@@ -228,7 +228,7 @@ func _build() -> void:
 	put(neck, sphere(0.085), skin, Vector3(0, -0.02, 0.0), Vector3(1.0, 0.6, 0.85))      # wide base: neck flares into the shoulders
 	var neck2 := b("neck2")       # upper neck: the head turns on this, the neck bends in two places
 	var head := b("head"); head.scale = Vector3(1.22, 1.22, 1.22)
-	put(head, _head_mesh(), skin)
+	fr.head = put(head, _head_mesh(), skin)
 	fr.jaw = put(b("jaw"), sphere(0.058), skin, Vector3(0, -0.06, 0.016) - JAW_P, Vector3(0.86, 0.72, 0.88))       # jaw, on the jaw bone
 	_face(head, skin, white, black)
 	put(head, sphere(0.018), skin, Vector3(-0.100, -0.042, -0.008), Vector3(0.40, 1.05, 0.80)); put(head, sphere(0.018), skin, Vector3(0.100, -0.042, -0.008), Vector3(0.40, 1.05, 0.80))
@@ -1098,7 +1098,7 @@ func _apply_face() -> void:
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
 		var ck: Node3D = fr["cheek_" + sd]
-		var up := maxf(0.0, sm) * 0.7 + sq2 * 0.8
+		var up := sq2 * 0.5      # the cheek shape now comes from the smile/squint blendshape, not a blob
 		ck.position = Vector3(0.046 * s, -0.034 + up * 0.006 - maxf(0.0, -sm) * 0.004, 0.054 + up * 0.004)
 		ck.scale = Vector3(1.0 + up * 0.18, 0.9 + up * 0.25, 0.7 + up * 0.15)
 		var wg: Node3D = fr["wing_" + sd]
@@ -1132,7 +1132,7 @@ func _apply_face() -> void:
 	var twa := _fp("tw1"); var twb := _fp("tw2")
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
-		var up2 := maxf(0.0, sm) * 0.6 + sq2 * 0.7 + _fp("wet") * 0.3
+		var up2 := sq2 * 0.45 + _fp("wet") * 0.3
 		var pf2: Node3D = fr["puff_" + sd]
 		pf2.position = Vector3(0.042 * s, -0.012 + up2 * 0.011, 0.088 + up2 * 0.002)
 		pf2.scale = Vector3(1.2, 0.28 + up2 * 0.32, 0.6)
@@ -1166,6 +1166,14 @@ func _apply_face() -> void:
 	tn2.visible = tg > 0.08 and mo > 0.12
 	tn2.position = Vector3(0, -0.0715, minf(zu_c, zl_c) - 0.001) - JAW_P
 	tn2.scale = Vector3(1.2, 0.5 + tg * 0.2, 0.45 + tg * 0.25)
+	# The fleshy expressions come from the file's blendshapes (sculpted in Blender), riding on top of the bones. This
+	# is the shape-key path: a real smile/squint sculpt instead of bone-rotated blobs.
+	var hg := rig_mesh.get(fr.get("head")) as MeshInstance3D
+	if hg != null:
+		var si := hg.find_blend_shape_by_name("smile")
+		if si >= 0: hg.set_blend_shape_value(si, clampf(sm, 0.0, 1.0))
+		var qi := hg.find_blend_shape_by_name("squint")
+		if qi >= 0: hg.set_blend_shape_value(qi, clampf(sq2, 0.0, 1.0))
 
 # eases the face toward its target; called from pose() (uses real time, so no extra plumbing in main.gd)
 func face_update() -> void:
