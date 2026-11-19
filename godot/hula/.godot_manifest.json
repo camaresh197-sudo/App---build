@@ -1,0 +1,46 @@
+{
+  "game": "Hula Vaquero: Sky Ride",
+  "version": "1.0",
+  "structure": {
+    "scripts": {
+      "main.gd": "Game loop, state machine, scoring, input",
+      "hero3d.gd": "3D character, poses, faces, expressions",
+      "sound.gd": "Music sequencer, SFX, mixer buses",
+      "menu.gd": "UI menus, navigation",
+      "save.gd": "Persistence, local data",
+      "updater.gd": "Autoload, pack mounting, updates",
+      "shotter.gd": "Test harness"
+    },
+    "data": {
+      "data_song.json": "Main game song (6/8 mariachi)",
+      "data_title.json": "Title screen song (ranchera)",
+      "data_victory.json": "Victory fanfare",
+      "data_vox.json": "Victory lyric clips",
+      "data_menu.json": "Menu structure, skills, achievements",
+      "data_expr.json": "Face expression keyframes (20K)",
+      "character_rig.json": "Blender rig export"
+    },
+    "scenes": {
+      "main.tscn": "Main scene tree, autoloads"
+    },
+    "audio": {
+      "path": "audio/",
+      "count": "~400 Ogg samples (generated)"
+    },
+    "art": {
+      "path": "art/",
+      "types": ["GLB models", "PNG albedos", "WebP sprites"]
+    }
+  },
+  "quick_access": {
+    "composer": ["data/data_song.json", "scripts/sound.gd"],
+    "character_rigger": ["scripts/hero3d.gd", "data/data_expr.json"],
+    "ui_designer": ["scripts/menu.gd", "data/data_menu.json"],
+    "game_logic": ["scripts/main.gd"]
+  },
+  "entry_points": {
+    "read_first": "AGENTS.md",
+    "then_read": ["project.godot", "main.tscn"],
+    "then_codemap": "docs/CODEMAP.md"
+  }
+}

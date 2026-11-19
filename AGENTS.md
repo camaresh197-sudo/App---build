@@ -6,12 +6,14 @@ Godot 4.6 game: dancing vaquero (desktop/Android/web). ~7 GDScript files + 12 to
 
 | Task | Files | Doc |
 |---|---|---|
-| Fix/compose a song | `data_song.json`, `sound.gd` (7k) | AUDIO.md |
-| Character pose/gesture/face | `hero3d.gd` (26k), `CHARACTER.md` | CHARACTER.md |
-| Add menu option | `menu.gd`, `data_menu.json`, `save.gd` | — |
-| Menu layout/text | `data_menu.json`, `data_expr.json` | — |
+| Fix/compose a song | `data/data_song.json`, `sound.gd` (7k) | AUDIO.md |
+| Character pose/gesture/face | `hero3d.gd` (26k), `data/data_expr.json` | CHARACTER.md |
+| Add menu option | `menu.gd`, `data/data_menu.json`, `save.gd` | — |
+| Menu layout/text | `data/data_menu.json` | — |
 | Audio SFX or levels | `sound.gd`, AUDIO.md | AUDIO.md |
 | Game scoring/input logic | `main.gd` (772×360 2D) | CODEMAP.md |
+
+**→ See `godot/hula/FILES.md` for fast role-based file access**
 
 ## Critical path (80% of edits)
 
@@ -43,13 +45,14 @@ Godot 4.6 game: dancing vaquero (desktop/Android/web). ~7 GDScript files + 12 to
 | `CODEMAP.md` | Line anchors for 7 scripts | ~2.9k | ✓ |
 | `AUDIO.md` | Music/SFX pipeline, song data, tools | — | ✓ |
 | `CHARACTER.md` | Blender, GLB, rig, face keys | — | ✓ |
-| **Data files (godot/hula/)** | | | |
+| **Data files (godot/hula/data/)** | | | |
 | `data_song.json` | Main game song (6/8 mariachi), 6-step | — | ✓ |
 | `data_title.json` | Title song (ranchera polka), 16-step | — | ✓ |
 | `data_victory.json` | Victory fanfare, 16-step + half-bars | — | ✓ |
 | `data_vox.json` | Victory lyric clips: id → `[clip, lead-in]` | — | ✓ |
 | `data_menu.json` | Menu text, structure, statics | — | ✓ |
 | `data_expr.json` | Face expression keyframes | — | ✓ |
+| `character_rig.json` | Blender rig export metadata | — | ✗ |
 | **Assets (binary/generated)** | | | |
 | `audio/` | ~400 Ogg samples (.import untracked) | — | ✗ |
 | `art/` | GLBs, PNGs, screenshots | — | ✗ |

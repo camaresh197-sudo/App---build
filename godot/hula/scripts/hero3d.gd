@@ -522,7 +522,7 @@ const JAW_OPEN := 0.23
 const MOUTH_DY := 0.010
 
 func _load_expr() -> void:
-	var f := FileAccess.open("res://data_expr.json", FileAccess.READ)
+	var f := FileAccess.open("res://data/data_expr.json", FileAccess.READ)
 	if f == null: return
 	var d: Dictionary = JSON.parse_string(f.get_as_text())
 	fx_def = d.def; expr_db = d.e; expr_fam = d.f
