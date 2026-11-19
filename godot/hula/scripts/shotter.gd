@@ -169,7 +169,9 @@ func _ready() -> void:
 		h.auto_blink = false
 		h.fixed_dt = 1.0 / 24.0   # no wall-clock dt: the face's breathing/twitch channels must be repeatable too
 		h.vp.size = Vector2i(400, 400)
-		h.cam.look_at_from_position(Vector3(0.0, 1.57, 1.1), Vector3(0, 1.5, 0))
+		var fyaw := float(a[4]) if a.size() > 4 else 0.0     # orbit the face camera so the profile can be checked too
+		var fc := Vector3(0.0, 1.585, 0.09)                  # orbit around the face, not the body axis
+		h.cam.look_at_from_position(fc + Vector3(sin(fyaw), 0.0, cos(fyaw)) * 0.82, fc)
 		h.j.hat.visible = false
 		for nm in a[3].split(","):
 			h.set_expr(nm, true)
@@ -261,7 +263,13 @@ func _ready() -> void:
 	if a.size() > 2 and a[2] == "glb":
 		# authoring export: build the hero, settle it into one expression, then write the whole rig out as glTF
 		# (.glb) so it can be opened and edited in Blender. args: a[0]=res:// path, a[3]=expression (default neutral)
+		# The mesh is now authored in Blender (blender/character_rigged.blend is the master), so this generator is
+		# frozen: it will not overwrite an existing export unless you pass "force" (it would clobber the sculpt).
 		var hx = m.hero3d
+		if FileAccess.file_exists(a[0]) and not a.has("force"):
+			print("glb: %s exists - the .blend is the master now; pass 'force' to regenerate from code" % a[0])
+			get_tree().quit()
+			return
 		m.set_process(false)
 		hx.rig_skel = null       # export the control rig itself, so the procedural parts (the mouth tubes) get built
 		hx.fixed_dt = 1.0 / 24.0
