@@ -22,7 +22,7 @@ func _ready() -> void:
 	vp.world_3d = World3D.new()   # explicit, so the portrait camera can share it
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
-	_world(); _rig(); _build(); _layer(j.hat, 2); _portrait(); _load_expr()
+	_world(); _rig(); _build(); _layer(j.hat, 2); _portrait(); _load_expr(); _load_rig()
 
 func tex() -> Texture2D: return vp.get_texture()
 
@@ -290,6 +290,7 @@ func _build() -> void:
 const GLB_PATH := "res://art/character.glb"
 var glb_parts := 0            # how many part meshes came from the .glb (0 = procedural build)
 func _apply_glb() -> void:
+	if FileAccess.file_exists(RIG_GLB): return   # the whole rig comes from the file instead
 	if not FileAccess.file_exists(GLB_PATH): return
 	var doc := GLTFDocument.new(); var st := GLTFState.new()
 	if doc.append_from_file(GLB_PATH, st) != OK: return
@@ -310,6 +311,94 @@ func _apply_glb() -> void:
 		for c in nd.get_children(): walk.append(c)
 	src.free()
 	print("hero3d: %d part meshes from %s" % [glb_parts, GLB_PATH])
+
+# ---------- the rig comes from the file ----------
+# When character_skinned.glb is present the character is drawn from it: its skeleton is driven by the same control rig
+# the pose code already moves, so the mesh AND the rig can be authored in Blender and the game picks them up. The parts
+# the code rebuilds or moves every frame (the hoop, the lip and mustache tubes) stay procedural and keep drawing from
+# the control rig, because a loaded skinned mesh is static geometry.
+const RIG_GLB := "res://art/character_skinned.glb"
+const PROC_PARTS := ["lipUm", "lipLm", "mustm_l", "mustm_r", "lidu_l_0", "lidu_r_0", "lidl_l_0", "lidl_r_0"]
+var rig_scene: Node3D
+var rig_skel: Skeleton3D
+var rig_bone := {}            # bone name -> skeleton bone index
+var rig_mesh := {}            # control mesh -> the glb mesh that replaces it
+var rig_c := {}               # bone name -> rest frame mapping (bone rest into the joint's rest)
+var rig_cinv := {}            # bone name -> inverse of rig_c
+var rig_pre := {}             # bone name -> parent's rig_c inverse
+var rig_parts := 0
+
+func _load_rig() -> void:
+	if not FileAccess.file_exists(RIG_GLB): return
+	var doc := GLTFDocument.new(); var st := GLTFState.new()
+	if doc.append_from_file(RIG_GLB, st) != OK: return
+	rig_scene = doc.generate_scene(st)
+	if rig_scene == null: return
+	root.get_parent().add_child(rig_scene)
+	var by := {}
+	var stack: Array = [rig_scene]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_back()
+		if nd is Skeleton3D:
+			rig_skel = nd
+			for i in rig_skel.get_bone_count(): rig_bone[rig_skel.get_bone_name(i)] = i
+		elif nd is MeshInstance3D: by[String(nd.name)] = nd
+		for c in nd.get_children(): stack.append(c)
+	if rig_skel == null: return
+	# the file is exported from a settled expression, so reproduce that state: the rig it was built from is the pose
+	# the glb was written at, not the build-time rest
+	set_expr("grin", true)
+	for i in 4: pose(0.0)
+	var rest := {}
+	for name in j:
+		var nd: Node3D = j[name]
+		var par := nd.get_parent() as Node3D
+		rest[name] = (rest[par.name] if par != null and rest.has(par.name) else Transform3D.IDENTITY) * nd.transform
+	for name in rig_bone:
+		if not rest.has(name): continue
+		var i: int = rig_bone[name]
+		var rj: Transform3D = rest[name]
+		var c: Transform3D = rj.affine_inverse() * rig_skel.get_bone_global_rest(i)
+		rig_c[name] = c
+		rig_cinv[name] = c.affine_inverse()
+		var pb := rig_skel.get_bone_parent(i)
+		if pb >= 0 and rig_cinv.has(rig_skel.get_bone_name(pb)): rig_pre[name] = rig_cinv[rig_skel.get_bone_name(pb)]
+	var walk: Array = [root]
+	while not walk.is_empty():
+		var nd: Node = walk.pop_back()
+		if nd is MeshInstance3D:
+			var cm := nd as MeshInstance3D
+			var g := by.get(String(cm.name)) as MeshInstance3D
+			if g != null:
+				if PROC_PARTS.has(String(cm.name)) or cm == hoop_node:
+					g.visible = false            # the code keeps drawing this one
+				else:
+					g.layers = cm.layers         # the glb mesh inherits the control mesh's render layer (e.g. the hat)
+					g.material_override = cm.material_override   # the file carries geometry; the code keeps its materials
+					cm.layers = 0                # ...and the control mesh stops drawing
+					rig_mesh[cm] = g
+					rig_parts += 1
+		for c in nd.get_children(): walk.append(c)
+	print("hero3d: rig from %s: %d bones, %d parts" % [RIG_GLB, rig_skel.get_bone_count(), rig_parts])
+
+# copy the control rig onto the loaded skeleton, and carry each part's visibility across
+func _rig_sync() -> void:
+	if rig_skel == null or rig_c.is_empty(): return
+	for name in rig_bone:
+		var nd: Node3D = j.get(name)
+		if nd == null: continue
+		var i: int = rig_bone[name]
+		var pose: Transform3D = (rig_pre.get(name, Transform3D.IDENTITY) as Transform3D) * nd.transform * (rig_c.get(name, Transform3D.IDENTITY) as Transform3D)
+		rig_skel.set_bone_pose_position(i, pose.origin)
+		rig_skel.set_bone_pose_rotation(i, pose.basis.get_rotation_quaternion())
+		rig_skel.set_bone_pose_scale(i, pose.basis.get_scale())
+	for cm in rig_mesh:
+		var vis: bool = (cm as MeshInstance3D).visible
+		var p: Node = (cm as Node3D).get_parent()
+		while vis and p is Node3D:
+			if not (p as Node3D).visible: vis = false
+			p = p.get_parent()
+		(rig_mesh[cm] as MeshInstance3D).visible = vis
 
 # ---------- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable ----------
 const PS := 160
@@ -1352,6 +1441,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	hoop_node.rotation = Vector3(-s * 0.16, 0, c * 0.16)
 	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
 	face_update()
+	_rig_sync()
 
 
 # upper-arm / forearm twist and the fingers. Fingers ripple in the hula (a wave runs across them); gestures set a curl (0 open .. 1 fist).
