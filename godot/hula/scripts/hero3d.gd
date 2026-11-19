@@ -591,7 +591,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var lid_m := mat(skin.albedo_color.lightened(0.04), 0.9); lid_m.metallic_specular = 0.05
 	var shine := mat(Color.WHITE, 0.1); shine.emission_enabled = true; shine.emission = Color.WHITE; shine.emission_energy_multiplier = 0.8
 	var lip_m := mat(skin.albedo_color.darkened(0.34).lerp(Color("b5524a"), 0.58), 0.5)
-	var mouth_m := mat(Color("4a1411"), 0.6)
+	var mouth_m := mat(Color("64211a"), 0.6)
 	# soft-edged skin for the cheeks, chin and jaw muscles: the shape fades out where it meets the head, so it reads as a swelling of the same skin and not a separate lump
 	var soft_sh := Shader.new()
 	soft_sh.code = "shader_type spatial;\nrender_mode blend_mix, depth_draw_always, cull_back;\nuniform vec4 col : source_color;\nvoid fragment() {\n\tALBEDO = col.rgb;\n\tROUGHNESS = 0.55;\n\tfloat f = clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);\n\tALPHA = smoothstep(0.3, 1.0, f) * 0.9;\n}\n"
@@ -1013,14 +1013,9 @@ func _apply_face() -> void:
 		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _pose_v("pu") * 0.003, zl) - JAW_P
 		(fr.lipU[i] as Node3D).position = Vector3(x, yu, zu)
 	var cav: Node3D = fr.cav
-	# the cavity is sized to the actual opening: the upper lip's height, the lower lip's height and how far the jaw bone
-	# has already taken the lower lip down, so the dark can never spill past the lips
-	var drop := 0.1345 * JAW_OPEN * mo
-	var open_c := -0.0685 - 0.375 * A - 0.5 * drop
-	var open_h := 0.005 + 0.125 * A + 0.5 * drop
 	# The mouth is the gap between the two lip tubes, and its edges are those tubes' inner edges (the jaw swing drops
-	# the lower one). The teeth are hung off those edges and sized to fit the gap, so a row never overlaps a lip - which
-	# is what stops the teeth from showing through a lip - and a nearly closed mouth shows almost none.
+	# the lower one). The dark interior, the teeth and the tongue are all sized to that gap, so nothing can spill out
+	# around a lip and the lips stay the thing you read the expression from.
 	var th := JAW_OPEN * mo
 	var zu_c := hz(0.0, -0.0635 - 0.25 * A) + 0.0022
 	var zl_c := hz(0.0, -0.0735 - 0.5 * A) + 0.0022
@@ -1029,8 +1024,8 @@ func _apply_face() -> void:
 	var y_bot := -0.05 + (-0.0735 - 0.5 * A + 0.05) * cos(th) - (zl_c + 0.045) * sin(th) + rl_c     # lower lip's upper edge, after the jaw swing
 	var h_win := maxf(0.004, y_top - y_bot)
 	var zt := minf(zu_c, zl_c) + 0.0035
-	cav.position = Vector3(0, open_c, minf(zu_c, zl_c) - 0.004)
-	cav.scale = Vector3(w / 0.03 * 1.02, open_h * 1.14 / 0.03, 0.20)
+	cav.position = Vector3(0, (y_top + y_bot) * 0.5, minf(zu_c, zl_c))
+	cav.scale = Vector3(w * 0.94 / 0.03, h_win * 0.55 / 0.03, 0.10)
 	# teeth: two rows of separate teeth laid along the mouth arc, the upper row hanging from the upper lip and the
 	# lower row standing on the lower lip. The gaps between them (and the per-tooth texture) are what make them read
 	# as teeth instead of one white plate.
