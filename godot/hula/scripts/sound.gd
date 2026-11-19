@@ -3,8 +3,11 @@ extends Node
 # Samples live in res://audio (assets pack). Everything is guarded, so the game still runs silent if the pack hasn't arrived yet.
 const E := 0.13               # seconds per eighth-note slot (6 per bar, 6/8 feel)
 const SMP_MUS := 0.25
-const TRIM := {"guitar": 0.8, "bass": 1.39, "trumpet": 0.37, "violin": 0.23, "accordion": 0.27, "pad": 0.11, "choir": 0.47, "bell": 0.4, "kick": 1.5, "snare": 0.36, "hat": 0.07, "shaker": 0.26, "clap": 0.07, "cymbal": 0.14, "tom": 1.27, "sfx_coin": 0.13, "sfx_buy": 0.1, "sfx_power": 0.09, "sfx_level": 0.16, "sfx_trophy": 0.15, "sfx_trumpet": 0.05, "sfx_beat": 0.11, "sfx_boss": 0.22, "sfx_click": 0.21, "sfx_shield": 0.05, "impact": 1.43, "riser": 0.5, "crowd": 0.69}
-const SFX_REL := {"shoot": 0.35, "hit": 0.4, "pop": 0.5, "coin": 0.5, "click": 0.4, "beat": 0.8}
+const TRIM := {"guitar": 0.8, "bass": 1.39, "trumpet": 0.37, "violin": 0.23, "accordion": 0.27, "pad": 0.11, "choir": 0.47, "bell": 0.4, "kick": 1.25, "snare": 0.62, "hat": 0.3, "shaker": 0.38, "clap": 0.18, "cymbal": 0.26, "tom": 1.15, "impact": 1.43, "riser": 0.5, "crowd": 0.69}
+# one-shot output gain (linear), independent of the instrument TRIM so the drums the SFX borrow do not set their level.
+# Measured so every SFX lands near the same peak; the old per-sample TRIM values spanned ~27 dB, which buried
+# shoot/coin/click under the music while hurt blared.
+const SFX_LVL := {"shoot": 0.5, "hit": 0.43, "pop": 0.25, "coin": 0.38, "click": 0.37, "hurt": 0.38, "beat": 0.35, "buy": 0.42, "power": 0.39, "level": 0.4, "trophy": 0.42, "trumpet": 0.4, "shield": 0.41, "boss": 0.4}
 # melodic instruments: [lowest root, highest root], roots every 2 semitones; each root has a second take "_2"
 const RANGE := {"guitar": [40, 88], "bass": [28, 64], "trumpet": [52, 88], "violin": [55, 99], "accordion": [48, 84], "pad": [40, 80], "choir": [48, 84], "bell": [60, 100]}
 const NVOICE := 40
@@ -25,7 +28,7 @@ var vox: Dictionary = {}
 var vox_lo: Dictionary = {}   # the octave-down double that sings under the synth-style lines
 var vox_only := false         # test switch: only the sung clips play
 var cur := "game"
-var boost := 1.0              # the title song is written quieter than the game song
+var boost := 1.0              # per-track gain, set in start_music() so the three songs are equally loud
 var playing := false
 var step := 0
 var next_t := 0.0
@@ -120,7 +123,7 @@ func play(name: String, o := {}) -> void:
 	if p == null: p = voices[oi]
 	p.stream = pk[0]
 	p.pitch_scale = pow(2.0, (midi - pk[1]) / 12.0) * o.get("rate", 1.0) if midi >= 0 and pk[1] > 0 else o.get("rate", 1.0)
-	var v: float = o.get("v", 1.0) * TRIM.get(name, 1.0)
+	var v: float = o.get("v", 1.0) * o.get("trim", TRIM.get(name, 1.0))
 	p.bus = o.get("bus", "Music")
 	if name.begins_with("vox/"): p.bus = "Vox"
 	if p.bus == "Music" or p.bus == "Vox": v *= boost
@@ -142,16 +145,17 @@ func sfx(n: String, vol := 1.0) -> void:
 	var gap: float = {"shoot": 0.09, "hit": 0.05, "pop": 0.04, "coin": 0.05}.get(n, 0.03)
 	if last.has(n) and now - last[n] < gap: return
 	last[n] = now
-	var nm := "sfx_" + n
-	if n == "shoot" or n == "hit" or n == "pop" or n == "hurt":   # these have no sample of their own: use the closest one-shots
-		nm = {"shoot": "hat", "hit": "sfx_click", "pop": "sfx_coin", "hurt": "impact"}[n]
-		var r := 0.94 + randf() * 0.12
-		if n == "shoot": play("hat", {"v": 0.9, "rate": 0.9 * r, "bus": "SFX"})
-		elif n == "hit": play("tom", {"v": 0.22, "rate": 1.6 * r, "bus": "SFX"})
-		elif n == "pop": play("snare", {"v": 0.3, "rate": 1.25 * r, "bus": "SFX"}); play("sfx_coin", {"v": 0.35, "rate": 1.5 * r, "bus": "SFX", "dl": 0.03})
-		else: play("impact", {"v": 0.5 * vol, "rate": 1.2, "bus": "SFX"})
-		return
-	play(nm, {"v": SFX_REL.get(n, 0.7) * vol, "rate": 0.94 + randf() * 0.12, "bus": "SFX"})
+	# shoot/hit/pop/hurt have no sample of their own, so they borrow the closest one-shots. SFX_LVL sets the level
+	# for every one-shot and trim:1.0 keeps the borrowed drum's TRIM out, so SFX do not inherit the music's drum balance.
+	var g: float = SFX_LVL.get(n, 0.4) * vol
+	var r := 0.94 + randf() * 0.12
+	if n == "shoot": play("hat", {"v": g, "trim": 1.0, "rate": 0.9 * r, "bus": "SFX"})
+	elif n == "hit": play("tom", {"v": g, "trim": 1.0, "rate": 1.6 * r, "bus": "SFX"})
+	elif n == "pop":
+		play("snare", {"v": g, "trim": 1.0, "rate": 1.25 * r, "bus": "SFX"})
+		play("sfx_coin", {"v": g, "trim": 1.0, "rate": 1.5 * r, "bus": "SFX", "dl": 0.03})
+	elif n == "hurt": play("impact", {"v": g, "trim": 1.0, "rate": 1.2, "bus": "SFX"})
+	else: play("sfx_" + n, {"v": g, "trim": 1.0, "rate": 0.94 + randf() * 0.12, "bus": "SFX"})
 
 # ---------- music ----------
 # the musical beat, so the dance can lock to the tune. tempo table derived from the step constants above:
@@ -168,7 +172,7 @@ func start_music(track := "game") -> void:
 	if track == "game" and song.is_empty(): return
 	if playing and cur == track: return
 	if playing: stop_music()
-	cur = track; boost = 1.25 if track == "menu" else (1.1 if track == "victory" else 0.8); playing = true; step = 0; next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
+	cur = track; boost = 1.8 if track == "menu" else (0.6 if track == "victory" else 1.15); playing = true; step = 0; next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
 
 func stop_music() -> void:
 	playing = false

@@ -304,6 +304,77 @@ func _ready() -> void:
 		print("glb: append=%d write=%d nodes=%d -> %s" % [ae, we, st.get_nodes().size(), a[0]])
 		get_tree().quit()
 		return
+	if a.size() > 3 and a[2] == "mix":
+		# audio QA: play one track in real time and capture the Master bus in front of and behind the limiter.
+		# args: a[0]=out .wav ("-" to skip), a[3]=track, a[4]=seconds (default 12). Levels are printed as one line each.
+		var track: String = a[3]
+		var secs: float = float(a[4]) if a.size() > 4 else 12.0
+		var pre_cap := AudioEffectCapture.new(); pre_cap.buffer_length = 4.0
+		var post_cap := AudioEffectCapture.new(); post_cap.buffer_length = 4.0
+		AudioServer.add_bus_effect(0, pre_cap, 0)   # before the limiter: the raw sum the limiter has to tame
+		AudioServer.add_bus_effect(0, post_cap)     # after it: what actually reaches the speakers
+		var mb := AudioServer.get_bus_index("Music")
+		var mpre_cap := AudioEffectCapture.new(); mpre_cap.buffer_length = 4.0
+		var mpost_cap := AudioEffectCapture.new(); mpost_cap.buffer_length = 4.0
+		AudioServer.add_bus_effect(mb, mpre_cap, 0)   # the Music bus in front of its reverb
+		AudioServer.add_bus_effect(mb, mpost_cap)     # and behind it, to see how much the reverb adds
+		m.set_process(false)
+		m.snd.set_volumes(8, 8)                     # pin the mix buses so runs stay comparable
+		m.snd.start_music(track)
+		if a.size() > 5 and a[5] == "play":         # end-to-end: let the real game run so music and SFX overlap
+			m.set_process(true)
+			m.start_run()
+		Engine.max_fps = 60                         # steady dt keeps the sequencer timing repeatable
+		var pre := PackedVector2Array(); var post := PackedVector2Array()
+		var mpre := PackedVector2Array(); var mpost := PackedVector2Array()
+		var t0 := Time.get_ticks_msec()
+		while Time.get_ticks_msec() - t0 < int(secs * 1000.0):
+			await get_tree().process_frame
+			var n1 := pre_cap.get_frames_available()
+			if n1 > 0: pre.append_array(pre_cap.get_buffer(n1))
+			var n2 := post_cap.get_frames_available()
+			if n2 > 0: post.append_array(post_cap.get_buffer(n2))
+			var n3 := mpre_cap.get_frames_available()
+			if n3 > 0: mpre.append_array(mpre_cap.get_buffer(n3))
+			var n4 := mpost_cap.get_frames_available()
+			if n4 > 0: mpost.append_array(mpost_cap.get_buffer(n4))
+		var sr := AudioServer.get_mix_rate()
+		_audio_report("PRE ", pre, sr)
+		_audio_report("POST", post, sr)
+		_audio_report("Mpre", mpre, sr)
+		_audio_report("Mpst", mpost, sr)
+		if a[0] != "-": _audio_wav(a[0], post, sr)
+		print("mix: track=%s secs=%.1f sr=%d frames=%d" % [track, secs, sr, post.size()])
+		get_tree().quit()
+		return
+	if a.size() > 2 and a[2] == "sfx":
+		# audio QA: fire each one-shot once with the music muted and report its level, so SFX loudness can be
+		# compared against the music bed. args: a[0]=out .wav ("-" to skip), a[3]=comma list (default: all)
+		var cap := AudioEffectCapture.new(); cap.buffer_length = 4.0
+		AudioServer.add_bus_effect(0, cap, 0)
+		m.set_process(false)
+		m.snd.set_volumes(8, 8)
+		Engine.max_fps = 60
+		AudioServer.set_bus_mute(AudioServer.get_bus_index("Music"), true)
+		AudioServer.set_bus_mute(AudioServer.get_bus_index("Vox"), true)
+		var sr := AudioServer.get_mix_rate()
+		var all := ["shoot", "hit", "pop", "coin", "click", "hurt", "beat", "buy", "power", "level", "trophy", "trumpet", "shield", "boss"]
+		var names: Array = String(a[3]).split(",") if a.size() > 3 else all
+		var mix := PackedVector2Array()
+		for nm in names:
+			cap.clear_buffer()
+			m.snd.sfx(nm)
+			var acc := PackedVector2Array()
+			var t0 := Time.get_ticks_msec()
+			while Time.get_ticks_msec() - t0 < 700:
+				await get_tree().process_frame
+				var nf := cap.get_frames_available()
+				if nf > 0: acc.append_array(cap.get_buffer(nf))
+			_audio_report("sfx %-8s" % nm, acc, sr)
+			mix.append_array(acc)
+		if a[0] != "-": _audio_wav(a[0], mix, sr)
+		get_tree().quit()
+		return
 	for i in n: await get_tree().process_frame
 	if a.size() > 2 and a[2] == "face":
 		var h = m.hero3d
@@ -323,3 +394,44 @@ func _ready() -> void:
 	else:
 		get_viewport().get_texture().get_image().save_png(a[0])
 	get_tree().quit()
+
+# ---------- audio QA helpers (used by the "mix" mode) ----------
+func _db(x: float) -> float:
+	return linear_to_db(maxf(1e-9, x))
+
+# Level summary of a stereo capture: peak, RMS, crest factor, hard-clip count, DC and a 3-band split.
+# The bands use one-pole filters (cheap, order-1), enough to spot a mix that is bottom-heavy or top-heavy.
+func _audio_report(tag: String, x: PackedVector2Array, sr: int) -> void:
+	var n := x.size()
+	if n == 0:
+		print("%s: no frames" % tag); return
+	var a_lo := 1.0 - exp(-TAU * 200.0 / sr)
+	var a_hi := 1.0 - exp(-TAU * 2000.0 / sr)
+	var peak := 0.0; var sumsq := 0.0; var clip := 0; var dc := 0.0
+	var lo := 0.0; var hi := 0.0; var lsq := 0.0; var msq := 0.0; var hsq := 0.0
+	for i in n:
+		var s := (x[i].x + x[i].y) * 0.5
+		var ab := absf(s)
+		if ab > peak: peak = ab
+		if ab >= 0.999: clip += 1
+		sumsq += s * s; dc += s
+		lo += a_lo * (s - lo)
+		hi += a_hi * (s - hi)
+		var mid := s - lo - hi
+		lsq += lo * lo; msq += mid * mid; hsq += hi * hi
+	var rms := sqrt(sumsq / n)
+	print("%s peak=%.1f dBFS  rms=%.1f dBFS  crest=%.1f dB  clip=%d  dc=%.4f  lo/mid/hi=%.1f/%.1f/%.1f dB" % [tag, _db(peak), _db(rms), _db(peak) - _db(rms), clip, dc / n, _db(sqrt(lsq / n)), _db(sqrt(msq / n)), _db(sqrt(hsq / n))])
+
+func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void:
+	var b := PackedByteArray(); b.resize(x.size() * 4)
+	var j := 0
+	for i in x.size():
+		b.encode_s16(j, int(clampf(x[i].x, -1.0, 1.0) * 32767.0))
+		b.encode_s16(j + 2, int(clampf(x[i].y, -1.0, 1.0) * 32767.0))
+		j += 4
+	var w := AudioStreamWAV.new()
+	w.format = AudioStreamWAV.FORMAT_16_BITS
+	w.mix_rate = sr
+	w.stereo = true
+	w.data = b
+	print("wav: %s err=%d frames=%d" % [path, w.save_to_wav(path), x.size()])
