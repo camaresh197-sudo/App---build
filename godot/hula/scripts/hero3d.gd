@@ -1005,7 +1005,7 @@ func _apply_face() -> void:
 		var x := t * w
 		var skw := sk * 0.008 * t
 		var yl := -0.0735 + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
-		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _pose_v("ns") * 0.004
+		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _pose_v("ns") * 0.004 + _pose_v("ul") * 0.008
 		# the lips sit on the face: their depth follows the head surface, so they curve back at the corners instead of
 		# hanging in the air, and the jaw's drop keeps the lower lip on the receding chin
 		var zl := hz(x, yl) + 0.0022 + _pose_v("pu") * 0.006 * (1.0 - 0.5 * t2)
@@ -1025,7 +1025,7 @@ func _apply_face() -> void:
 	var zu_c := hz(0.0, -0.0635 - 0.25 * A) + 0.0022
 	var zl_c := hz(0.0, -0.0735 - 0.5 * A) + 0.0022
 	var rl_c := 0.0034 + 0.0042
-	var y_top := (-0.0635 - 0.25 * A) - 0.0062                                                     # upper lip's lower edge
+	var y_top := (-0.0635 - 0.25 * A) - 0.0062 + _pose_v("ul") * 0.008                                    # upper lip's lower edge
 	var y_bot := -0.05 + (-0.0735 - 0.5 * A + 0.05) * cos(th) - (zl_c + 0.045) * sin(th) + rl_c     # lower lip's upper edge, after the jaw swing
 	var h_win := maxf(0.004, y_top - y_bot)
 	var zt := minf(zu_c, zl_c) + 0.0035
@@ -1086,7 +1086,7 @@ func _apply_face() -> void:
 	(fr.tip as Node3D).position = Vector3(0, -0.019 + ns * 0.004 - maxf(0.0, _fp("pu")) * 0.002, 0.107 + nf * 0.002)
 	for m in fr.must:
 		var nd: Node3D = m[0]; var b: Vector3 = m[1]; var mt: float = m[2]; var ms: float = m[3]
-		var dy := maxf(0.0, sm) * 0.004 * mt * mt + ns * 0.004 - maxf(0.0, -sm) * 0.005 * mt * mt - mo * 0.005 * (1.0 - mt) + sk * 0.003 * ms * mt
+		var dy := maxf(0.0, sm) * 0.004 * mt * mt + ns * 0.004 - maxf(0.0, -sm) * 0.005 * mt * mt - mo * 0.005 * (1.0 - mt) + sk * 0.003 * ms * mt + _pose_v("ul") * 0.005 * (1.0 - mt)
 		var dx := _fp("mw") * 0.006 * mt * ms - _fp("pu") * 0.008 * mt * ms
 		nd.position = b + Vector3(dx, dy, 0.0)
 	_mouth_meshes()
@@ -1178,6 +1178,9 @@ func face_update() -> void:
 	var breath := 0.5 + 0.5 * sin(_clock * 1.7)
 	fo["mo"] = breath * 0.018 + talk * (0.1 + 0.3 * absf(sin(_clock * 11.0)) * (0.6 + 0.4 * sin(_clock * 4.3)))
 	fo["mw"] = talk * 0.3 * sin(_clock * 6.5); fo["pu"] = talk * 0.2 * maxf(0.0, sin(_clock * 6.5 + 2.0))
+	# the upper lip has to move too, or the mouth only flaps its jaw: it lifts on the open vowels and drops back onto the
+	# lower lip for the closed ones (which is what makes speech read as speech and not as a hinged jaw)
+	fo["ul"] = talk * (0.55 * absf(sin(_clock * 8.5)) - 0.15 + 0.2 * sin(_clock * 3.9))
 	fo["bo"] += talk * 0.12 * maxf(0.0, sin(_clock * 5.0)); fo["bi"] += talk * 0.08 * maxf(0.0, sin(_clock * 5.0 + 0.6))   # speech punctuates with the brows
 	fo["ch"] = talk * 0.25 * absf(sin(_clock * 11.0 + 0.5))                                                                  # and the chin bobs behind the jaw
 	fo["bo"] -= _blink_k * 0.05; fo["bi"] -= _blink_k * 0.04          # brows dip with each blink
