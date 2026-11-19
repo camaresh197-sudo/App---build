@@ -22,7 +22,6 @@ var song: Array = []
 var title: Array = []
 var vic: Array = []
 var vox: Dictionary = {}
-var vox_lo: Dictionary = {}   # the octave-down double that sings under the synth-style lines
 var vox_only := false         # test switch: only the sung clips play
 var cur := "game"
 var boost := 1.0              # the title song is written quieter than the game song
@@ -44,8 +43,6 @@ func _ready() -> void:
 		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0)
 	var f := FileAccess.open("res://data_song.json", FileAccess.READ)
 	if f: song = JSON.parse_string(f.get_as_text())
-	var f5 := FileAccess.open("res://data_vox_lo.json", FileAccess.READ)
-	if f5: vox_lo = JSON.parse_string(f5.get_as_text())
 	var f4 := FileAccess.open("res://data_vox.json", FileAccess.READ)
 	if f4: vox = JSON.parse_string(f4.get_as_text())
 	var f3 := FileAccess.open("res://data_victory.json", FileAccess.READ)
@@ -63,7 +60,10 @@ func _buses() -> void:
 			AudioServer.set_bus_name(i, nm); AudioServer.set_bus_send(i, "Master")
 	var vb := AudioServer.get_bus_index("Vox")
 	if AudioServer.get_bus_effect_count(vb) == 0:
-		var vr := AudioEffectReverb.new(); vr.room_size = 0.4; vr.damping = 0.8; vr.wet = 0.11; vr.dry = 1.0; AudioServer.add_bus_effect(vb, vr)   # sung words stay almost dry, so there is no echo on long notes
+		# catch only the loudest peaks (the clips are already compressed per line), so VOX_GAIN stays predictable
+		var vc := AudioEffectCompressor.new(); vc.threshold = -10.0; vc.ratio = 2.0; vc.attack_us = 12000.0; vc.release_ms = 180.0; vc.gain = 0.0; AudioServer.add_bus_effect(vb, vc)
+		# a little room so the ensemble reads as a choir, but still short enough that held words do not echo
+		var vr := AudioEffectReverb.new(); vr.room_size = 0.5; vr.damping = 0.6; vr.wet = 0.15; vr.dry = 1.0; AudioServer.add_bus_effect(vb, vr)
 	var mb := AudioServer.get_bus_index("Music")
 	if AudioServer.get_bus_effect_count(mb) == 0:
 		var rv := AudioEffectReverb.new(); rv.room_size = 0.55; rv.damping = 0.5; rv.wet = 0.16; rv.dry = 0.9; rv.hipass = 0.1
@@ -373,7 +373,7 @@ func _tstep(st: int, dl: float) -> void:
 
 # ---------- victory fanfare (instrumental: the tune is carried by the lead instruments) ----------
 const VE := 0.105
-const VOX_GAIN := 1.4
+const VOX_GAIN := 2.4
 var have_vox := true
 const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-tag": 0.0}
 func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void:
@@ -454,8 +454,9 @@ func _vstep(st: int, dl: float) -> void:
 		elif sec == "v-tag": vk = "tag%d" % bar
 		elif sec == "v-F": vk = ["B0", "B1", "B6", "B7"][clampi(bar, 0, 3)]
 		if vox.has(vk):
+			# one clip per line: each clip is pre-rendered as a small detuned ensemble (choir), so a separate
+			# unison double is no longer played here (two takes at the same pitch comb-filtered into a metallic edge).
 			play("vox/" + str(vox[vk][0]), {"v": VOX_GAIN, "dl": maxf(0.0, dd - float(vox[vk][1]) + 0.01)})
-			if vox_lo.has(vk): play("vox/" + str(vox_lo[vk][0]), {"v": VOX_GAIN * 0.5, "dl": maxf(0.0, dd - float(vox_lo[vk][1]) + 0.01)})
 	# --- the tune ---
 	var m: int = int(mel[s])
 	if m > 0:
