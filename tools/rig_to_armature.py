@@ -6,6 +6,11 @@ world transform); every mesh is bound weight-1 to its parent node's bone, so the
 result poses exactly like the glTF file but is a normal armature you can select,
 pose and animate in Blender.
 
+Keep <out.blend> OUTSIDE the Godot project (the repo's blender/ folder, not
+godot/hula/art/): a .blend inside res:// makes Godot try to import it, and when
+Blender is not configured (headless / CI) that failure aborts the WHOLE import
+pass - nothing is imported, so the game loses all audio and textures.
+
     blender --background --factory-startup --python rig_to_armature.py -- <in.glb> <out.blend>
 """
 import sys
