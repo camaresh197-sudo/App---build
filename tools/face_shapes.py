@@ -59,6 +59,25 @@ def frown_disp(p):
     return d
 
 
+def brow_disp(p):
+    # the brow ridge lifts and takes the forehead skin up with it
+    d = Vector((0.0, 0.0, 0.0))
+    for s in (-1.0, 1.0):
+        d += Vector((0.0, 0.015, 0.004)) * fall(p, Vector((0.043 * s, 0.062, 0.081)), 0.038)
+    d += Vector((0.0, 0.009, 0.003)) * fall(p, Vector((0.0, 0.050, 0.094)), 0.032)
+    return d
+
+
+def snarl_disp(p):
+    # the nose bridge wrinkles and the wings flare, as on a snarl
+    d = Vector((0.0, 0.0, 0.0))
+    for yy in (0.018, 0.028, 0.038):
+        d -= Vector((0.0, 0.0, 0.006)) * fall(p, Vector((0.0, yy, 0.100)), 0.017)
+    for s in (-1.0, 1.0):
+        d += Vector((0.006 * s, 0.0, 0.003)) * fall(p, Vector((0.015 * s, -0.022, 0.100)), 0.022)
+    return d
+
+
 def pucker_disp(p):
     # the mouth pushes forward and the cheeks hollow in, as when whistling
     d = Vector((0.0, 0.0, 0.0))
@@ -82,7 +101,8 @@ me = head.data
 if me.shape_keys is None:
     head.shape_key_add(name="Basis", from_mix=False)
 
-SHAPES = {"smile": smile_disp, "squint": squint_disp, "frown": frown_disp, "pucker": pucker_disp}
+SHAPES = {"smile": smile_disp, "squint": squint_disp, "frown": frown_disp, "pucker": pucker_disp,
+          "brow": brow_disp, "snarl": snarl_disp}
 for name, fn in SHAPES.items():
     old = me.shape_keys.key_blocks.get(name)
     if old is not None:
