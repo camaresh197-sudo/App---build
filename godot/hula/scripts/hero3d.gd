@@ -490,13 +490,15 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	fr.must = must
 	for s: float in [-1.0, 1.0]:
 		var n := 18
+		var msd := "l" if s < 0 else "r"
 		for i in n:
 			var t := float(i) / (n - 1)
 			var x := 0.003 + t * 0.048
 			var y := -0.043 - sin(t * PI) * 0.004 + maxf(0.0, t - 0.6) * 0.019
 			var z := 0.105 * 0.95 * sqrt(maxf(0.02, 1.0 - pow(x / 0.0977, 2.0))) + 0.006
 			var r := lerpf(0.0130, 0.0050, pow(t, 0.85))
-			var mn := put(head, sphere(r), black, Vector3(x * s, y, z), Vector3(1.2, 0.9, 0.9))
+			var mn := _fb("must_%s_%d" % [msd, i], head, Vector3(x * s, y, z))
+			put(mn, sphere(r), black, Vector3.ZERO, Vector3(1.2, 0.9, 0.9))
 			mn.visible = false
 			must.append([mn, mn.position, t, s])
 	# mouth: dark cavity, two rows of separate teeth (laid along the mouth arc every frame), upper and lower lip
@@ -517,8 +519,8 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		(J if nm == "lipLm" else head).add_child(mi); fr[nm] = mi
 	fr.lipU = []; fr.lipL = []
 	for i in LIP_N:
-		fr.lipL.append(put(J, sphere(0.0042), lip_m, Vector3.ZERO, Vector3(1.2, 0.8, 0.8))); (fr.lipL[i] as Node3D).visible = false
-		fr.lipU.append(put(head, sphere(0.0038), lip_m, Vector3.ZERO, Vector3(1.2, 0.7, 0.8))); (fr.lipU[i] as Node3D).visible = false
+		var bl := _fb("lipL_%d" % i, J, Vector3.ZERO); put(bl, sphere(0.0042), lip_m, Vector3.ZERO, Vector3(1.2, 0.8, 0.8)); bl.visible = false; fr.lipL.append(bl)
+		var bu := _fb("lipU_%d" % i, head, Vector3.ZERO); put(bu, sphere(0.0038), lip_m, Vector3.ZERO, Vector3(1.2, 0.7, 0.8)); bu.visible = false; fr.lipU.append(bu)
 	put(_fb("chin", J, Vector3(0, -0.102, 0.054) - JAW_P), sphere(0.026), soft_m); fr.chin = b("chin")   # chin, on the jaw bone
 	put(_fb("tongue", J, Vector3(0, -0.075, 0.08) - JAW_P), sphere(0.014), mat(Color("c0525a"), 0.45)); fr.tongue = b("tongue")
 	for s: float in [-1.0, 1.0]:
