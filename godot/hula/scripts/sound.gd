@@ -41,13 +41,13 @@ func _ready() -> void:
 	_buses()
 	for i in NVOICE:
 		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0)
-	var f := FileAccess.open("res://data_song.json", FileAccess.READ)
+	var f := FileAccess.open("res://data/data_song.json", FileAccess.READ)
 	if f: song = JSON.parse_string(f.get_as_text())
-	var f4 := FileAccess.open("res://data_vox.json", FileAccess.READ)
+	var f4 := FileAccess.open("res://data/data_vox.json", FileAccess.READ)
 	if f4: vox = JSON.parse_string(f4.get_as_text())
-	var f3 := FileAccess.open("res://data_victory.json", FileAccess.READ)
+	var f3 := FileAccess.open("res://data/data_victory.json", FileAccess.READ)
 	if f3: vic = JSON.parse_string(f3.get_as_text())
-	var f2 := FileAccess.open("res://data_title.json", FileAccess.READ)
+	var f2 := FileAccess.open("res://data/data_title.json", FileAccess.READ)
 	if f2: title = JSON.parse_string(f2.get_as_text())
 	for i in song.size():
 		if song[i][7] == 0: loop_from = i; break

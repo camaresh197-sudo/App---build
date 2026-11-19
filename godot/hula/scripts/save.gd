@@ -5,7 +5,7 @@ static var data: Dictionary = {}
 static var defs: Dictionary = {}
 
 static func load_all() -> void:
-	var f := FileAccess.open("res://data_menu.json", FileAccess.READ)
+	var f := FileAccess.open("res://data/data_menu.json", FileAccess.READ)
 	defs = JSON.parse_string(f.get_as_text())
 	data = {"gold": 300, "skills": {}, "own": {"hat": [0], "hoop": [0], "trail": [0]}, "eq": {"hat": 0, "hoop": 0, "trail": 0},
 		"ach": {}, "stats": {"runs": 0, "kills": 0, "hats": 0, "bosses": 0, "gold_all": 0, "time": 0, "best_run": 0, "best_level": 0, "best_combo": 0, "best_kills": 0},
