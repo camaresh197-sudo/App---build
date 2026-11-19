@@ -71,5 +71,30 @@ for v in me.vertices:
 me.update()
 
 print("SCULPT: %s - nose on %d/%d verts" % (head.name, moved, len(me.vertices)))
+
+# --- jaw / mouth ---
+jaw = bpy.data.objects.get("jaw_0")
+if jaw is not None:
+    ys = [v.co.y for v in jaw.data.vertices]
+    zs = [v.co.z for v in jaw.data.vertices]
+    chin = Vector((0.0, min(ys) + 0.012, max(zs) - 0.022))      # the lowest-front point of the jaw mesh
+    for v in jaw.data.vertices:
+        p = v.co
+        v.co = p + Vector((0.0, -0.006, 0.007)) * fall(p, chin, 0.038)     # a defined chin
+    jaw.data.update()
+    print("SCULPT: jaw %s - chin at %s" % (jaw.name, tuple(round(c, 3) for c in chin)))
+
+# the teeth are plain boxes; bevel the edges so they read as teeth and not blocks
+tn = 0
+for o in bpy.data.objects:
+    if o.type == "MESH" and (o.name.startswith("tooth_u") or o.name.startswith("tooth_l")):
+        b = o.modifiers.new("Bevel", "BEVEL")
+        b.width = 0.0011
+        b.segments = 2
+        bpy.context.view_layer.objects.active = o
+        bpy.ops.object.modifier_apply(modifier=b.name)
+        tn += 1
+print("SCULPT: bevelled %d teeth" % tn)
+
 bpy.ops.wm.save_as_mainfile(filepath=DST)
 print("SCULPT: saved", DST)
