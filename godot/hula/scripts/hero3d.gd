@@ -78,7 +78,7 @@ func _declare_bones() -> Array:
 			["fore_" + side, "elbow_" + side, Vector3.ZERO],         # forearm twist (palm turns)
 			["hand_" + side, "fore_" + side, Vector3(0, -0.3, 0)],   # wrist
 			["thumb_" + side, "hand_" + side, Vector3(0.04 * s, -0.045, 0.012), Vector3(0, 0, -0.9 * s)],
-			["hair_" + side, "head", Vector3(0.1 * s, 0.04, -0.03), Vector3(0, 0, 0.08 * s)],   # pivots at the top so the lock can swing
+			["hair_" + side, "head", Vector3(0.068 * s, 0.03, -0.055), Vector3(0, 0, 0.08 * s)],   # pivots at the top so the lock can swing
 			# eyes: a real ball that turns inside two lids, so the iris can never slide off the eye
 			["white_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],
 			["iris_" + side, "white_" + side, Vector3.ZERO],
@@ -170,7 +170,7 @@ func _build() -> void:
 	var silver := mat(Color("d8dde6"), 0.25, 0.9)
 	var leather := mat(Color("8a5a2b"), 0.6)
 	var boot := mat(Color("1b1412"), 0.35, 0.15)
-	var black := mat(Color("120c09"), 0.5)
+	var black := mat(Color("120c09"), 0.72)
 	var white := mat(Color("f4efe6"), 0.6)
 	var felt := mat(Color("efe3c3"), 0.9)
 	mats = {"felt": felt, "skin": skin}
@@ -212,21 +212,21 @@ func _build() -> void:
 	put(spine, BoxMesh.new(), gold, Vector3(0, 0.02, 0.134), Vector3(0.04, 0.035, 0.012))
 	# head
 	var neck := b("neck")
-	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.07, 0), Vector3(0.14, 0.14, 0.14))      # the neck: runs from inside the collar up under the jaw
-	put(neck, sphere(0.09), skin, Vector3(0, -0.02, 0.0), Vector3(1.0, 0.6, 0.85))      # wide base: neck flares into the shoulders
+	put(neck, CylinderMesh.new(), skin, Vector3(0, 0.07, 0), Vector3(0.125, 0.14, 0.125))      # the neck: runs from inside the collar up under the jaw
+	put(neck, sphere(0.085), skin, Vector3(0, -0.02, 0.0), Vector3(1.0, 0.6, 0.85))      # wide base: neck flares into the shoulders
 	var neck2 := b("neck2")       # upper neck: the head turns on this, the neck bends in two places
 	var head := b("head"); head.scale = Vector3(1.22, 1.22, 1.22)
 	put(head, sphere(0.105), skin, Vector3(0, 0.0, 0), Vector3(0.93, 1.1, 1.0))
 	fr.jaw = put(b("jaw"), sphere(0.06), skin, Vector3(0, -0.06, 0.02) - JAW_P, Vector3(0.95, 0.75, 0.9))       # jaw, on the jaw bone
 	_face(head, skin, white, black)
-	put(head, sphere(0.02), skin, Vector3(-0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8)); put(head, sphere(0.02), skin, Vector3(0.104, 0, 0.0), Vector3(0.5, 1.1, 0.8))
-	# hair: long dark locks either side + back
+	put(head, sphere(0.018), skin, Vector3(-0.100, -0.042, -0.008), Vector3(0.40, 1.05, 0.80)); put(head, sphere(0.018), skin, Vector3(0.100, -0.042, -0.008), Vector3(0.40, 1.05, 0.80))
+	# hair: a shell that hugs the skull - high above the brows at the front, down over the nape at the back - with a long
+	# flat lock falling behind each side. The old pair of rounded blobs beside the head read as ears; this reads as hair.
+	var black_nc := mat(Color("120c09"), 0.78); black_nc.cull_mode = BaseMaterial3D.CULL_DISABLED
+	put(head, _hair_cap(0.0977, 0.1155, 0.105, 0.088, -0.012, -0.10), black_nc)
 	for s in [-1, 1]:
 		var lock := b("hair_" + ("l" if s < 0 else "r"))      # pivots at the top so the lock can swing
-		lock.rotation = Vector3(0, 0, 0.08 * s)
-		var black_nc := mat(Color("120c09"), 0.5); black_nc.cull_mode = BaseMaterial3D.CULL_DISABLED
-		put(lock, lathe([Vector2(0.03, 0.02), Vector2(0.046, -0.02), Vector2(0.05, -0.09), Vector2(0.043, -0.17), Vector2(0.028, -0.25), Vector2(0.01, -0.31), Vector2(0.0015, -0.325)], 24), black_nc)
-	put(head, sphere(0.108), black, Vector3(0, 0.02, -0.03), Vector3(0.95, 1.0, 0.95))
+		put(lock, lathe([Vector2(0.010, 0.04), Vector2(0.030, 0.0), Vector2(0.040, -0.08), Vector2(0.042, -0.16), Vector2(0.036, -0.24), Vector2(0.024, -0.31), Vector2(0.010, -0.36), Vector2(0.001, -0.385)], 24), black_nc, Vector3.ZERO, Vector3(0.88, 1.0, 1.15))
 	# sombrero
 	var hat := b("hat")
 	var brim := lathe([Vector2(0.09, 0.0), Vector2(0.20, -0.005), Vector2(0.30, 0.0), Vector2(0.40, 0.03), Vector2(0.43, 0.065), Vector2(0.425, 0.07), Vector2(0.395, 0.04), Vector2(0.30, 0.012), Vector2(0.20, 0.005), Vector2(0.09, 0.012)])
@@ -340,7 +340,7 @@ const SPR := {"lid": [26.0, 1.0], "lidL": [26.0, 1.0], "lidR": [26.0, 1.0], "sq"
 	"hp": [9.0, 0.8], "hr": [9.0, 0.8], "hy": [9.0, 0.8], "ns": [18.0, 0.9], "nf": [18.0, 0.9], "ch": [16.0, 0.8], "te": [3.0, 1.0], "wet": [4.0, 1.0], "fix": [10.0, 1.0]}
 var _clock := 0.0
 const LIP_N := 17
-const EYE_R := 0.027
+const EYE_R := 0.025
 # The mouth is posed, not drawn: the jaw is a bone, and the parts that belong to it (lower lip, chin, tongue, its corner
 # knots) hang off it. JAW_P is the hinge in head space and JAW_OPEN the angle at mo = 1, picked so the lower lip drops the
 # same 0.03 the old per-part translation used to, so the mouth reads the same but the opening now comes from one bone.
@@ -383,11 +383,11 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var black_nc2 := mat(Color("050303"), 0.25); black_nc2.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var lid_base := skin.albedo_color.lightened(0.04)
 	var lidv_m := mat(Color.WHITE, 0.85); lidv_m.vertex_color_use_as_albedo = true; lidv_m.cull_mode = BaseMaterial3D.CULL_DISABLED; lidv_m.metallic_specular = 0.08
-	var sclera_m := mat(Color("eadfd0"), 0.3); sclera_m.metallic_specular = 0.2
+	var sclera_m := mat(Color("d8cab6"), 0.5); sclera_m.metallic_specular = 0.05
 	var lid_m := mat(skin.albedo_color.lightened(0.04), 0.9); lid_m.metallic_specular = 0.05
 	var pink_m := mat(Color("d98a86"), 0.5)
 	var shine := mat(Color.WHITE, 0.1); shine.emission_enabled = true; shine.emission = Color.WHITE; shine.emission_energy_multiplier = 0.8
-	var lip_m := mat(skin.albedo_color.darkened(0.3).lerp(Color("b5524a"), 0.45), 0.5)
+	var lip_m := mat(skin.albedo_color.darkened(0.34).lerp(Color("b5524a"), 0.58), 0.5)
 	var mouth_m := mat(Color("4a1411"), 0.6)
 	# soft-edged skin for the cheeks, chin and jaw muscles: the shape fades out where it meets the head, so it reads as a swelling of the same skin and not a separate lump
 	var soft_sh := Shader.new()
@@ -413,7 +413,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		fr["ex_" + sd] = ex
 		var ec := Vector3(ex, 0.025, 0.0725)         # eyeball centre: a real ball that turns inside two lids, so the iris can never slide off the eye
 		fr["ec_" + sd] = ec
-		fr["soc_" + sd] = put(head, sphere(0.027), skin_d, Vector3(ex, 0.025, 0.083), Vector3(1.18, 0.95, 0.4))        # socket shadow
+		fr["soc_" + sd] = put(head, sphere(0.025), skin_d, Vector3(ex, 0.025, 0.083), Vector3(1.18, 0.95, 0.4))        # socket shadow
 		var ball := b("white_" + sd)
 		fr["white_" + sd] = ball
 		put(ball, sphere(EYE_R), sclera_m)
@@ -424,8 +424,8 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		var pup := b("pupil_" + sd)
 		fr["pupil_" + sd] = pup
 		put(pup, _cap(EYE_R * 1.004, asin(0.0052 / EYE_R), false), black_nc2)
-		fr["shine_" + sd] = put(head, sphere(0.0036), shine, ec, Vector3(1, 1, 0.35))
-		fr["shine2_" + sd] = put(head, sphere(0.0016), shine, ec, Vector3(1, 1, 0.35))
+		fr["shine_" + sd] = put(head, sphere(0.0026), shine, ec, Vector3(1, 1, 0.35))
+		fr["shine2_" + sd] = put(head, sphere(0.0011), shine, ec, Vector3(1, 1, 0.35))
 		var lu := b("lidu_" + sd); fr["lid_" + sd] = lu
 		put(lu, _lidmesh(EYE_R + 0.0022, true, lid_base, skin_d.albedo_color), lidv_m)
 		var ll := b("lidl_" + sd); fr["low_" + sd] = ll
@@ -448,18 +448,18 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		var n := 18
 		for i in n:
 			var t := float(i) / (n - 1)
-			var x := 0.004 + t * 0.064
-			var y := -0.04 - sin(t * PI) * 0.006 + maxf(0.0, t - 0.55) * 0.05
-			var z := 0.105 * 0.95 * sqrt(maxf(0.02, 1.0 - pow(x / 0.0977, 2.0))) + 0.007
-			var r := lerpf(0.0165, 0.0065, pow(t, 0.8))
-			var mn := put(head, sphere(r), black, Vector3(x * s, y, z), Vector3(1.15, 0.9, 0.9))
+			var x := 0.003 + t * 0.048
+			var y := -0.043 - sin(t * PI) * 0.004 + maxf(0.0, t - 0.6) * 0.019
+			var z := 0.105 * 0.95 * sqrt(maxf(0.02, 1.0 - pow(x / 0.0977, 2.0))) + 0.006
+			var r := lerpf(0.0130, 0.0050, pow(t, 0.85))
+			var mn := put(head, sphere(r), black, Vector3(x * s, y, z), Vector3(1.2, 0.9, 0.9))
 			mn.visible = false
 			must.append([mn, mn.position, t, s])
 	# mouth: dark cavity, teeth, upper and lower lip rows (shaped every frame), smile-line dimples
 	fr.cav = put(head, sphere(0.03), mouth_m, Vector3(0, -0.068, 0.083), Vector3(1.0, 0.46, 0.3))
 	fr.teeth = put(head, BoxMesh.new(), teeth_m, Vector3(0, -0.0625, 0.0925), Vector3(0.046, 0.008, 0.004))
 	var tube_m := lip_m.duplicate(); tube_m.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var must_m := mat(Color("0d0908"), 0.45); must_m.cull_mode = BaseMaterial3D.CULL_DISABLED; must_m.rim_enabled = true; must_m.rim = 0.25; must_m.rim_tint = 0.0
+	var must_m := mat(Color("0d0908"), 0.75); must_m.cull_mode = BaseMaterial3D.CULL_DISABLED; must_m.rim_enabled = true; must_m.rim = 0.25; must_m.rim_tint = 0.0
 	for nm in ["lipUm", "lipLm", "mustm_l", "mustm_r"]:
 		var mi := MeshInstance3D.new(); mi.mesh = ArrayMesh.new(); mi.material_override = (must_m if nm.begins_with("must") else tube_m)
 		(J if nm == "lipLm" else head).add_child(mi); fr[nm] = mi
@@ -467,12 +467,10 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	for i in LIP_N:
 		fr.lipL.append(put(J, sphere(0.0042), lip_m, Vector3.ZERO, Vector3(1.2, 0.8, 0.8))); (fr.lipL[i] as Node3D).visible = false
 		fr.lipU.append(put(head, sphere(0.0038), lip_m, Vector3.ZERO, Vector3(1.2, 0.7, 0.8))); (fr.lipU[i] as Node3D).visible = false
-	for s: float in [-1.0, 1.0]:
-		fr["dim_" + ("l" if s < 0 else "r")] = put(head, sphere(0.0034), skin_d, Vector3(0.042 * s, -0.056, 0.082), Vector3(1, 1.3, 0.6))
 	fr.chin = put(J, sphere(0.026), soft_m, Vector3(0, -0.102, 0.054) - JAW_P, Vector3(1.3, 0.5, 0.7))   # chin, on the jaw bone
 	fr.tongue = put(J, sphere(0.014), mat(Color("c0525a"), 0.45), Vector3(0, -0.075, 0.08) - JAW_P, Vector3(1.2, 0.5, 1.0))
 	for s: float in [-1.0, 1.0]:
-		fr["fold_" + ("l" if s < 0 else "r")] = put(head, sphere(0.007), skin_d, Vector3(0.042 * s, -0.05, 0.085), Vector3(0.6, 2.2, 0.5))   # smile line (nasolabial fold)
+		fr["fold_" + ("l" if s < 0 else "r")] = put(head, sphere(0.005), skin_d, Vector3(0.042 * s, -0.05, 0.085), Vector3(0.5, 1.7, 0.4))   # smile line (nasolabial fold)
 
 	# skin details that appear with expression: forehead lines, the furrow between the brows, crow's feet
 	var line_m := mat(skin.albedo_color.darkened(0.3), 0.8)
@@ -496,10 +494,10 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
 		fr["puff_" + sd] = put(head, sphere(0.02), soft_m, Vector3(0.042 * s, -0.01, 0.088), Vector3(1.2, 0.28, 0.6))
-		fr["corner_" + sd] = put(J, sphere(0.0035), skin_d, Vector3(0.04 * s, -0.07, 0.085) - JAW_P, Vector3(1, 1, 0.6))
+		fr["corner_" + sd] = put(J, sphere(0.0016), skin_d, Vector3(0.04 * s, -0.07, 0.085) - JAW_P, Vector3(1, 1, 0.6))
 		fr["mass_" + sd] = put(head, sphere(0.02), soft_m, Vector3(0.078 * s, -0.052, 0.03), Vector3(0.5, 1.0, 0.8))
 		fr["vein_" + sd] = put(head, capsule(0.0013, 0.03), vein_m, Vector3(0.06 * s, 0.092, hz(0.06 * s, 0.092) + 0.001), Vector3(1, 1, 0.5), Vector3(0, 0, 0.5 * s))
-	fr.dimple = put(J, sphere(0.006), skin_d, Vector3(0, -0.092, 0.081) - JAW_P, Vector3(1.4, 0.8, 0.5))
+	fr.dimple = put(J, sphere(0.006), skin_d, Vector3(0, -0.092, 0.066) - JAW_P, Vector3(1.4, 0.8, 0.3))
 	_apply_face()
 
 # a spherical cap facing +Z (the iris and pupil): polar-disc UVs so a round texture fits it
@@ -524,6 +522,32 @@ func _cap(r: float, ang: float, with_uv: bool, rings := 10, seg := 32) -> ArrayM
 	arr[Mesh.ARRAY_VERTEX] = vs; arr[Mesh.ARRAY_NORMAL] = ns; arr[Mesh.ARRAY_TEX_UV] = uvs; arr[Mesh.ARRAY_INDEX] = idx
 	var am := ArrayMesh.new(); am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 	return am
+
+# a hair shell that hugs the skull: it follows the head ellipsoid (A, B, C), growing a little thicker towards the crown,
+# and its lower edge sits high above the brows at the front, sweeps down at the sides and runs furthest down the nape.
+# Because the edge is flush with the skin at t = 0 the hairline reads as a clean line and never floats off the face.
+func _hair_cap(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick := 0.1, seg := 48, rows := 16) -> ArrayMesh:
+	var st := SurfaceTool.new(); st.begin(Mesh.PRIMITIVE_TRIANGLES); st.set_smooth_group(0)
+	for r in rows:
+		var t0 := float(r) / rows; var t1 := float(r + 1) / rows
+		for i in seg:
+			var f0 := TAU * i / seg; var f1 := TAU * (i + 1) / seg
+			var a := _hair_pt(A, B, C, y_front, y_side, y_back, thick, f0, t0)
+			var b2 := _hair_pt(A, B, C, y_front, y_side, y_back, thick, f1, t0)
+			var c2 := _hair_pt(A, B, C, y_front, y_side, y_back, thick, f0, t1)
+			var d := _hair_pt(A, B, C, y_front, y_side, y_back, thick, f1, t1)
+			st.add_vertex(a); st.add_vertex(c2); st.add_vertex(d)
+			st.add_vertex(a); st.add_vertex(d); st.add_vertex(b2)
+	st.generate_normals()
+	return st.commit()
+
+func _hair_pt(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick: float, f: float, t: float) -> Vector3:
+	var sf := sin(f)                                             # +1 towards the front (+Z), -1 towards the back
+	var ye := lerpf(y_side, y_front if sf >= 0.0 else y_back, absf(sf))
+	var y := lerpf(ye, B, pow(t, 0.8))
+	var rr := sqrt(maxf(0.0, 1.0 - (y / B) * (y / B)))
+	var k := 1.006 + thick * pow(t, 0.7)                         # flush at the hairline, fullest over the crown
+	return Vector3(A * k * rr * cos(f), y * k, C * k * rr * sin(f))
 
 # an eyelid: a shell round the eyeball from its rim (the equator) up (upper) or down (lower). The rim is a great circle, so when the lid turns about the
 # eye's x axis the opening becomes a natural almond. Vertex colours paint the lash line, the lid crease and the pink waterline.
@@ -759,15 +783,17 @@ func _apply_face() -> void:
 		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _pose_v("pu") * 0.003, zz + _pose_v("pu") * 0.006 * (1.0 - 0.5 * t2)) - JAW_P
 		(fr.lipU[i] as Node3D).position = Vector3(x, yu, zz)
 	var cav: MeshInstance3D = fr.cav
-	cav.position = Vector3(0, -0.0685 - mo * 0.012, 0.083)
-	cav.scale = Vector3(w / 0.03 * 0.95, 0.25 + mo * 0.7, 0.3)
+	# the cavity is sized to the actual opening: the upper lip's height, the lower lip's height and how far the jaw bone
+	# has already taken the lower lip down, so the dark can never spill past the lips
+	var drop := 0.1345 * JAW_OPEN * mo
+	var open_c := -0.0685 - 0.375 * A - 0.5 * drop
+	var open_h := 0.005 + 0.125 * A + 0.5 * drop
+	cav.position = Vector3(0, open_c, 0.0785)
+	cav.scale = Vector3(w / 0.03 * 1.02, open_h * 1.14 / 0.03, 0.26)
 	var tn: MeshInstance3D = fr.teeth
 	var show := maxf(_pose_v("tt") * 0.9, mo * 1.2)
 	tn.visible = show > 0.18
-	tn.position = Vector3(0, -0.0615 + _pose_v("ns") * 0.004, 0.0925); tn.scale = Vector3(w * 1.25, 0.008 + minf(1.0, show) * 0.004, 0.004)
-	for s: float in [-1.0, 1.0]:
-		var d: Node3D = fr["dim_" + ("l" if s < 0 else "r")]
-		d.position = Vector3((w + 0.006) * s, -0.0735 - mo * 0.03 * 0.5 + A * 0.5 + 0.012 + sm * 0.01, 0.082)
+	tn.position = Vector3(0, open_c + open_h * 0.55 + _pose_v("ns") * 0.004, 0.0885); tn.scale = Vector3(w * 1.25, 0.008 + minf(1.0, show) * 0.004, 0.004)
 
 	# facial muscles: cheeks lift with a smile or squint, the nose wrinkles and flares, the mustache rides the upper lip, the jaw drops, the tongue shows
 	var sq2 := _fp("sq"); var ns := _fp("ns"); var nf := _fp("nf"); var ch := _fp("ch"); var tg := _fp("tg")
@@ -785,12 +811,12 @@ func _apply_face() -> void:
 		nt.scale = Vector3(1.0 + nf * 0.5, 0.7 + nf * 0.6, 0.5)
 		var fd: Node3D = fr["fold_" + sd]
 		fd.position = Vector3((w + 0.008) * s, -0.052 + maxf(0.0, sm) * 0.012 + ns * 0.004 - mo * 0.008, 0.085)
-		fd.scale = Vector3(0.6, 1.6 + maxf(0.0, sm) * 1.5 + ns * 1.0, 0.5)
+		fd.scale = Vector3(0.5, 1.2 + maxf(0.0, sm) * 1.1 + ns * 0.8, 0.4)
 	(fr.tip as Node3D).position = Vector3(0, -0.02 + ns * 0.004 - maxf(0.0, _fp("pu")) * 0.002, 0.112 + nf * 0.002)
 	for m in fr.must:
 		var nd: Node3D = m[0]; var b: Vector3 = m[1]; var mt: float = m[2]; var ms: float = m[3]
-		var dy := maxf(0.0, sm) * 0.007 * mt * mt + ns * 0.005 - maxf(0.0, -sm) * 0.006 * mt * mt - mo * 0.006 * (1.0 - mt) + sk * 0.003 * ms * mt
-		var dx := _fp("mw") * 0.01 * mt * ms - _fp("pu") * 0.012 * mt * ms
+		var dy := maxf(0.0, sm) * 0.004 * mt * mt + ns * 0.004 - maxf(0.0, -sm) * 0.005 * mt * mt - mo * 0.005 * (1.0 - mt) + sk * 0.003 * ms * mt
+		var dx := _fp("mw") * 0.006 * mt * ms - _fp("pu") * 0.008 * mt * ms
 		nd.position = b + Vector3(dx, dy, 0.0)
 	_mouth_meshes()
 	var jaw: Node3D = fr.jaw
@@ -825,7 +851,7 @@ func _apply_face() -> void:
 	var dm: Node3D = fr.dimple
 	var mn := clampf(maxf(0.0, -sm) * 0.6 + _fp("pu") * 0.7 + ch * 0.4 - mo * 0.7, 0.0, 1.0)
 	dm.visible = mn > 0.15
-	dm.position = Vector3(0, -0.092 + mn * 0.003, 0.081) - JAW_P; dm.scale = Vector3(1.4 + mn * 0.6, 0.8 + mn * 0.5, 0.5)
+	dm.position = Vector3(0, -0.092 + mn * 0.003, 0.066) - JAW_P; dm.scale = Vector3(1.4 + mn * 0.6, 0.8 + mn * 0.5, 0.3)
 	# skin details: forehead lines with raised brows, the furrow with a scowl, crow's feet with a big smile or squint
 	var rz := (_pose_v("bo") + _pose_v("bi") + _pose_v("boL") + _pose_v("boR") + _pose_v("biL") + _pose_v("biR")) * 0.5
 	for i in 3:
@@ -902,15 +928,15 @@ func _mouth_meshes() -> void:
 		var u: Vector3 = (fr.lipU[i] as Node3D).position; var l: Vector3 = (fr.lipL[i] as Node3D).position
 		var bow := 1.0 - smoothstep(0.0, 0.35, absf(t))               # the upper lip has a centre bow and tapers to the corners
 		up.append(u + Vector3(0, 0.0008 * bow, 0.0004 * bow)); lo.append(l - Vector3(0, 0.0005, 0))
-		ru.append(0.0026 + 0.0017 * (1.0 - absf(t)) + 0.0012 * bow); rl.append(0.0028 + 0.0036 * (1.0 - t * t))
+		ru.append(0.0030 + 0.0020 * (1.0 - absf(t)) + 0.0012 * bow); rl.append(0.0034 + 0.0042 * (1.0 - t * t))
 	_tube(fr.lipUm, up, ru, 0.85); _tube(fr.lipLm, lo, rl, 0.95)
 	for side in 2:
 		var pts: Array = []; var rr: Array = []
 		for m in fr.must:
 			if (m[3] < 0.0) == (side == 0):
 				var mp: Vector3 = (m[0] as Node3D).position
-				if pts.is_empty(): pts.append(Vector3(-mp.x * 0.8, mp.y, mp.z)); rr.append(0.0150)        # carry on past the middle so the two halves join
-				pts.append(mp); rr.append(lerpf(0.0165, 0.0065, pow(m[2], 0.8)) * 0.92)
+				if pts.is_empty(): pts.append(Vector3(-mp.x * 0.8, mp.y, mp.z)); rr.append(0.0125)        # carry on past the middle so the two halves join
+				pts.append(mp); rr.append(lerpf(0.0130, 0.0050, pow(m[2], 0.85)) * 0.95)
 		_tube(fr["mustm_l" if side == 0 else "mustm_r"], pts, rr, 1.0, 10)
 
 func _fp_raw(k: String) -> float: return float(fx.get(k, 0.0))
