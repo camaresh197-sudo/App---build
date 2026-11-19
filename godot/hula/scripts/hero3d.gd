@@ -1185,6 +1185,10 @@ func _apply_face() -> void:
 		if fi >= 0: hg.set_blend_shape_value(fi, clampf(-sm, 0.0, 1.0))
 		var pi := hg.find_blend_shape_by_name("pucker")
 		if pi >= 0: hg.set_blend_shape_value(pi, clampf(_pose_v("pu"), 0.0, 1.0))
+		var bi2 := hg.find_blend_shape_by_name("brow")
+		if bi2 >= 0: hg.set_blend_shape_value(bi2, clampf(maxf(_pose_v("bo"), _pose_v("bi")), 0.0, 1.0))
+		var ni := hg.find_blend_shape_by_name("snarl")
+		if ni >= 0: hg.set_blend_shape_value(ni, clampf(_pose_v("ns"), 0.0, 1.0))
 
 # eases the face toward its target; called from pose() (uses real time, so no extra plumbing in main.gd)
 func face_update() -> void:
