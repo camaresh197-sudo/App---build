@@ -49,6 +49,26 @@ def squint_disp(p):
     return d
 
 
+def frown_disp(p):
+    # the mouth corners drag down and a furrow pulls in between the brows
+    d = Vector((0.0, 0.0, 0.0))
+    for s in (-1.0, 1.0):
+        corner = Vector((0.034 * s, -0.066, 0.084))
+        d += Vector((0.005 * s, -0.016, -0.003)) * fall(p, corner, 0.038)
+    d += Vector((0.0, 0.007, -0.005)) * fall(p, Vector((0.0, 0.050, 0.094)), 0.030)
+    return d
+
+
+def pucker_disp(p):
+    # the mouth pushes forward and the cheeks hollow in, as when whistling
+    d = Vector((0.0, 0.0, 0.0))
+    d += Vector((0.0, 0.001, 0.011)) * fall(p, Vector((0.0, -0.064, 0.088)), 0.040)
+    for s in (-1.0, 1.0):
+        cheek = Vector((0.050 * s, -0.030, 0.056))
+        d += Vector((-0.007 * s, 0.0, -0.002)) * fall(p, cheek, 0.052)
+    return d
+
+
 # the head is the biggest mesh on the head bone (its name carries a child index that can shift)
 head = None
 for o in bpy.data.objects:
@@ -62,7 +82,7 @@ me = head.data
 if me.shape_keys is None:
     head.shape_key_add(name="Basis", from_mix=False)
 
-SHAPES = {"smile": smile_disp, "squint": squint_disp}
+SHAPES = {"smile": smile_disp, "squint": squint_disp, "frown": frown_disp, "pucker": pucker_disp}
 for name, fn in SHAPES.items():
     old = me.shape_keys.key_blocks.get(name)
     if old is not None:
