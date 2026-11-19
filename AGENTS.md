@@ -21,6 +21,12 @@ Godot 4.6 game: dancing vaquero (desktop/Android/web). ~7 GDScript files + 12 to
 
 **Intro:** This file → project.godot + main.tscn → CODEMAP.md → task doc
 
+## Token savings (optimizations done)
+
+- Deleted `reference/release.yml` (stale duplicate)
+- Consolidated AGENTS.md: cut prose, added task lookup, critical path, token budgets
+- Next: could consolidate `data_vox.json` → `data_song.json` (568 bytes + file overhead) if refactoring `sound.gd` load logic
+
 ## Files
 
 | Path | Purpose | Tokens | Edit? |
@@ -104,3 +110,14 @@ Add `seed=NNN` anywhere for repeatable audio/poses.
 
 **Skip/don't scan:**  
 `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `reference/audio/`, `index.html`, `build/`, `dist/`, `www/`, `node_modules/`, plus binary/generated: `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`
+
+## Code token savings (future)
+
+**Data consolidation:**
+- Merge `data_vox.json` (568 B) → `data_song.json` as `vox` key — requires: change `sound.gd` load
+- Merge `data_expr.json` (20K) → separate `data_character.json` or inline in `hero3d.gd` as constant — big refactor
+
+**Script utilities:**
+- Extract input handling → `input_util.gd` (shared by main.gd + menu.gd)
+- Extract state machine → `state_machine.gd` (shared by main.gd + updater.gd)
+- **Saves:** ~1-2k tokens (dedup ~300 LOC)
