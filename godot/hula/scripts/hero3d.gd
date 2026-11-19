@@ -22,7 +22,7 @@ func _ready() -> void:
 	vp.world_3d = World3D.new()   # explicit, so the portrait camera can share it
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
-	_world(); _rig(); _build(); _layer(j.hat, 2); _portrait(); _load_expr(); _load_rig()
+	_world(); _rig(); _build(); _layer(j.hat, 2); _load_rig(); _portrait(); _load_expr()
 
 func tex() -> Texture2D: return vp.get_texture()
 
@@ -318,6 +318,7 @@ func _apply_glb() -> void:
 # the code rebuilds or moves every frame (the hoop, the lip and mustache tubes) stay procedural and keep drawing from
 # the control rig, because a loaded skinned mesh is static geometry.
 const RIG_GLB := "res://art/character_skinned.glb"
+const RIG_REF := "res://art/character_rig.json"   # the joint transforms the .glb was exported from
 const PROC_PARTS := ["lipUm", "lipLm", "mustm_l", "mustm_r", "lidu_l_0", "lidu_r_0", "lidl_l_0", "lidl_r_0"]
 var rig_scene: Node3D
 var rig_skel: Skeleton3D
@@ -345,15 +346,16 @@ func _load_rig() -> void:
 		elif nd is MeshInstance3D: by[String(nd.name)] = nd
 		for c in nd.get_children(): stack.append(c)
 	if rig_skel == null: return
-	# the file is exported from a settled expression, so reproduce that state: the rig it was built from is the pose
-	# the glb was written at, not the build-time rest
-	set_expr("grin", true)
-	for i in 4: pose(0.0)
+	# The file is exported from a settled expression, so the rig it was built from is that pose, not the build-time
+	# rest. The export writes those joint transforms to character_rig.json, and the game reads them here - no guessing.
+	if not FileAccess.file_exists(RIG_REF): return
+	var jf := FileAccess.open(RIG_REF, FileAccess.READ)
+	var refd = JSON.parse_string(jf.get_as_text()); jf.close()
 	var rest := {}
-	for name in j:
-		var nd: Node3D = j[name]
-		var par := nd.get_parent() as Node3D
-		rest[name] = (rest[par.name] if par != null and rest.has(par.name) else Transform3D.IDENTITY) * nd.transform
+	if refd is Dictionary:
+		for name in refd:
+			var a: Array = refd[name]
+			rest[name] = Transform3D(Basis(Vector3(a[0], a[1], a[2]), Vector3(a[3], a[4], a[5]), Vector3(a[6], a[7], a[8])), Vector3(a[9], a[10], a[11]))
 	for name in rig_bone:
 		if not rest.has(name): continue
 		var i: int = rig_bone[name]

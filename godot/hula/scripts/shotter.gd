@@ -268,6 +268,19 @@ func _ready() -> void:
 		for i in 4:
 			hx.pose(0.0)
 			await get_tree().process_frame
+		# Write the reference rig: the control joints' world transforms at the exported pose. The game needs these to
+		# map its joint transforms onto the file's bones (Blender's bone rests are not the empty transforms), and this
+		# way it reads them from the file instead of trying to reproduce the export pose. Done before the prune, which
+		# frees hidden joints that are still listed in the rig.
+		var ref := {}
+		for name in hx.j:
+			var nd: Node3D = hx.j[name]
+			if not is_instance_valid(nd): continue
+			var gt: Transform3D = nd.global_transform
+			ref[name] = [gt.basis.x.x, gt.basis.x.y, gt.basis.x.z, gt.basis.y.x, gt.basis.y.y, gt.basis.y.z, gt.basis.z.x, gt.basis.z.y, gt.basis.z.z, gt.origin.x, gt.origin.y, gt.origin.z]
+		var jf := FileAccess.open("res://art/character_rig.json", FileAccess.WRITE)
+		jf.store_string(JSON.stringify(ref)); jf.close()
+		print("glb: wrote reference rig (%d joints)" % ref.size())
 		# Drop the hidden parts before exporting. A hidden node is a part's on/off switch, so prune its whole subtree.
 		# They carry no visible geometry, but a hidden node makes Godot write KHR_node_visibility into
 		# extensionsRequired, and Blender does not implement that extension, so it refuses the file.
