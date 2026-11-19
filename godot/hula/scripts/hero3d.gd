@@ -40,7 +40,9 @@ func mat(col: Color, rough := 0.7, metal := 0.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new(); m.albedo_color = col; m.roughness = rough; m.metallic = metal; return m
 
 func put(parent: Node3D, mesh: Mesh, m: Material, pos := Vector3.ZERO, scl := Vector3.ONE, rot := Vector3.ZERO) -> MeshInstance3D:
-	var n := MeshInstance3D.new(); n.mesh = mesh; n.material_override = m; n.position = pos; n.scale = scl; n.rotation = rot; parent.add_child(n); return n
+	var n := MeshInstance3D.new(); n.mesh = mesh; n.material_override = m; n.position = pos; n.scale = scl; n.rotation = rot
+	n.name = "%s_%d" % [parent.name, parent.get_child_count()]   # stable id: the same code path names the same part the same way, so the Blender round-trip can match it
+	parent.add_child(n); return n
 
 # ---------- the skeleton ----------
 # The rig is declared once, here: [name, parent, rest position, rest rotation]. _rig() builds every bone from this list
@@ -272,6 +274,34 @@ func _build() -> void:
 	hoop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA       # faded by gk so it never pops when a gesture takes over
 	var tm := TorusMesh.new(); tm.inner_radius = 0.54; tm.outer_radius = 0.63; tm.rings = 48; tm.ring_segments = 16
 	hoop_node = put(root, tm, hoop_mat, Vector3(0, 0.86, 0))
+	_apply_glb()
+
+# Option B: the geometry can come from a .glb authored in Blender. The code still builds the rig and every part
+# (so all the posing, springs and face logic keep working), then each part's mesh is swapped for the one with the
+# same name in character.glb. Parts the Blender file does not name are left procedural, so a partial edit is safe.
+const GLB_PATH := "res://art/character.glb"
+var glb_parts := 0            # how many part meshes came from the .glb (0 = procedural build)
+func _apply_glb() -> void:
+	if not FileAccess.file_exists(GLB_PATH): return
+	var doc := GLTFDocument.new(); var st := GLTFState.new()
+	if doc.append_from_file(GLB_PATH, st) != OK: return
+	var src := doc.generate_scene(st)
+	if src == null: return
+	var by := {}
+	var stack: Array = [src]
+	while not stack.is_empty():
+		var nd: Node = stack.pop_back()
+		if nd is MeshInstance3D and (nd as MeshInstance3D).mesh != null: by[String(nd.name)] = (nd as MeshInstance3D).mesh
+		for c in nd.get_children(): stack.append(c)
+	var walk: Array = [root]
+	while not walk.is_empty():
+		var nd: Node = walk.pop_back()
+		if nd is MeshInstance3D and by.has(String(nd.name)):
+			(nd as MeshInstance3D).mesh = by[String(nd.name)]
+			glb_parts += 1
+		for c in nd.get_children(): walk.append(c)
+	src.free()
+	print("hero3d: %d part meshes from %s" % [glb_parts, GLB_PATH])
 
 # ---------- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable ----------
 const PS := 160
@@ -471,7 +501,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var tube_m := lip_m.duplicate(); tube_m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var must_m := mat(Color("0d0908"), 0.75); must_m.cull_mode = BaseMaterial3D.CULL_DISABLED; must_m.rim_enabled = true; must_m.rim = 0.25; must_m.rim_tint = 0.0
 	for nm in ["lipUm", "lipLm", "mustm_l", "mustm_r"]:
-		var mi := MeshInstance3D.new(); mi.mesh = ArrayMesh.new(); mi.material_override = (must_m if nm.begins_with("must") else tube_m)
+		var mi := MeshInstance3D.new(); mi.mesh = ArrayMesh.new(); mi.name = nm; mi.material_override = (must_m if nm.begins_with("must") else tube_m)
 		(J if nm == "lipLm" else head).add_child(mi); fr[nm] = mi
 	fr.lipU = []; fr.lipL = []
 	for i in LIP_N:
@@ -882,7 +912,7 @@ func _apply_face() -> void:
 		ms.scale = Vector3(0.32 + cl * 0.2, 1.0 + cl * 0.1, 0.7 + cl * 0.1)
 		var vn: Node3D = fr["vein_" + sd]
 		var rage := clampf(glr + sq2 * 0.5 + ns * 0.4 - 1.25, 0.0, 1.0) * 2.5
-		vn.visible = rage > 0.1; vn.scale = Vector3(1, minf(1.4, rage), 0.5)
+		vn.visible = rage > 0.1; vn.scale = Vector3(1, maxf(0.01, minf(1.4, rage)), 0.5)
 	var dm: Node3D = fr.dimple
 	var mn := clampf(maxf(0.0, -sm) * 0.6 + _fp("pu") * 0.7 + ch * 0.4 - mo * 0.7, 0.0, 1.0)
 	dm.visible = mn > 0.15

@@ -258,6 +258,23 @@ func _ready() -> void:
 		lg.close()
 		get_tree().quit()
 		return
+	if a.size() > 2 and a[2] == "glb":
+		# authoring export: build the hero, settle it into one expression, then write the whole rig out as glTF
+		# (.glb) so it can be opened and edited in Blender. args: a[0]=res:// path, a[3]=expression (default neutral)
+		var hx = m.hero3d
+		m.set_process(false)
+		hx.fixed_dt = 1.0 / 24.0
+		hx.set_expr(a[3] if a.size() > 3 else "neutral", true)
+		for i in 4:
+			hx.pose(0.0)
+			await get_tree().process_frame
+		var doc := GLTFDocument.new()
+		var st := GLTFState.new()
+		var ae := doc.append_from_scene(hx.root, st)
+		var we := doc.write_to_filesystem(st, a[0])
+		print("glb: append=%d write=%d nodes=%d -> %s" % [ae, we, st.get_nodes().size(), a[0]])
+		get_tree().quit()
+		return
 	for i in n: await get_tree().process_frame
 	if a.size() > 2 and a[2] == "face":
 		var h = m.hero3d
