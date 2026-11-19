@@ -10,6 +10,8 @@ var j := {}          # joints by name
 var mats := {}
 var hoop_mat: StandardMaterial3D
 var hoop_node: MeshInstance3D
+var hoop_bone: Node3D          # the hoop rides this bone, so the mesh can live in the file like the rest
+var hoop_glb: MeshInstance3D   # the file's hoop, which takes the code's fade
 var hat_mats: Array = []
 var yaw := -0.18
 var look := Vector2.ZERO
@@ -281,7 +283,8 @@ func _build() -> void:
 	hoop_mat.albedo_texture = stripe_tex(Color("1e8449"), Color("58d68d"))
 	hoop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA       # faded by gk so it never pops when a gesture takes over
 	var tm := TorusMesh.new(); tm.inner_radius = 0.54; tm.outer_radius = 0.63; tm.rings = 48; tm.ring_segments = 16
-	hoop_node = put(root, tm, hoop_mat, Vector3(0, 0.86, 0))
+	hoop_bone = _fb("hoop", root, Vector3(0, 0.86, 0))
+	hoop_node = put(hoop_bone, tm, hoop_mat, Vector3.ZERO)
 	_apply_glb()
 
 # Option B: the geometry can come from a .glb authored in Blender. The code still builds the rig and every part
@@ -319,7 +322,6 @@ func _apply_glb() -> void:
 # the control rig, because a loaded skinned mesh is static geometry.
 const RIG_GLB := "res://art/character_skinned.glb"
 const RIG_REF := "res://art/character_rig.json"   # the joint transforms the .glb was exported from
-const PROC_PARTS := []
 var rig_scene: Node3D
 var rig_skel: Skeleton3D
 var rig_bone := {}            # bone name -> skeleton bone index
@@ -372,8 +374,9 @@ func _load_rig() -> void:
 			var cm := nd as MeshInstance3D
 			var g := by.get(String(cm.name)) as MeshInstance3D
 			if g != null:
-				if PROC_PARTS.has(String(cm.name)) or cm == hoop_node:
-					g.visible = false            # the code keeps drawing this one
+				if cm == hoop_node:
+					hoop_glb = g                 # the file's hoop takes the code's fade instead of drawing the control mesh
+					cm.layers = 0
 				else:
 					g.layers = cm.layers         # the glb mesh inherits the control mesh's render layer (e.g. the hat)
 					g.material_override = cm.material_override   # the file carries geometry; the code keeps its materials
@@ -401,6 +404,9 @@ func _rig_sync() -> void:
 			if not (p as Node3D).visible: vis = false
 			p = p.get_parent()
 		(rig_mesh[cm] as MeshInstance3D).visible = vis
+	if hoop_glb != null:
+		hoop_glb.visible = hoop_node.visible
+		hoop_glb.transparency = hoop_node.transparency
 
 # ---------- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable ----------
 const PS := 160
@@ -1440,8 +1446,8 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 		_arm(side, d, phase, bank, wave, hurt)
 	hoop_node.visible = gk < 0.999
 	hoop_node.transparency = gk
-	hoop_node.position = Vector3(pp.x + c * 0.06, pp.y + 0.04, pp.z + s * 0.08)
-	hoop_node.rotation = Vector3(-s * 0.16, 0, c * 0.16)
+	hoop_bone.position = Vector3(pp.x + c * 0.06, pp.y + 0.04, pp.z + s * 0.08)
+	hoop_bone.rotation = Vector3(-s * 0.16, 0, c * 0.16)
 	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
 	face_update()
 	_rig_sync()
