@@ -330,6 +330,9 @@ func _ready() -> void:
 		m.set_process(false)
 		m.snd.set_volumes(8, 8)                     # pin the mix buses so runs stay comparable
 		m.snd.start_music(track)
+		if a.size() > 6 and a[6] == "vocals":        # isolate the sung line + ad-libs (mute the band and SFX)
+			AudioServer.set_bus_mute(mb, true)
+			AudioServer.set_bus_mute(AudioServer.get_bus_index("SFX"), true)
 		if a.size() > 5 and a[5] == "play":         # end-to-end: let the real game run so music and SFX overlap
 			m.set_process(true)
 			m.start_run()

@@ -380,11 +380,16 @@ const VE := 0.105
 const VOX_GAIN := 2.4
 var have_vox := true
 const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-tag": 0.0}
-# Sparse vocal ad-libs for the chorus singer: a deep, in-character grunt on the bar's chord root (r),
-# placed on a strong beat or the last step of a bar before a section change, and never on every bar.
+# Vocal ad-libs for the chorus singer: a deep, in-character grunt on the bar's chord root (r),
+# two per section on the strong steps (12/14) and the section-final bar, with an "unh-unh"
+# double when the phrase needs it. Never on a held bar or the final ring-out.
 # [section, bar, step]; the grunt is pitched to r so it sits on a chord tone.
-const VGRUNT := [["v-A", 7, 14], ["v-B", 3, 12], ["v-B", 7, 14], ["v-C", 7, 14], ["v-tag", 3, 14], ["v-F", 3, 14]]
-const VGRUNT_V := 1.0   # grunt level (linear, before the Vox bus); tuned to sit just under the sung line
+const VGRUNT := [["v-A", 3, 14], ["v-A", 7, 12], ["v-A", 7, 14],
+	["v-B", 1, 14], ["v-B", 3, 12], ["v-B", 5, 14], ["v-B", 7, 14],
+	["v-C", 3, 14], ["v-C", 5, 12], ["v-C", 5, 14], ["v-C", 7, 14],
+	["v-tag", 1, 14], ["v-tag", 3, 14],
+	["v-F", 1, 12], ["v-F", 3, 14]]
+const VGRUNT_V := 2.6   # grunt level (linear, before the Vox bus); hotter than the sung line on purpose
 func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void:
 	for x in cv: note("trumpet", int(x) + add, dur, v, 0.05, dl)
 
@@ -470,7 +475,7 @@ func _vstep(st: int, dl: float) -> void:
 	if not hold and not last:
 		for g in VGRUNT:
 			if sec == g[0] and bar == g[1] and s == g[2]:
-				play("grunt", {"midi": r, "dur": 0.22, "v": VGRUNT_V, "bus": "Vox", "dl": dd})
+				play("grunt", {"midi": r, "dur": 0.34, "v": VGRUNT_V, "bus": "Vox", "dl": dd})
 				break
 	# --- the tune ---
 	var m: int = int(mel[s])

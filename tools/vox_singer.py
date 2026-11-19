@@ -247,8 +247,15 @@ def _lowshelf(fs, f0, db, S=1.0):
 def _highshelf(fs, f0, db, S=1.0):
     A = 10 ** (db / 40); w0 = 2 * np.pi * f0 / fs; c = np.cos(w0); s = np.sin(w0)
     a = s / 2 * np.sqrt((A + 1 / A) * (1 / S - 1) + 2); t = 2 * np.sqrt(A) * a
-    return ([A * ((A + 1) + (A - 1) * c + t), -2 * A * ((A - 1) + (A + 1) * c), A * ((A + 1) - (A - 1) * c - t)],
-            [(A + 1) - (A - 1) * c + t, 2 * ((A - 1) + (A + 1) * c), (A + 1) - (A - 1) * c - t])
+    b = [A * ((A + 1) + (A - 1) * c + t), -2 * A * ((A - 1) + (A + 1) * c), A * ((A + 1) + (A - 1) * c - t)]
+    d = [(A + 1) - (A - 1) * c + t, 2 * ((A - 1) - (A + 1) * c), (A + 1) - (A - 1) * c - t]
+    # a high shelf is 0 dB at DC and `db` at Nyquist; check it here so a coefficient typo fails at the source
+    # instead of shipping as a sound (a wrong b2 once tilted every "grunt" into pure 16 kHz hiss)
+    dc = abs(_resp(b, d, np.array([0.0]))[0])
+    ny = abs(_resp(b, d, np.array([np.pi - 1e-9]))[0])
+    assert abs(20 * np.log10(dc)) < 0.05, "high shelf DC gain != 0 dB"
+    assert abs(20 * np.log10(ny) - db) < 0.1, "high shelf Nyquist gain != %g dB" % db
+    return b, d
 
 def _resp(b, d, w):
     z1 = np.exp(-1j * w); z2 = z1 * z1
@@ -258,6 +265,10 @@ def _apply(x, specs):
     n = len(x); w = 2 * np.pi * np.fft.rfftfreq(n, 1.0)
     H = np.ones_like(w, dtype=complex)
     for b, d in specs:
+        # guard against an unstable biquad (pole outside the unit circle); under FFT filtering a bad filter
+        # silently turns into a huge boost instead of failing, which is how a broken shelf once shipped as "audio"
+        if np.max(np.abs(np.roots(d))) >= 1.0:
+            raise ValueError("unstable filter: max pole radius >= 1")
         H *= _resp(b, d, w)
     return np.fft.irfft(np.fft.rfft(x) * np.abs(H), n)
 
