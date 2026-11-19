@@ -1,0 +1,40 @@
+# Quick access aliases — source or copy to your shell
+
+# Music tasks
+alias compose="$EDITOR data/data_song.json"
+alias title_song="$EDITOR data/data_title.json"
+alias victory="$EDITOR data/data_victory.json"
+alias vox="$EDITOR data/data_vox.json"
+alias mixer="$EDITOR scripts/sound.gd"
+
+# Character/animation
+alias expressions="$EDITOR data/data_expr.json"
+alias rig="$EDITOR scripts/hero3d.gd"
+alias faces="head -50 scripts/hero3d.gd"
+
+# Menu/UI
+alias menu_data="$EDITOR data/data_menu.json"
+alias menu_code="$EDITOR scripts/menu.gd"
+alias skills="grep -A100 '\"skills\"' data/data_menu.json"
+alias achievements="grep -A100 '\"achs\"' data/data_menu.json"
+alias wardrobe="grep -A50 '\"cos\"' data/data_menu.json"
+
+# Game logic
+alias game="$EDITOR scripts/main.gd"
+alias scoring="sed -n '150,200p' scripts/main.gd"
+alias input="sed -n '50,100p' scripts/main.gd"
+alias save_sys="$EDITOR scripts/save.gd"
+
+# Testing
+alias test_screenshot="godot --path . main.tscn -- out.png 1"
+alias test_audio="godot --path . main.tscn -- \"/tmp/test.wav\" 1 mix"
+alias smoke_test="godot --path . --resolution 800x600 main.tscn --quit-after 180 -- --smoke"
+
+# Navigation
+alias files="$EDITOR FILES.md"
+alias manifest="$EDITOR .godot_manifest.json"
+alias map="$EDITOR ../docs/CODEMAP.md"
+
+# Git
+alias gstatus="cd ../.. && git status && cd -"
+alias changes="cd ../.. && git diff godot/hula/ && cd -"
