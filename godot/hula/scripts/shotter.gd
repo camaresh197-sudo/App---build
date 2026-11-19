@@ -1,11 +1,19 @@
 extends Node
 # test helper: args after "--": out.png frames [play]
+# Every harness run starts from the same RNG state, so clip/hat logs and face renders are reproducible.
+# Pass seed=<n> anywhere in the args to use a different one; normal launches are untouched.
+const SEED := 20261118
 func _ready() -> void:
 	await get_tree().process_frame
 	var a := OS.get_cmdline_user_args()
 	if a.size() < 2:
 		queue_free()   # normal launch (no "-- out.png frames ..." args): this is only a test helper
 		return
+	var sd := SEED
+	for arg in a:
+		if arg.begins_with("seed="): sd = int(arg.substr(5))
+	seed(sd)   # shotter is a child, so this runs before main/_ready builds the hero: even its first randf is repeatable
+	print("shotter: rng seed %d" % sd)
 	var m = get_parent()
 	if a.size() > 2 and a[2] == "play": m.start_run()
 	if a.size() > 2 and a[2] == "secret":
@@ -159,6 +167,7 @@ func _ready() -> void:
 		var h = m.hero3d
 		m.set_process(false)   # the game loop would keep setting the menu mood
 		h.auto_blink = false
+		h.fixed_dt = 1.0 / 24.0   # no wall-clock dt: the face's breathing/twitch channels must be repeatable too
 		h.vp.size = Vector2i(400, 400)
 		h.cam.look_at_from_position(Vector3(0.0, 1.57, 1.1), Vector3(0, 1.5, 0))
 		h.j.hat.visible = false
@@ -252,6 +261,7 @@ func _ready() -> void:
 	for i in n: await get_tree().process_frame
 	if a.size() > 2 and a[2] == "face":
 		var h = m.hero3d
+		h.fixed_dt = 1.0 / 24.0
 		h.vp.size = Vector2i(600, 600)
 		h.cam.look_at_from_position(Vector3(0.0, 1.56, 1.25), Vector3(0, 1.5, 0))
 		h.j.hat.visible = false if a.size() > 4 else true
