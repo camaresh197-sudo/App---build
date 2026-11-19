@@ -1,4 +1,7 @@
-name: Build game, publish patch, build Android app
+name: Release
+# The primary app is the Godot build. This workflow used to build the Capacitor
+# (web) APK; it now builds the Godot APK from the `godot` branch, which is where
+# the Godot project lives. The web patch job is unchanged.
 on:
   push: { branches: [main] }
   workflow_dispatch: {}
@@ -7,6 +10,7 @@ concurrency: { group: pages, cancel-in-progress: false }
 env:
   UPDATE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/latest.json
   APP_VERSION: ${{ github.run_number }}
+  GODOT_VER: 4.6.3
 jobs:
   patch:
     runs-on: ubuntu-latest
@@ -23,20 +27,50 @@ jobs:
       - id: deploy
         uses: actions/deploy-pages@v4
   apk:
+    # the Godot build is the app this workflow ships
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: 22 }
+        with: { ref: godot, fetch-depth: 0 }   # the Godot project lives on the godot branch
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 21 }
-      - run: npm install --no-audit --no-fund
-      - run: node prepare.mjs
-      - run: npx cap add android
-      - run: node native-setup.mjs
-      - run: npx cap sync android
-      - name: Build APK
-        working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        with: { distribution: temurin, java-version: 17 }
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-35 build-tools;35.0.1 cmdline-tools;latest'
+      - name: Install Godot and export templates
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_linux.x86_64.zip
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_export_templates.tpz
+          unzip -q Godot_v${GODOT_VER}-stable_linux.x86_64.zip
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VER}.stable
+          unzip -q Godot_v${GODOT_VER}-stable_export_templates.tpz -d tpl
+          mv tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VER}.stable/
+          mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot 2>/dev/null || sudo mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
+      - name: Stamp the build number
+        run: |
+          echo -n "${{ github.run_number }}" > godot/hula/build.txt
+          echo -n "${{ github.run_number }}" > godot/hula/version.txt
+      - name: Debug keystore and editor settings
+        run: |
+          cp godot/debug.keystore debug.keystore   # fixed key, so every new APK installs over the last one
+          mkdir -p ~/.config/godot godot_tmp
+          (cd godot/hula && godot --headless --import || true)
+          cat > ~/.config/godot/editor_settings-4.6.tres <<EOF
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/debug_keystore = "$PWD/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          EOF
+      - name: Export APK
+        working-directory: godot/hula
+        run: |
+          mkdir -p build
+          sed -i "s#KEYSTORE_PATH#$GITHUB_WORKSPACE/debug.keystore#" export_presets.cfg
+          godot --headless --verbose --export-debug Android build/HulaVaquero.apk
       - uses: actions/upload-artifact@v4
-        with: { name: HulaVaquero-apk, path: android/app/build/outputs/apk/debug/app-debug.apk }
+        with:
+          name: HulaVaquero-apk
+          path: godot/hula/build/HulaVaquero.apk
