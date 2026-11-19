@@ -93,11 +93,11 @@ def fuse(objs, name, bone, voxel, ratio, shrink=()):
 
 h = pick(HEAD)
 print("MERGE: head group = %s" % ", ".join(sorted(o.name for o in h)))
-fuse(h, "head_12", "head", 0.0025, 0.35)
+fuse(h, "head_12", "head", 0.0019, 0.32)
 
 j = pick(JAW)
 print("MERGE: jaw group = %s" % ", ".join(sorted(o.name for o in j)))
-fuse(j, "jaw_0", "jaw", 0.0025, 0.4)
+fuse(j, "jaw_0", "jaw", 0.0019, 0.38)
 
 bpy.ops.wm.save_as_mainfile(filepath=DST)
 print("MERGE: saved", DST)
