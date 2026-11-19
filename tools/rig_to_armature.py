@@ -9,6 +9,8 @@ pose and animate in Blender.
     blender --background --factory-startup --python rig_to_armature.py -- <in.glb> <out.blend>
 """
 import sys
+import os
+import json
 import bpy
 from mathutils import Vector
 
@@ -55,8 +57,34 @@ def make_bone(empty, parent_bone):
 bpy.ops.object.mode_set(mode="EDIT")
 for root in [o for o in empties if o.parent is None or o.parent.type != "EMPTY"]:
     make_bone(root, None)
+
+# The lip and mustache bead rows are hidden helpers, so the glb prunes them - but they are the rig the mouth tubes
+# deform against. Recreate them from the reference rig the export wrote (Godot Y-up -> Blender Z-up).
+ref_path = os.path.join(os.path.dirname(SRC), "character_rig.json")
+beads = 0
+if os.path.exists(ref_path):
+    with open(ref_path) as fh:
+        ref = json.load(fh)
+    for name, a in ref.items():
+        if name in bone_of:
+            continue
+        if name.startswith("lipU_") or name.startswith("must_"):
+            parent = "head"
+        elif name.startswith("lipL_"):
+            parent = "jaw"
+        else:
+            continue
+        if parent not in arm_data.edit_bones:
+            continue
+        eb = arm_data.edit_bones.new(name[:60])
+        eb.head = Vector((a[9], -a[11], a[10]))
+        eb.tail = eb.head + Vector((0.0, 0.0, 0.01))
+        eb.roll = 0.0
+        eb.parent = arm_data.edit_bones[parent]
+        bone_of[name] = eb.name
+        beads += 1
 bpy.ops.object.mode_set(mode="OBJECT")
-print("RIG: %d bones" % len(arm_data.bones))
+print("RIG: %d bones (%d mouth beads)" % (len(arm_data.bones), beads))
 
 # bind each mesh rigidly to its parent node's bone
 bound = 0
@@ -77,6 +105,26 @@ for m in meshes:
     mod.object = arm
     bound += 1
 print("RIG: bound %d meshes, skipped %d" % (bound, skipped))
+
+# Re-weight the mouth tubes: the code rebuilds them every frame from the bead rows, so in the file they belong to the
+# bead bones instead. _tube writes ring by ring, so vertex i of a tube is ring i // ring_size - that ring was built
+# from bead (i // ring_size), which is exactly the bone that should carry it.
+TUBES = [("lipUm", 8, "lipU_", 0), ("lipLm", 8, "lipL_", 0), ("mustm_l", 10, "must_l_", 1), ("mustm_r", 10, "must_r_", 1)]
+rew = 0
+for nm, ring, prefix, off in TUBES:
+    o = bpy.data.objects.get(nm)
+    if o is None:
+        continue
+    for g in list(o.vertex_groups):
+        o.vertex_groups.remove(g)
+    groups = {}
+    for i in range(len(o.data.vertices)):
+        bn = prefix + str(max(0, i // ring - off))
+        if bn not in groups:
+            groups[bn] = o.vertex_groups.new(name=bn)
+        groups[bn].add([i], 1.0, "REPLACE")
+    rew += 1
+print("RIG: re-weighted %d mouth tubes" % rew)
 
 # the node hierarchy has become the armature; drop the empties so the file is clean
 for e in empties:

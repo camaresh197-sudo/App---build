@@ -319,7 +319,7 @@ func _apply_glb() -> void:
 # the control rig, because a loaded skinned mesh is static geometry.
 const RIG_GLB := "res://art/character_skinned.glb"
 const RIG_REF := "res://art/character_rig.json"   # the joint transforms the .glb was exported from
-const PROC_PARTS := ["lipUm", "lipLm", "mustm_l", "mustm_r", "lidu_l_0", "lidu_r_0", "lidl_l_0", "lidl_r_0"]
+const PROC_PARTS := ["lidu_l_0", "lidu_r_0", "lidl_l_0", "lidl_r_0"]
 var rig_scene: Node3D
 var rig_skel: Skeleton3D
 var rig_bone := {}            # bone name -> skeleton bone index
@@ -1098,6 +1098,7 @@ func face_update() -> void:
 	_apply_face()
 
 func _mouth_meshes() -> void:
+	if rig_skel != null: return          # the mouth tubes come from the file, skinned to the bead bones
 	var up: Array = []; var lo: Array = []; var ru: Array = []; var rl: Array = []
 	var mo := clampf(_pose_v("mo"), 0.0, 1.0)
 	for i in LIP_N:

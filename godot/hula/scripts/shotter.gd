@@ -263,6 +263,7 @@ func _ready() -> void:
 		# (.glb) so it can be opened and edited in Blender. args: a[0]=res:// path, a[3]=expression (default neutral)
 		var hx = m.hero3d
 		m.set_process(false)
+		hx.rig_skel = null       # export the control rig itself, so the procedural parts (the mouth tubes) get built
 		hx.fixed_dt = 1.0 / 24.0
 		hx.set_expr(a[3] if a.size() > 3 else "neutral", true)
 		for i in 4:
