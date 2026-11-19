@@ -384,6 +384,13 @@ func _load_rig() -> void:
 					rig_mesh[cm] = g
 					rig_parts += 1
 		for c in nd.get_children(): walk.append(c)
+	# The file is the sole geometry source now: hide every control mesh, so a part the file merged into one of its
+	# meshes (the cheeks, puffs, folds fused into the face) does not also draw as its old procedural shell.
+	var hide: Array = [root]
+	while not hide.is_empty():
+		var nd2: Node = hide.pop_back()
+		if nd2 is MeshInstance3D: (nd2 as MeshInstance3D).layers = 0
+		for c in nd2.get_children(): hide.append(c)
 	print("hero3d: rig from %s: %d bones, %d parts" % [RIG_GLB, rig_skel.get_bone_count(), rig_parts])
 
 # copy the control rig onto the loaded skeleton, and carry each part's visibility across
