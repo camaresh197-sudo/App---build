@@ -1018,7 +1018,12 @@ func _apply_face() -> void:
 	var drop := 0.1345 * JAW_OPEN * mo
 	var open_c := -0.0685 - 0.375 * A - 0.5 * drop
 	var open_h := 0.005 + 0.125 * A + 0.5 * drop
-	cav.position = Vector3(0, open_c, hz(0, -0.0735 - 0.5 * A) + 0.0005)
+	# the teeth and the cavity sit at the depth of the mouth: behind whichever lip is closest to the face, so they can
+	# never spill out over a lip. The rows are hung off the lips in y (see below), so an open jaw never drags them back.
+	var zu_c := hz(0.0, -0.0635 - 0.25 * A) + 0.0022
+	var zl_c := hz(0.0, -0.0735 - 0.5 * A) + 0.0022
+	var zmouth := minf(zu_c, zl_c)
+	cav.position = Vector3(0, open_c, zmouth - 0.004)
 	cav.scale = Vector3(w / 0.03 * 1.02, open_h * 1.14 / 0.03, 0.20)
 	# teeth: two rows of separate teeth laid along the mouth arc, the upper row hanging from the upper lip and the
 	# lower row standing on the lower lip. The gaps between them (and the per-tooth texture) are what make them read
@@ -1034,7 +1039,11 @@ func _apply_face() -> void:
 		if t_on:
 			var ft := (float(k) + 0.5) / TOOTH_U * 2.0 - 1.0
 			var yu := -0.0635 + A * 0.5 * (ft * ft - 0.5) + sk * 0.008 * ft + _pose_v("ns") * 0.004
-			tu.position = Vector3(ft * spanw, yu - 0.0032 - tth * 0.5, hz(ft * spanw, yu) + 0.0006)
+			# hang the row off the upper lip's lower edge (its tube radius tapers towards the corners), so a wide open
+			# mouth shows the teeth instead of tucking them up behind the lip
+			var bt := absf(ft) * 0.7
+			var ru := 0.0030 + 0.0020 * (1.0 - bt) + 0.0012 * (1.0 - smoothstep(0.0, 0.35, bt))
+			tu.position = Vector3(ft * spanw, yu - ru - tth * 0.5 - 0.0004, zmouth + 0.0035)
 			tu.scale = Vector3(2.0 * spanw / TOOTH_U * 0.88, tth, TOOTH_D)
 			tu.rotation.y = ft * 0.10
 	var l_on := t_on and mo > 0.45
@@ -1044,7 +1053,7 @@ func _apply_face() -> void:
 		if l_on:
 			var ft := (float(k) + 0.5) / TOOTH_L * 2.0 - 1.0
 			var yl := -0.0735 + A * (ft * ft - 0.5) + sk * 0.008 * ft - maxf(0.0, -sm) * 0.008 * ft * ft
-			tl.position = Vector3(ft * spanw, yl + 0.0006 + tth * 0.5, hz(ft * spanw, yl) + 0.0006) - JAW_P
+			tl.position = Vector3(ft * spanw, yl + 0.0006 + tth * 0.5, zmouth + 0.0035) - JAW_P
 			tl.scale = Vector3(2.0 * spanw / TOOTH_L * 0.88, tth, TOOTH_D)
 			tl.rotation.y = ft * 0.10
 
@@ -1119,8 +1128,8 @@ func _apply_face() -> void:
 		(n3 as Node3D).visible = cr > 0.05; (n3 as Node3D).scale = Vector3(1, maxf(cr, 0.01), 0.5)
 	var tn2: Node3D = fr.tongue
 	tn2.visible = tg > 0.08 and mo > 0.12
-	tn2.position = Vector3(0, -0.0715, 0.082 + tg * 0.012) - JAW_P
-	tn2.scale = Vector3(1.2, 0.5 + tg * 0.2, 1.0 + tg * 0.8)
+	tn2.position = Vector3(0, -0.0715, zmouth - 0.001) - JAW_P
+	tn2.scale = Vector3(1.2, 0.5 + tg * 0.2, 0.45 + tg * 0.25)
 
 # eases the face toward its target; called from pose() (uses real time, so no extra plumbing in main.gd)
 func face_update() -> void:
