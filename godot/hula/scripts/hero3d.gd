@@ -85,6 +85,7 @@ func _declare_bones() -> Array:
 			["pupil_" + side, "iris_" + side, Vector3.ZERO],
 			["lidu_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],     # upper lid
 			["lidl_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],     # lower lid
+			["brow_" + side, "head", Vector3(0.043 * s, 0.062, 0.081)],     # brow ridge: raise and tilt live on this bone; the three brow pieces are local detail
 		])
 		for f in 4:            # four fingers, two joints each
 			out.append(["fg%d_%s" % [f, side], "hand_" + side, Vector3(-0.03 + f * 0.02, -0.075, 0)])
@@ -366,7 +367,9 @@ func _set_target(name: String, snap := false) -> void:
 	expr_name = name
 	fx_t = fx_def.duplicate()
 	for k in expr_db[name]: fx_t[k] = expr_db[name][k]
-	if snap: fx = fx_t.duplicate(); fx_v.clear()
+	if snap:
+		fx = fx_t.duplicate(); fx_v.clear()
+		_cp.clear(); _fcs.clear(); fc.clear()   # snap means no trailing flesh either
 
 # z of the head surface at (x, y) in head space (head sphere r 0.105 scaled 0.93, 1.1, 1)
 func hz(x: float, y: float) -> float:
@@ -430,12 +433,14 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 		fr["wet_" + sd] = put(head, sphere(0.02), wet_m, Vector3(ex, 0.006, 0.0975), Vector3(1.0, 0.2, 0.5))
 		fr["streak_" + sd] = put(head, capsule(0.0024, 0.04), wet_m, Vector3(ex * 1.12, -0.025, hz(ex * 1.12, -0.025) + 0.0015), Vector3(1, 1, 0.7))
 		fr["drop_" + sd] = put(head, sphere(0.0048), drop_m, Vector3(ex * 1.12, -0.03, hz(ex * 1.12, -0.03) + 0.003), Vector3(1, 1.5, 1))
-	# brows: inner + outer piece per side
+	# brows: the ridge is a bone; inner / middle / outer pieces are small local offsets on it
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
-		fr["bi_" + sd] = put(head, capsule(0.0085, 0.036), black, Vector3(0.028 * s, 0.063, 0.087), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 + 0.1 * s))
-		fr["bo_" + sd] = put(head, capsule(0.0075, 0.036), black, Vector3(0.058 * s, 0.059, 0.074), Vector3(1, 1, 0.6), Vector3(0, 0.45 * s, PI / 2 - 0.42 * s))
-		fr["bm_" + sd] = put(head, capsule(0.008, 0.034), black, Vector3(0.043 * s, 0.062, 0.081), Vector3(1, 1, 0.6), Vector3(0, 0.25 * s, PI / 2 - 0.1 * s))
+		var br := b("brow_" + sd)
+		fr["brow_" + sd] = br
+		fr["bi_" + sd] = put(br, capsule(0.0085, 0.036), black, Vector3(-0.015 * s, 0.001, 0.006), Vector3(1, 1, 0.6), Vector3(0, 0, PI / 2 + 0.26 * s))
+		fr["bo_" + sd] = put(br, capsule(0.0075, 0.036), black, Vector3(0.015 * s, -0.003, -0.007), Vector3(1, 1, 0.6), Vector3(0, 0.45 * s, PI / 2 - 0.26 * s))
+		fr["bm_" + sd] = put(br, capsule(0.008, 0.034), black, Vector3.ZERO, Vector3(1, 1, 0.6), Vector3(0, 0.25 * s, PI / 2))
 	# charro mustache: moves with the smile, the nose and the jaw
 	var must: Array = []
 	fr.must = must
@@ -604,14 +609,26 @@ func _iris_tex() -> ImageTexture:
 			img.set_pixel(x, y, Color(col.r, col.g, col.b, 1.0))
 	return ImageTexture.create_from_image(img)
 
-var fc := {}                  # couplings: what each muscle drags along with it (filled by _couple, each with its own lag)
-var _fcs := {}
-func _fp(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0)) + float(fc.get(k, 0.0))
+var fc := {}                  # soft tissue: only a fraction of how far a coupling spring is behind its pose
+var _fcs := {}                # the coupling springs' lagged values
+var _cp := {}                 # exact coupling targets: part of the skeleton's pose, never a driver of it
+# Soft tissue gains, per coupling: 0 would be pure bone/tendon, 1 the old full-lag pull. Cheeks (ns/nf) and the chin (ch)
+# are the fleshiest and keep the most trail; the eyes and the brow bone keep very little.
+const FSOFT := {"bo": 0.14, "bi": 0.14, "lid": 0.18, "sq": 0.25, "ns": 0.35, "nf": 0.3, "ch": 0.3, "mw": 0.16, "sm": 0.16, "hp": 0.1, "tt": 0.25}
+
+# The face has the same two layers as the body. _raw() is the expression the choreography asked for; _pose_v() adds the
+# exact couplings, and it is all the structural parts read: jaw, lids, eye bones, brow bones, lip row, head. _fp() adds
+# the muscles on top - a small share of the lag of a spring chasing that pose. A muscle can never move a bone off the
+# expression, so a blink lands on the frame it was asked for and the flesh catches up afterwards.
+func _raw(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
+func _pose_v(k: String) -> float: return _raw(k) + float(_cp.get(k, 0.0))
+func _fp(k: String) -> float: return _pose_v(k) + float(fc.get(k, 0.0))
 
 # Muscles never work alone. A smile pulls the cheeks into the eyes and drops the outer brow, an open jaw lifts the brows and flares the nose,
-# a scowl wrinkles the nose, tightens the lips and pushes the chin up, sadness bunches the chin and lifts the inner brows. Each link lags its cause a little.
+# a scowl wrinkles the nose, tightens the lips and pushes the chin up, sadness bunches the chin and lifts the inner brows. Those relationships
+# are now part of the pose (t below); what lags is only the soft tissue riding on it.
 func _couple(dt: float) -> void:
-	var sm := float(fx.get("sm", 0.0)); var mo := clampf(float(fx.get("mo", 0.0)) + float(fo.get("mo", 0.0)), 0.0, 1.0)
+	var sm := float(fx.get("sm", 0.0)); var mo := clampf(_raw("mo"), 0.0, 1.0)
 	var bi := float(fx.get("bi", 0.0)); var bo := float(fx.get("bo", 0.0)); var lid := float(fx.get("lid", 0.5))
 	var pf := float(fx.get("pf", 0.0)); var pu := float(fx.get("pu", 0.0)); var sq := float(fx.get("sq", 0.0))
 	var glare := maxf(pf, maxf(0.0, -bi) * 0.8)
@@ -631,10 +648,13 @@ func _couple(dt: float) -> void:
 		"tt": glare * 0.3 * (1.0 if mo > 0.1 else 0.0),
 	}
 	var lag := {"bo": 18.0, "bi": 18.0, "lid": 14.0, "sq": 12.0, "ns": 10.0, "nf": 10.0, "ch": 8.0, "mw": 12.0, "sm": 9.0, "hp": 6.0, "tt": 10.0}
+	_cp = t
 	for k in t:
-		var cur: float = _fcs.get(k, 0.0)
-		cur = lerpf(cur, float(t[k]), 1.0 - exp(-dt * float(lag[k])))
-		_fcs[k] = cur; fc[k] = cur
+		var target := float(t[k]); var rate: float = float(lag[k])
+		var cur: float = _fcs.get(k, target)
+		cur = lerpf(cur, target, 1.0 - exp(-dt * rate))
+		_fcs[k] = cur
+		fc[k] = (cur - target) * float(FSOFT.get(k, 0.2))       # trailing flesh, never the pose itself
 
 # shapes every face part from the current parameters
 func _apply_face() -> void:
@@ -644,22 +664,22 @@ func _apply_face() -> void:
 		var sd := "l" if s < 0 else "r"
 		var ex: float = fr["ex_" + sd]
 		# upper lid: its lower edge sits at 0.0084 (closed) .. 0.042 (wide); below half-open it grows taller so it can cover the eye
-		var bis := _fp("bi") + _fp("biL" if s < 0 else "biR")
-		var bos := _fp("bo") + _fp("boL" if s < 0 else "boR")
-		var pf := _fp("pf")
+		var bis := _pose_v("bi") + _pose_v("biL" if s < 0 else "biR")
+		var bos := _pose_v("bo") + _pose_v("boL" if s < 0 else "boR")
+		var pf := _pose_v("pf")
 		var glare := maxf(pf, maxf(0.0, -bis) * 0.8)
 		var Ls := "lidL" if s < 0 else "lidR"
-		var sq := clampf(_fp("sq") + _fp("wet") * 0.15 + maxf(0.0, _fp("sm")) * 0.2, 0.0, 1.0)
-		var lidv := clampf(_fp("lid") + _fp(Ls) - _fp("sq") * 0.04 - glare * 0.05 - maxf(0.0, _fp("sm") - 0.3) * 0.04, 0.0, 1.0)
-		lidv = maxf(lidv, minf(_fp("lid") + _fp(Ls), 0.1))
+		var sq := clampf(_pose_v("sq") + _pose_v("wet") * 0.15 + maxf(0.0, _pose_v("sm")) * 0.2, 0.0, 1.0)
+		var lidv := clampf(_pose_v("lid") + _pose_v(Ls) - _pose_v("sq") * 0.04 - glare * 0.05 - maxf(0.0, _pose_v("sm") - 0.3) * 0.04, 0.0, 1.0)
+		lidv = maxf(lidv, minf(_pose_v("lid") + _pose_v(Ls), 0.1))
 		if lidv >= 0.12: lidv = maxf(lidv, 0.34)        # a half-lidded look still shows most of the iris
 		lidv *= (1.0 - blink)
-		var tilt := clampf(glare * 0.55 - maxf(0.0, bis) * 0.5 - maxf(0.0, -_fp("sm")) * 0.25, -0.6, 0.6)
-		var ew := _fp("ew")
-		var gxv := clampf(_fp("gx"), -1.2, 1.2); var gyv := clampf(_fp("gy"), -1.2, 1.2)
+		var tilt := clampf(glare * 0.55 - maxf(0.0, bis) * 0.5 - maxf(0.0, -_pose_v("sm")) * 0.25, -0.6, 0.6)
+		var ew := _pose_v("ew")
+		var gxv := clampf(_pose_v("gx"), -1.2, 1.2); var gyv := clampf(_pose_v("gy"), -1.2, 1.2)
 		# upper lid edge: elevation above the middle of the eye (radians). The lid rides down a little when he looks down.
 		var au := lerpf(-0.14, 0.9, pow(lidv, 0.8)) + gyv * 0.15 + ew * 0.14
-		var al := -0.45 + sq * 0.42 + _fp("wet") * 0.08 + blink * 0.55 - maxf(0.0, gyv) * 0.06
+		var al := -0.45 + sq * 0.42 + _pose_v("wet") * 0.08 + blink * 0.55 - maxf(0.0, gyv) * 0.06
 		var ec: Vector3 = fr["ec_" + sd]
 		(fr["lid_" + sd] as Node3D).rotation = Vector3(-au, 0, s * tilt)
 		(fr["low_" + sd] as Node3D).rotation = Vector3(-al, 0, s * tilt * 0.35)
@@ -697,26 +717,37 @@ func _apply_face() -> void:
 			var dy := -0.004 - ln * ph
 			drop.position = Vector3(x, dy, hz(x, dy) + 0.003)
 			drop.scale = Vector3(1, 1.5, 1) * (0.7 + te * 0.5) * (1.0 - ph * 0.4)
-		# brows: raise, lower and tilt (inner higher = sad/worried, inner lower = angry), pinch together, overhang the eye when scowling
+		# brows: the ridge bone carries the raise and the tilt - those are the pose. The three pieces keep only their
+		# shape, pinch (pf) and scowl overhang: small local offsets riding on the bone, never the thing that moves it.
 		var bdrop := maxf(0.0, -bis)
-		var bi: MeshInstance3D = fr["bi_" + sd]
-		bi.position = Vector3(0.028 * s - 0.012 * pf * s - 0.006 * bdrop * s, 0.063 + 0.02 * bis - 0.012 * pf, 0.087 + 0.004 * glare)
-		bi.rotation = Vector3(0, 0, PI / 2 + s * clampf(0.1 + 0.6 * (bos - bis) + 0.4 * pf, -0.85, 0.95))
-		var bo: MeshInstance3D = fr["bo_" + sd]
-		bo.position = Vector3(0.058 * s - 0.005 * pf * s, 0.059 + 0.016 * bos - 0.006 * pf - 0.006 * bdrop, 0.074 + 0.003 * glare)
-		bo.rotation = Vector3(0, 0.45 * s, PI / 2 + s * clampf(-0.42 + 0.5 * (bos - bis) + 0.35 * pf, -0.9, 0.7))
-		var bm: MeshInstance3D = fr["bm_" + sd]
+		var bz := s * (-0.16 + 0.5 * (bos - bis) + 0.375 * pf)
+		var bry := 0.062 + 0.018 * bis + 0.014 * bos
+		var brp := Vector3(0.043 * s, bry, 0.081 + 0.004 * glare)
+		var br: Node3D = fr["brow_" + sd]
+		br.rotation.z = bz; br.position = brp
+		var biw := Vector3(0.028 * s - 0.012 * pf * s - 0.006 * bdrop * s, 0.063 + 0.02 * bis - 0.012 * pf, 0.087 + 0.004 * glare)
+		var bo_w := Vector3(0.058 * s - 0.005 * pf * s, 0.059 + 0.016 * bos - 0.006 * pf - 0.006 * bdrop, 0.074 + 0.003 * glare)
 		var arch := 0.003 + 0.004 * clampf((bos + bis) * 0.5, -0.5, 1.0) - 0.004 * glare       # the brow arches when raised and flattens when scowling
-		bm.position = Vector3(0.043 * s - 0.008 * pf * s, (bi.position.y + bo.position.y) * 0.5 + arch, 0.081 + 0.004 * glare)
-		bm.rotation = Vector3(0, 0.25 * s, PI / 2 + s * ((bi.rotation.z + bo.rotation.z) * 0.5 - PI / 2))
+		var bi_z := PI / 2 + s * clampf(0.1 + 0.6 * (bos - bis) + 0.4 * pf, -0.85, 0.95)
+		var bo_z := PI / 2 + s * clampf(-0.42 + 0.5 * (bos - bis) + 0.35 * pf, -0.9, 0.7)
+		var bm_w := Vector3(0.043 * s - 0.008 * pf * s, (biw.y + bo_w.y) * 0.5 + arch, 0.081 + 0.004 * glare)
+		var bm_z := (bi_z + bo_z) * 0.5
+		# map the wanted world transforms back into bone space: the bone supplies the pose, these locals only keep the brow's shape
+		var inv := Basis.from_euler(Vector3(0, 0, -bz))
+		var bi: MeshInstance3D = fr["bi_" + sd]
+		bi.position = inv * (biw - brp); bi.rotation = (inv * Basis.from_euler(Vector3(0, 0, bi_z))).get_euler()
+		var bo: MeshInstance3D = fr["bo_" + sd]
+		bo.position = inv * (bo_w - brp); bo.rotation = (inv * Basis.from_euler(Vector3(0, 0.45 * s, bo_z))).get_euler()
+		var bm: MeshInstance3D = fr["bm_" + sd]
+		bm.position = inv * (bm_w - brp); bm.rotation = (inv * Basis.from_euler(Vector3(0, 0.25 * s, bm_z))).get_euler()
 	# mouth: half-width w, smile sm lifts corners (frown drops them), pu puckers, sk skews. The jaw bone does the opening
 	# (mo), so the lower lip only carries its own shape here and the corner knots ride the jaw with it.
-	var sm := _fp("sm"); var mo := clampf(_fp("mo"), 0.0, 1.0)
+	var sm := _pose_v("sm"); var mo := clampf(_pose_v("mo"), 0.0, 1.0)
 	var jb: Node3D = b("jaw")
 	jb.rotation = Vector3(JAW_OPEN * mo, 0, 0)
-	var w := 0.036 * (1.0 + 0.5 * _fp("mw")) * (1.0 - 0.45 * _fp("pu"))
+	var w := 0.036 * (1.0 + 0.5 * _pose_v("mw")) * (1.0 - 0.45 * _pose_v("pu"))
 	var A := 0.010 + sm * (0.016 if sm > 0.0 else 0.022)
-	var sk := _fp("sk")
+	var sk := _pose_v("sk")
 	for i in LIP_N:
 		var t := float(i) / (LIP_N - 1) * 2.0 - 1.0
 		var t2 := t * t
@@ -724,16 +755,16 @@ func _apply_face() -> void:
 		var skw := sk * 0.008 * t
 		var zz := 0.0895 - absf(t) * 0.006
 		var yl := -0.0735 + A * (t2 - 0.5) + skw - maxf(0.0, -sm) * 0.008 * t2
-		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _fp("ns") * 0.004
-		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _fp("pu") * 0.003, zz + _fp("pu") * 0.006 * (1.0 - 0.5 * t2)) - JAW_P
+		var yu := -0.0635 + A * 0.5 * (t2 - 0.5) + skw + _pose_v("ns") * 0.004
+		(fr.lipL[i] as Node3D).position = Vector3(x, yl + _pose_v("pu") * 0.003, zz + _pose_v("pu") * 0.006 * (1.0 - 0.5 * t2)) - JAW_P
 		(fr.lipU[i] as Node3D).position = Vector3(x, yu, zz)
 	var cav: MeshInstance3D = fr.cav
 	cav.position = Vector3(0, -0.0685 - mo * 0.012, 0.083)
 	cav.scale = Vector3(w / 0.03 * 0.95, 0.25 + mo * 0.7, 0.3)
 	var tn: MeshInstance3D = fr.teeth
-	var show := maxf(_fp("tt") * 0.9, mo * 1.2)
+	var show := maxf(_pose_v("tt") * 0.9, mo * 1.2)
 	tn.visible = show > 0.18
-	tn.position = Vector3(0, -0.0615 + _fp("ns") * 0.004, 0.0925); tn.scale = Vector3(w * 1.25, 0.008 + minf(1.0, show) * 0.004, 0.004)
+	tn.position = Vector3(0, -0.0615 + _pose_v("ns") * 0.004, 0.0925); tn.scale = Vector3(w * 1.25, 0.008 + minf(1.0, show) * 0.004, 0.004)
 	for s: float in [-1.0, 1.0]:
 		var d: Node3D = fr["dim_" + ("l" if s < 0 else "r")]
 		d.position = Vector3((w + 0.006) * s, -0.0735 - mo * 0.03 * 0.5 + A * 0.5 + 0.012 + sm * 0.01, 0.082)
@@ -796,11 +827,11 @@ func _apply_face() -> void:
 	dm.visible = mn > 0.15
 	dm.position = Vector3(0, -0.092 + mn * 0.003, 0.081) - JAW_P; dm.scale = Vector3(1.4 + mn * 0.6, 0.8 + mn * 0.5, 0.5)
 	# skin details: forehead lines with raised brows, the furrow with a scowl, crow's feet with a big smile or squint
-	var rz := (_fp("bo") + _fp("bi") + _fp("boL") + _fp("boR") + _fp("biL") + _fp("biR")) * 0.5
+	var rz := (_pose_v("bo") + _pose_v("bi") + _pose_v("boL") + _pose_v("boR") + _pose_v("biL") + _pose_v("biR")) * 0.5
 	for i in 3:
 		var n3: Node3D = fr.fore[i]; var am := clampf((rz - 0.25 - i * 0.14) * 3.0, 0.0, 1.0)
 		n3.visible = am > 0.05; n3.scale = Vector3(1, maxf(am, 0.01) * (1.3 - i * 0.15), 0.5)
-	var gl := clampf((maxf(_fp("pf"), maxf(0.0, -_fp("bi")) * 0.8) - 0.2) * 1.6, 0.0, 1.0)
+	var gl := clampf((maxf(_pose_v("pf"), maxf(0.0, -_pose_v("bi")) * 0.8) - 0.2) * 1.6, 0.0, 1.0)
 	for n3 in fr.glab:
 		(n3 as Node3D).visible = gl > 0.05; (n3 as Node3D).scale = Vector3(1, maxf(gl, 0.01), 0.5)
 	var cr := clampf((maxf(0.0, sm) * 0.6 + sq2 * 0.8 - 0.35) * 1.6, 0.0, 1.0)
@@ -865,7 +896,7 @@ func face_update() -> void:
 
 func _mouth_meshes() -> void:
 	var up: Array = []; var lo: Array = []; var ru: Array = []; var rl: Array = []
-	var mo := clampf(_fp("mo"), 0.0, 1.0)
+	var mo := clampf(_pose_v("mo"), 0.0, 1.0)
 	for i in LIP_N:
 		var t := float(i) / (LIP_N - 1) * 2.0 - 1.0
 		var u: Vector3 = (fr.lipU[i] as Node3D).position; var l: Vector3 = (fr.lipL[i] as Node3D).position
@@ -1191,7 +1222,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	hd += stab
 	(j.chest as Node3D).scale = Vector3.ONE * (1.0 + 0.012 * sin(_clock * 1.7)) + Vector3(0.0, 0.01 * sin(_clock * 1.7), 0.01 * sin(_clock * 1.7))
 	(j.neck2 as Node3D).rotation = hd * 0.4
-	(j.head as Node3D).rotation = Vector3(0.04 + _fp("hp") * 1.0 + hd.x * 0.6, look.x * 0.4 + _fp("hy") * 0.6 + hd.y * 0.6, _fp("hr") * 0.8 + hd.z * 0.6)
+	(j.head as Node3D).rotation = Vector3(0.04 + _pose_v("hp") * 1.0 + hd.x * 0.6, look.x * 0.4 + _pose_v("hy") * 0.6 + hd.y * 0.6, _pose_v("hr") * 0.8 + hd.z * 0.6)
 	_secondary(phase, c)
 	for side in ["l", "r"]:
 		var d := -1.0 if side == "l" else 1.0
