@@ -1100,25 +1100,15 @@ func _apply_face() -> void:
 			tl.scale = Vector3(2.0 * spanw / TOOTH_L * 0.88, tth_l, TOOTH_D)
 			tl.rotation.y = ft * 0.10
 
-	# facial muscles: cheeks lift with a smile or squint, the nose wrinkles and flares, the mustache rides the upper lip, the jaw drops, the tongue shows
+	# facial muscles. The cheeks, nose wings, folds and the nose tip are part of the merged face mesh now, so their
+	# shape comes from the blendshapes (above) and the old per-blob motion is retired. The nostrils are still separate
+	# dark detail and the mustache still rides the upper lip, so those keep their motion.
 	var sq2 := _fp("sq"); var ns := _fp("ns"); var nf := _fp("nf"); var ch := _fp("ch"); var tg := _fp("tg")
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
-		var ck: Node3D = fr["cheek_" + sd]
-		var up := sq2 * 0.5      # the cheek shape now comes from the smile/squint blendshape, not a blob
-		ck.position = Vector3(0.046 * s, -0.034 + up * 0.006 - maxf(0.0, -sm) * 0.004, 0.054 + up * 0.004)
-		ck.scale = Vector3(1.0 + up * 0.18, 0.9 + up * 0.25, 0.7 + up * 0.15)
-		var wg: Node3D = fr["wing_" + sd]
-		wg.position = Vector3(0.015 * s * (1.0 + nf * 0.35), -0.022 + ns * 0.005, 0.100)
-		wg.scale = Vector3(1.0 + nf * 0.3, 0.9 - ns * 0.15, 0.8)
 		var nt: Node3D = fr["nost_" + sd]
 		nt.position = Vector3(0.0085 * s * (1.0 + nf * 0.5), -0.029 + ns * 0.005, 0.104)
 		nt.scale = Vector3(1.0 + nf * 0.5, 0.7 + nf * 0.6, 0.5)
-		var fd: Node3D = fr["fold_" + sd]
-		var fy := -0.052 + maxf(0.0, sm) * 0.012 + ns * 0.004 - mo * 0.008
-		fd.position = Vector3((w + 0.008) * s, fy, hz((w + 0.008) * s, fy) + 0.0015)
-		fd.scale = Vector3(0.5, 1.2 + maxf(0.0, sm) * 1.1 + ns * 0.8, 0.4)
-	(fr.tip as Node3D).position = Vector3(0, -0.019 + ns * 0.004 - maxf(0.0, _fp("pu")) * 0.002, 0.107 + nf * 0.002)
 	for m in fr.must:
 		var nd: Node3D = m[0]; var b: Vector3 = m[1]; var mt: float = m[2]; var ms: float = m[3]
 		var dy := maxf(0.0, sm) * 0.004 * mt * mt + ns * 0.004 - maxf(0.0, -sm) * 0.005 * mt * mt - mo * 0.005 * (1.0 - mt) + sk * 0.003 * ms * mt + _pose_v("ul") * 0.005 * (1.0 - mt)
@@ -1127,30 +1117,15 @@ func _apply_face() -> void:
 	_mouth_meshes()
 	var jaw: Node3D = fr.jaw
 	jaw.position = Vector3(0, -0.06 + ch * 0.004, 0.02) - JAW_P
-	var chn: Node3D = fr.chin
-	chn.position = Vector3(sk * 0.004, -0.100 + ch * 0.004 + maxf(0.0, -sm) * 0.003 - _fp("pu") * 0.002, 0.036 + ch * 0.005) - JAW_P
-	chn.scale = Vector3(1.02 - ch * 0.12 + mo * 0.04, 0.5 + ch * 0.16 + maxf(0.0, -sm) * 0.1 - mo * 0.05, 0.62 + ch * 0.1)
-	chn.rotation.z = sk * 0.12
+	# the chin is part of the merged jaw mesh too, so it rides the jaw bone instead of being nudged on its own
 	# deeper muscles: corrugator bunch, cheek puffs, zygomatic lip-corner knots, mentalis dimple, masseter, forehead vein
 	var glr := maxf(_fp("pf"), maxf(0.0, -_fp("bi")) * 0.8)
 	var bn: Node3D = fr.bunch
 	bn.visible = glr > 0.35
 	bn.scale = Vector3(0.45 + glr * 0.35, 1.0 + glr * 0.9, 0.35 + glr * 0.2)
-	var twa := _fp("tw1"); var twb := _fp("tw2")
 	for s: float in [-1.0, 1.0]:
 		var sd := "l" if s < 0 else "r"
-		var up2 := sq2 * 0.45 + _fp("wet") * 0.3
-		var pf2: Node3D = fr["puff_" + sd]
-		pf2.position = Vector3(0.042 * s, -0.012 + up2 * 0.011, 0.088 + up2 * 0.002)
-		pf2.scale = Vector3(1.2, 0.28 + up2 * 0.32, 0.6)
-		var cn: Node3D = fr["corner_" + sd]
-		var cy: float = (fr.lipL[LIP_N - 1 if s > 0.0 else 0] as Node3D).position.y
-		cn.position = Vector3((w + 0.003) * s, cy + 0.002 + twa * 0.0008 * s, hz((w + 0.003) * s, cy - 0.05) + 0.0015 - JAW_P.z)
-		cn.scale = Vector3(1.0 + absf(sm) * 0.5 + _fp("mw") * 0.3, 1.0 + absf(sm) * 0.5, 0.6)
-		var ms: Node3D = fr["mass_" + sd]
-		var cl := clampf(ch * 0.8 + glr * 0.4 + _fp("tt") * 0.15 - mo * 0.2, 0.0, 1.0)
-		ms.position = Vector3(0.076 * s, -0.05 - mo * 0.006, 0.012)
-		ms.scale = Vector3(0.32 + cl * 0.2, 1.0 + cl * 0.1, 0.7 + cl * 0.1)
+		# the puffs, lip-corner knots and masseters are merged into the face/jaw meshes as well
 		var vn: Node3D = fr["vein_" + sd]
 		var rage := clampf(glr + sq2 * 0.5 + ns * 0.4 - 1.25, 0.0, 1.0) * 2.5
 		vn.visible = rage > 0.1; vn.scale = Vector3(1, maxf(0.01, minf(1.4, rage)), 0.5)
