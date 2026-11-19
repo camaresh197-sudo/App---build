@@ -172,6 +172,7 @@ func _ready() -> void:
 		var fyaw := float(a[4]) if a.size() > 4 else 0.0     # orbit the face camera so the profile can be checked too
 		var fc := Vector3(0.0, 1.585, 0.09)                  # orbit around the face, not the body axis
 		h.cam.look_at_from_position(fc + Vector3(sin(fyaw), 0.0, cos(fyaw)) * 0.82, fc)
+		if a.size() > 5 and a[5] == "nohead": h.fr["head"].visible = false
 		h.j.hat.visible = false
 		for nm in a[3].split(","):
 			h.set_expr(nm, true)
