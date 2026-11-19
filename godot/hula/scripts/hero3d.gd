@@ -341,6 +341,10 @@ const SPR := {"lid": [26.0, 1.0], "lidL": [26.0, 1.0], "lidR": [26.0, 1.0], "sq"
 var _clock := 0.0
 const LIP_N := 17
 const EYE_R := 0.025
+const TOOTH_U := 6            # upper teeth in the visible row
+const TOOTH_L := 6            # lower teeth (only shown when the mouth is really open)
+const TOOTH_H := 0.0105       # tooth height
+const TOOTH_D := 0.005        # tooth depth (front to back)
 # The mouth is posed, not drawn: the jaw is a bone, and the parts that belong to it (lower lip, chin, tongue, its corner
 # knots) hang off it. JAW_P is the hinge in head space and JAW_OPEN the angle at mo = 1, picked so the lower lip drops the
 # same 0.03 the old per-part translation used to, so the mouth reads the same but the opening now comes from one bone.
@@ -393,7 +397,7 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	var soft_sh := Shader.new()
 	soft_sh.code = "shader_type spatial;\nrender_mode blend_mix, depth_draw_always, cull_back;\nuniform vec4 col : source_color;\nvoid fragment() {\n\tALBEDO = col.rgb;\n\tROUGHNESS = 0.55;\n\tfloat f = clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0);\n\tALPHA = smoothstep(0.3, 1.0, f) * 0.9;\n}\n"
 	var soft_m := ShaderMaterial.new(); soft_m.shader = soft_sh; soft_m.set_shader_parameter("col", skin.albedo_color)
-	var teeth_m := mat(Color.WHITE, 0.4); teeth_m.albedo_texture = _teeth_tex()
+	var teeth_m := mat(Color.WHITE, 0.32); teeth_m.albedo_texture = _tooth_tex(); teeth_m.uv1_scale = Vector3(3.0, 2.0, 1.0)
 	var wet_m := mat(Color(0.78, 0.9, 1.0, 0.5), 0.04); wet_m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	wet_m.emission_enabled = true; wet_m.emission = Color(0.55, 0.75, 1.0); wet_m.emission_energy_multiplier = 0.35
 	var drop_m := mat(Color(0.85, 0.94, 1.0), 0.05); drop_m.emission_enabled = true; drop_m.emission = Color(0.7, 0.85, 1.0); drop_m.emission_energy_multiplier = 0.6
@@ -455,9 +459,15 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 			var mn := put(head, sphere(r), black, Vector3(x * s, y, z), Vector3(1.2, 0.9, 0.9))
 			mn.visible = false
 			must.append([mn, mn.position, t, s])
-	# mouth: dark cavity, teeth, upper and lower lip rows (shaped every frame), smile-line dimples
+	# mouth: dark cavity, two rows of separate teeth (laid along the mouth arc every frame), upper and lower lip
+	# rows (shaped every frame), smile-line dimples
 	fr.cav = put(head, sphere(0.03), mouth_m, Vector3(0, -0.068, 0.083), Vector3(1.0, 0.46, 0.3))
-	fr.teeth = put(head, BoxMesh.new(), teeth_m, Vector3(0, -0.0625, 0.0925), Vector3(0.046, 0.008, 0.004))
+	var tbox := BoxMesh.new(); tbox.size = Vector3.ONE
+	fr.tooth_u = []; fr.tooth_l = []
+	for i in TOOTH_U:
+		var tu := put(head, tbox, teeth_m); tu.visible = false; fr.tooth_u.append(tu)
+	for i in TOOTH_L:
+		var tl := put(J, tbox, teeth_m); tl.visible = false; fr.tooth_l.append(tl)
 	var tube_m := lip_m.duplicate(); tube_m.cull_mode = BaseMaterial3D.CULL_DISABLED
 	var must_m := mat(Color("0d0908"), 0.75); must_m.cull_mode = BaseMaterial3D.CULL_DISABLED; must_m.rim_enabled = true; must_m.rim = 0.25; must_m.rim_tint = 0.0
 	for nm in ["lipUm", "lipLm", "mustm_l", "mustm_r"]:
@@ -602,17 +612,17 @@ func _tube(mi: MeshInstance3D, pts: Array, rad: Array, ry := 1.0, ring := 8) -> 
 	var am: ArrayMesh = mi.mesh
 	am.clear_surfaces(); am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
 
-func _teeth_tex() -> ImageTexture:         # a row of six teeth: ivory, separated by thin gaps, shaded darker at the gum and the edge
-	var w := 96; var h := 24
+func _tooth_tex() -> ImageTexture:         # a single tooth: ivory, a warmer gum end at the top, a shaded incisal edge at the bottom
+	var w := 12; var h := 24
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 	for y in h:
 		for x in w:
-			var u := float(x) / w * 6.0
-			var fu := u - floorf(u)
-			var gap := 1.0 - smoothstep(0.0, 0.07, minf(fu, 1.0 - fu)) 
 			var vy := float(y) / (h - 1)
-			var c := Color("fff8e8").lerp(Color("d9ccb0"), smoothstep(0.55, 1.0, absf(vy - 0.45) * 2.0) * 0.7)
-			c = c.lerp(Color("7a6a58"), gap * 0.85)
+			var c := Color("fffdf5")
+			c = c.lerp(Color("d8c39a"), smoothstep(0.0, 0.30, 1.0 - vy) * 0.6)          # gum end
+			c = c.lerp(Color("e7dac1"), smoothstep(0.78, 1.0, vy) * 0.5)                 # incisal edge
+			var sx := absf(float(x) / (w - 1) * 2.0 - 1.0)
+			c = c.lerp(Color("cebc99"), smoothstep(0.62, 1.0, sx) * 0.45)               # round the sides
 			img.set_pixel(x, y, c)
 	return ImageTexture.create_from_image(img)
 
@@ -790,10 +800,35 @@ func _apply_face() -> void:
 	var open_h := 0.005 + 0.125 * A + 0.5 * drop
 	cav.position = Vector3(0, open_c, 0.0785)
 	cav.scale = Vector3(w / 0.03 * 1.02, open_h * 1.14 / 0.03, 0.26)
-	var tn: MeshInstance3D = fr.teeth
+	# teeth: two rows of separate teeth laid along the mouth arc, the upper row hanging from the upper lip and the
+	# lower row standing on the lower lip. The gaps between them (and the per-tooth texture) are what make them read
+	# as teeth instead of one white plate.
 	var show := maxf(_pose_v("tt") * 0.9, mo * 1.2)
-	tn.visible = show > 0.18
-	tn.position = Vector3(0, open_c + open_h * 0.55 + _pose_v("ns") * 0.004, 0.0885); tn.scale = Vector3(w * 1.25, 0.008 + minf(1.0, show) * 0.004, 0.004)
+	var showk := clampf(show, 0.0, 1.0)
+	var t_on := show > 0.18
+	var spanw := w * 0.70
+	var tth := TOOTH_H * (0.88 + 0.12 * showk)
+	for k in TOOTH_U:
+		var tu: MeshInstance3D = fr.tooth_u[k]
+		tu.visible = t_on
+		if t_on:
+			var ft := (float(k) + 0.5) / TOOTH_U * 2.0 - 1.0
+			var zz := 0.0895 - absf(ft) * 0.006
+			var yu := -0.0635 + A * 0.5 * (ft * ft - 0.5) + sk * 0.008 * ft + _pose_v("ns") * 0.004
+			tu.position = Vector3(ft * spanw, yu - 0.0032 - tth * 0.5, zz - 0.0015)
+			tu.scale = Vector3(2.0 * spanw / TOOTH_U * 0.88, tth, TOOTH_D)
+			tu.rotation.y = ft * 0.10
+	var l_on := t_on and mo > 0.45
+	for k in TOOTH_L:
+		var tl: MeshInstance3D = fr.tooth_l[k]
+		tl.visible = l_on
+		if l_on:
+			var ft := (float(k) + 0.5) / TOOTH_L * 2.0 - 1.0
+			var zz := 0.0895 - absf(ft) * 0.006
+			var yl := -0.0735 + A * (ft * ft - 0.5) + sk * 0.008 * ft - maxf(0.0, -sm) * 0.008 * ft * ft
+			tl.position = Vector3(ft * spanw, yl + 0.0006 + tth * 0.5, zz - 0.0015) - JAW_P
+			tl.scale = Vector3(2.0 * spanw / TOOTH_L * 0.88, tth, TOOTH_D)
+			tl.rotation.y = ft * 0.10
 
 	# facial muscles: cheeks lift with a smile or squint, the nose wrinkles and flares, the mustache rides the upper lip, the jaw drops, the tongue shows
 	var sq2 := _fp("sq"); var ns := _fp("ns"); var nf := _fp("nf"); var ch := _fp("ch"); var tg := _fp("tg")
