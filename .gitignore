@@ -1,2 +1,16 @@
+# Generated / build output — never commit
 build/
+dist/
+www/
+node_modules/
+.godot/
+__pycache__/
+
+# Audio .import files are all default settings (loop=false, bpm=0); Godot
+# regenerates them on --import. Art .import files stay tracked.
+godot/hula/audio/**/*.import
+
+# Blender backups and local temp files
 *.blend1
+*.tmp
+*.log

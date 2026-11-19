@@ -1,0 +1,18 @@
+# ripgrep/agent search filter: keep asset noise out of grep and glob results.
+# These files stay in git; they are just not worth searching or listing.
+*.import
+*.uid
+*.ogg
+*.wav
+*.png
+*.webp
+*.glb
+*.blend
+index.html
+reference/audio/
+.godot/
+build/
+dist/
+www/
+node_modules/
+__pycache__/

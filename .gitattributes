@@ -1,0 +1,16 @@
+# Keep binary assets out of diffs and patch output.
+*.ogg binary
+*.wav binary
+*.png binary
+*.webp binary
+*.glb binary
+*.blend binary
+*.import binary
+index.html binary
+
+# GDScript/Python/JSON are text and diff normally.
+*.gd text
+*.py text
+*.json text
+*.mjs text
+*.js text
