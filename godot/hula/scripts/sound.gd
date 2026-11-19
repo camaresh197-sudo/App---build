@@ -29,6 +29,8 @@ var boost := 1.0              # the title song is written quieter than the game 
 var playing := false
 var step := 0
 var next_t := 0.0
+var beat_t := 0.0            # sequencer time of beat 0 for the current track (the first audible downbeat, next_t)
+var bar_t := 0.0             # sequencer time the current bar's step 0 fired (the bar boundary; victory hold bars are half-length)
 var loop_from := 0
 var vol_music := 0.8
 var vol_sfx := 0.8
@@ -36,6 +38,7 @@ var have := false
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	process_priority = -1   # run our clock before main reads beat_pos()
 	_buses()
 	for i in NVOICE:
 		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0)
@@ -151,6 +154,13 @@ func sfx(n: String, vol := 1.0) -> void:
 	play(nm, {"v": SFX_REL.get(n, 0.7) * vol, "rate": 0.94 + randf() * 0.12, "bus": "SFX"})
 
 # ---------- music ----------
+# the musical beat, so the dance can lock to the tune. tempo table derived from the step constants above:
+# a bar is steps-per-bar slots; a beat is the musical pulse, bar / beats-per-bar.
+#   menu:    TE 0.125 s/step x 16 steps/bar = 2.000 s/bar, 4 beats/bar -> 0.500 s/beat (120 bpm)
+#   game:    E  0.130 s/step x  6 steps/bar = 0.780 s/bar, 2 beats/bar -> 0.390 s/beat (6/8 feel)
+#   victory: VE 0.105 s/step x 16 steps/bar = 1.680 s/bar, 4 beats/bar -> 0.420 s/beat
+const BEAT_SECS := {"menu": TE * 4.0, "game": E * 3.0, "victory": VE * 4.0}
+const BEATS_BAR := {"menu": 4, "game": 2, "victory": 4}
 func start_music(track := "game") -> void:
 	if not have: return
 	if track == "menu" and title.is_empty(): return
@@ -158,12 +168,36 @@ func start_music(track := "game") -> void:
 	if track == "game" and song.is_empty(): return
 	if playing and cur == track: return
 	if playing: stop_music()
-	cur = track; boost = 1.25 if track == "menu" else (1.1 if track == "victory" else 0.8); playing = true; step = 0; next_t = now + 0.08
+	cur = track; boost = 1.25 if track == "menu" else (1.1 if track == "victory" else 0.8); playing = true; step = 0; next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
 
 func stop_music() -> void:
 	playing = false
 	for i in voices.size():
 		if voices[i].bus == "Music": vstop[i] = now + 0.01
+
+# beats elapsed in the current track since beat 0, from the wall clock so it stays continuous and monotonic
+# even when the sequencer skips (victory step += 8) or the lag guard resets next_t.
+# beat 0 is the first audible downbeat: the first step start_music schedules (next_t = now + 0.08), so the
+# 0.08 s lead-in is beat 0 and the dance's downbeat lands exactly on the music's.
+func beat_pos() -> float:
+	if not playing: return 0.0
+	return maxf(0.0, (now - beat_t) / beat_secs())
+
+# beats into the current bar, measured from the bar's step 0 (bar_t). returns 0.0 at a bar boundary and grows
+# to the bar's length, then snaps back to 0 when the next bar's step 0 fires. normal bars are beats_per_bar()
+# long; a victory hold bar (field17 == 1) is only half a bar, so there it wraps at beats_per_bar() / 2.
+func bar_pos() -> float:
+	if not playing: return 0.0
+	return maxf(0.0, (now - bar_t) / beat_secs())
+
+func beat_secs() -> float:
+	return float(BEAT_SECS.get(cur, E * 3.0))
+
+func beats_per_bar() -> int:
+	return int(BEATS_BAR.get(cur, 2))
+
+func is_playing() -> bool:
+	return playing
 
 func _process(dt: float) -> void:
 	now += dt
@@ -185,6 +219,7 @@ func _process(dt: float) -> void:
 	if playing:
 		var guard := 0
 		while now >= next_t and guard < 4:
+			if step % (6 if cur == "game" else 16) == 0: bar_t = next_t   # a bar's step 0 sounds at next_t: mark the boundary
 			if cur == "menu": _tstep(step, next_t - now)
 			elif cur == "victory": _vstep(step, next_t - now)
 			else: _step(step, next_t - now)

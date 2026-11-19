@@ -172,6 +172,83 @@ func _ready() -> void:
 			h.tex().get_image().save_png(a[0] + "/" + nm + ".png")
 		get_tree().quit()
 		return
+	if a.size() > 5 and a[2] == "beat":
+		# coordinator harness: drive the dance from a synthetic musical beat and log the motion, so beat-lock can be measured.
+		# args: a[0]=out dir, a[3]=gesture, a[4]=beats to run, a[5]=steps per beat,
+		#       a[6]=beat at which the gesture is triggered (default 0), a[7]=="fallback" to use the internal clock instead
+		var hb = m.hero3d
+		m.set_process(false)
+		var spb := int(a[5])
+		var start_beat := float(a[6]) if a.size() > 6 else 0.0
+		hb.fixed_dt = 1.0 / (float(spb) * 2.0)   # one commanded beat == 1/BPS seconds of internal clock
+		hb.set("beat_bpm", 120.0)
+		hb.set("beat_on", not (a.size() > 7 and a[7] == "fallback"))
+		var lg := FileAccess.open("%s/beat_%s_%.2f.csv" % [a[0], a[3], start_beat], FileAccess.WRITE)
+		lg.store_line("beat,yaw,handdist,hand_l_y,hand_r_y,ankle_l_y,ankle_r_y,gest_cur,gk")
+		var trigger := true
+		for s in int(float(a[4]) * spb):
+			var bt := start_beat + float(s) / float(spb)
+			if trigger:
+				# trigger the gesture at start_beat, exactly like the game does (blend out of hula first)
+				hb.gesture(a[3]); hb.gest_cur = "hula"; hb.gk = 0.0; trigger = false
+			hb.set("beat", bt)
+			if a.size() > 9 and a[9] == "barfeed": hb.set("beat_bar", fmod(bt, 4.0))   # mimic the producer: beats into the 4/4 bar
+			hb._clock = bt * 0.5
+			hb.snap = not (a.size() > 8 and a[8] == "nosnap")
+			hb.pose(0.0)
+			var hl: Vector3 = (hb.j["hand_l"] as Node3D).global_position
+			var hr: Vector3 = (hb.j["hand_r"] as Node3D).global_position
+			var al: Vector3 = (hb.j["ankle_l"] as Node3D).global_position
+			var ar: Vector3 = (hb.j["ankle_r"] as Node3D).global_position
+			lg.store_line("%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%.4f,%s,%.3f" % [bt, (hb.root as Node3D).rotation.y, hl.distance_to(hr), hl.y, hr.y, al.y, ar.y, hb.gest_cur, hb.gk])
+		lg.close()
+		get_tree().quit()
+		return
+	if a.size() > 5 and a[2] == "clip":
+		# coordinator: log the arm joints and the hat in world space, so sombrero clipping can be measured numerically
+		# args: a[0]=out dir, a[3]=gesture, a[4]=beats, a[5]=steps/beat, a[6]=optional arm_kick to hold ("cheer"/"flinch"/"limp")
+		var hc = m.hero3d
+		m.set_process(false)
+		var cspb := int(a[5])
+		hc.fixed_dt = 1.0 / (float(cspb) * 2.0)
+		hc.set("beat_on", true)
+		hc.gesture(a[3]); hc.gest_cur = a[3]; hc.gk = 1.0 if a[3] != "hula" else 0.0
+		if a.size() > 6 and a[6] != "": hc.arm_kick(a[6], 999.0)
+		var cg := FileAccess.open("%s/clip_%s.csv" % [a[0], a[3]], FileAccess.WRITE)
+		cg.store_line("beat,hatx,haty,hatz,shlx,shly,shlz,ellx,elly,ellz,halx,haly,halz,shrx,shry,shrz,elrx,elry,elrz,harx,hary,harz")
+		for s in int(float(a[4]) * cspb):
+			var bt2 := float(s) / float(cspb)
+			hc.set("beat", bt2)
+			hc._clock = bt2 * 0.5
+			hc.snap = true
+			hc.pose(0.0)
+			var hp: Vector3 = (hc.j.hat as Node3D).global_position
+			var shl: Vector3 = (hc.j.shoulder_l as Node3D).global_position
+			var ell: Vector3 = (hc.j.elbow_l as Node3D).global_position
+			var hal: Vector3 = (hc.j.hand_l as Node3D).global_position
+			var shr: Vector3 = (hc.j.shoulder_r as Node3D).global_position
+			var elr: Vector3 = (hc.j.elbow_r as Node3D).global_position
+			var har: Vector3 = (hc.j.hand_r as Node3D).global_position
+			var line := "%.4f" % bt2
+			for v in [hp, shl, ell, hal, shr, elr, har]:
+				line += ",%.4f,%.4f,%.4f" % [v.x, v.y, v.z]
+			cg.store_line(line)
+		cg.close()
+		get_tree().quit()
+		return
+	if a.size() > 2 and a[2] == "live":
+		# end-to-end: main._process is NOT disabled, so the real music feeds hero3d.beat; log the hero's clock and body every frame
+		var hl = m.hero3d
+		var lg := FileAccess.open("%s/live.csv" % a[0], FileAccess.WRITE)
+		lg.store_line("t,beat,beat_on,phrase0,gest,gk,talk,handdist,yaw")
+		for f in n:
+			await get_tree().process_frame
+			var hd2: Vector3 = (hl.j["hand_l"] as Node3D).global_position
+			var hr2: Vector3 = (hl.j["hand_r"] as Node3D).global_position
+			lg.store_line("%.4f,%.4f,%s,%.4f,%s,%.3f,%.3f,%.4f,%.4f" % [m.t, hl.beat, str(hl.beat_on), hl._phrase0, hl.gest_cur, hl.gk, hl.talk, hd2.distance_to(hr2), (hl.root as Node3D).rotation.y])
+		lg.close()
+		get_tree().quit()
+		return
 	for i in n: await get_tree().process_frame
 	if a.size() > 2 and a[2] == "face":
 		var h = m.hero3d

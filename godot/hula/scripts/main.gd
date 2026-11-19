@@ -76,9 +76,18 @@ func _process(dt: float) -> void:
 		_want = want
 		if want == "": snd.stop_music()
 		else: snd.start_music(want)
+	# beat feed for the hero's dance, phase-locked to the music. after the track switch above, so is_playing() is
+	# already true on the frame the music starts (the hero never sees a stale first frame). Object.set() on a
+	# property hero3d.gd has not declared yet is a silent no-op; guard the nodes in case _process runs before _ready.
+	if hero3d and snd:
+		hero3d.set("beat", snd.beat_pos())
+		hero3d.set("beat_on", snd.is_playing())
+		hero3d.set("beat_bar", snd.bar_pos())
+		hero3d.set("beat_bpm", 60.0 / snd.beat_secs())
 	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
 	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
-	if not _confirmed and Time.get_ticks_msec() > 4000:
+	# confirm as soon as the game is really up. a long wait turns "opened it for a second to check" into a failed start.
+	if not _confirmed and Time.get_ticks_msec() > 2000:
 		_confirmed = true; Updater.confirm_good()
 	if state == S.PLAY:
 		player = player.lerp(target, 1.0 - pow(0.00001, dt))
@@ -160,16 +169,20 @@ func _draw() -> void:
 	var off := Vector2(randf_range(-1, 1), randf_range(-1, 1)) * shake * 10.0
 	draw_set_transform(off)
 	_sky(R)
-	if state == S.SECRET: menu.secret(R, t)
+	if state == S.SECRET:
+		menu.secret(R, t); _below(R, Color(0.03, 0.03, 0.08, 0.85))
 	elif state == S.MENU:
-		if menu.in_hub: menu.hub(R, t, Callable(self, "_hero"))
-		else: menu.title(R, t, Callable(self, "_hero"), ship_tex)
+		if menu.in_hub:
+			menu.hub(R, t, Callable(self, "_hero")); _below(R, Color(0.03, 0.03, 0.08, 0.8))
+		else:
+			menu.title(R, t, Callable(self, "_hero"), ship_tex); _below(R, Color("4a2a3e"))
 		if not menu.in_hub: _portrait_hud()
 	else:
 		for s in shots: draw_rect(Rect2(s.p - Vector2(8, 2), Vector2(16, 4)), Color(1, 0.9, 0.3))
 		for sh in ships: _ship(sh)
 		_hero(player, t)
 		for p in pops: draw_circle(p.p, 3.0 * p.life * 2.0, Color(0.6, 0.9, 0.3, p.life * 2.0))
+		if state == S.OVER: draw_rect(Rect2(0, 0, R, _vis_h()), Color(0.03, 0.03, 0.08, 0.7))   # dim the field, but the HUD below stays bright
 		_hud(R)
 		_portrait_hud()
 		if state == S.OVER: _over(R)
@@ -177,10 +190,20 @@ func _draw() -> void:
 	draw_set_transform(Vector2.ZERO)
 	if Save.data.opt.fps: _fps(R)
 
+# visible logical height: 360 at the design aspect, more when the window is taller. never shift the composition
+# (buttons/_to_field live in field coords); instead extend the background fills down to cover the extra space.
+func _vis_h() -> float:
+	return maxf(FH, get_viewport_rect().size.y)
+
+func _below(R: float, col: Color) -> void:
+	var h := _vis_h()
+	if h > FH: draw_rect(Rect2(0, FH, R, h - FH), col)
+
 func _sky(R: float) -> void:
 	var top := Color("3b8fd9"); var mid := Color("8fcdf5"); var bot := Color("ffc98a")
-	for i in 36:
-		var u := i / 35.0
+	var h := _vis_h()
+	for i in int(ceil(h / 10.0)):
+		var u := clampf(i / 35.0, 0.0, 1.0)
 		var c := top.lerp(mid, u / 0.55) if u < 0.55 else mid.lerp(bot, (u - 0.55) / 0.45)
 		draw_rect(Rect2(0, i * 10, R, 10), c)
 	for k in 7:
@@ -189,7 +212,8 @@ func _sky(R: float) -> void:
 		draw_circle(Vector2(x + 24, 66 + (k * 53) % 200), 20, Color(1, 1, 1, 0.55))
 	for k in 6:
 		var x := k * 150.0 - fmod(t * 20, 150.0)
-		draw_rect(Rect2(x, FH - 50 - (k * 17) % 40, 90, 120), Color("b5546e"))
+		var by := FH - 50 - (k * 17) % 40
+		draw_rect(Rect2(x, by, 90, maxf(120.0, h - by)), Color("b5546e"))
 
 func _hero(p: Vector2, tm: float, k := 1.0) -> void:
 	# the 3D vaquero: posed, rendered in its own viewport, drawn here as a sprite (height ~ 76 field units)
@@ -253,7 +277,6 @@ func _portrait_hud() -> void:
 	draw_rect(pr.grow(4), Color("e7b84a"), false, 2.0)
 
 func _over(R: float) -> void:
-	draw_rect(Rect2(0, 0, R, FH), Color(0.03, 0.03, 0.08, 0.7))
 	var f := ThemeDB.fallback_font
 	draw_string(f, Vector2(R / 2 - 140, 150), "KNOCKED OUT!", HORIZONTAL_ALIGNMENT_LEFT, -1, 44, Color("ff4757"))
 	draw_string(f, Vector2(R / 2 - 60, 185), "Score %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)

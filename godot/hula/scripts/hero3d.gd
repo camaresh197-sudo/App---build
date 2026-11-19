@@ -822,7 +822,12 @@ const L1 := 0.36            # thigh length
 const L2 := 0.34            # shin length
 const FOOT_Y := 0.1         # ankle height of a planted foot
 const FOOT_X := 0.125       # half stance width
-const BPS := 2.0            # dance tempo: beats per second (120 bpm)
+const BPS := 2.0            # dance tempo: beats per second (120 bpm). The fallback beat grid when no external source drives the dance
+const BAR := 4.0            # beats per bar (the menu theme is 4/4): gesture phrases lock to this grid when the music gives no bar feed
+const SALSA_BEATS := 16.0   # the salsa phrase: 16 beats (4 bars of 4/4), with the turn at beats 12.15-14.9 of it
+const FLEX_BEATS := 8.0     # flex: one full left/right show-off cycle every 8 beats (2 bars)
+const POWER_BEATS := 6.0    # power: swell, then the shout, every 6 beats
+const CLAP_LEAD := 0.1094   # the arm springs need ~0.11 beat to arrive, so the clap phase leads by that much and the visible contact lands on the beat
 var snap := false           # tests: jump straight to the targets, no springs
 var _snap := false
 var _sm := {}
@@ -881,7 +886,12 @@ func _ft(d: float, lift := 0.0, out := 0.0, wide := 0.0, fwd := 0.0) -> Vector3:
 # gesture("dance"|"hips"|"clap"|"flex"|"power"|"hula"). The move is blended over the hula (out, then in). auto_dance cycles them like the title screen.
 var gest := "hula"          # what we want
 var gest_cur := "hula"      # what is on screen
-var gest_t := 0.0           # local time of the current move: every move starts at the top of its phrase
+var gest_t := 0.0           # local time of the current move, in seconds: the fallback clock when no external beat drives the dance
+var beat := 0.0             # musical beat position, in beats; set externally each frame
+var beat_bpm := 120.0       # the external source's tempo (informational: the offline fallback uses BPS)
+var beat_bar := 0.0         # beats into the current bar from the music (0.0 at a bar line); fed by the producer
+var beat_on := false        # true when an external beat source is driving the dance
+var _phrase0 := 0.0         # beat where the current gesture's phrase is anchored (snapped to a bar line when beat_on)
 var gk := 0.0               # blend 0..1
 var auto_dance := false
 const GMOOD := {"hula": "grin", "dance": "joy", "hips": "smug", "clap": "delight", "flex": "proud", "power": "battle_cry"}
@@ -894,11 +904,20 @@ const CYC := [["dance", "", 8.2], ["hips", "", 3.2], ["clap", "", 3.2], ["flex",
 func gesture(n: String) -> void:
 	gest = n
 
+# Where the current gesture's phrase is anchored, in beats. Prefers the music's bar feed, so the phrase lands on the
+# real bar line even when a bar is not 4 beats (the 6/8 game song has 2-beat bars); else the fallback 4/4 grid. The
+# salsa also locks to its own 16-beat hypermeasure, so its turn lands on the music's 4-bar phrase rather than mid-phrase.
+func _phrase_origin() -> float:
+	var bar := maxf(0.0, beat_bar)                        # the producer may leave the feed at 0: clamp it
+	var o := (beat - bar) if (beat_on and bar > 0.0) else floorf(beat / BAR) * BAR
+	return o - fmod(o, SALSA_BEATS) if gest_cur == "dance" else o
+
 func _gstep() -> void:
 	var now := Time.get_ticks_msec()
 	_pdt = fixed_dt if fixed_dt > 0.0 else clampf((now - _pms) / 1000.0, 0.001, 0.05)
 	_pms = now
 	var dt := _pdt
+	if not beat_on: beat += dt * BPS      # no music: synthesize the beat grid at the fallback tempo (BPS == beat_bpm / 60 at the default 120 bpm)
 	if auto_dance:
 		if not _cyclic:                     # (re)start the cycle from the top whenever auto-dance comes on
 			_cyclic = true; _cyc_i = 0; _cyc_t = 0.0; gest = CYC[0][0]
@@ -915,7 +934,11 @@ func _gstep() -> void:
 	if auto_dance: mood("joy" if (arm_t > 0.0 and arm_n == "cheer") else GMOOD.get(gest, "grin"))      # title screen: face matches the move
 	if gest_cur != gest:
 		gk -= dt * 5.0
-		if gk <= 0.0: gk = 0.0; gest_cur = gest; gest_t = 0.0
+		if gk <= 0.0:
+			gk = 0.0; gest_cur = gest; gest_t = 0.0
+			# phrase lock: anchor the new phrase to the bar (the salsa to its 16-beat hypermeasure), so its beats land on the
+			# music instead of mid-bar. The move clock is beat - _phrase0 (see pose).
+			_phrase0 = _phrase_origin()
 	elif gest_cur != "hula": gk = minf(1.0, gk + dt * 5.0)
 	else: gk = 0.0
 	if gest_cur != "hula": gest_t += dt
@@ -925,7 +948,7 @@ const MICRO := ["wink", "cheeky", "playful", "big_grin", "laugh", "smirk", "tong
 func _life(dt: float) -> void:
 	if auto_dance:                  # title screen: the eyes roam, he shouts on the accents, and little expressions flash across his face
 		gaze = Vector2(sin(_clock * 0.9) * 0.7 + sin(_clock * 2.3) * 0.15, 0.2 * sin(_clock * 1.3))
-		var bb := _clock * BPS
+		var bb := beat
 		var accent := (int(floorf(bb)) % 4 == 0) and (bb - floorf(bb) < 0.6) and gest_cur != "hula"
 		talk = lerpf(talk, 0.85 if accent else 0.0, 1.0 - exp(-dt * 14.0))
 	_micro_t -= dt
@@ -933,11 +956,11 @@ func _life(dt: float) -> void:
 		_micro_t = randf_range(2.2, 5.0)
 		if react_t <= 0.0 and (auto_dance or base_expr == "grin"): react(MICRO[randi() % MICRO.size()], randf_range(0.6, 1.1))
 
-func _move(n: String, t: float) -> Dictionary:
+func _move(n: String, b: float) -> Dictionary:       # b = the move's local beat position, off the shared beat grid
 	var M := _neutral()
 	M.arm_l = [0, 0, -2.0, 0, -0.85, 0, 0]; M.arm_r = [0, 0, 2.0, 0, 0.85, 0, 0]
 	M.fing_l = 0.25; M.fing_r = 0.25
-	var b := t * BPS; var bi := int(floorf(b)); var bf := b - bi
+	var bi := int(floorf(b)); var bf := b - bi
 	var up := sin(PI * bf)
 	match n:
 		"dance":       # salsa. Basic: weight rocks side to side on the beat with hip action (hips and chest counter-rotate), the free foot taps out between beats,
@@ -960,7 +983,7 @@ func _move(n: String, t: float) -> Dictionary:
 			M.sp = Vector3(0.05, wp * 0.08, -wp * 0.04)
 			M.ch = Vector3(0, wp * 0.26 - 0.18 * prep, wp * 0.03)
 			M.nk = Vector3(0.04 * pump, wp * 0.1, -wp * 0.06)
-			var hy := -wp * 0.2 + 0.35 * (1.0 - spk) * sin(t * 0.9) - 0.35 * prep
+			var hy := -wp * 0.2 + 0.35 * (1.0 - spk) * sin(b * 0.45) - 0.35 * prep
 			if spk > 0.001: hy += clampf(wrapf(-M.spin, -PI, PI), -1.15, 1.15) * spk       # spotting: the face holds to the front, then whips round with the body
 			M.hd = Vector3(0.07 * pump + 0.05 * up + 0.05 * land, hy, -wp * 0.08)       # chin leads the beat, the head tilts into the shift and scans the room
 			M.shr = maxf(0.0, wp) * 0.15; M.shl = maxf(0.0, -wp) * 0.15
@@ -973,9 +996,9 @@ func _move(n: String, t: float) -> Dictionary:
 				var d := -1.0 if sd == "l" else 1.0
 				var m := lerpf(mr0 if sd == "r" else 1.0 - mr0, 1.0, spk)
 				M["arm_" + sd] = _al([-0.5 + 0.12 * pump, 0, d * 0.5, 0, -d * 0.95, 0.2, 0], [-0.15, 0, d * (2.3 + 0.12 * pump), 0, d * 0.55, 0, d * 0.5 * (1.0 - bf)], m)
-			M.fing_l = 0.12 + 0.1 * sin(9.0 * t); M.fing_r = 0.12 + 0.1 * sin(9.0 * t + 1.5)
-		"hips":        # sassy: the hip pops out on each (slow) beat and holds, the free foot touches out, hands on hips
-			var bh := t; var bj := int(floorf(bh)); var fh := bh - bj
+			M.fing_l = 0.12 + 0.1 * sin(4.5 * b); M.fing_r = 0.12 + 0.1 * sin(4.5 * b + 1.5)
+		"hips":        # sassy: the hip pops out on every two beats (one slow beat) and holds, the free foot touches out, hands on hips
+			var bh := b * 0.5; var bj := int(floorf(bh)); var fh := bh - bj       # half the beat rate: the pop lasts a half-note
 			var hit := 1.0 - pow(1.0 - fh, 4.0)
 			var wp := lerpf(_sd(bj - 1), _sd(bj), hit)
 			var tap := sin(PI * minf(1.0, fh * 2.0))
@@ -987,17 +1010,18 @@ func _move(n: String, t: float) -> Dictionary:
 				M["arm_" + sd] = [0.1, 0, d * (0.75 + 0.1 * maxf(0.0, d * wp)), 0, -d * 1.3, 0, 0]
 			M.fing_l = 0.3; M.fing_r = 0.3
 		"clap":        # front claps on the beat with little hops, head nods along
-			var c1 := absf(sin(PI * t * BPS)); var hop := 1.0 - c1        # hands meet on the beat, so the claps land with the music
+			var lead := CLAP_LEAD if beat_on else 0.0       # the lead only exists with music, so the offline fallback stays bit-exact
+			var c1 := absf(sin(PI * (b + lead))); var hop := 1.0 - c1        # the target leads so the sprung hands land on the beat
 			M.pel = Vector3(0, 0.765 + 0.035 * hop, 0)
-			M.sp = Vector3(0.08 + 0.1 * hop, 0, 0); M.hd = Vector3(0.05 + 0.1 * hop, sin(3.0 * t) * 0.3, 0)
+			M.sp = Vector3(0.08 + 0.1 * hop, 0, 0); M.hd = Vector3(0.05 + 0.1 * hop, sin(1.5 * b) * 0.3, 0)
 			M.shl = 0.06 + 0.1 * hop; M.shr = M.shl
 			M.fl = _ft(-1.0, 0.07 * hop); M.fr = _ft(1.0, 0.07 * hop)
 			for sd in ["l", "r"]:
 				var d := -1.0 if sd == "l" else 1.0
 				M["arm_" + sd] = [-0.9 - 0.2 * hop, 0, d * (0.9 - 0.3 * hop), 0, -d * (1.6 + 0.2 * hop), 0, 0]       # hands open shoulder-width, elbows flared, then snap together in front of the sternum
 			M.fing_l = 0.0; M.fing_r = 0.0
-		"flex":        # alternates showing each bicep in a wide squat, torso turns into it, head turns to admire
-			var u := sin(TAU * t / 3.7)
+		"flex":        # alternates showing each bicep in a wide squat, torso turns into it, head turns to admire: one side per 4 beats
+			var u := sin(TAU * b / FLEX_BEATS)
 			var mr := smoothstep(0.05, 0.4, u); var ml := smoothstep(0.05, 0.4, -u); var dd := mr - ml
 			M.pel = Vector3(0, 0.765, 0); M.pr = Vector3(0, -dd * 0.08, 0)
 			M.sp = Vector3(0.0, -dd * 0.1, dd * 0.03); M.ch = Vector3(0, -dd * 0.25, dd * 0.04); M.hd = Vector3(-0.05, dd * 0.5, -dd * 0.1)
@@ -1008,10 +1032,10 @@ func _move(n: String, t: float) -> Dictionary:
 				var m := mr if sd == "r" else ml
 				M["arm_" + sd] = _al([0.1, 0, d * 0.5, 0, -d * 0.5, 0, 0], [-0.1, 0, d * 1.57, 0, d * 1.75, 0, 0], m)
 			M.fing_r = lerpf(0.3, 1.0, mr); M.fing_l = lerpf(0.3, 1.0, ml)
-		"power":       # wide squat, chest swells, then fists tight at the chest and shaking
-			var u := fmod(t / 2.8, 1.0)
+		"power":       # wide squat, chest swells, then fists tight at the chest and shaking: one swell+shout every 6 beats
+			var u := fmod(b / POWER_BEATS, 1.0)
 			var ex := clampf((u - 0.6) / 0.1, 0.0, 1.0) * (1.0 - clampf((u - 0.9) / 0.1, 0.0, 1.0)); var sw := 0.5 - 0.5 * cos(u * TAU)
-			var shk := sin(38.0 * t) * 0.04 * ex
+			var shk := sin(19.0 * b) * 0.04 * ex
 			M.pel = Vector3(0, 0.755 - 0.03 * ex, 0); M.sp = Vector3(-0.1 - 0.05 * sw + shk * 0.4, 0, 0)       # the shout drives him down into the stance
 			M.shl = 0.1 + 0.15 * sw + 0.12 * ex; M.shr = M.shl; M.hd = Vector3(-0.15, 0, 0)
 			M.fl = _ft(-1.0, 0.0, 0.0, 0.1); M.fr = _ft(1.0, 0.0, 0.0, 0.1); M.fyl = 0.4; M.fyr = 0.4
@@ -1054,7 +1078,11 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	_snap = snap; snap = false
 	var M := _move_hula(phase, bank)
 	if gk > 0.001:
-		_G = _move(gest_cur, gest_t)
+		# the move runs on the shared beat grid: with an external beat, the phrase clock is beat - _phrase0 (bar-locked);
+		# without one, it is the exact legacy gesture clock (gest_t seconds at BPS), so offline renders are unchanged.
+		if beat_on and beat < _phrase0: _phrase0 = _phrase_origin()       # the beat jumped back (a track change): re-anchor so gb stays >= 0
+		var gb := (beat - _phrase0) if beat_on else gest_t * BPS
+		_G = _move(gest_cur, gb)
 		M = _mix(M, _G, gk)
 	else: _G = {}
 	root.rotation.y = yaw + bank * 0.35 + float(M.spin)
@@ -1089,6 +1117,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 	hoop_node.rotation = Vector3(-s * 0.16, 0, c * 0.16)
 	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
 	face_update()
+
 
 # upper-arm / forearm twist and the fingers. Fingers ripple in the hula (a wave runs across them); gestures set a curl (0 open .. 1 fist).
 func _hand_joints(side: String, d: float, ph: float, wave: float) -> void:
