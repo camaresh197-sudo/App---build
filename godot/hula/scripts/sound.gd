@@ -25,6 +25,7 @@ var song: Array = []
 var title: Array = []
 var vic: Array = []
 var vox: Dictionary = {}
+var cutscenes: Dictionary = {}  # cutscene id -> data array
 var vox_only := false         # test switch: only the sung clips play
 var solo_grunt := false       # test switch: only the grunt ad-libs play
 var mute_grunt := false       # test switch: mute the grunt ad-libs (vocal-ducking QA)
@@ -54,6 +55,9 @@ func _ready() -> void:
 	if f3: vic = JSON.parse_string(f3.get_as_text())
 	var f2 := FileAccess.open("res://data/data_title.json", FileAccess.READ)
 	if f2: title = JSON.parse_string(f2.get_as_text())
+	for cs_id in ["c_fiesta", "c_theft", "c_fall", "c_hero", "c_climb", "c_mission", "c_pursuit1", "c_pursuit2", "c_reckon", "c_armada", "c_showdown"]:
+		var fc := FileAccess.open("res://data/data_" + cs_id + ".json", FileAccess.READ)
+		if fc: cutscenes[cs_id] = JSON.parse_string(fc.get_as_text())
 	for i in song.size():
 		if song[i][7] == 0: loop_from = i; break
 	have = ResourceLoader.exists("res://audio/kick.ogg")
@@ -176,13 +180,14 @@ func sfx(n: String, vol := 1.0) -> void:
 #   menu:    TE 0.125 s/step x 16 steps/bar = 2.000 s/bar, 4 beats/bar -> 0.500 s/beat (120 bpm)
 #   game:    E  0.130 s/step x  6 steps/bar = 0.780 s/bar, 2 beats/bar -> 0.390 s/beat (6/8 feel)
 #   victory: VE 0.105 s/step x 16 steps/bar = 1.680 s/bar, 4 beats/bar -> 0.420 s/beat
-const BEAT_SECS := {"menu": TE * 4.0, "game": E * 3.0, "victory": VE * 4.0}
-const BEATS_BAR := {"menu": 4, "game": 2, "victory": 4}
+const BEAT_SECS := {"menu": TE * 4.0, "game": E * 3.0, "victory": VE * 4.0, "c_fiesta": E * 3.0, "c_theft": E * 3.0, "c_fall": E * 3.0, "c_hero": E * 3.0, "c_climb": E * 3.0, "c_mission": E * 3.0, "c_pursuit1": E * 3.0, "c_pursuit2": E * 3.0, "c_reckon": E * 3.0, "c_armada": E * 3.0, "c_showdown": E * 3.0}
+const BEATS_BAR := {"menu": 4, "game": 2, "victory": 4, "c_fiesta": 2, "c_theft": 2, "c_fall": 2, "c_hero": 2, "c_climb": 2, "c_mission": 2, "c_pursuit1": 2, "c_pursuit2": 2, "c_reckon": 2, "c_armada": 2, "c_showdown": 2}
 func start_music(track := "game") -> void:
 	if not have: return
 	if track == "menu" and title.is_empty(): return
 	if track == "victory" and vic.is_empty(): return
 	if track == "game" and song.is_empty(): return
+	if track.begins_with("c_") and not cutscenes.has(track): return
 	if playing and cur == track: return
 	if playing: stop_music()
 	cur = track; boost = 1.8 if track == "menu" else (0.6 if track == "victory" else 1.15); playing = true; step = 0; next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
@@ -261,11 +266,13 @@ func _strum(v: Array, dl: float, down: bool, vol: float) -> void:
 const ARP := [[0,1,2,3,2,1], [0,2,1,3,2,1], [3,2,1,0,1,2], [0,1,2,1,2,3], [0,2,3,2,1,0]]
 const STRUMV := [[1,2,4,5], [1,2,3,5], [1,3,4,5]]
 func _step(st: int, dl: float) -> void:
-	var nb := song.size()
+	var data_array := song if not cur.begins_with("c_") else (cutscenes.get(cur, []) as Array)
+	var nb := data_array.size()
+	if nb == 0: return
 	var bi := st / 6
 	if bi >= nb: bi = loop_from + (bi - nb) % (nb - loop_from)
 	var slot := st % 6
-	var B: Array = song[bi]
+	var B: Array = data_array[bi]
 	var r: int = B[0]; var f: int = B[1]; var cv: Array = B[2]; var mel: Array = B[3]; var inst: String = B[4]; var bar: int = B[5]
 	var odd := bi % 2 == 1
 	var hv := 0.9 + randf() * 0.2
@@ -306,7 +313,7 @@ func _step(st: int, dl: float) -> void:
 		var holds := 0
 		while true:
 			var idx := slot + 1 + holds
-			var nx: int = int(mel[idx]) if idx < 6 else (int(song[(bi + 1) % nb][3][idx - 6]) if (bi + 1) < nb else 0)
+			var nx: int = int(mel[idx]) if idx < 6 else (int(data_array[(bi + 1) % nb][3][idx - 6]) if (bi + 1) < nb else 0)
 			if nx == -1: holds += 1
 			else: break
 			if holds > 5: break
