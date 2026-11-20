@@ -9,7 +9,7 @@ static func load_all() -> void:
 	defs = JSON.parse_string(f.get_as_text())
 	data = {"gold": 300, "skills": {}, "own": {"hat": [0], "hoop": [0], "trail": [0]}, "eq": {"hat": 0, "hoop": 0, "trail": 0},
 		"ach": {}, "stats": {"runs": 0, "kills": 0, "hats": 0, "bosses": 0, "gold_all": 0, "time": 0, "best_run": 0, "best_level": 0, "best_combo": 0, "best_kills": 0},
-		"opt": {"music": 8, "sfx": 8, "particles": 1, "shake": true, "fps": false, "vibe": true}}
+		"opt": {"music": 8, "sfx": 8, "particles": 1, "shake": true, "fps": false, "vibe": true}, "levels": {}}
 	var g := FileAccess.open(PATH, FileAccess.READ)
 	if g:
 		var j = JSON.parse_string(g.get_as_text())

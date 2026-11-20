@@ -1,0 +1,165 @@
+{
+  "stars": [70, 40],
+  "acts": [
+    {
+      "name": "The Rise",
+      "nodes": [
+        {
+          "id": "a1_1",
+          "name": "Valle Chiquito Liftoff",
+          "target": 150,
+          "spawn": 1.0,
+          "speed": 1.0
+        },
+        {
+          "id": "a1_2",
+          "name": "Cloud Rustlers",
+          "target": 205,
+          "spawn": 1.03,
+          "speed": 1.02
+        },
+        {
+          "id": "a1_3",
+          "name": "Thunderhead Gauntlet",
+          "target": 261,
+          "spawn": 1.06,
+          "speed": 1.03
+        },
+        {
+          "id": "a1_4",
+          "name": "Capitán Globito",
+          "target": 316,
+          "spawn": 1.09,
+          "speed": 1.05
+        },
+        {
+          "id": "a1_5",
+          "name": "Galactic Finale",
+          "target": 371,
+          "spawn": 1.13,
+          "speed": 1.06
+        }
+      ]
+    },
+    {
+      "name": "The Pursuit",
+      "nodes": [
+        {
+          "id": "a2_1",
+          "name": "Taco Tuesday Rush",
+          "target": 426,
+          "spawn": 1.16,
+          "speed": 1.08
+        },
+        {
+          "id": "a2_2",
+          "name": "Canyon Sprint",
+          "target": 482,
+          "spawn": 1.19,
+          "speed": 1.09
+        },
+        {
+          "id": "a2_3",
+          "name": "Midnight Mesa Run",
+          "target": 537,
+          "spawn": 1.22,
+          "speed": 1.11
+        },
+        {
+          "id": "a2_4",
+          "name": "El Camión Salsero",
+          "target": 592,
+          "spawn": 1.25,
+          "speed": 1.13
+        },
+        {
+          "id": "a2_5",
+          "name": "Cosmic Victory Dance",
+          "target": 647,
+          "spawn": 1.28,
+          "speed": 1.14
+        }
+      ]
+    },
+    {
+      "name": "The Reckoning",
+      "nodes": [
+        {
+          "id": "a3_1",
+          "name": "Plaza de los Piñatas",
+          "target": 703,
+          "spawn": 1.32,
+          "speed": 1.16
+        },
+        {
+          "id": "a3_2",
+          "name": "Cantina Brawl",
+          "target": 758,
+          "spawn": 1.35,
+          "speed": 1.17
+        },
+        {
+          "id": "a3_3",
+          "name": "Bone Orchard",
+          "target": 813,
+          "spawn": 1.38,
+          "speed": 1.19
+        },
+        {
+          "id": "a3_4",
+          "name": "La Calavera Gigante",
+          "target": 868,
+          "spawn": 1.41,
+          "speed": 1.21
+        },
+        {
+          "id": "a3_5",
+          "name": "Sky's Edge Rise",
+          "target": 924,
+          "spawn": 1.44,
+          "speed": 1.22
+        }
+      ]
+    },
+    {
+      "name": "The Cosmos",
+      "nodes": [
+        {
+          "id": "a4_1",
+          "name": "Fiesta Galaxy Gates",
+          "target": 979,
+          "spawn": 1.47,
+          "speed": 1.24
+        },
+        {
+          "id": "a4_2",
+          "name": "Meteor Piñatas",
+          "target": 1034,
+          "spawn": 1.51,
+          "speed": 1.25
+        },
+        {
+          "id": "a4_3",
+          "name": "The Baron's Armada",
+          "target": 1089,
+          "spawn": 1.54,
+          "speed": 1.27
+        },
+        {
+          "id": "a4_4",
+          "name": "EL GRAN GLOBO",
+          "target": 1145,
+          "spawn": 1.57,
+          "speed": 1.28
+        },
+        {
+          "id": "a4_5",
+          "name": "Infinite Horizon",
+          "target": 1200,
+          "spawn": 1.6,
+          "speed": 1.3
+        }
+      ]
+    }
+  ]
+}
