@@ -56,6 +56,36 @@ func node(a: int, i: int) -> Dictionary:
 		return {}
 	return ns[i]
 
+func node_by_id(id: String) -> Dictionary:
+	if id == "":
+		return {}
+	for a in acts().size():
+		for nd in node_list(a):
+			if str(nd.get("id", "")) == id:
+				return nd
+	return {}
+
+func star_thresholds() -> Array:
+	return data.get("stars", [70, 40])
+
+func next_node(id: String) -> Dictionary:
+	if id == "":
+		return {}
+	var k := -1
+	var n := 0
+	for a in acts().size():
+		var ns := node_list(a)
+		for i in ns.size():
+			if str(ns[i].get("id", "")) == id:
+				k = n + i
+				break
+		n += ns.size()
+		if k >= 0:
+			break
+	if k < 0:
+		return {}
+	return node_by_flat(k + 1)
+
 func stars(id: String) -> int:
 	var lv: Dictionary = Save.data.get("levels", {})
 	return int(lv.get(id, 0))

@@ -19,6 +19,10 @@ var hp := 100.0
 var score := 0
 var run_level := ""
 var run_target := 0
+var run_spawn := 1.0
+var run_speed := 1.0
+var won := false
+var run_stars := 0
 var ships: Array = []
 var shots: Array = []
 var pops: Array = []
@@ -74,6 +78,13 @@ func _to_field(p: Vector2) -> Vector2:
 func start_run(level_id := "", goal := 0) -> void:
 	run_level = level_id
 	run_target = goal
+	won = false
+	run_stars = 0
+	var nd: Dictionary = {}
+	if level_id != "":
+		nd = map.node_by_id(level_id)
+	run_spawn = float(nd.get("spawn", 1.0))
+	run_speed = float(nd.get("speed", 1.0))
 	hero3d.arm_clear(); hero3d.mood("grin"); hero3d.gaze = Vector2.ZERO
 	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
 	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
@@ -118,14 +129,14 @@ func _process(dt: float) -> void:
 			shots.append({"p": player + Vector2(18, -4), "v": Vector2(560, 0)}); snd.sfx("shoot")
 		spawn_cd -= dt
 		if spawn_cd <= 0.0:
-			spawn_cd = max(0.45, 1.3 - t * 0.012)
-			ships.append({"p": Vector2(_right() + 40, randf_range(40, FH - 40)), "v": Vector2(-randf_range(70, 130), 0), "hp": 3, "ph": randf() * 6.0})
+			spawn_cd = max(0.45, 1.3 - t * 0.012) / max(0.1, run_spawn)
+			ships.append({"p": Vector2(_right() + 40, randf_range(40, FH - 40)), "v": Vector2(-randf_range(70, 130) * run_speed, 0), "hp": 3, "ph": randf() * 6.0})
 		for s in shots: s.p += s.v * dt
 		shots = shots.filter(func(s): return s.p.x < _right() + 20)
 		for sh in ships:
 			sh.ph += dt
 			var to_p: Vector2 = (player - sh.p).normalized()
-			sh.v = sh.v.lerp(to_p * 110.0, dt * 0.8) + Vector2(0, sin(sh.ph * 2.0) * 40.0 * dt)
+			sh.v = sh.v.lerp(to_p * 110.0 * run_speed, dt * 0.8) + Vector2(0, sin(sh.ph * 2.0) * 40.0 * dt)
 			sh.p += sh.v * dt
 			if sh.p.distance_to(player) < 26.0:
 				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt"); hero3d.react("pain", 0.6); hero3d.arm_kick("flinch", 0.5)
@@ -139,7 +150,10 @@ func _process(dt: float) -> void:
 		ships = ships.filter(func(sh): return sh.hp > 0 and sh.p.x > -60)
 		shots = shots.filter(func(s): return s.p.x < 9000)
 		_director(dt)
-		if hp <= 0: state = S.OVER; snd.stop_music(); hero3d.mood("despair"); hero3d.arm_kick("limp", 999.0); hero3d.gaze = Vector2(0.0, -0.7)
+		if run_target > 0 and score >= run_target:
+			_finish(true)
+		elif hp <= 0:
+			_finish(false)
 	for p in pops:
 		p.p += p.v * dt; p.life -= dt
 	pops = pops.filter(func(p): return p.life > 0)
@@ -170,6 +184,33 @@ func _director(dt: float) -> void:
 	hero3d.look = Vector2(hero3d.gaze.x * 0.5, 0.0)
 	if nd < 70.0 and hero3d.react_t <= 0.0: hero3d.react("startled", 0.35); hero3d.arm_kick("flinch", 0.3)
 	hero3d.mood("afraid" if hp <= 25.0 else ("worried" if hp <= 50.0 else ("determined" if ships.size() >= 5 else "grin")))
+
+func _finish(win: bool) -> void:
+	state = S.OVER
+	won = win
+	run_stars = 0
+	snd.stop_music()
+	if win:
+		run_stars = 1
+		var th: Array = map.star_thresholds()
+		if th.size() >= 2:
+			if hp >= float(th[0]): run_stars = 3
+			elif hp >= float(th[1]): run_stars = 2
+		if run_level != "":
+			var lv: Dictionary = Save.data.get("levels", {})
+			lv[run_level] = max(int(lv.get(run_level, 0)), run_stars)
+			Save.data.levels = lv
+		hero3d.mood("grin"); hero3d.arm_kick("cheer", 2.0)
+		snd.sfx("level")
+	else:
+		hero3d.mood("despair"); hero3d.arm_kick("limp", 999.0); hero3d.gaze = Vector2(0.0, -0.7)
+	Save.data.stats.runs = int(Save.data.stats.runs) + 1
+	Save.data.stats.best_run = max(int(Save.data.stats.best_run), score)
+	Save.save()
+
+func _back_to_map() -> void:
+	map.open()
+	state = S.MENU
 
 func _right() -> float:
 	var vs := get_viewport_rect().size
@@ -307,7 +348,22 @@ func _portrait_hud() -> void:
 
 func _over(R: float) -> void:
 	var f := ThemeDB.fallback_font
-	draw_string(f, Vector2(R / 2 - 140, 150), "KNOCKED OUT!", HORIZONTAL_ALIGNMENT_LEFT, -1, 44, Color("ff4757"))
-	draw_string(f, Vector2(R / 2 - 60, 185), "Score %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
-	_btn(Rect2(R / 2 - 110, 215, 220, 50), "AGAIN", Color("2ecc71"), start_run, 24)
-	_btn(Rect2(R / 2 - 110, 275, 220, 40), "MENU", Color("636e72"), func(): state = S.MENU, 18)
+	var title := "LEVEL CLEAR!" if won else "KNOCKED OUT!"
+	var col := Color("2ecc71") if won else Color("ff4757")
+	draw_string(f, Vector2(R / 2 - 150, 145), title, HORIZONTAL_ALIGNMENT_LEFT, -1, 40, col)
+	draw_string(f, Vector2(R / 2 - 60, 178), "Score %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color.WHITE)
+	if won:
+		for i in 3:
+			draw_circle(Vector2(R / 2 - 24 + i * 24, 202), 8, Color("ffd32a") if i < run_stars else Color(1, 1, 1, 0.18))
+	var nxt: Dictionary = {}
+	if run_level != "" and won:
+		nxt = map.next_node(run_level)
+	if won and not nxt.is_empty():
+		var nid := str(nxt.get("id", ""))
+		var ntarget := int(nxt.get("target", 0))
+		_btn(Rect2(R / 2 - 110, 224, 220, 44), "NEXT", Color("2ecc71"), func(): start_run(nid, ntarget), 22)
+		_btn(Rect2(R / 2 - 110, 276, 106, 36), "AGAIN", Color("0984e3"), func(): start_run(run_level, run_target), 16)
+		_btn(Rect2(R / 2 - 4, 276, 106, 36), "MAP", Color("636e72"), _back_to_map, 16)
+	else:
+		_btn(Rect2(R / 2 - 110, 236, 220, 48), "AGAIN", Color("2ecc71"), func(): start_run(run_level, run_target), 22)
+		_btn(Rect2(R / 2 - 110, 292, 220, 34), "MAP", Color("636e72"), _back_to_map, 16)
