@@ -1,0 +1,176 @@
+{
+ "acts": [
+  [
+   {
+    "title": "I · THE FIESTA",
+    "text": "Every year, the village of Valle Chiquito throws the Fiesta del Sol, lit by the legendary Golden Sombrero.",
+    "cs": "c_fiesta"
+   },
+   {
+    "title": "II · THE THEFT",
+    "text": "One night, a shadow rose over the rooftops. El Gran Globo, the balloon baron nobody ever invited, stole the Sombrero.",
+    "cs": "c_theft"
+   },
+   {
+    "title": "III · THE FALL",
+    "text": "His army of mustachioed balls rained down. The guitars fell silent. The fiesta was over.",
+    "cs": "c_fall"
+   },
+   {
+    "title": "IV · THE HERO",
+    "text": "Only one rider dared to answer: Hula Vaquero, and his abuela's enchanted hula hoop.",
+    "cs": "c_hero"
+   },
+   {
+    "title": "V · THE CLIMB",
+    "text": "Through clouds, storms and stars he rode, up to the Fiesta Galaxy, where El Gran Globo waits.",
+    "cs": "c_climb"
+   },
+   {
+    "title": "VI · THE MISSION",
+    "text": "Pop the balls. Collect gold and relics. Take back the Sombrero, and bring back the fiesta!",
+    "cs": "c_mission"
+   }
+  ],
+  [
+   {
+    "title": "ACT 2 · THE PURSUIT",
+    "text": "Capitán Globito crashes, but his scouts flee with the festival lanterns in a convoy of speeding cars. Our hero grabs the keys to a certain taco on wheels. Hit the gas!"
+   },
+   {
+    "title": "ACT 2 · THE PURSUIT",
+    "text": "The taco car roars onto the road, nitro blazing. Plan each move, lasso the lantern trucks one by one, and nobody steals the Fiesta!"
+   }
+  ],
+  [
+   {
+    "title": "ACT 3 · THE RECKONING",
+    "text": "The chase ends in the Plaza de los Piñatas on the Night of the Dead. The Baron's curse wakes the skeleton piñatas. Our hero trades the wheel for a machete."
+   }
+  ],
+  [
+   {
+    "title": "ACT 4 · THE FINAL SHOWDOWN",
+    "text": "Beyond the clouds hangs the Baron's armada, circling the Fiesta Galaxy. At its heart floats El Gran Globo, wearing the Golden Sombrero."
+   },
+   {
+    "title": "ACT 4 · THE FINAL SHOWDOWN",
+    "text": "\"You cannot pop me, little vaquero!\" he roars. Our hero tips his hat and spins his hoop. \"Watch me.\""
+   }
+  ]
+ ],
+ "end": [
+  {
+   "title": "THE LAST POP",
+   "text": "\"Impossible!\" the Baron shrieks as the hoop spins faster than he can bear. Cracks race across his armor, and the whole sky holds its breath."
+  },
+  {
+   "title": "THE FALL",
+   "text": "With one final pop, El Gran Globo screams, wheezes, and spirals out of the sky like a sad, deflating balloon. His glow gutters out. The stolen sombrero tumbles free."
+  },
+  {
+   "title": "THE ARMADA FALLS",
+   "text": "Without their master, the Baron's armada loses its glow. One by one the dark airships sputter, burn, and sink into the clouds below."
+  },
+  {
+   "title": "THE GOLDEN SOMBRERO",
+   "text": "The Golden Sombrero glides gently down. Our hero leaps, snatches it from the air, and the whole Fiesta Galaxy lights up in gold."
+  },
+  {
+   "title": "THE LONG WAY DOWN",
+   "text": "Our hero hops on a passing cloud and rides it down through the storm, past the thunderheads, toward the tiny lights of home."
+  },
+  {
+   "title": "THE ROAD HOME",
+   "text": "Back on solid ground, the taco car is waiting. The hero hits the gas for one last cruise down the canyon road toward Valle Chiquito."
+  },
+  {
+   "title": "THE PLAZA AWAKENS",
+   "text": "In the Plaza de los Piñatas the spirits have lost their curse. They rise from the stones, tip their marigold crowns, and rattle in rhythm."
+  },
+  {
+   "title": "ABUELA'S CANTINA",
+   "text": "Abuela throws open the cantina doors. Free tamales for everyone, and a toast to the hero. Nobody notices the candle by the window gutter, or the cold that slips in beside it."
+  },
+  {
+   "title": "THE BAND TUNES UP",
+   "text": "Trumpets, guitars and one very enthusiastic accordion. The whole valley sings along, even the dead, who have so much to say tonight. The hero conducts. Nobody counts how many hands are clapping."
+  },
+  {
+   "title": "THE LANTERNS GO OUT",
+   "text": "The villagers hang every lantern back on its string. Then, one by one, the flames gutter and die. The music thins out. Somewhere, very close, someone is laughing."
+  },
+  {
+   "title": "THE LAST BOTTLE",
+   "text": "While the hero laughs, a shape leans over the toasting pitcher. A cold green wisp slides in. The Baron never wanted peace. If he cannot have the sombrero, he will have the valley."
+  },
+  {
+   "title": "THE TOAST",
+   "text": "Abuela raises her cup. \"To the hero!\" they cry. The wine tastes of ash. One by one, the villagers lower their cups, and do not rise again."
+  },
+  {
+   "title": "THE CHASE",
+   "text": "The hero runs. Past the shuttered cantina, down the street where the lanterns lie broken. The laughter is always one step ahead, and it is wearing his own sombrero."
+  },
+  {
+   "title": "THE REVENGE",
+   "text": "The Baron never fell. His anger just rose with the smoke. The spirits in the plaza were his all along, and the ones who loved the hero most are the first to be taken."
+  },
+  {
+   "title": "THE OFFER",
+   "text": "A white flame burns in the Baron's ghostly hands. \"Let it turn your skin white,\" he whispers, \"and every spirit is saved. Refuse, and they stay ghosts forever.\" The villagers kneel and beg the hero to say yes."
+  },
+  {
+   "title": "THE REFUSAL",
+   "text": "Hula Vaquero looks at the white flame and does not even blink. \"No.\" A refused flame cannot be kept: it turns on its maker. The Baron's ghost shrieks and burns away to nothing. The hero laughs. \"From the very first pop,\" he says. \"I knew.\""
+  },
+  {
+   "title": "THE LEDGER",
+   "text": "The night he rode out to fight the Baron, the hero found an old book in Abuela's cellar. A balloon never stays dead, it said. He rises again as a ghost, offers the one who beat him a white flame, and a refused flame returns to its maker."
+  },
+  {
+   "title": "THE PROMISE",
+   "text": "The night he rode out to challenge the Baron, he made the village promise one thing: when he came home, they would throw a fiesta, and every single one of them would be in the plaza. Bait works best when it is alive."
+  },
+  {
+   "title": "THE LAUGH",
+   "text": "He laughs, and the plaza has no one left to laugh back. It was never about the village. He never cared about it, and he is glad they are gone."
+  },
+  {
+   "title": "THE PLUNDER",
+   "text": "While Abuela's spirit wails, the hero empties the cantina till, pockets the tips, and kicks the guacamole across the floor. Free tamales for the hero. Nothing for anyone else, ever again."
+  },
+  {
+   "title": "THE PORTRAIT",
+   "text": "He rips down the fiesta banners, the lanterns, and the names of the dead, and hangs a giant portrait of himself in their place. The ghosts are told to hold the ropes."
+  },
+  {
+   "title": "THE CROWNING",
+   "text": "He climbs the pedestal where the Golden Sombrero used to shine and sits down on it like a throne. The ghosts bow. There is no Baron left to bow to, so they bow to him."
+  },
+  {
+   "title": "THE REHEARSAL",
+   "text": "Every night the ghosts cheer on his signal, in perfect time, forever. Any that cheer late are ground to dust. He is adored at last, and he has made sure of it."
+  },
+  {
+   "title": "THE WHY",
+   "text": "The smallest spirit finds the courage to ask him why. He sits on the ledge, still smiling, and the smoke loosens something underneath."
+  },
+  {
+   "title": "THE TANGENT",
+   "text": "The smoke carries him far from the question. He talks to the stars, to his own hand, and to the voices he swears are whispering. Then he reaches into his pocket."
+  },
+  {
+   "title": "THE STASH",
+   "text": "A baggie, a rolled bill, one hard snort. The whispers swell into a chant, and the only thing they are cheering for is the hat."
+  },
+  {
+   "title": "THE BREAKING",
+   "text": "Wired and wide awake, he finally says the quiet part out loud. The smallest spirit only needs one sentence to break him."
+  },
+  {
+   "title": "THE FIESTA NEVER ENDS",
+   "text": "Years pass. The Fiesta del Sol has never once stopped, and no one is allowed to leave. Hula Vaquero is the most loved man in the valley, because there is no one left who can say otherwise. THE END."
+  }
+ ]
+}

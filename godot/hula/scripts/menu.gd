@@ -273,27 +273,16 @@ func settings(ox: float) -> void:
 			ctxt(r.position.x + r.size.x - 62, r.position.y + 33, lab, 13, Color("ffd32a"))
 	button(Rect2(ox + 14, 260, 302, 48), "CHECK FOR UPDATES", Color("3498db"), func(): c.snd.sfx("click"); Updater.check_for_updates(), 14)
 
-# ---------- secret song test (tap the RUNS pill on the title three times) ----------
-const TRACKS := ["menu", "game", "victory", "map", "race", "rpg", "boss", "finale", "unease", "dirge", "wrath", "vigil", "omen", "c_fiesta", "c_theft", "c_fall", "c_hero", "c_climb", "c_mission", "c_pursuit1", "c_pursuit2", "c_reckon", "c_armada", "c_showdown"]
+# ---------- secret theater / song test (tap the RUNS pill on the title three times) ----------
 const SONGS := ["menu", "game", "victory"]
 const CUTSCENES := ["c_fiesta", "c_theft", "c_fall", "c_hero", "c_climb", "c_mission", "c_pursuit1", "c_pursuit2", "c_reckon", "c_armada", "c_showdown"]
-const STORY_ORDER := ["c_fiesta", "c_theft", "c_fall", "c_hero", "c_climb", "c_mission", "c_pursuit1", "c_pursuit2", "c_reckon", "c_armada", "c_showdown"]
 const READY := SONGS + CUTSCENES
 const TNAME := {"menu": "TITLE THEME", "game": "SHOOTER SONG", "victory": "VICTORY FANFARE"}
-# Theater acts: maps act name to cutscene IDs
-const ACTS := {
-	"act1": ["c_fiesta"],
-	"act2": ["c_theft", "c_fall"],
-	"act3": ["c_hero", "c_climb", "c_mission"],
-	"act4": ["c_pursuit1", "c_pursuit2", "c_reckon", "c_armada", "c_showdown"]
-}
-const ACT_NAMES := {"act1": "Act 1 Intro", "act2": "Act 2 Intro", "act3": "Act 3 Intro", "act4": "Act 4 Intro"}
+const STORY_LABELS := ["ACT 1 INTRO", "ACT 2 INTRO", "ACT 3 INTRO", "ACT 4 INTRO"]
+var theater: Dictionary = {}       # data_theater.json: "acts" (4 intro lists) + "end" (28 ending scenes)
+var scene_text: Dictionary = {}    # scene title -> narration caption
 var cutscene_data: Dictionary = {}
-var all_scenes: Array = []  # All scenes in display order
 var song_test_tab := 0  # 0=THEATER, 1=SONGS, 2=MUSICAL
-var story_mode_active := false
-var story_idx := 0
-var theater_scroll := 0
 
 func _secret_tap() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
@@ -301,169 +290,88 @@ func _secret_tap() -> void:
 	sec_t = now
 	if sec_taps >= 3:
 		sec_taps = 0; song_test = ""; sec_msg = ""; song_test_tab = 0; c.state = c.S.SECRET; c.snd.sfx("level")
-		_load_cutscene_data()
+		_load_theater_data()
 
-func _load_cutscene_data() -> void:
-	var f := FileAccess.open("res://data/data_cutscenes.json", FileAccess.READ)
-	if f:
-		var j = JSON.parse_string(f.get_as_text())
-		if j and j.has("data"):
-			# Build a list of scenes for each cutscene
-			for cs_id in j["data"]:
-				var scenes: Dictionary = j["data"][cs_id]
-				var scene_list: Array = scenes.keys()
-				cutscene_data[cs_id] = {"id": cs_id, "scenes": scene_list, "first_scene": scene_list[0] if scene_list.size() > 0 else ""}
-			# Build all_scenes in story order
-			all_scenes.clear()
-			for cs_id in STORY_ORDER:
-				if cutscene_data.has(cs_id):
-					for scene_name in cutscene_data[cs_id]["scenes"]:
-						all_scenes.append({"cutscene": cs_id, "scene": scene_name, "name": scene_name})
+func _read_json(path: String) -> Dictionary:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null: return {}
+	var j = JSON.parse_string(f.get_as_text())
+	return j if j is Dictionary else {}
 
-func _start_story_mode() -> void:
-	story_mode_active = true
-	story_idx = 0
-	_play_story_cutscene()
+func _load_theater_data() -> void:
+	theater = _read_json("res://data/data_theater.json")
+	scene_text.clear()
+	for list in theater.get("acts", []) + [theater.get("end", [])]:
+		for item in list:
+			scene_text[item["title"]] = item.get("text", "")
+	var cs: Dictionary = _read_json("res://data/data_cutscenes.json").get("data", {})
+	cutscene_data.clear()
+	for cs_id in cs:
+		var names: Array = (cs[cs_id] as Dictionary).keys()
+		cutscene_data[cs_id] = {"id": cs_id, "scenes": names, "first_scene": names[0] if names.size() > 0 else ""}
 
-func _stop_story_mode() -> void:
-	story_mode_active = false
-	story_idx = 0
-
-func _play_story_cutscene() -> void:
-	if not story_mode_active or story_idx >= STORY_ORDER.size():
-		story_mode_active = false
-		return
-	var cs_id: String = STORY_ORDER[story_idx]
-	song_test = cs_id
-	c.snd.stop_music()
-	c.snd.start_music(cs_id)
+func _play_list(items: Array, from := 0) -> void:
+	if items.is_empty() or not c.cutscene: return
+	song_test = ""; sec_msg = ""
 	c.snd.sfx("click")
-	if cutscene_data.has(cs_id):
-		var first_scene = cutscene_data[cs_id].get("first_scene", "")
-		if first_scene and c.cutscene:
-			c.cutscene.start(c.snd, c.hero3d, c, cs_id, first_scene)
+	c.cutscene.play_list(c.snd, c.hero3d, c, items, from)
 
-func update_story_mode() -> void:
-	if not story_mode_active or story_idx >= STORY_ORDER.size():
-		return
-	# Check if current cutscene has finished
-	if c.cutscene and not c.cutscene.is_active():
-		story_idx += 1
-		if story_idx < STORY_ORDER.size():
-			_play_story_cutscene()
-		else:
-			story_mode_active = false
-
-func _play_act_intro(act_name: String) -> void:
-	# Play the first cutscene of an act
-	if ACTS.has(act_name):
-		var cs_ids: Array = ACTS[act_name]
-		if cs_ids.size() > 0:
-			var cs_id = cs_ids[0]
-			song_test = act_name
-			c.snd.stop_music()
-			c.snd.start_music(cs_id)
-			c.snd.sfx("click")
-			if cutscene_data.has(cs_id):
-				var first_scene = cutscene_data[cs_id].get("first_scene", "")
-				if first_scene and c.cutscene:
-					c.cutscene.start(c.snd, c.hero3d, c, cs_id, first_scene)
-
-func _play_single_scene(cutscene_id: String, scene_name: String) -> void:
-	song_test = scene_name
-	c.snd.stop_music()
-	c.snd.start_music(cutscene_id)
-	c.snd.sfx("click")
-	if c.cutscene:
-		c.cutscene.start(c.snd, c.hero3d, c, cutscene_id, scene_name)
+func _play_cutscene_id(cs_id: String) -> void:
+	var items: Array = []
+	for scene_name in cutscene_data.get(cs_id, {}).get("scenes", []):
+		items.append({"title": scene_name, "text": scene_text.get(scene_name, ""), "cs": cs_id})
+	_play_list(items, 0)
 
 func secret(R: float, t: float) -> void:
 	var ox := (R - 640.0) / 2.0
 	c.draw_rect(Rect2(0, 0, R, 360), Color(0.03, 0.03, 0.08, 0.85))
+	if theater.is_empty(): _load_theater_data()
 
-	# Title
-	txt(Vector2(ox + 150, 15), "CUTSCENE THEATER", 20, Color.WHITE)
-
-	# Tabs
+	txt(Vector2(ox + 14, 26), "CUTSCENE THEATER", 18, Color.WHITE)
 	for tab_idx in 3:
-		var tab_name: String = ["THEATER", "SONGS", "MUSICAL"][tab_idx]
-		var tr := Rect2(ox + 26 + tab_idx * 158, 32, 148, 28)
+		var tr := Rect2(ox + 270 + tab_idx * 124, 8, 118, 24)
 		var is_on := tab_idx == song_test_tab
 		var idx := tab_idx
-		var captured_tab_idx = idx
-		c.buttons.append([tr, func(): song_test_tab = captured_tab_idx; song_test = ""; sec_msg = ""; story_mode_active = false; theater_scroll = 0])
-		var tab_col := Color("16a085") if is_on else Color("2d3a6b")
-		rrect(tr, tab_col, 8)
-		rframe(tr, Color("ffd32a") if is_on else Color(1, 1, 1, 0.4), 2.0 if is_on else 1.0, 8)
-		ctxt(tr.position.x + tr.size.x / 2.0, tr.position.y + 14, tab_name, 14, Color.WHITE)
+		c.buttons.append([tr, func(): song_test_tab = idx; song_test = ""; sec_msg = ""])
+		rrect(tr, Color("16a085") if is_on else Color("2d3a6b"), 7)
+		rframe(tr, Color("ffd32a") if is_on else Color(1, 1, 1, 0.4), 2.0 if is_on else 1.0, 7)
+		ctxt(tr.position.x + tr.size.x / 2.0, tr.position.y + 17, ["THEATER", "SONGS", "MUSICAL"][tab_idx], 12, Color.WHITE)
 
 	if song_test_tab == 0:
-		# Theater mode - ensure data is loaded
-		if all_scenes.is_empty():
-			_load_cutscene_data()
-		txt(Vector2(ox + 20, 70), "pick a scene to watch", 12, Color("ffd32a"))
-
-		# Story intros
-		txt(Vector2(ox + 20, 90), "STORY", 11, Color("ffd32a"))
-		var acts := ["act1", "act2", "act3", "act4"]
-		for act_i in 4:
-			var act_name = acts[act_i]
-			var r := Rect2(ox + 20 + (act_i % 2) * 310, 105 + (act_i / 2) * 36, 300, 32)
-			var captured_act = act_name
-			c.buttons.append([r, func(): _play_act_intro(captured_act)])
-			rrect(r, Color("6366ff"), 6)
-			rframe(r, Color("ffd32a") if song_test == act_name else Color(1, 1, 1, 0.3), 1.5, 6)
-			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 16, ACT_NAMES[act_name], 11, Color.WHITE)
-
-		# Full ending button
-		var full_btn := Rect2(ox + 20, 180, 300, 32)
-		c.buttons.append([full_btn, func(): _start_story_mode()])
-		rrect(full_btn, Color("c0392b"), 6)
-		rframe(full_btn, Color("ffd32a") if story_mode_active else Color(1, 1, 1, 0.3), 1.5, 6)
-		ctxt(full_btn.position.x + full_btn.size.x / 2.0, full_btn.position.y + 16, "FULL ENDING", 11, Color.WHITE)
-
-		# Ending scenes - show 8 at a time
-		txt(Vector2(ox + 20, 220), "ENDING SCENES (plays on from there)", 10, Color("ffd32a"))
-		for i in mini(all_scenes.size(), 8):
-			var scene_data = all_scenes[i]
-			var scene_id = scene_data["cutscene"]
-			var scene_name = scene_data["scene"]
-			var captured_id = scene_id
-			var captured_name = scene_name
-			var r := Rect2(ox + 20 + (i % 2) * 310, 236 + (i / 2) * 32, 300, 30)
-			c.buttons.append([r, func(): _play_single_scene(captured_id, captured_name)])
-			var ready := READY.has(scene_id)
-			var col := Color("2d3a6b") if ready else Color(0.18, 0.2, 0.3, 0.7)
-			rrect(r, col, 6)
-			rframe(r, Color("ffd32a") if song_test == scene_name else Color(1, 1, 1, 0.3 if ready else 0.15), 1.5, 6)
-			var label := "%d. %s" % [i + 1, scene_name]
-			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 15, label, 10, Color.WHITE if ready else Color(1, 1, 1, 0.4))
+		txt(Vector2(ox + 14, 50), "pick a scene to watch", 12, Color("ffd32a"))
+		txt(Vector2(ox + 14, 70), "STORY", 11, Color("ffd32a"))
+		var acts: Array = theater.get("acts", [])
+		var end_list: Array = theater.get("end", [])
+		for i in 5:
+			var r := Rect2(ox + 14 + i * 124, 76, 120, 26)
+			var is_end := i == 4
+			var list: Array = end_list if is_end else (acts[i] if i < acts.size() else [])
+			c.buttons.append([r, func(): _play_list(list, 0)])
+			rrect(r, Color("c0392b") if is_end else Color("6c5ce7"), 7); rframe(r, Color(1, 1, 1, 0.35), 1.2, 7)
+			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 17, "FULL ENDING" if is_end else STORY_LABELS[i], 11, Color.WHITE)
+		txt(Vector2(ox + 14, 120), "ENDING SCENES (plays on from there)", 11, Color("ffd32a"))
+		for i in end_list.size():
+			var r := Rect2(ox + 14 + (i % 4) * 156, 126 + (i / 4) * 26, 152, 23)
+			var from := i
+			c.buttons.append([r, func(): _play_list(end_list, from)])
+			rrect(r, Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.2, 6)
+			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 16, "%d. %s" % [i + 1, end_list[i]["title"]], 9, Color.WHITE)
 	else:
-		# SONGS or MUSICAL tabs
-		var tracks_to_show := SONGS if song_test_tab == 1 else CUTSCENES
+		var msg: String = ("now playing: " + TNAME.get(song_test, song_test)) if song_test != "" else (sec_msg if sec_msg != "" else "pick a track to hear it")
+		txt(Vector2(ox + 14, 50), msg, 12, Color("ffd32a"))
+		var tracks_to_show: Array = SONGS if song_test_tab == 1 else CUTSCENES
 		for i in tracks_to_show.size():
-			var k: String = tracks_to_show[i]
-			var track := k
-			var captured_track = track
+			var track: String = tracks_to_show[i]
 			var r := Rect2(ox + 14 + (i % 4) * 153, 70 + (i / 4) * 40, 150, 36)
-			var ready := READY.has(k)
-			var on := k == song_test
-			var col := Color("16a085") if on else (Color("2d3a6b") if ready else Color(0.18, 0.2, 0.3, 0.7))
+			var on := track == song_test
 			c.buttons.append([r, func():
-				if ready:
-					song_test = captured_track; c.snd.stop_music(); c.snd.start_music(captured_track); c.snd.sfx("click")
-					if captured_track.begins_with("c_") and cutscene_data.has(captured_track):
-						var first_scene = cutscene_data[captured_track].get("first_scene", "")
-						if first_scene and c.cutscene:
-							c.cutscene.start(c.snd, c.hero3d, c, captured_track, first_scene)
+				if song_test_tab == 1:
+					song_test = track; c.snd.stop_music(); c.snd.start_music(track); c.snd.sfx("click")
 				else:
-					sec_msg = captured_track + " isn't in the new version yet"])
-			rrect(r, col, 7); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3 if ready else 0.15), 2.0 if on else 1.2, 7)
-			var label: String = TNAME.get(k, cutscene_data.get(k, {}).get("name", k.to_upper()))
-			ctxt(r.position.x + r.size.x / 2.0, r.position.y + (21 if not ready else 16), label, 11, Color.WHITE if ready else Color(1, 1, 1, 0.4))
-			if ready:
-				var sub_text: String = "with vocals" if k == "victory" else (cutscene_data.get(k, {}).get("desc", "ready") if k.begins_with("c_") else "ready")
-				ctxt(r.position.x + r.size.x / 2.0, r.position.y + 30, sub_text, 9, Color(1, 1, 1, 0.55))
+					_play_cutscene_id(track)])
+			rrect(r, Color("16a085") if on else Color("2d3a6b"), 7); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3), 2.0 if on else 1.2, 7)
+			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 16, TNAME.get(track, track.to_upper()), 11, Color.WHITE)
+			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 30, "with vocals" if track == "victory" else "ready", 9, Color(1, 1, 1, 0.55))
 
-	button(Rect2(ox + 14, 314, 164, 38), "STOP", Color("c0392b"), func(): _stop_story_mode(); song_test = ""; c.snd.stop_music(), 16)
-	button(Rect2(ox + 190, 314, 164, 38), "BACK", Color("6c5ce7"), func(): _stop_story_mode(); song_test = ""; c.snd.stop_music(); c.state = c.S.MENU, 16)
+	button(Rect2(ox + 14, 314, 164, 38), "STOP", Color("c0392b"), func(): song_test = ""; c.snd.stop_music(), 16)
+	button(Rect2(ox + 190, 314, 164, 38), "BACK", Color("6c5ce7"), func(): song_test = ""; c.snd.stop_music(); c.state = c.S.MENU, 16)

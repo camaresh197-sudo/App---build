@@ -50,7 +50,7 @@ func _input(e: InputEvent) -> void:
 		if e.pressed:
 			# Skip cutscene on tap
 			if cutscene and cutscene.is_active():
-				cutscene.skip()
+				cutscene.handle_tap(pos)
 				get_tree().root.set_input_as_handled()
 				return
 			for b in buttons:
@@ -94,7 +94,6 @@ func _process(dt: float) -> void:
 	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
 	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
 	if cutscene: cutscene.update(dt)
-	if state == S.SECRET and menu: menu.update_story_mode()
 	# confirm as soon as the game is really up. a long wait turns "opened it for a second to check" into a failed start.
 	if not _confirmed and Time.get_ticks_msec() > 2000:
 		_confirmed = true; Updater.confirm_good()
@@ -182,7 +181,8 @@ func _draw() -> void:
 		_hero(Vector2(FW / 2, 160), t)
 		if not (cutscene and cutscene.is_active()):
 			menu.secret(R, t)
-		_below(R, Color(0.03, 0.03, 0.08, 0.85)); _portrait_hud()
+		_below(R, Color(0.03, 0.03, 0.08, 0.85))
+		if menu.song_test_tab != 0: _portrait_hud()   # the theater grid uses that corner
 	elif state == S.MENU:
 		if menu.in_hub:
 			menu.hub(R, t, Callable(self, "_hero")); _below(R, Color(0.03, 0.03, 0.08, 0.8))
