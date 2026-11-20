@@ -31,6 +31,7 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
 - Check before pushing: `godot --headless --path godot/hula --quit-after 120 -- --smoke` and look for `SCRIPT ERROR` (Godot 4.6.3).
 - The updater mounts packs from `user://.../packs` over `res://`. When testing locally, delete that `packs` folder or you test old code.
+- `shotter` face/sheet/map modes need a real renderer. Run them with the windowed binary; `--headless` never resolves the viewport texture and the process hangs (kill it, don't wait).
 - Narration-only cutscene scenes have no entry in `data_cutscenes.json`; their text lives in `data_theater.json`.
 
 ## World map plan (Greg → Wren, 2026-11-20)

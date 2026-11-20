@@ -94,6 +94,7 @@ Format: `main.tscn -- <output> <frames> [mode] [args]`
 | `mix sfx` | `- 1 sfx coin,click,hit` | SFX levels |
 | `secret` | `- 1 victory [voxonly]` | Jump to song ± vocals |
 | `face` | `face.png 1 face 3.2` | Face pose + GLB export |
+| `map` | `out.png 6 map [act] [node]` | World map still (optional act/node, e.g. a locked one) |
 
 Add `seed=NNN` anywhere for repeatable audio/poses.
 
