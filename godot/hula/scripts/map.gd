@@ -1,7 +1,7 @@
 extends RefCounted
 # World map screen: 4 acts x 5 nodes laid over the endless run. Reads data_map.json and
-# Save.data.levels (id -> stars). Milestone 2 is read-only: it shows the chain and launches
-# a run, but does not award stars yet (that is the run-goal slice).
+# Save.data.levels (id -> stars). Shows the chain, launches a run with its target, and
+# draws the stars main.gd writes on a win.
 const Save = preload("res://scripts/save.gd")
 const DATA := "res://data/data_map.json"
 var c: Node2D
