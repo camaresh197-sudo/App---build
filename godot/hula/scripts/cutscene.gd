@@ -52,13 +52,15 @@ func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: St
 	display_text = ""
 	display_speaker = ""
 
-	# Start cutscene music if audio file exists
+	# Try to start cutscene audio if file exists
 	if snd and config_data.has(cutscene_id):
 		var cs_config = config_data[cutscene_id]
 		for scene_cfg in cs_config.get("scenes", []):
 			if scene_cfg.has("id") and scene_cfg["id"] == scene_name:
 				if scene_cfg.has("audio_file"):
-					snd.play_cutscene_audio(scene_cfg["audio_file"])
+					var audio_path = scene_cfg["audio_file"]
+					if ResourceLoader.exists(audio_path):
+						snd.play_cutscene_audio(audio_path)
 				break
 
 	# Load events for this scene
@@ -135,8 +137,8 @@ func draw(canvas: CanvasItem) -> void:
 	if not active or display_text == "":
 		return
 
-	# Background overlay
-	canvas.draw_rect(Rect2(0, 0, 772, 360), Color(0, 0, 0, 0.5))
+	# Background overlay - darker for visibility
+	canvas.draw_rect(Rect2(0, 0, 772, 360), Color(0, 0, 0, 0.65))
 
 	var speaker_colors = {
 		"baron": Color("#ff6a5a"),
@@ -179,12 +181,12 @@ func _draw_speaker(canvas: CanvasItem, font: Font, col: Color) -> void:
 	var scale_x = 772.0 / 320.0
 	x = int(x * scale_x)
 
-	var radius := 20.0
+	var radius := 32.0
 	canvas.draw_circle(Vector2(x, y), radius, col)
-	canvas.draw_circle(Vector2(x, y), radius - 2, Color(0, 0, 0, 0.7))
+	canvas.draw_circle(Vector2(x, y), radius - 3, Color(0, 0, 0, 0.8))
 	var label = display_speaker.substr(0, 3).to_upper()
-	var text_size = font.get_string_size(label, -1, -1, 10)
-	canvas.draw_string(font, Vector2(x - text_size.x / 2, y - 4), label, -1, -1, 10, Color.WHITE)
+	var text_size = font.get_string_size(label, -1, -1, 14)
+	canvas.draw_string(font, Vector2(x - text_size.x / 2, y - 7), label, -1, -1, 14, col)
 
 func is_active() -> bool:
 	return active
