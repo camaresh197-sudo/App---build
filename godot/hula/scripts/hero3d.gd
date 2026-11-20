@@ -510,8 +510,8 @@ const EYE_Z := 0.0725
 const EYE_R := 0.0235
 const TOOTH_U := 6            # upper teeth in the visible row
 const TOOTH_L := 6            # lower teeth (only shown when the mouth is really open)
-const TOOTH_H := 0.0085       # tooth height
-const TOOTH_D := 0.005        # tooth depth (front to back)
+const TOOTH_H := 0.0105       # tooth height (was 0.0085: the row read as a white strip)
+const TOOTH_D := 0.0045       # tooth depth (front to back)
 # The mouth is posed, not drawn: the jaw is a bone, and the parts that belong to it (lower lip, chin, tongue, its corner
 # knots) hang off it. JAW_P is the hinge in head space and JAW_OPEN the angle at mo = 1, picked so the lower lip drops the
 # same 0.03 the old per-part translation used to, so the mouth reads the same but the opening now comes from one bone.
@@ -716,7 +716,8 @@ func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, bl
 	# mouth: dark cavity, two rows of separate teeth (laid along the mouth arc every frame), upper and lower lip
 	# rows (shaped every frame), smile-line dimples
 	put(_fb("mouth_cav", head, Vector3(0, -0.068 + MOUTH_DY, 0.083)), sphere(0.03), mouth_m); fr.cav = b("mouth_cav")
-	var tbox := BoxMesh.new(); tbox.size = Vector3.ONE
+	var tbox := CylinderMesh.new()
+	tbox.top_radius = 0.5; tbox.bottom_radius = 0.5; tbox.height = 1.0; tbox.radial_segments = 10; tbox.rings = 1
 	fr.tooth_u = []; fr.tooth_l = []
 	for i in TOOTH_U:
 		put(_fb("tooth_u_%d" % i, head, Vector3(0, -0.0625 + MOUTH_DY, 0.0925)), tbox, teeth_m)
@@ -1098,7 +1099,7 @@ func _apply_face() -> void:
 	var show := maxf(_pose_v("tt") * 0.9, mo * 1.2)
 	var showk := clampf(show, 0.0, 1.0)
 	var t_on := show > 0.18
-	var spanw := w * 0.64
+	var spanw := w * 0.58
 	var tth := minf(TOOTH_H * (0.88 + 0.12 * showk), h_win * 0.75)      # the upper row fills most of the opening
 	var tth_l := minf(TOOTH_H * (0.88 + 0.12 * showk), h_win * 0.5)     # the lower row takes the rest, just behind it
 	for k in TOOTH_U:
