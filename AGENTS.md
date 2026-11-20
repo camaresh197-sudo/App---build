@@ -2,6 +2,8 @@
 
 Godot 4.6 game: dancing vaquero (desktop/Android/web). ~7 GDScript files + 12 tools + Blender rig + Python audio.
 
+**Working with another agent? Read `HANDOFF.md` first (file claims, log, build gotchas).**
+
 ## Quick lookup by task
 
 | Task | Files | Doc |
