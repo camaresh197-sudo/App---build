@@ -2,14 +2,15 @@
 """Generate voice lines with Piper TTS, ready for WORLD processing.
 
 Usage:
-    python piper_gen.py --text "Hello world" [--output out.wav] [--voice en_US-male-medium]
-    python piper_gen.py --text "Line 1" --text "Line 2" --prefix vox_
+    python piper_gen.py --text "Hello world" [--output out.wav] [--voice en_US-male-medium] [--model-dir ./models]
+    python piper_gen.py --text "Line 1" --text "Line 2" --prefix vox_ [--model-dir ./models]
 
 Options:
     --text TEXT         Text to synthesize (repeatable)
     --output PATH       Output WAV file (default: stdout)
     --voice VOICE       Piper voice model (default: en_US-male-medium)
     --prefix PREFIX     Prefix for batch output files (auto-numbered)
+    --model-dir DIR     Directory with downloaded .onnx/.json model files
     --list-voices       Show available voices and exit
 """
 
@@ -44,20 +45,29 @@ def list_voices():
         print(f"  {voice_id:30} {desc}")
 
 
-def synthesize(text, voice_name="en_US-male-medium", output_file=None):
+def synthesize(text, voice_name="en_US-male-medium", output_file=None, model_dir=None):
     """Synthesize text with Piper TTS.
 
     Args:
         text: Text to synthesize
         voice_name: Piper voice model ID
         output_file: Path to write WAV, or None for bytes
+        model_dir: Directory containing .onnx/.json model files
 
     Returns:
         WAV bytes or None if written to file
     """
-    voice = PiperVoice.load(voice_name, use_cuda=False)
+    if model_dir:
+        # Load from local model files
+        model_path = Path(model_dir) / f"{voice_name}.onnx"
+        config_path = Path(model_dir) / f"{voice_name}.json"
+        if not model_path.exists() or not config_path.exists():
+            raise FileNotFoundError(f"Model files not found in {model_dir}: {voice_name}.onnx/.json")
+        voice = PiperVoice.load(str(model_path), config_path=str(config_path), use_cuda=False)
+    else:
+        # Try to load from installed models
+        voice = PiperVoice.load(voice_name, use_cuda=False)
 
-    # Piper returns (audio_data, sample_rate)
     wav_file = io.BytesIO()
     voice.synthesize(text, wav_file)
     wav_file.seek(0)
@@ -80,6 +90,7 @@ def main():
     parser.add_argument("--output", help="Output WAV file")
     parser.add_argument("--voice", default="en_US-male-medium", help="Piper voice model")
     parser.add_argument("--prefix", help="Prefix for batch output (auto-numbered)")
+    parser.add_argument("--model-dir", help="Directory with .onnx/.json model files")
     parser.add_argument("--list-voices", action="store_true", help="Show available voices")
 
     args = parser.parse_args()
@@ -98,7 +109,7 @@ def main():
         for i, text in enumerate(args.text):
             output_path = f"{args.prefix}{i:02d}.wav"
             print(f"Generating: {output_path}", file=sys.stderr)
-            synthesize(text, args.voice, output_path)
+            synthesize(text, args.voice, output_path, args.model_dir)
         print(f"Generated {len(args.text)} files with prefix '{args.prefix}'", file=sys.stderr)
         return 0
 
@@ -110,11 +121,10 @@ def main():
     text = args.text[0]
     if args.output:
         print(f"Generating: {args.output}", file=sys.stderr)
-        synthesize(text, args.voice, args.output)
+        synthesize(text, args.voice, args.output, args.model_dir)
         print(f"Wrote {args.output}", file=sys.stderr)
     else:
-        # Write to stdout
-        wav_bytes = synthesize(text, args.voice)
+        wav_bytes = synthesize(text, args.voice, model_dir=args.model_dir)
         sys.stdout.buffer.write(wav_bytes)
 
     return 0
