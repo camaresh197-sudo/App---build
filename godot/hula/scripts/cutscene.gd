@@ -21,6 +21,7 @@ var fallback_timing := false  # use wall-clock if music stops
 
 var scene_bg: Node2D        # background/scene rendering node
 var scene_config: Dictionary = {}  # loaded cutscene config
+var scene_gen: SceneGenerator  # procedural background generator
 
 func _ready() -> void:
 	_load_scene_config()
@@ -40,6 +41,10 @@ func _setup_scene_bg() -> void:
 	scene_bg.position = Vector2.ZERO
 	add_child(scene_bg)
 	move_child(scene_bg, 0)
+
+	scene_gen = SceneGenerator.new()
+	add_child(scene_gen)
+	move_child(scene_gen, 0)
 
 func _apply_scene_config(cutscene_id: String, scene_name: String) -> void:
 	if not scene_config.has(cutscene_id):
@@ -90,6 +95,11 @@ func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: St
 	# Clear previous scene
 	for child in scene_bg.get_children():
 		child.queue_free()
+
+	# Generate procedural background
+	if scene_gen:
+		scene_gen.queue_redraw()
+		scene_gen.generate_background(cutscene_id)
 
 	# Apply scene configuration
 	_apply_scene_config(cutscene_id, scene_name)

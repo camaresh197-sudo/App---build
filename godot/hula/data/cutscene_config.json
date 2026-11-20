@@ -1,78 +1,353 @@
 {
   "cutscenes": {
     "c_fiesta": {
-      "name": "FIESTA",
+      "name": "CONFETTI",
       "scenes": [
         {
-          "id": "THE FIESTA NEVER ENDS",
-          "audio_file": "res://audio/cutscene_fiesta.ogg",
-          "background": "res://art/scene_fiesta.webp",
-          "bg_color": "#1a0a1f",
-          "light_color": "#ffb366",
+          "id": "THE LAST POP",
+          "audio_file": "res://audio/cutscene_c_fiesta.ogg",
           "particles": {
             "type": "confetti",
-            "count": 80,
+            "count": 100,
             "lifetime": 4.0,
-            "velocity_min": 50,
-            "velocity_max": 200
-          }
+            "velocity_min": 80,
+            "velocity_max": 200,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 2
+        },
+        {
+          "id": "THE LEDGER",
+          "audio_file": "res://audio/cutscene_c_fiesta.ogg",
+          "particles": {
+            "type": "confetti",
+            "count": 100,
+            "lifetime": 4.0,
+            "velocity_min": 80,
+            "velocity_max": 200,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 1
+        },
+        {
+          "id": "THE FIESTA NEVER ENDS",
+          "audio_file": "res://audio/cutscene_c_fiesta.ogg",
+          "particles": {
+            "type": "confetti",
+            "count": 100,
+            "lifetime": 4.0,
+            "velocity_min": 80,
+            "velocity_max": 200,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 2
         }
       ]
     },
     "c_theft": {
-      "name": "THEFT",
+      "name": "SMOKE",
       "scenes": [
         {
           "id": "THE PROMISE",
-          "audio_file": "res://audio/cutscene_theft.ogg",
-          "background": "res://art/scene_theft.webp",
-          "bg_color": "#0a1a2f",
-          "light_color": "#66ccff",
+          "audio_file": "res://audio/cutscene_c_theft.ogg",
           "particles": {
             "type": "smoke",
-            "count": 30,
-            "lifetime": 3.0,
+            "count": 40,
+            "lifetime": 3.5,
             "velocity_min": 20,
-            "velocity_max": 80
-          }
+            "velocity_max": 60,
+            "color": "#666666"
+          },
+          "dialogue_events": 2
+        },
+        {
+          "id": "THE LANTERNS GO OUT",
+          "audio_file": "res://audio/cutscene_c_theft.ogg",
+          "particles": {
+            "type": "smoke",
+            "count": 40,
+            "lifetime": 3.5,
+            "velocity_min": 20,
+            "velocity_max": 60,
+            "color": "#666666"
+          },
+          "dialogue_events": 1
+        },
+        {
+          "id": "THE LAST BOTTLE",
+          "audio_file": "res://audio/cutscene_c_theft.ogg",
+          "particles": {
+            "type": "smoke",
+            "count": 40,
+            "lifetime": 3.5,
+            "velocity_min": 20,
+            "velocity_max": 60,
+            "color": "#666666"
+          },
+          "dialogue_events": 1
+        },
+        {
+          "id": "THE TOAST",
+          "audio_file": "res://audio/cutscene_c_theft.ogg",
+          "particles": {
+            "type": "smoke",
+            "count": 40,
+            "lifetime": 3.5,
+            "velocity_min": 20,
+            "velocity_max": 60,
+            "color": "#666666"
+          },
+          "dialogue_events": 2
         }
       ]
     },
-    "c_fall": {
-      "name": "FALL",
-      "scenes": []
-    },
     "c_hero": {
-      "name": "HERO",
-      "scenes": []
-    },
-    "c_climb": {
-      "name": "CLIMB",
-      "scenes": []
-    },
-    "c_mission": {
-      "name": "MISSION",
-      "scenes": []
+      "name": "SPARKLES",
+      "scenes": [
+        {
+          "id": "THE GOLDEN SOMBRERO",
+          "audio_file": "res://audio/cutscene_c_hero.ogg",
+          "particles": {
+            "type": "sparkles",
+            "count": 80,
+            "lifetime": 2.5,
+            "velocity_min": 50,
+            "velocity_max": 150,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 1
+        },
+        {
+          "id": "THE PLAZA AWAKENS",
+          "audio_file": "res://audio/cutscene_c_hero.ogg",
+          "particles": {
+            "type": "sparkles",
+            "count": 80,
+            "lifetime": 2.5,
+            "velocity_min": 50,
+            "velocity_max": 150,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 1
+        },
+        {
+          "id": "ABUELA'S CANTINA",
+          "audio_file": "res://audio/cutscene_c_hero.ogg",
+          "particles": {
+            "type": "sparkles",
+            "count": 80,
+            "lifetime": 2.5,
+            "velocity_min": 50,
+            "velocity_max": 150,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 2
+        },
+        {
+          "id": "THE BAND TUNES UP",
+          "audio_file": "res://audio/cutscene_c_hero.ogg",
+          "particles": {
+            "type": "sparkles",
+            "count": 80,
+            "lifetime": 2.5,
+            "velocity_min": 50,
+            "velocity_max": 150,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 1
+        },
+        {
+          "id": "THE REVENGE",
+          "audio_file": "res://audio/cutscene_c_hero.ogg",
+          "particles": {
+            "type": "sparkles",
+            "count": 80,
+            "lifetime": 2.5,
+            "velocity_min": 50,
+            "velocity_max": 150,
+            "color": "#ffd700"
+          },
+          "dialogue_events": 1
+        }
+      ]
     },
     "c_pursuit1": {
-      "name": "PURSUIT 1",
-      "scenes": []
+      "name": "SPEED_LINES",
+      "scenes": [
+        {
+          "id": "THE CHASE",
+          "audio_file": "res://audio/cutscene_c_pursuit1.ogg",
+          "particles": {
+            "type": "speed_lines",
+            "count": 20,
+            "lifetime": 1.5,
+            "velocity_min": 200,
+            "velocity_max": 400,
+            "color": "#ffffff"
+          },
+          "dialogue_events": 2
+        },
+        {
+          "id": "THE TANGENT",
+          "audio_file": "res://audio/cutscene_c_pursuit1.ogg",
+          "particles": {
+            "type": "speed_lines",
+            "count": 20,
+            "lifetime": 1.5,
+            "velocity_min": 200,
+            "velocity_max": 400,
+            "color": "#ffffff"
+          },
+          "dialogue_events": 2
+        }
+      ]
+    },
+    "c_climb": {
+      "name": "DUST",
+      "scenes": [
+        {
+          "id": "THE OFFER",
+          "audio_file": "res://audio/cutscene_c_climb.ogg",
+          "particles": {
+            "type": "dust",
+            "count": 30,
+            "lifetime": 2.0,
+            "velocity_min": 30,
+            "velocity_max": 80,
+            "color": "#cc9966"
+          },
+          "dialogue_events": 3
+        },
+        {
+          "id": "THE REFUSAL",
+          "audio_file": "res://audio/cutscene_c_climb.ogg",
+          "particles": {
+            "type": "dust",
+            "count": 30,
+            "lifetime": 2.0,
+            "velocity_min": 30,
+            "velocity_max": 80,
+            "color": "#cc9966"
+          },
+          "dialogue_events": 2
+        }
+      ]
+    },
+    "c_mission": {
+      "name": "NONE",
+      "scenes": [
+        {
+          "id": "THE LAUGH",
+          "audio_file": "res://audio/cutscene_c_mission.ogg",
+          "particles": {
+            "type": "none",
+            "count": 0,
+            "lifetime": 1.0,
+            "velocity_min": 0,
+            "velocity_max": 0,
+            "color": "#ffffff"
+          },
+          "dialogue_events": 2
+        },
+        {
+          "id": "THE REHEARSAL",
+          "audio_file": "res://audio/cutscene_c_mission.ogg",
+          "particles": {
+            "type": "none",
+            "count": 0,
+            "lifetime": 1.0,
+            "velocity_min": 0,
+            "velocity_max": 0,
+            "color": "#ffffff"
+          },
+          "dialogue_events": 3
+        }
+      ]
     },
     "c_pursuit2": {
-      "name": "PURSUIT 2",
-      "scenes": []
-    },
-    "c_reckon": {
-      "name": "RECKON",
-      "scenes": []
+      "name": "SPEED_LINES",
+      "scenes": [
+        {
+          "id": "THE PLUNDER",
+          "audio_file": "res://audio/cutscene_c_pursuit2.ogg",
+          "particles": {
+            "type": "speed_lines",
+            "count": 20,
+            "lifetime": 1.5,
+            "velocity_min": 200,
+            "velocity_max": 400,
+            "color": "#ff6666"
+          },
+          "dialogue_events": 2
+        },
+        {
+          "id": "THE PORTRAIT",
+          "audio_file": "res://audio/cutscene_c_pursuit2.ogg",
+          "particles": {
+            "type": "speed_lines",
+            "count": 20,
+            "lifetime": 1.5,
+            "velocity_min": 200,
+            "velocity_max": 400,
+            "color": "#ff6666"
+          },
+          "dialogue_events": 2
+        }
+      ]
     },
     "c_armada": {
-      "name": "ARMADA",
-      "scenes": []
+      "name": "EXPLOSIONS",
+      "scenes": [
+        {
+          "id": "THE CROWNING",
+          "audio_file": "res://audio/cutscene_c_armada.ogg",
+          "particles": {
+            "type": "explosions",
+            "count": 60,
+            "lifetime": 3.0,
+            "velocity_min": 100,
+            "velocity_max": 250,
+            "color": "#ff9900"
+          },
+          "dialogue_events": 2
+        }
+      ]
+    },
+    "c_reckon": {
+      "name": "NONE",
+      "scenes": [
+        {
+          "id": "THE WHY",
+          "audio_file": "res://audio/cutscene_c_reckon.ogg",
+          "particles": {
+            "type": "none",
+            "count": 0,
+            "lifetime": 1.0,
+            "velocity_min": 0,
+            "velocity_max": 0,
+            "color": "#ffffff"
+          },
+          "dialogue_events": 2
+        }
+      ]
     },
     "c_showdown": {
-      "name": "SHOWDOWN",
-      "scenes": []
+      "name": "EXPLOSIONS",
+      "scenes": [
+        {
+          "id": "THE BREAKING",
+          "audio_file": "res://audio/cutscene_c_showdown.ogg",
+          "particles": {
+            "type": "explosions",
+            "count": 50,
+            "lifetime": 2.5,
+            "velocity_min": 120,
+            "velocity_max": 280,
+            "color": "#ff3333"
+          },
+          "dialogue_events": 14
+        }
+      ]
     }
   }
 }
