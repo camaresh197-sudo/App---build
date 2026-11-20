@@ -137,8 +137,15 @@ func draw(canvas: CanvasItem) -> void:
 	if not active or display_text == "":
 		return
 
-	# Background overlay - darker for visibility
-	canvas.draw_rect(Rect2(0, 0, 772, 360), Color(0, 0, 0, 0.65))
+	# Background overlay with gradient
+	# Top part darker, bottom part lighter so dialogue box stands out
+	var top_color = Color(0.1, 0.05, 0.15, 0.8)
+	var bot_color = Color(0.05, 0.03, 0.1, 0.9)
+	canvas.draw_set_transform(Vector2.ZERO)
+	for i in 360:
+		var t = float(i) / 360.0
+		var col = top_color.lerp(bot_color, t)
+		canvas.draw_line(Vector2(0, i), Vector2(772, i), col)
 
 	var speaker_colors = {
 		"baron": Color("#ff6a5a"),
@@ -182,8 +189,12 @@ func _draw_speaker(canvas: CanvasItem, font: Font, col: Color) -> void:
 	x = int(x * scale_x)
 
 	var radius := 32.0
+	# Outer glow
+	canvas.draw_circle(Vector2(x, y), radius + 6, Color(col.r, col.g, col.b, 0.3))
+	# Main circle
 	canvas.draw_circle(Vector2(x, y), radius, col)
-	canvas.draw_circle(Vector2(x, y), radius - 3, Color(0, 0, 0, 0.8))
+	# Inner dark circle
+	canvas.draw_circle(Vector2(x, y), radius - 3, Color(0, 0, 0, 0.9))
 	var label = display_speaker.substr(0, 3).to_upper()
 	var text_size = font.get_string_size(label, -1, -1, 14)
 	canvas.draw_string(font, Vector2(x - text_size.x / 2, y - 7), label, -1, -1, 14, col)
