@@ -49,13 +49,18 @@ func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: St
 		events = []
 
 func _advance_event() -> void:
-	if cur_event_idx >= events.size():
+	if not events or events.is_empty() or cur_event_idx >= events.size():
 		active = false
 		display_text = ""
 		display_speaker = ""
+		current_event = {}
 		return
 
 	current_event = events[cur_event_idx]
+	if not current_event or current_event.is_empty():
+		active = false
+		return
+
 	event_time = 0.0
 	cur_event_idx += 1
 
@@ -84,12 +89,12 @@ func update(dt: float) -> void:
 	# If there's a gap, use it as the event duration
 	if current_event.has("gap"):
 		var gap_beats = float(current_event.get("gap", 0))
-		var gap_secs = gap_beats * beat_sec
+		var gap_secs = maxf(0.1, gap_beats * beat_sec)
 		if event_time >= gap_secs:
 			should_advance = true
 	else:
-		# Default: show for 2 beats
-		var default_secs = 2.0 * beat_sec
+		# Default: show for 2 beats (min 0.5s)
+		var default_secs = maxf(0.5, 2.0 * beat_sec)
 		if event_time >= default_secs:
 			should_advance = true
 
