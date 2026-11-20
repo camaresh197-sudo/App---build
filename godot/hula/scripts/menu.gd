@@ -271,6 +271,7 @@ func settings(ox: float) -> void:
 			txt(Vector2(r.position.x + r.size.x - 26, r.position.y + 34), "›", 22, Color("7d86ad"))
 			var lab: String = ("%d%%" % (v * 10)) if kind == "vol" else ["Low", "Normal", "High"][v]
 			ctxt(r.position.x + r.size.x - 62, r.position.y + 33, lab, 13, Color("ffd32a"))
+	button(Rect2(ox + 14, 260, 302, 48), "CHECK FOR UPDATES", Color("3498db"), func(): c.snd.sfx("click"); Updater.check_for_updates(), 14)
 
 # ---------- secret song test (tap the RUNS pill on the title three times) ----------
 const TRACKS := ["menu", "game", "victory", "map", "race", "rpg", "boss", "finale", "unease", "dirge", "wrath", "vigil", "omen", "c_fiesta", "c_theft", "c_fall", "c_hero", "c_climb", "c_mission", "c_pursuit1", "c_pursuit2", "c_reckon", "c_armada", "c_showdown"]
