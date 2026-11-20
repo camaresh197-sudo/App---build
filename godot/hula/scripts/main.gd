@@ -48,8 +48,10 @@ func _input(e: InputEvent) -> void:
 	if e is InputEventScreenTouch:
 		var pos := _to_field(e.position)
 		if e.pressed:
-			# Skip button clicks during cutscenes
+			# Skip cutscene on tap
 			if cutscene and cutscene.is_active():
+				cutscene.skip()
+				get_tree().root.set_input_as_handled()
 				return
 			for b in buttons:
 				if (b[0] as Rect2).has_point(pos):

@@ -176,6 +176,23 @@ func sfx(n: String, vol := 1.0) -> void:
 	elif n == "hurt": play("impact", {"v": g, "trim": 1.0, "rate": 1.2, "bus": "SFX"})
 	else: play("sfx_" + n, {"v": g, "trim": 1.0, "rate": 0.94 + randf() * 0.12, "bus": "SFX"})
 
+# ---------- cutscene audio ----------
+var cutscene_player: AudioStreamPlayer = null
+
+func play_cutscene_audio(audio_path: String) -> void:
+	if not have or not ResourceLoader.exists(audio_path):
+		return
+	if cutscene_player == null:
+		cutscene_player = AudioStreamPlayer.new()
+		add_child(cutscene_player)
+		cutscene_player.bus = "Music"
+	cutscene_player.stream = load(audio_path)
+	cutscene_player.play()
+
+func stop_cutscene_audio() -> void:
+	if cutscene_player and cutscene_player.playing:
+		cutscene_player.stop()
+
 # ---------- music ----------
 # the musical beat, so the dance can lock to the tune. tempo table derived from the step constants above:
 # a bar is steps-per-bar slots; a beat is the musical pulse, bar / beats-per-bar.
