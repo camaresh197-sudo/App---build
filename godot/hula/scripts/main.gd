@@ -94,6 +94,7 @@ func _process(dt: float) -> void:
 	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
 	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
 	if cutscene: cutscene.update(dt)
+	if state == S.SECRET and menu: menu.update_story_mode()
 	# confirm as soon as the game is really up. a long wait turns "opened it for a second to check" into a failed start.
 	if not _confirmed and Time.get_ticks_msec() > 2000:
 		_confirmed = true; Updater.confirm_good()
