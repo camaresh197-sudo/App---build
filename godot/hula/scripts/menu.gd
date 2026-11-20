@@ -333,7 +333,7 @@ func _play_story_cutscene() -> void:
 	if not story_mode_active or story_idx >= STORY_ORDER.size():
 		story_mode_active = false
 		return
-	var cs_id := STORY_ORDER[story_idx]
+	var cs_id: String = STORY_ORDER[story_idx]
 	song_test = cs_id
 	c.snd.stop_music()
 	c.snd.start_music(cs_id)
