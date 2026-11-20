@@ -65,35 +65,96 @@ func _ready() -> void:
 	have = ResourceLoader.exists("res://audio/kick.ogg")
 
 func _buses() -> void:
-	for nm in ["Music", "SFX", "Vox", "VoxGrunt", "Cutscene"]:
+	# Create all buses if they don't exist
+	var bus_names = ["Music", "SFX", "Vox", "VoxGrunt", "Cutscene", "Ambient", "UI"]
+	for nm in bus_names:
 		if AudioServer.get_bus_index(nm) < 0:
 			AudioServer.add_bus(); var i := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(i, nm); AudioServer.set_bus_send(i, "Master")
-	var vb := AudioServer.get_bus_index("Vox")
-	if AudioServer.get_bus_effect_count(vb) == 0:
-		# catch only the loudest peaks (the clips are already compressed per line), so VOX_GAIN stays predictable
-		var vc := AudioEffectCompressor.new(); vc.threshold = -10.0; vc.ratio = 1.5; vc.attack_us = 12000.0; vc.release_ms = 180.0; vc.gain = 0.0; AudioServer.add_bus_effect(vb, vc)
-		# a little room so the ensemble reads as a choir, but still short enough that held words do not echo
-		var vr := AudioEffectReverb.new(); vr.room_size = 0.5; vr.damping = 0.6; vr.wet = 0.15; vr.dry = 1.0; AudioServer.add_bus_effect(vb, vr)
-	var gb := AudioServer.get_bus_index("VoxGrunt")
-	if AudioServer.get_bus_effect_count(gb) == 0:
-		# The grunts get their own bus: the Vox compressor only sees the sung line, so a grunt can no
-		# longer duck the vocal. The compressor here keeps the grunt's peaks off the master limiter.
-		var gc := AudioEffectCompressor.new(); gc.threshold = -4.0; gc.ratio = 2.5; gc.attack_us = 5000.0; gc.release_ms = 120.0; gc.gain = 0.0; AudioServer.add_bus_effect(gb, gc)
-		# the same room as Vox, a little drier, so the ad-lib still belongs to the performance
-		var gr := AudioEffectReverb.new(); gr.room_size = 0.5; gr.damping = 0.6; gr.wet = 0.10; gr.dry = 1.0; AudioServer.add_bus_effect(gb, gr)
+
+	# MASTER BUS - Limiting and metering
+	if AudioServer.get_bus_effect_count(0) == 0:
+		if ClassDB.class_exists("AudioEffectHardLimiter"):
+			var lim = ClassDB.instantiate("AudioEffectHardLimiter")
+			lim.pre_gain_db = 0.0
+			lim.ceiling_db = -0.5
+			AudioServer.add_bus_effect(0, lim)
+
+	# MUSIC BUS - Warm room with musical reverb
 	var mb := AudioServer.get_bus_index("Music")
 	if AudioServer.get_bus_effect_count(mb) == 0:
-		var rv := AudioEffectReverb.new(); rv.room_size = 0.55; rv.damping = 0.5; rv.wet = 0.16; rv.dry = 0.9; rv.hipass = 0.1
-		AudioServer.add_bus_effect(mb, rv)
+		# Compression for consistent levels
+		var mc := AudioEffectCompressor.new()
+		mc.threshold = -20.0; mc.ratio = 2.0; mc.attack_us = 50000.0; mc.release_ms = 300.0; mc.gain = 0.0
+		AudioServer.add_bus_effect(mb, mc)
+		# Warm reverb for musical ambience
+		var mr := AudioEffectReverb.new()
+		mr.room_size = 0.55; mr.damping = 0.5; mr.wet = 0.16; mr.dry = 0.9; mr.hipass = 0.1
+		AudioServer.add_bus_effect(mb, mr)
+
+	# SFX BUS - Punchy compression, dry
+	var sb := AudioServer.get_bus_index("SFX")
+	if AudioServer.get_bus_effect_count(sb) == 0:
+		# Heavy compression to tame transients
+		var sc := AudioEffectCompressor.new()
+		sc.threshold = -15.0; sc.ratio = 4.0; sc.attack_us = 10000.0; sc.release_ms = 200.0; sc.gain = 2.0
+		AudioServer.add_bus_effect(sb, sc)
+
+	# VOICE/VOX BUS - Clean dialogue with controlled room
+	var vb := AudioServer.get_bus_index("Vox")
+	if AudioServer.get_bus_effect_count(vb) == 0:
+		# Tight compression for consistent vocal levels
+		var vc := AudioEffectCompressor.new()
+		vc.threshold = -10.0; vc.ratio = 1.5; vc.attack_us = 12000.0; vc.release_ms = 180.0; vc.gain = 0.0
+		AudioServer.add_bus_effect(vb, vc)
+		# Light room for vocal ensemble
+		var vr := AudioEffectReverb.new()
+		vr.room_size = 0.5; vr.damping = 0.6; vr.wet = 0.15; vr.dry = 1.0
+		AudioServer.add_bus_effect(vb, vr)
+
+	# VOCAL GRUNT BUS - Separate compression for ad-libs
+	var gb := AudioServer.get_bus_index("VoxGrunt")
+	if AudioServer.get_bus_effect_count(gb) == 0:
+		# Keep grunts from hitting limiter
+		var gc := AudioEffectCompressor.new()
+		gc.threshold = -4.0; gc.ratio = 2.5; gc.attack_us = 5000.0; gc.release_ms = 120.0; gc.gain = 0.0
+		AudioServer.add_bus_effect(gb, gc)
+		# Matching room as Vox
+		var gr := AudioEffectReverb.new()
+		gr.room_size = 0.5; gr.damping = 0.6; gr.wet = 0.10; gr.dry = 1.0
+		AudioServer.add_bus_effect(gb, gr)
+
+	# CUTSCENE BUS - Clean, tight, minimal effects
 	var csb := AudioServer.get_bus_index("Cutscene")
 	if AudioServer.get_bus_effect_count(csb) == 0:
-		# Minimal reverb for cutscenes (less echo than music)
-		var cr := AudioEffectReverb.new(); cr.room_size = 0.2; cr.damping = 0.8; cr.wet = 0.05; cr.dry = 0.95; cr.hipass = 0.3
+		# Compression for consistent dialogue levels
+		var csc := AudioEffectCompressor.new()
+		csc.threshold = -18.0; csc.ratio = 3.0; csc.attack_us = 15000.0; csc.release_ms = 200.0; csc.gain = 1.0
+		AudioServer.add_bus_effect(csb, csc)
+		# Minimal reverb for clarity
+		var cr := AudioEffectReverb.new()
+		cr.room_size = 0.2; cr.damping = 0.8; cr.wet = 0.05; cr.dry = 0.95; cr.hipass = 0.3
 		AudioServer.add_bus_effect(csb, cr)
-	if AudioServer.get_bus_effect_count(0) == 0 and ClassDB.class_exists("AudioEffectHardLimiter"):
-		var lim = ClassDB.instantiate("AudioEffectHardLimiter"); lim.pre_gain_db = 0.0; lim.ceiling_db = -0.5
-		AudioServer.add_bus_effect(0, lim)
+
+	# AMBIENT BUS - Warm, wide atmosphere
+	var ab := AudioServer.get_bus_index("Ambient")
+	if AudioServer.get_bus_effect_count(ab) == 0:
+		# Light compression
+		var ac := AudioEffectCompressor.new()
+		ac.threshold = -25.0; ac.ratio = 1.2; ac.attack_us = 100000.0; ac.release_ms = 500.0; ac.gain = 0.0
+		AudioServer.add_bus_effect(ab, ac)
+		# Large room for ambient
+		var ar := AudioEffectReverb.new()
+		ar.room_size = 0.8; ar.damping = 0.3; ar.wet = 0.25; ar.dry = 0.85; ar.hipass = 0.05
+		AudioServer.add_bus_effect(ab, ar)
+
+	# UI BUS - Tight, dry, punchy
+	var ub := AudioServer.get_bus_index("UI")
+	if AudioServer.get_bus_effect_count(ub) == 0:
+		# Heavy compression for consistent UI feedback
+		var uc := AudioEffectCompressor.new()
+		uc.threshold = -12.0; uc.ratio = 5.0; uc.attack_us = 5000.0; uc.release_ms = 100.0; uc.gain = 2.0
+		AudioServer.add_bus_effect(ub, uc)
 
 func set_volumes(music10: int, sfx10: int) -> void:
 	vol_music = music10 / 10.0; vol_sfx = sfx10 / 10.0
