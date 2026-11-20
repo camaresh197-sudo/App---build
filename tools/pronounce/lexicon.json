@@ -12,6 +12,30 @@
         ],
         "note": "matched to reference recording's 'am' (F1 ~280, F2 ~1640 Hz)",
         "date": "2026-11-20"
+      },
+      {
+        "ipa": [
+          "ɛ",
+          "m"
+        ],
+        "note": "matched to the second recording's 'am' (F1 ~480, F2 ~2200 Hz)",
+        "date": "2026-11-20"
+      },
+      {
+        "ipa": [
+          "ʌ",
+          "m"
+        ],
+        "note": "closest of the candidates to the second recording's 'am' (F1 ~480, F2 ~2200 Hz; best was F1 409 / F2 1939)",
+        "date": "2026-11-20"
+      },
+      {
+        "ipa": [
+          "ɪ",
+          "m"
+        ],
+        "note": "best in-clip match to the second recording's 'am' (F1 425 / F2 1707 Hz vs 480 / 2201); ɛ m and ʌ m measured further away",
+        "date": "2026-11-20"
       }
     ]
   }
