@@ -119,6 +119,11 @@ func _process(dt: float) -> void:
 		status_t -= dt
 		if status_t <= 0.0: status = ""
 
+func check_for_updates() -> void:
+	if _test: return
+	_say("Checking for updates...", 15.0)
+	_fetch_manifest()
+
 func _fetch_manifest() -> void:
 	_cur = {"kind": "manifest"}
 	if _http.request(MANIFEST_URL) != OK: _cur = {}
