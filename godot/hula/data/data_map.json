@@ -1,0 +1,45 @@
+{
+  "stars": [70, 40],
+  "acts": [
+    {
+      "name": "FIESTA",
+      "nodes": [
+        {"id": "a1_1", "name": "Plaza Caliente", "target": 150, "spawn": 1.0, "speed": 1.0},
+        {"id": "a1_2", "name": "Sombrero Row", "target": 170, "spawn": 1.03, "speed": 1.02},
+        {"id": "a1_3", "name": "Mariachi Mile", "target": 190, "spawn": 1.06, "speed": 1.03},
+        {"id": "a1_4", "name": "Cantina Curve", "target": 210, "spawn": 1.09, "speed": 1.05},
+        {"id": "a1_5", "name": "Bell Tower", "target": 230, "spawn": 1.13, "speed": 1.06}
+      ]
+    },
+    {
+      "name": "CANYON",
+      "nodes": [
+        {"id": "a2_1", "name": "Dust Devil", "target": 260, "spawn": 1.16, "speed": 1.08},
+        {"id": "a2_2", "name": "Mesa Run", "target": 290, "spawn": 1.19, "speed": 1.09},
+        {"id": "a2_3", "name": "Cactus Alley", "target": 325, "spawn": 1.22, "speed": 1.11},
+        {"id": "a2_4", "name": "Rattler Pass", "target": 360, "spawn": 1.25, "speed": 1.13},
+        {"id": "a2_5", "name": "Eagle Nest", "target": 405, "spawn": 1.29, "speed": 1.14}
+      ]
+    },
+    {
+      "name": "CLOUD SEA",
+      "nodes": [
+        {"id": "a3_1", "name": "Balloon Line", "target": 450, "spawn": 1.32, "speed": 1.16},
+        {"id": "a3_2", "name": "Windmill Ridge", "target": 505, "spawn": 1.35, "speed": 1.17},
+        {"id": "a3_3", "name": "Storm Front", "target": 560, "spawn": 1.38, "speed": 1.19},
+        {"id": "a3_4", "name": "Star Field", "target": 625, "spawn": 1.41, "speed": 1.21},
+        {"id": "a3_5", "name": "Moon Gate", "target": 700, "spawn": 1.45, "speed": 1.22}
+      ]
+    },
+    {
+      "name": "BARON'S SKY",
+      "nodes": [
+        {"id": "a4_1", "name": "Black Sail", "target": 780, "spawn": 1.48, "speed": 1.24},
+        {"id": "a4_2", "name": "Hail of Coins", "target": 870, "spawn": 1.51, "speed": 1.25},
+        {"id": "a4_3", "name": "Ghost Fleet", "target": 970, "spawn": 1.54, "speed": 1.27},
+        {"id": "a4_4", "name": "Baron's Hold", "target": 1080, "spawn": 1.57, "speed": 1.28},
+        {"id": "a4_5", "name": "Corona", "target": 1200, "spawn": 1.6, "speed": 1.3}
+      ]
+    }
+  ]
+}
