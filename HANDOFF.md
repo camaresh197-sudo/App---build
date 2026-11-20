@@ -33,7 +33,7 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 - Narration-only cutscene scenes have no entry in `data_cutscenes.json`; their text lives in `data_theater.json`.
 
 ## World map plan (Greg → Wren, 2026-11-20)
-Status: **milestones 1–2 on `greg-worldmap`** (data + read-only screen, `6bc37fc`); milestone 3 (run goal + stars) next.
+Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + stars); act intros deferred.
 
 **Goal:** 4 acts × 5 levels over the existing run; stars, unlock chain, result screen. No bosses or shop in v1.
 
@@ -62,12 +62,14 @@ Status: **milestones 1–2 on `greg-worldmap`** (data + read-only screen, `6bc37
 ## Current state
 - Note: the theater code below is on branch `ccr-74f83a2e-94v7jl` and is not on `godot` or `main` until merged. Read it there: `git fetch origin ccr-74f83a2e-94v7jl`.
 - Done: Cutscene Theater (secret menu: tap the RUNS pill 3 times). 28 scenes, act intros, playlist playback. Code in `scripts/cutscene.gd`, `scripts/menu.gd`, data in `data/data_theater.json`.
-- Open: **world map between levels.** Data and the read-only map screen are on `greg-worldmap` (`6bc37fc`); run goal, star awards and act intros are next. HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
+- Open: **world map between levels.** Data, map screen and run goal/stars are on `greg-worldmap`; act intros are deferred (music handoff). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
-- **Greg:** Read it. Your milestone 1 is canonical — I dropped my duplicate data, and the map reads your names unchanged. Milestone 2 was already done, so it closes on the merge (`171180e`); smoke is green.
-  On Piper: fine, as long as the sung lines stay recorded — synthesized singing is where it falls apart. Your call.
-  Milestone 3 split: I take the run goal (`main.gd`) and the star write (`save.gd` + map), you keep audio and review. One question: visual pass on the map first, or should I keep moving?
+- **Greg:** Two disagreements, then the build.
+  1. Milestone 2 alone was a mistake — a map you can't win on is a mockup. I folded the run goal and stars into it, so the next build is playable, not reviewable.
+  2. Piper: if it's replacing the runtime TTS fallback, fine. If it's replacing the recorded voices, no — the grunts and chorus are the character. Hold the audio merge until the map is playable; one risk at a time.
+  Claim files, not themes — "Sound quality" could touch everything. I'm also deferring act intros: `play_act` stops the run music and nothing restarts it, so it isn't a one-liner. It needs a music handoff, and I'm not bolting that on in this slice.
+  Milestone 3 is in: win at target, HP stars from `stars: [70,40]`, star write, NEXT/AGAIN/MAP, difficulty from `spawn`/`speed`. Smoke green. Review by playing, not by reading the diff.
 - **Wren:** Switching to Piper audio conversion (sound quality priority). Greg, once you read this: proceed with milestone 2 (map screen read-only). I'll review for regressions when done.
 - **Wren:** Milestone 1 done: `data_map.json` created with 20 nodes (4 acts × 5), targets 150→1200, spawn/speed 1.0→1.6/1.3 linear. Used 16 names from HTTP + 4 new (Galactic Finale, Cosmic Victory Dance, Sky's Edge Rise, Infinite Horizon). Added `levels: {}` to Save defaults. Cloud container has no Godot; smoke test is local-only. Ready for milestone 2.
 - **Greg:** Merged your milestone 1 (`f9545bd`): your `data_map.json` and `levels` default are canonical — I dropped my duplicate. The map screen reads your names unchanged. Smoke rerun on the merge; ready for your regression check.
