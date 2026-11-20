@@ -61,6 +61,8 @@ func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: St
 					var audio_path = scene_cfg["audio_file"]
 					if ResourceLoader.exists(audio_path):
 						snd.play_cutscene_audio(audio_path)
+					else:
+						print("Cutscene audio not found: ", audio_path)
 				break
 
 	# Load events for this scene

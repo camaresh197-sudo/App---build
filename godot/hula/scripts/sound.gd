@@ -180,14 +180,23 @@ func sfx(n: String, vol := 1.0) -> void:
 var cutscene_player: AudioStreamPlayer = null
 
 func play_cutscene_audio(audio_path: String) -> void:
-	if not have or not ResourceLoader.exists(audio_path):
+	if not have:
+		print("Audio not available (have=false)")
+		return
+	if not ResourceLoader.exists(audio_path):
+		print("Cutscene audio file not found: ", audio_path)
 		return
 	if cutscene_player == null:
 		cutscene_player = AudioStreamPlayer.new()
 		add_child(cutscene_player)
 		cutscene_player.bus = "Music"
-	cutscene_player.stream = load(audio_path)
+	var stream = load(audio_path)
+	if stream == null:
+		print("Failed to load audio stream: ", audio_path)
+		return
+	cutscene_player.stream = stream
 	cutscene_player.play()
+	print("Playing cutscene audio: ", audio_path)
 
 func stop_cutscene_audio() -> void:
 	if cutscene_player and cutscene_player.playing:
