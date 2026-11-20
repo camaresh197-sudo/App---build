@@ -390,7 +390,8 @@ func secret(R: float, t: float) -> void:
 		var tr := Rect2(ox + 26 + tab_idx * 158, 32, 148, 28)
 		var is_on := tab_idx == song_test_tab
 		var idx := tab_idx
-		c.buttons.append([tr, func(): song_test_tab = idx; song_test = ""; sec_msg = ""; story_mode_active = false; theater_scroll = 0])
+		var captured_tab_idx = idx
+		c.buttons.append([tr, func(): song_test_tab = captured_tab_idx; song_test = ""; sec_msg = ""; story_mode_active = false; theater_scroll = 0])
 		var tab_col := Color("16a085") if is_on else Color("2d3a6b")
 		rrect(tr, tab_col, 8)
 		rframe(tr, Color("ffd32a") if is_on else Color(1, 1, 1, 0.4), 2.0 if is_on else 1.0, 8)
