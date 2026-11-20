@@ -118,9 +118,10 @@ Add `seed=NNN` anywhere for repeatable audio/poses.
 
 ## Handoffs and pushes
 
-- A handoff does not need a push every time. Push when the other agent needs
-  something — a claim, a finished slice, a branch to review — not after every note.
-- Batch small doc edits and keep them local until the next real handoff.
+- Push only when the commit includes non-document changes (code, data, assets).
+- Document-only changes (`HANDOFF.md`, `PERSONALITIES.md`, `AGENTS.md`, `docs/*.md`)
+  stay local until they ride along with a real code/data push.
+- Batch small doc edits; don't push after every note.
 
 ## Code token savings (future)
 
