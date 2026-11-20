@@ -31,21 +31,29 @@ func play_dialogue(speaker: String, text: String) -> void:
 		player.play()
 		return
 
-	# Try pre-recorded file
-	var audio_path = "res://audio/voice/%s/%s.ogg" % [speaker, text.to_lower().replace(" ", "_")]
-	var audio = load(audio_path)
-	if audio:
-		voice_cache[cache_key] = audio
-		player.stream = audio
-		player.play()
+	# Try pre-recorded file (name rule must mirror tools/piper_batch.py)
+	var audio_path = "res://audio/voice/%s/%s.ogg" % [speaker, _safe_name(text)]
+	if ResourceLoader.exists(audio_path):
+		var audio = load(audio_path)
+		if audio:
+			voice_cache[cache_key] = audio
+			player.stream = audio
+			player.play()
 		return
 
 	# If TTS enabled, generate speech
 	if tts_enabled:
 		_tts_speak(speaker, text, player)
 
-func _tts_speak(speaker: String, text: String, player: AudioStreamPlayer) -> void:
-	# Placeholder for TTS implementation
+## Filename-safe version of a dialogue line: lowercase, spaces -> '_',
+## minus characters Windows filenames cannot contain. Mirrors piper_batch.py.
+func _safe_name(text: String) -> String:
+	var n := text.to_lower().replace(" ", "_")
+	for c in ["?", "*", ":", "\"", "<", ">", "|", "/", "\\"]:
+		n = n.replace(c, "")
+	return n
+
+func _tts_speak(speaker: String, text: String, player: AudioStreamPlayer) -> void:	# Placeholder for TTS implementation
 	# Could use Google Cloud TTS API, local espeak, or similar
 	push_warning("TTS not implemented: %s says '%s'" % [speaker, text])
 

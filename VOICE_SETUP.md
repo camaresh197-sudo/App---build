@@ -13,7 +13,8 @@ godot/hula/audio/voice/[speaker]/[dialogue].ogg
 
 **Dialogue filename:** 
 - Lowercase, spaces → underscores
-- Example: "Promise me" → `promise_me.ogg`
+- Characters Windows filenames can't hold (`? * : " < > | / \`) are stripped
+- Example: "Promise me" → `promise_me.ogg`, "Why? I looked up to you." → `why_i_looked_up_to_you..ogg`
 
 ## Example Structure
 
@@ -47,10 +48,13 @@ Voice lines auto-load when cutscene plays:
 
 ## Alternative: Text-to-Speech
 
-For quick testing, implement TTS in `voice_manager.gd`:
-- Google Cloud TTS API
-- Local espeak/festival
-- Other TTS service
+Piper TTS pipeline (implemented):
+- `tools/piper_batch.py` — generates every cutscene line in `data_cutscenes.json` with per-character voices
+  (hero=ryan, baron=danny-low, abuela=amy, kid=bryce pitched +25%, guitar=joe, chorus=bryce+joe layered)
+  and files them under `audio/voice/`. Run `python tools/piper_batch.py [--force]`.
+- `tools/piper_gen.py` — single-line generator (model dir: `tools/models/`, `.onnx` + `.onnx.json`).
+- `voice_manager.gd` resolves lines via `_safe_name()` (same rule as `piper_batch.py`) and plays them on the Vox bus.
+- Cutscene playback is wired in `cutscene.gd`: each line speaks when shown, and the scene waits for the voice.
 
 Enable: `voice_mgr.tts_enabled = true`
 

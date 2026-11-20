@@ -21,6 +21,7 @@ var current_audio_length := 0.0  # Duration of current audio line in seconds
 var cutscene_data: Dictionary = {}
 var config_data: Dictionary = {}
 var audio_durations: Dictionary = {}  # Cache of audio file durations
+var voice_mgr: Node                   # VoiceManager: speaks the dialogue lines
 
 # Playlist: scenes play back to back. Each item is {title, text, cs?}. text is the narration caption; cs picks the
 # music + dialogue set (looked up by title in the dialogue data when omitted).
@@ -35,6 +36,8 @@ var act_intros: Array = []      # data_theater.json "acts": 4 lists of {title, t
 
 func _ready() -> void:
 	_load_data()
+	voice_mgr = preload("res://scripts/voice_manager.gd").new()
+	add_child(voice_mgr)
 
 func _load_data() -> void:
 	# Load cutscene dialogue data
@@ -129,6 +132,14 @@ func _advance_event() -> void:
 		var text_len = display_text.length()
 		current_audio_length = maxf(1.0, text_len / 12.0)
 
+	# Speak the line with the recorded/Piper voice; never advance before it ends
+	var voice_len := 0.0
+	if voice_mgr and display_speaker != "" and display_text != "":
+		voice_mgr.play_dialogue(display_speaker, display_text)
+		voice_len = voice_mgr.get_voice_duration(display_speaker, display_text)
+	if voice_len > 0.0:
+		current_audio_length = maxf(current_audio_length, voice_len + 0.45)
+
 	# Apply expression to hero
 	if display_speaker == "hero" and display_expr != "" and hero3d:
 		hero3d.set_expr(display_expr)
@@ -185,6 +196,8 @@ func stop_all() -> void:
 	display_text = ""
 	display_speaker = ""
 	current_event = {}
+	if voice_mgr:
+		voice_mgr.stop_all_voices()
 	if snd:
 		snd.stop_cutscene_audio()
 		snd.stop_music()
@@ -202,6 +215,8 @@ func skip() -> void:
 	current_event = {}
 	current_audio_length = 0.0
 	caption_left = 0.0
+	if voice_mgr:
+		voice_mgr.stop_all_voices()
 	if snd:
 		snd.stop_cutscene_audio()
 	if not playlist.is_empty():

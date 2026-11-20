@@ -61,6 +61,9 @@ def synthesize(text, voice_name="en_US-male-medium", output_file=None, model_dir
         # Load from local model files
         model_path = Path(model_dir) / f"{voice_name}.onnx"
         config_path = Path(model_dir) / f"{voice_name}.json"
+        if not config_path.exists():
+            # Piper's standard download naming is "<voice>.onnx.json"
+            config_path = Path(model_dir) / f"{voice_name}.onnx.json"
         if not model_path.exists() or not config_path.exists():
             raise FileNotFoundError(f"Model files not found in {model_dir}: {voice_name}.onnx/.json")
         voice = PiperVoice.load(str(model_path), config_path=str(config_path), use_cuda=False)
@@ -68,16 +71,23 @@ def synthesize(text, voice_name="en_US-male-medium", output_file=None, model_dir
         # Try to load from installed models
         voice = PiperVoice.load(voice_name, use_cuda=False)
 
-    wav_file = io.BytesIO()
-    voice.synthesize(text, wav_file)
-    wav_file.seek(0)
+    # New piper-tts (>=1.3) API: synthesize() returns an iterable of AudioChunk
+    chunks = voice.synthesize(text)
+    first = next(iter(chunks), None)
+    if first is None:
+        raise RuntimeError(f"Piper produced no audio for text: {text!r}")
 
-    if output_file:
-        with open(output_file, 'wb') as f:
-            f.write(wav_file.read())
-        return None
-    else:
-        return wav_file.getvalue()
+    import wave as _wave
+    with _wave.open(str(output_file), "wb") as wav_out:
+        wav_out.setframerate(first.sample_rate)
+        wav_out.setsampwidth(first.sample_width)
+        wav_out.setnchannels(getattr(first, "sample_channels", 1))
+        chunk: Any = first
+        while chunk is not None:
+            wav_out.writeframes(chunk.audio_int16_bytes)
+            chunk = next(iter(chunks), None)
+
+    return None
 
 
 def main():
