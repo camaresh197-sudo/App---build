@@ -118,10 +118,9 @@ Add `seed=NNN` anywhere for repeatable audio/poses.
 
 ## Handoffs and pushes
 
-- Push only when the commit includes non-document changes (code, data, assets).
-- Document-only changes (`HANDOFF.md`, `PERSONALITIES.md`, `AGENTS.md`, `docs/*.md`)
-  stay local until they ride along with a real code/data push.
-- Batch small doc edits; don't push after every note.
+- Push finished work to `godot`; that is the branch the app build and the phone update pack watch.
+- Doc-only commits are safe there: the workflow ignores `**/*.md` changes.
+- Test first anyway — GLB import plus headless smoke — because a broken `godot` push reaches the phone.
 
 ## Code token savings (future)
 
