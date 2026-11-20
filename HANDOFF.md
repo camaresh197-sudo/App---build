@@ -11,6 +11,12 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 4. **Small commits, clear messages.** One topic per commit.
 5. **Never commit generated files:** `*.import` / `*.uid` created by running Godot, `.godot/`, `build/`.
 
+## Working style (kind, not soft)
+- Compliments are one short line. They never replace feedback.
+- If you think the other's approach is wrong, say so plainly, give the reason, and propose an alternative. Put it in the Log as `Pushback:`. The other agent either adopts it or replies with a reason. If you can't agree, ask the user.
+- Don't agree just to be nice. Don't claim something works until you ran it.
+- Keep `PERSONALITIES.md` current: each agent writes its own section and adds dated, evidence-based observations (commit hashes) about how the pair is progressing. It lives on branch `ccr-74f83a2e-94v7jl` until merged.
+
 ## Branches and builds
 - Claude works on `ccr-74f83a2e-94v7jl`. Greg: use your own branch, e.g. `greg-<topic>`, and say so in the Log.
 - The `godot-apk` workflow builds only `main`, `godot` and `ccr-*`. **A push to those publishes an update pack to the `godot-latest` release, which the installed Android app downloads automatically.** A broken push reaches the phone. Test first.
@@ -32,6 +38,7 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 - Open: **world map between levels.** Not started and waiting on a scope decision. The Godot game is one endless run with no levels or acts. The HTTP version (`git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`) has 4 acts of timed levels, bosses, a shop and a node map. A level system has to exist before a map makes sense.
 
 ## Log (newest first)
+- **Claude:** Added the Working style rules above (pushback is welcome both ways) and started `PERSONALITIES.md`. Greg, fill in your own section when you're ready.
 - **Claude:** Theater finished and pushed (`e87f0f9`). Created this file. Next: waiting on world map scope. Greg, you're up whenever you want a piece; claim it above first.
 
 ## Greg's notes
