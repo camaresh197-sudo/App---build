@@ -5,7 +5,9 @@ const FH := 360.0
 enum S { MENU, PLAY, OVER, SECRET }
 const Save = preload("res://scripts/save.gd")
 const Menu = preload("res://scripts/menu.gd")
+const Map = preload("res://scripts/map.gd")
 var menu
+var map
 var hero3d
 var ship_tex: Array = []
 var state := S.MENU
@@ -15,6 +17,8 @@ var player := Vector2(120, 180)
 var target := Vector2(120, 180)
 var hp := 100.0
 var score := 0
+var run_level := ""
+var run_target := 0
 var ships: Array = []
 var shots: Array = []
 var pops: Array = []
@@ -31,6 +35,7 @@ func _ready() -> void:
 	ship_tex = frames
 	Save.load_all()
 	menu = Menu.new(self)
+	map = Map.new(self)
 	hero3d = preload("res://scripts/hero3d.gd").new(); add_child(hero3d)
 	snd = preload("res://scripts/sound.gd").new(); add_child(snd)
 	cutscene = preload("res://scripts/cutscene.gd").new(); add_child(cutscene)
@@ -66,16 +71,23 @@ func _input(e: InputEvent) -> void:
 func _to_field(p: Vector2) -> Vector2:
 	return get_canvas_transform().affine_inverse() * p
 
-func start_run() -> void:
+func start_run(level_id := "", goal := 0) -> void:
+	run_level = level_id
+	run_target = goal
 	hero3d.arm_clear(); hero3d.mood("grin"); hero3d.gaze = Vector2.ZERO
 	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
 	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
 	snd.start_music()
 
+func open_map() -> void:
+	menu.close_hub()
+	map.open()
+	state = S.MENU
+
 var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
-	hero3d.portrait_on = state == S.PLAY or state == S.OVER or state == S.SECRET or (state == S.MENU and not menu.in_hub)
+	hero3d.portrait_on = state == S.PLAY or state == S.OVER or state == S.SECRET or (state == S.MENU and not menu.in_hub and not map.in_map)
 	hero3d.auto_dance = state == S.MENU or state == S.SECRET
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
 	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
@@ -184,11 +196,13 @@ func _draw() -> void:
 		_below(R, Color(0.03, 0.03, 0.08, 0.85))
 		if menu.song_test_tab != 0: _portrait_hud()   # the theater grid uses that corner
 	elif state == S.MENU:
-		if menu.in_hub:
+		if map.in_map:
+			map.draw(R, t); _below(R, Color(0.03, 0.03, 0.08, 0.92))
+		elif menu.in_hub:
 			menu.hub(R, t, Callable(self, "_hero")); _below(R, Color(0.03, 0.03, 0.08, 0.8))
 		else:
 			menu.title(R, t, Callable(self, "_hero"), ship_tex); _below(R, Color("4a2a3e"))
-		if not menu.in_hub: _portrait_hud()
+		if not menu.in_hub and not map.in_map: _portrait_hud()
 	else:
 		for s in shots: draw_rect(Rect2(s.p - Vector2(8, 2), Vector2(16, 4)), Color(1, 0.9, 0.3))
 		for sh in ships: _ship(sh)
@@ -281,6 +295,8 @@ func _hud(R: float) -> void:
 	draw_rect(Rect2(10, 8, 160 * clamp(hp / 100.0, 0, 1), 16), Color("2ecc71"))
 	draw_string(f, Vector2(14, 21), "HP %d/100" % int(max(hp, 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
 	draw_string(f, Vector2(R - 130, 24), "SCORE %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("ffd32a"))
+	if run_target > 0:
+		draw_string(f, Vector2(R - 130, 42), "TARGET %d" % run_target, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("9aa3c7"))
 
 func _portrait_hud() -> void:
 	# close-up of his face, bottom-left, so the emotions can be read

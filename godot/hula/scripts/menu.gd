@@ -111,7 +111,7 @@ func title(R: float, t: float, hero: Callable, ship_tex: Array) -> void:
 		c.draw_texture_rect(ship_tex[fi], r, false, mod)
 	# buttons column
 	var bxr := R - 250.0
-	button(Rect2(bxr, 64, 224, 60), "RIDE!", Color("2ecc71"), c.start_run, 30, "world map · 4 acts")
+	button(Rect2(bxr, 64, 224, 60), "RIDE!", Color("2ecc71"), c.open_map, 30, "world map · 4 acts")
 	button(Rect2(bxr, 136, 224, 50), "ENDLESS", Color("8e44ad"), c.start_run, 22, "no map, just fly")
 	button(Rect2(bxr, 198, 224, 50), "OPTIONS", Color("e67e22"), func(): open_hub(0), 22, "skills · wardrobe · more")
 	pill(Rect2(bxr, 262, 104, 26)); coin(Vector2(bxr + 14, 275)); txt(Vector2(bxr + 28, 280), "$ %d" % Save.data.gold, 13, Color("58d68d"))
