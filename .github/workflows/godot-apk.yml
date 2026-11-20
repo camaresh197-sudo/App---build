@@ -4,7 +4,7 @@ permissions:
 on:
   workflow_dispatch:
   push:
-    branches: [main, godot]
+    branches: [main, godot, 'ccr-*']
 jobs:
   apk:
     runs-on: ubuntu-latest
