@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main, godot]
+    paths-ignore: ['*.md', '**/*.md']   # doc-only pushes (HANDOFF.md etc.) don't build
 jobs:
   apk:
     runs-on: ubuntu-latest
