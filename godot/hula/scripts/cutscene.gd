@@ -16,9 +16,11 @@ var event_time := 0.0
 var display_text := ""
 var display_speaker := ""
 var display_expr := ""
+var current_audio_length := 0.0  # Duration of current audio line in seconds
 
 var cutscene_data: Dictionary = {}
 var config_data: Dictionary = {}
+var audio_durations: Dictionary = {}  # Cache of audio file durations
 
 func _ready() -> void:
 	_load_data()
@@ -96,6 +98,16 @@ func _advance_event() -> void:
 	display_text = current_event.get("say", "")
 	display_expr = current_event.get("ex", current_event.get("hx", ""))
 
+	# Calculate audio duration for this dialogue line
+	# Use gap if specified (in beats), otherwise estimate from text length
+	if current_event.has("gap"):
+		var beat_sec = snd.beat_secs() if snd else 0.3
+		current_audio_length = float(current_event.get("gap", 0)) * beat_sec
+	else:
+		# Estimate: ~12 characters per second for speech
+		var text_len = display_text.length()
+		current_audio_length = maxf(1.0, text_len / 12.0)
+
 	# Apply expression to hero
 	if display_speaker == "hero" and display_expr != "" and hero3d:
 		hero3d.set_expr(display_expr)
@@ -106,24 +118,11 @@ func update(dt: float) -> void:
 
 	event_time += dt
 
-	var beat_sec = snd.beat_secs()
-	if beat_sec <= 0:
-		beat_sec = 0.3  # Fallback timing
+	# Wait for current dialogue line to finish playing
+	# Using calculated audio duration ensures proper pacing
+	var wait_time = current_audio_length + 0.3  # 300ms buffer for transitions
 
-	var should_advance := false
-
-	# Use gap if specified, otherwise default duration
-	if current_event.has("gap"):
-		var gap_beats = float(current_event.get("gap", 0))
-		var gap_secs = maxf(0.1, gap_beats * beat_sec)
-		if event_time >= gap_secs:
-			should_advance = true
-	else:
-		var default_secs = maxf(0.5, 2.0 * beat_sec)
-		if event_time >= default_secs:
-			should_advance = true
-
-	if should_advance:
+	if event_time >= wait_time:
 		_advance_event()
 
 func skip() -> void:
@@ -132,6 +131,7 @@ func skip() -> void:
 		display_text = ""
 		display_speaker = ""
 		current_event = {}
+		current_audio_length = 0.0
 		if snd:
 			snd.stop_cutscene_audio()
 
