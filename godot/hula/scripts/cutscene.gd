@@ -5,6 +5,7 @@ class_name CutscenePlayer
 var snd: Node
 var hero3d: Node
 var main: Node2D
+var voice_mgr: VoiceManager
 
 var active := false
 var cur_cutscene := ""      # e.g. "c_fiesta"
@@ -24,6 +25,8 @@ var scene_config: Dictionary = {}  # loaded cutscene config
 func _ready() -> void:
 	_load_scene_config()
 	_setup_scene_bg()
+	voice_mgr = VoiceManager.new()
+	add_child(voice_mgr)
 
 func _load_scene_config() -> void:
 	var f = FileAccess.open("res://data/cutscene_config.json", FileAccess.READ)
@@ -125,6 +128,10 @@ func _advance_event() -> void:
 	display_speaker = current_event.get("who", "")
 	display_text = current_event.get("say", "")
 	display_expr = current_event.get("ex", current_event.get("hx", ""))
+
+	# Play voice line
+	if display_speaker and display_text and voice_mgr:
+		voice_mgr.play_dialogue(display_speaker, display_text)
 
 	# Apply expression to hero if it's a hero line
 	if display_speaker == "hero" and display_expr != "" and hero3d:
