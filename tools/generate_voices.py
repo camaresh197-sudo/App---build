@@ -43,7 +43,7 @@ def generate_voice_espeak(speaker: str, text: str, voice_rate: int = 150) -> boo
         }
 
         voice = voices.get(speaker, "en-us+m1")
-        cmd = ["espeak", "-v", voice, "-s", str(voice_rate), "-w", str(output_path), text]
+        cmd = ["espeak-ng", "-v", voice, "-s", str(voice_rate), "-w", str(output_path), text]
 
         result = subprocess.run(cmd, capture_output=True, timeout=5)
         if result.returncode == 0:
@@ -59,8 +59,8 @@ def generate_voice_espeak(speaker: str, text: str, voice_rate: int = 150) -> boo
         return False
 
 def main():
-    if not shutil.which("espeak"):
-        print("espeak not found. Install with: apt-get install espeak-ng")
+    if not shutil.which("espeak-ng"):
+        print("espeak-ng not found. Install with: apt-get install espeak-ng")
         return False
 
     if not shutil.which("ffmpeg"):
