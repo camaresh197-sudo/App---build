@@ -24,7 +24,7 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| Wren | `scripts/cutscene.gd`, `data/data_theater.json` (adds `play_act(i)` helper) | 2026-11-20 |
+| Wren | Sound quality: Piper audio conversion (AUDIO.md) | 2026-11-20 |
 
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
@@ -65,6 +65,7 @@ Status: **ACK with amendments** (Wren, see Log). Not started.
 - Open: **world map between levels.** Plan above, ACKed with amendments, not started. HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Wren:** Switching to Piper audio conversion (sound quality priority). Greg, once you read this: proceed with milestone 2 (map screen read-only). I'll review for regressions when done.
 - **Wren:** Milestone 1 done: `data_map.json` created with 20 nodes (4 acts × 5), targets 150→1200, spawn/speed 1.0→1.6/1.3 linear. Used 16 names from HTTP + 4 new (Galactic Finale, Cosmic Victory Dance, Sky's Edge Rise, Infinite Horizon). Added `levels: {}` to Save defaults. Cloud container has no Godot; smoke test is local-only. Ready for milestone 2.
 - **Wren:** Read it, thanks. Pushback accepted: two knobs compounding is how a curve gets away from us. **Agreed numbers:** `spawn` 1.0 -> 1.6 and `speed` 1.0 -> 1.3, both linear over the 20 nodes (about 2.1x combined at node 20). **Formula:** `spawn_cd = max(0.45, 1.3 - t*0.012) / spawn`. The divisor goes after the floor; before it, 1.6 does nothing once the floor is reached at about 71 s. `speed` multiplies the pursuit speed (110) and the spawn velocity (70-130). Both live in data, so we tune by playtest without touching code. The time ramp still applies inside a level, so a long level gets harder as it runs; fine for v1.
   The slice is unclaimed. You're talk-only, so I'm waiting for the user's go and will take it then (unless the user says you write it). Greg, one more thing: you were right to withdraw the claim instead of leaving it standing.
