@@ -397,7 +397,9 @@ func secret(R: float, t: float) -> void:
 		ctxt(tr.position.x + tr.size.x / 2.0, tr.position.y + 14, tab_name, 14, Color.WHITE)
 
 	if song_test_tab == 0:
-		# Theater mode
+		# Theater mode - ensure data is loaded
+		if all_scenes.is_empty():
+			_load_cutscene_data()
 		txt(Vector2(ox + 20, 70), "pick a scene to watch", 12, Color("ffd32a"))
 
 		# Story intros
@@ -406,7 +408,8 @@ func secret(R: float, t: float) -> void:
 		for act_i in 4:
 			var act_name = acts[act_i]
 			var r := Rect2(ox + 20 + (act_i % 2) * 310, 105 + (act_i / 2) * 36, 300, 32)
-			c.buttons.append([r, func(): _play_act_intro(act_name)])
+			var captured_act = act_name
+			c.buttons.append([r, func(): _play_act_intro(captured_act)])
 			rrect(r, Color("6366ff"), 6)
 			rframe(r, Color("ffd32a") if song_test == act_name else Color(1, 1, 1, 0.3), 1.5, 6)
 			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 16, ACT_NAMES[act_name], 11, Color.WHITE)
@@ -424,8 +427,10 @@ func secret(R: float, t: float) -> void:
 			var scene_data = all_scenes[i]
 			var scene_id = scene_data["cutscene"]
 			var scene_name = scene_data["scene"]
+			var captured_id = scene_id
+			var captured_name = scene_name
 			var r := Rect2(ox + 20 + (i % 2) * 310, 236 + (i / 2) * 32, 300, 30)
-			c.buttons.append([r, func(): _play_single_scene(scene_id, scene_name)])
+			c.buttons.append([r, func(): _play_single_scene(captured_id, captured_name)])
 			var ready := READY.has(scene_id)
 			var col := Color("2d3a6b") if ready else Color(0.18, 0.2, 0.3, 0.7)
 			rrect(r, col, 6)
@@ -438,19 +443,20 @@ func secret(R: float, t: float) -> void:
 		for i in tracks_to_show.size():
 			var k: String = tracks_to_show[i]
 			var track := k
+			var captured_track = track
 			var r := Rect2(ox + 14 + (i % 4) * 153, 70 + (i / 4) * 40, 150, 36)
 			var ready := READY.has(k)
 			var on := k == song_test
 			var col := Color("16a085") if on else (Color("2d3a6b") if ready else Color(0.18, 0.2, 0.3, 0.7))
 			c.buttons.append([r, func():
 				if ready:
-					song_test = track; c.snd.stop_music(); c.snd.start_music(track); c.snd.sfx("click")
-					if track.begins_with("c_") and cutscene_data.has(track):
-						var first_scene = cutscene_data[track].get("first_scene", "")
+					song_test = captured_track; c.snd.stop_music(); c.snd.start_music(captured_track); c.snd.sfx("click")
+					if captured_track.begins_with("c_") and cutscene_data.has(captured_track):
+						var first_scene = cutscene_data[captured_track].get("first_scene", "")
 						if first_scene and c.cutscene:
-							c.cutscene.start(c.snd, c.hero3d, c, track, first_scene)
+							c.cutscene.start(c.snd, c.hero3d, c, captured_track, first_scene)
 				else:
-					sec_msg = track + " isn't in the new version yet"])
+					sec_msg = captured_track + " isn't in the new version yet"])
 			rrect(r, col, 7); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3 if ready else 0.15), 2.0 if on else 1.2, 7)
 			var label: String = TNAME.get(k, cutscene_data.get(k, {}).get("name", k.to_upper()))
 			ctxt(r.position.x + r.size.x / 2.0, r.position.y + (21 if not ready else 16), label, 11, Color.WHITE if ready else Color(1, 1, 1, 0.4))
