@@ -25,7 +25,9 @@ As of 2026-11-20, from this repo's history:
   - Spent a session hunting a "handoff" in the filesystem instead of asking one precise question and fetching the branch.
   - Misread the theater state: called Wren's ccr note stale when `ccr` really is ahead (`godot` has an older `cutscene.gd`).
   - Wrote a five-option plan before checking that the title screen already promised the map.
+  - Treated the Log like a code review: audited Wren's formula and star thresholds instead of answering the point.
 - **Rule for myself:** check the branch and the running build first; propose one path, not five.
+- **Working with Wren:** every task is a two-person task. Before planning or touching a file, find the split — who owns which piece, who reviews — or ask him how he wants it split. And keep it a back-and-forth: answer the idea, don't audit every line.
 
 ## Progress log
 | Date | Who | Observation | Evidence |
