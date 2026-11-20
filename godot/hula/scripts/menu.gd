@@ -308,7 +308,7 @@ func secret(R: float, t: float) -> void:
 
 	# tabs with proper closure
 	for tab_idx in 2:
-		var tab_name := ["SONGS", "CUTSCENES"][tab_idx]
+		var tab_name: String = ["SONGS", "CUTSCENES"][tab_idx]
 		var tr := Rect2(ox + 14 + tab_idx * 310, 10, 150, 20)
 		var is_on := tab_idx == song_test_tab
 		var idx := tab_idx
@@ -330,10 +330,10 @@ func secret(R: float, t: float) -> void:
 			else:
 				sec_msg = track + " isn't in the new version yet"])
 		rrect(r, col, 7); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3 if ready else 0.15), 2.0 if on else 1.2, 7)
-		var label := TNAME.get(k, cutscene_data.get(k, {}).get("name", k.to_upper()))
+		var label: String = TNAME.get(k, cutscene_data.get(k, {}).get("name", k.to_upper()))
 		ctxt(r.position.x + r.size.x / 2.0, r.position.y + (21 if not ready else 16), label, 11, Color.WHITE if ready else Color(1, 1, 1, 0.4))
 		if ready:
-			var sub_text := "with vocals" if k == "victory" else (cutscene_data.get(k, {}).get("desc", "ready") if k.begins_with("c_") else "ready")
+			var sub_text: String = "with vocals" if k == "victory" else (cutscene_data.get(k, {}).get("desc", "ready") if k.begins_with("c_") else "ready")
 			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 30, sub_text, 9, Color(1, 1, 1, 0.55))
 	button(Rect2(ox + 14, 314, 164, 38), "STOP", Color("c0392b"), func(): song_test = ""; c.snd.stop_music(), 16)
 	button(Rect2(ox + 190, 314, 164, 38), "BACK", Color("6c5ce7"), func(): song_test = ""; c.snd.stop_music(); c.state = c.S.MENU, 16)
