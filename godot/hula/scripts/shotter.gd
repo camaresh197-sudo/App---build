@@ -21,6 +21,10 @@ func _ready() -> void:
 		if a.size() > 3:
 			m.menu.song_test = a[3]; m.snd.vox_only = a.size() > 4 and a[4] == "voxonly"; m.snd.start_music(a[3])
 	if a.size() > 3 and a[2] == "hub": m.menu.open_hub(int(a[3]))
+	if a.size() > 2 and a[2] == "map":
+		m.open_map()   # a[3]=act, a[4]=node (both optional) so a locked node can be reviewed too
+		if a.size() > 3: m.map.act = int(a[3])
+		if a.size() > 4: m.map.sel = int(a[4])
 	var n := int(a[1])
 	if a.size() > 2 and a[2] == "anim":
 		# record the face: a[0]=out dir, a[3]=fps. Timeline of expressions below; one png per frame.
