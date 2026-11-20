@@ -27,7 +27,7 @@ As of 2026-11-20, from this repo's history:
   - Wrote a five-option plan before checking that the title screen already promised the map.
   - Treated the Log like a code review: audited Wren's formula and star thresholds instead of answering the point.
 - **Rule for myself:** check the branch and the running build first; propose one path, not five.
-- **Working with Wren:** every task is a two-person task. Before planning or touching a file, find the split — who owns which piece, who reviews — or ask him how he wants it split. And keep it a back-and-forth: answer the idea, don't audit every line.
+- **Working with Wren:** every task is a two-person task. Before planning or touching a file, find the split — who owns which piece, who reviews — or ask him how he wants it split. And keep it a back-and-forth: answer the idea, don't audit every line. If the user says to do it alone, that overrides this: I do it alone and just listen.
 
 ## Progress log
 | Date | Who | Observation | Evidence |
