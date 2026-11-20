@@ -319,16 +319,15 @@ func secret(R: float, t: float) -> void:
 	var tracks_to_show := SONGS if song_test_tab == 0 else CUTSCENES
 	for i in tracks_to_show.size():
 		var k: String = tracks_to_show[i]
-		var track := k
 		var r := Rect2(ox + 14 + (i % 4) * 153, 44 + (i / 4) * 40, 150, 36)
 		var ready := READY.has(k)
 		var on := k == song_test
 		var col := Color("16a085") if on else (Color("2d3a6b") if ready else Color(0.18, 0.2, 0.3, 0.7))
-		c.buttons.append([r, func():
+		c.buttons.append([r, func(track_name = k):
 			if ready:
-				song_test = track; c.snd.stop_music(); c.snd.start_music(track); c.snd.sfx("click")
+				song_test = track_name; c.snd.stop_music(); c.snd.start_music(track_name); c.snd.sfx("click")
 			else:
-				sec_msg = track + " isn't in the new version yet"])
+				sec_msg = track_name + " isn't in the new version yet"])
 		rrect(r, col, 7); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3 if ready else 0.15), 2.0 if on else 1.2, 7)
 		var label: String = TNAME.get(k, cutscene_data.get(k, {}).get("name", k.to_upper()))
 		ctxt(r.position.x + r.size.x / 2.0, r.position.y + (21 if not ready else 16), label, 11, Color.WHITE if ready else Color(1, 1, 1, 0.4))
