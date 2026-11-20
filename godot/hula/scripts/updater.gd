@@ -150,11 +150,13 @@ func _on_done(result: int, code: int, _h: PackedStringArray, body: PackedByteArr
 
 func _plan() -> void:
 	if int(_manifest.get("build", 0)) <= build and build > 0:
+		_say("No updates available", 4.0)
 		return   # this APK is at least as new as the published packs: its own content is already current
 	# packs are compiled by a specific engine build and only load in an APK built with that same one.
 	# an older APK must ignore them and keep playing instead of downloading something it cannot mount.
 	var want: String = str(_manifest.get("engine", ""))
 	if want != "" and not _engine().begins_with(want):
+		_say("No compatible updates available", 4.0)
 		return
 	_queue.clear()
 	for p in _manifest.get("packs", []):
@@ -163,7 +165,9 @@ func _plan() -> void:
 		if int((state.bad as Dictionary).get(sha, 0)) >= BAD_LIMIT: continue   # this exact pack failed to start BAD_LIMIT times
 		# an older version of the same pack slot is replaced when the new one becomes good
 		_queue.append(p)
-	if _queue.is_empty(): return
+	if _queue.is_empty():
+		_say("No updates available", 4.0)
+		return
 	_say("Downloading update...", 60.0)
 	_next()
 
