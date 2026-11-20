@@ -33,8 +33,10 @@ func _ready() -> void:
 	menu = Menu.new(self)
 	hero3d = preload("res://scripts/hero3d.gd").new(); add_child(hero3d)
 	snd = preload("res://scripts/sound.gd").new(); add_child(snd)
+	cutscene = preload("res://scripts/cutscene.gd").new(); add_child(cutscene)
 
 var snd: Node
+var cutscene: Node
 var _want := "?"
 var _vm := -1
 var touch_start := Vector2.ZERO
@@ -86,6 +88,7 @@ func _process(dt: float) -> void:
 		hero3d.set("beat_bpm", 60.0 / snd.beat_secs())
 	var vm: int = int(Save.data.opt.music) * 100 + int(Save.data.opt.sfx)
 	if vm != _vm: _vm = vm; snd.set_volumes(int(Save.data.opt.music), int(Save.data.opt.sfx))
+	if cutscene: cutscene.update(dt)
 	# confirm as soon as the game is really up. a long wait turns "opened it for a second to check" into a failed start.
 	if not _confirmed and Time.get_ticks_msec() > 2000:
 		_confirmed = true; Updater.confirm_good()
@@ -186,6 +189,7 @@ func _draw() -> void:
 		_hud(R)
 		_portrait_hud()
 		if state == S.OVER: _over(R)
+	if cutscene: cutscene.draw(self)
 	_toast(R)
 	draw_set_transform(Vector2.ZERO)
 	if Save.data.opt.fps: _fps(R)

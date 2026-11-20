@@ -294,10 +294,12 @@ func _load_cutscene_data() -> void:
 	var f := FileAccess.open("res://data/data_cutscenes.json", FileAccess.READ)
 	if f:
 		var j = JSON.parse_string(f.get_as_text())
-		if j and j.get("cutscenes") is Array:
-			for cs in j["cutscenes"]:
-				if cs.get("id"):
-					cutscene_data[cs["id"]] = cs
+		if j and j.has("data"):
+			# Build a list of scenes for each cutscene
+			for cs_id in j["data"]:
+				var scenes: Dictionary = j["data"][cs_id]
+				var scene_list: Array = scenes.keys()
+				cutscene_data[cs_id] = {"id": cs_id, "scenes": scene_list, "first_scene": scene_list[0] if scene_list.size() > 0 else ""}
 
 func secret(R: float, t: float) -> void:
 	var ox := (R - 640.0) / 2.0
@@ -327,6 +329,11 @@ func secret(R: float, t: float) -> void:
 		c.buttons.append([r, func():
 			if ready:
 				song_test = track; c.snd.stop_music(); c.snd.start_music(track); c.snd.sfx("click")
+				# Start cutscene if it's a cutscene ID
+				if track.begins_with("c_") and cutscene_data.has(track):
+					var first_scene = cutscene_data[track].get("first_scene", "")
+					if first_scene and c.cutscene:
+						c.cutscene.start(c.snd, c.hero3d, c, track, first_scene)
 			else:
 				sec_msg = track + " isn't in the new version yet"])
 		rrect(r, col, 7); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3 if ready else 0.15), 2.0 if on else 1.2, 7)
