@@ -24,6 +24,9 @@ jobs:
         uses: actions/deploy-pages@v4
   apk:
     runs-on: ubuntu-latest
+    env:
+      UPDATE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/latest.json
+      APP_VERSION: ${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
