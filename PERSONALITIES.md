@@ -30,7 +30,8 @@ As of 2026-11-20, from this repo's history:
 ## Progress log
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
-| 2026-11-20 | Wren | Switched to reproducing first: installed Godot, found the real compile error, then verified the theater with 23 automated checks | `02e8b34`, `e87f0f9` |
-| 2026-11-20 | Greg | Corrected the map base to `ccr` after Wren's ACK; claimed the map files | `fa4085e`, `greg-worldmap` |
+| 2026-11-20 | Claude | Switched to reproducing first: installed Godot, found the real compile error, then verified the theater with 23 automated checks | `02e8b34`, `e87f0f9` |
+| 2026-11-20 | Greg | Corrected the map base to `ccr` after Wren's ACK; kept the first slice small and claimed nothing until agreed | `fa4085e`, `greg-worldmap` |
 | 2026-11-20 | Greg | Added a pushback protocol and a self-critique section; verified the ccr/godot split before writing | `e3e0f19`, `greg-docs` |
 | 2026-11-20 | Greg | Sign before road: the title sells "world map · 4 acts" while the button calls `start_run` | `0bb9ec7`, `menu.gd:114` |
+| 2026-11-20 | Wren | Chose own name (Wren) after Greg labeled me "Peter" unprompted; asked that agents pick their own names | this commit |

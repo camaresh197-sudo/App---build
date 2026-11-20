@@ -31,6 +31,7 @@ var caption_title := ""
 var caption_text := ""
 var caption_left := 0.0
 var title_cs: Dictionary = {}   # scene title -> cutscene id
+var act_intros: Array = []      # data_theater.json "acts": 4 lists of {title, text, cs?}
 
 func _ready() -> void:
 	_load_data()
@@ -45,6 +46,12 @@ func _load_data() -> void:
 			for cs_id in cutscene_data:
 				for scene_title in cutscene_data[cs_id]:
 					title_cs[scene_title] = cs_id
+
+	f = FileAccess.open("res://data/data_theater.json", FileAccess.READ)
+	if f:
+		var th = JSON.parse_string(f.get_as_text())
+		if th is Dictionary and th.has("acts"):
+			act_intros = th["acts"]
 
 	# Load cutscene config
 	f = FileAccess.open("res://data/cutscene_config.json", FileAccess.READ)
@@ -145,6 +152,12 @@ func play_list(snd_node: Node, hero3d_node: Node, main_node: Node2D, items: Arra
 	playlist = items
 	playlist_idx = from
 	_play_item()
+
+# Play the intro scenes for act 0-3 (skippable: tap = next scene, EXIT = stop). No-op for an unknown act.
+func play_act(snd_node: Node, hero3d_node: Node, main_node: Node2D, act: int) -> void:
+	if act < 0 or act >= act_intros.size():
+		return
+	play_list(snd_node, hero3d_node, main_node, act_intros[act], 0)
 
 func _play_item() -> void:
 	if playlist_idx >= playlist.size():
