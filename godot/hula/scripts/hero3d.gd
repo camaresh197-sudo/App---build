@@ -1403,24 +1403,15 @@ func _gstep() -> void:
 	var dt := _pdt
 	if not beat_on: beat += dt * BPS      # no music: synthesize the beat grid at the fallback tempo (BPS == beat_bpm / 60 at the default 120 bpm)
 	if auto_dance:
-		# Load cutscene choreography if playing a cutscene
-		var cur_track = c.snd.cur if c and c.snd else ""
-		if cur_track.begins_with("c_") and cur_track != _last_track:
-			_last_track = cur_track
-			_load_cutscene_choreography(cur_track)
-
 		if not _cyclic:                     # (re)start the cycle from the top whenever auto-dance comes on
-			_cyclic = true; _cyc_i = 0; _cyc_t = 0.0
-			var cyc = _cur_choreography if _cur_choreography.size() > 0 else CYC
-			gest = cyc[0][0]
-			if cyc[0][1] != "": arm_kick(cyc[0][1], 2.2)
+			_cyclic = true; _cyc_i = 0; _cyc_t = 0.0; gest = CYC[0][0]
+			if CYC[0][1] != "": arm_kick(CYC[0][1], 2.2)
 		_cyc_t += dt
-		var cyc = _cur_choreography if _cur_choreography.size() > 0 else CYC
-		while _cyc_t >= float(cyc[_cyc_i][2]):
-			_cyc_t -= float(cyc[_cyc_i][2])
-			_cyc_i = (_cyc_i + 1) % cyc.size()
-			gest = cyc[_cyc_i][0]
-			if cyc[_cyc_i][1] != "": arm_kick(cyc[_cyc_i][1], 2.2)
+		while _cyc_t >= float(CYC[_cyc_i][2]):
+			_cyc_t -= float(CYC[_cyc_i][2])
+			_cyc_i = (_cyc_i + 1) % CYC.size()
+			gest = CYC[_cyc_i][0]
+			if CYC[_cyc_i][1] != "": arm_kick(CYC[_cyc_i][1], 2.2)
 	elif _cyclic:
 		_cyclic = false; gest = "hula"      # back to the plain hula when auto-dance stops
 	_life(dt)
