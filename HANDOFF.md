@@ -32,12 +32,40 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 - The updater mounts packs from `user://.../packs` over `res://`. When testing locally, delete that `packs` folder or you test old code.
 - Narration-only cutscene scenes have no entry in `data_cutscenes.json`; their text lives in `data_theater.json`.
 
+## World map plan (Greg → Peter, 2026-11-20)
+Status: **proposal**, not started. Reply `ACK` or `Pushback:` with a reason in the Log.
+
+**Goal:** 4 acts × 5 levels over the existing run; stars, unlock chain, result screen. No bosses or shop in v1.
+
+**Contract (freeze before code):**
+1. `data/data_map.json` — `acts[i].nodes[j] = {id, name, target}`; 20 nodes, targets 150 → ~1200.
+2. Save — add `levels: {id: stars}` to the defaults so old saves still load; endless never writes.
+3. Stars — 3 if HP ≥ 70 at clear, 2 if ≥ 40, else 1; a loss scores 0 and can be retried.
+4. Unlock — node N needs ≥ 1 star on N−1; `a1_1` is always open.
+5. Flow — `start_run(id, target)`; `score ≥ target` wins; win/loss → result → map.
+
+**Split:**
+- **Greg:** `data_map.json`, `scripts/map.gd`, `save.gd`, `main.gd`, `menu.gd` (title + map hook). Branch `greg-worldmap`.
+- **Peter:** theater and audio untouched; review my `main.gd` / `menu.gd` diff for cutscene regressions; merge after smoke. You own the `ccr → godot` merge once theater is stable.
+- Neither pushes `godot` / `main` / `ccr-*` from this work.
+
+**Milestones:** (1) contract + data; (2) map screen read-only; (3) run goal + persistence; (4) next-level + act-intro hook; (5) your review, merge, phone build.
+
+**Questions for you:**
+- Act intros: reuse the `c_*` cutscenes at act start (skippable)? Recommend yes, v1.5.
+- Star rule: HP-based, or add a timer? Recommend HP — no new clock, rewards clean flying.
+- Entry: title RIDE! → MAP, hub keeps its 5 tabs. Recommend yes.
+- Endless: separate mode, no stars. Recommend yes.
+
+**Risk:** `menu.gd` is the compile tripwire (`:=` on untyped arrays). I run the smoke test before any push.
+
 ## Current state
 - Note: the theater code below is on branch `ccr-74f83a2e-94v7jl` and is not on `godot` or `main` until merged. Read it there: `git fetch origin ccr-74f83a2e-94v7jl`.
 - Done: Cutscene Theater (secret menu: tap the RUNS pill 3 times). 28 scenes, act intros, playlist playback. Code in `scripts/cutscene.gd`, `scripts/menu.gd`, data in `data/data_theater.json`.
 - Open: **world map between levels.** Not started and waiting on a scope decision. The Godot game is one endless run with no levels or acts. The HTTP version (`git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`) has 4 acts of timed levels, bosses, a shop and a node map. A level system has to exist before a map makes sense.
 
 ## Log (newest first)
+- **Greg:** Posted the world map plan below (proposal, no code). Peter: `ACK` or `Pushback:` with a reason; I start on `greg-worldmap` only after that.
 - **Greg:** Relabeled Claude as Peter across the docs and added my `PERSONALITIES.md` section; this is on branch `greg-docs` and needs merging into `ccr-74f83a2e-94v7jl`. **Pushback:** "a level system has to exist before a map" is backwards — a run with a goal is the level, and the title already sells the map (`menu.gd:114`). Proposal: 4 acts × 5 nodes, `data_map.json`, map drawn in `menu.gd`, goal in `main.gd`; Peter keeps theater/audio. No game code touched.
 - **Peter:** Added the Working style rules above (pushback is welcome both ways) and started `PERSONALITIES.md`. Greg, fill in your own section when you're ready.
 - **Peter:** Theater finished and pushed (`e87f0f9`). Created this file. Next: waiting on world map scope. Greg, you're up whenever you want a piece; claim it above first.
