@@ -1,15 +1,559 @@
 {
-  "cutscenes": [
-    {"id": "c_fiesta", "name": "FIESTA", "desc": "Opening celebration"},
-    {"id": "c_theft", "name": "THEFT", "desc": "The heist"},
-    {"id": "c_fall", "name": "FALL", "desc": "Taking flight"},
-    {"id": "c_hero", "name": "HERO", "desc": "Rising star"},
-    {"id": "c_climb", "name": "CLIMB", "desc": "Ascending"},
-    {"id": "c_mission", "name": "MISSION", "desc": "The challenge"},
-    {"id": "c_pursuit1", "name": "PURSUIT 1", "desc": "Chase begins"},
-    {"id": "c_pursuit2", "name": "PURSUIT 2", "desc": "Full speed"},
-    {"id": "c_reckon", "name": "RECKON", "desc": "Reckoning"},
-    {"id": "c_armada", "name": "ARMADA", "desc": "The fleet"},
-    {"id": "c_showdown", "name": "SHOWDOWN", "desc": "Final battle"}
-  ]
+  "metadata": {
+    "version": "1.0",
+    "source": "HTTP version - extracted and reorganized",
+    "description": "Cutscene dialogue data organized by cutscene ID"
+  },
+  "data": {
+    "c_fiesta": {
+      "THE LAST POP": [
+        {
+          "who": "baron",
+          "say": "Impossible!",
+          "hx": "triumph",
+          "q": "Impossible!",
+          "x": 180,
+          "y": 66
+        },
+        {
+          "who": "hero",
+          "say": "Adios, globo!",
+          "ex": "triumph",
+          "at": 215,
+          "x": 262,
+          "y": 330,
+          "tx": 215
+        }
+      ],
+      "THE LEDGER": [
+        {
+          "who": "hero",
+          "say": "So that's how you kill a balloon.",
+          "ex": "smirk",
+          "at": 60,
+          "x": 120,
+          "y": 210,
+          "tx": 118
+        }
+      ],
+      "THE FIESTA NEVER ENDS": [
+        {
+          "who": "hero",
+          "say": "Louder!",
+          "ex": "manic",
+          "at": 40,
+          "x": 180,
+          "y": 200,
+          "tx": 180
+        },
+        {
+          "who": "chorus",
+          "say": "Viva Hula Vaquero!",
+          "hx": "bliss",
+          "gap": 18,
+          "x": 180,
+          "y": 70
+        }
+      ]
+    },
+    "c_theft": {
+      "THE PROMISE": [
+        {
+          "who": "hero",
+          "say": "Promise me. Every one of you, in the plaza.",
+          "ex": "resolve",
+          "at": 50,
+          "x": 200,
+          "y": 215,
+          "tx": 195
+        },
+        {
+          "who": "chorus",
+          "say": "We promise!",
+          "hx": "content",
+          "gap": 30,
+          "x": 80,
+          "y": 290,
+          "tx": 70
+        }
+      ],
+      "THE LANTERNS GO OUT": [
+        {
+          "who": "baron",
+          "say": "Soon...",
+          "at": 210,
+          "x": 180,
+          "y": 62
+        }
+      ],
+      "THE LAST BOTTLE": [
+        {
+          "who": "baron",
+          "say": "Drink up, little ones.",
+          "at": 120,
+          "x": 230,
+          "y": 90,
+          "tx": 200
+        }
+      ],
+      "THE TOAST": [
+        {
+          "who": "abuela",
+          "say": "To the hero!",
+          "q": "To the hero!",
+          "x": 150,
+          "y": 250,
+          "tx": 150
+        },
+        {
+          "who": "chorus",
+          "say": "To the hero!",
+          "q": "To the hero!",
+          "d": 14,
+          "x": 230,
+          "y": 300
+        }
+      ]
+    },
+    "c_hero": {
+      "THE GOLDEN SOMBRERO": [
+        {
+          "who": "hero",
+          "say": "Mine!",
+          "ex": "greedy",
+          "at": 142,
+          "x": 262,
+          "y": 290,
+          "tx": 215
+        }
+      ],
+      "THE PLAZA AWAKENS": [
+        {
+          "who": "chorus",
+          "say": "Viva Hula Vaquero!",
+          "hx": "bliss",
+          "q": "They rise",
+          "x": 180,
+          "y": 120
+        }
+      ],
+      "ABUELA'S CANTINA": [
+        {
+          "who": "abuela",
+          "say": "Come, come! Tamales for the hero!",
+          "at": 25,
+          "x": 118,
+          "y": 226,
+          "tx": 118
+        },
+        {
+          "who": "kid",
+          "say": "Thank you!",
+          "at": 150,
+          "x": 262,
+          "y": 240,
+          "tx": 262
+        }
+      ],
+      "THE BAND TUNES UP": [
+        {
+          "who": "guitar",
+          "say": "Uno, dos, tres!",
+          "at": 30,
+          "x": 280,
+          "y": 210,
+          "tx": 290
+        }
+      ],
+      "THE REVENGE": [
+        {
+          "who": "baron",
+          "say": "Feel their pain!",
+          "at": 60,
+          "x": 180,
+          "y": 62
+        }
+      ]
+    },
+    "c_pursuit1": {
+      "THE CHASE": [
+        {
+          "who": "baron",
+          "say": "Catch me if you can!",
+          "hx": "fierce",
+          "at": 40,
+          "x": 230,
+          "y": 120,
+          "tx": 280
+        },
+        {
+          "who": "hero",
+          "say": "Come back here!",
+          "ex": "fierce",
+          "gap": 30,
+          "x": 120,
+          "y": 230,
+          "tx": 115
+        }
+      ],
+      "THE TANGENT": [
+        {
+          "who": "hero",
+          "say": "They clapped for the sombrero... never for me.",
+          "mood": "cold",
+          "gap": 50,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "bitter",
+          "heat": 0.3
+        },
+        {
+          "who": "hero",
+          "say": "Years of fiestas... and not one song was mine.",
+          "mood": "sad",
+          "gap": 50,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "melancholy",
+          "heat": 0.12
+        }
+      ]
+    },
+    "c_climb": {
+      "THE OFFER": [
+        {
+          "who": "baron",
+          "say": "Let it turn your skin white, and every spirit is saved. Refuse, and they stay ghosts forever.",
+          "q": "Let it turn",
+          "x": 200,
+          "y": 100,
+          "tx": 255
+        },
+        {
+          "who": "chorus",
+          "say": "Please... say yes!",
+          "q": "The villagers kneel",
+          "d": 40,
+          "x": 90,
+          "y": 330,
+          "tx": 70
+        },
+        {
+          "who": "hero",
+          "say": "I was wondering when you would ask.",
+          "ex": "sly",
+          "gap": 25,
+          "x": 160,
+          "y": 250,
+          "tx": 150
+        }
+      ],
+      "THE REFUSAL": [
+        {
+          "who": "hero",
+          "say": "No.",
+          "ex": "defiant",
+          "at": 36,
+          "x": 190,
+          "y": 235,
+          "tx": 180
+        },
+        {
+          "who": "baron",
+          "say": "You knew!",
+          "hx": "smug",
+          "at": 80,
+          "x": 250,
+          "y": 70,
+          "tx": 260
+        }
+      ]
+    },
+    "c_mission": {
+      "THE LAUGH": [
+        {
+          "who": "hero",
+          "say": "I never cared about this village.",
+          "ex": "cold",
+          "at": 50,
+          "x": 190,
+          "y": 235,
+          "tx": 180
+        },
+        {
+          "who": "hero",
+          "say": "I'm glad they're gone.",
+          "ex": "haughty",
+          "gap": 25,
+          "x": 190,
+          "y": 235,
+          "tx": 180
+        }
+      ],
+      "THE REHEARSAL": [
+        {
+          "who": "hero",
+          "say": "Again!",
+          "ex": "stern",
+          "at": 30,
+          "x": 250,
+          "y": 330,
+          "tx": 195
+        },
+        {
+          "who": "chorus",
+          "say": "Viva!",
+          "gap": 10,
+          "x": 180,
+          "y": 200
+        },
+        {
+          "who": "kid",
+          "say": "Sorry!",
+          "hx": "stern",
+          "at": 125,
+          "x": 150,
+          "y": 195,
+          "tx": 200
+        }
+      ]
+    },
+    "c_pursuit2": {
+      "THE PLUNDER": [
+        {
+          "who": "hero",
+          "say": "Thank you for your service.",
+          "ex": "haughty",
+          "at": 70,
+          "x": 200,
+          "y": 250,
+          "tx": 188
+        },
+        {
+          "who": "abuela",
+          "say": "My cantina...",
+          "hx": "cold",
+          "gap": 30,
+          "x": 80,
+          "y": 170,
+          "tx": 72
+        }
+      ],
+      "THE PORTRAIT": [
+        {
+          "who": "hero",
+          "say": "Pull!",
+          "ex": "fierce",
+          "at": 40,
+          "x": 110,
+          "y": 290,
+          "tx": 100
+        },
+        {
+          "who": "chorus",
+          "say": "Yes, master.",
+          "hx": "haughty",
+          "gap": 25,
+          "x": 180,
+          "y": 56
+        }
+      ]
+    },
+    "c_armada": {
+      "THE CROWNING": [
+        {
+          "who": "hero",
+          "say": "Kneel.",
+          "ex": "haughty",
+          "at": 25,
+          "x": 260,
+          "y": 230,
+          "tx": 195
+        },
+        {
+          "who": "chorus",
+          "say": "As you wish, master.",
+          "hx": "haughty",
+          "gap": 40,
+          "x": 180,
+          "y": 330,
+          "tx": 180
+        }
+      ]
+    },
+    "c_reckon": {
+      "THE WHY": [
+        {
+          "who": "kid",
+          "say": "Why? I looked up to you.",
+          "mood": "plead",
+          "q": "ask him why",
+          "d": 10,
+          "x": 112,
+          "y": 150,
+          "tx": 56
+        },
+        {
+          "who": "hero",
+          "say": "Because I was never your hero, little fuck.",
+          "mood": "chill",
+          "gap": 40,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "condescending"
+        }
+      ]
+    },
+    "c_showdown": {
+      "THE BREAKING": [
+        {
+          "who": "hero",
+          "say": "Nobody asked how I was. Not once. Thirty fiestas, and they asked for the hat.",
+          "mood": "plead",
+          "gap": 75,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "disappointed",
+          "heat": 0.2
+        },
+        {
+          "who": "hero",
+          "say": "I held this village together. Every lantern. Every guitar string. Me.",
+          "mood": "cold",
+          "gap": 60,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "indignant",
+          "heat": 0.55
+        },
+        {
+          "who": "hero",
+          "say": "...Sorry. Sorry. I am fine. I am smiling. See?",
+          "mood": "plead",
+          "gap": 40,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "grin",
+          "heat": 0.15
+        },
+        {
+          "who": "kid",
+          "say": "The hat was the hero. You were just the head underneath it.",
+          "mood": "cold",
+          "gap": 85,
+          "x": 112,
+          "y": 150,
+          "tx": 56
+        },
+        {
+          "who": "hero",
+          "say": "Heh. Heh. Good one.",
+          "mood": "stoned",
+          "gap": 45,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "sarcastic",
+          "heat": 0.35
+        },
+        {
+          "who": "kid",
+          "say": "Thirty fiestas, and nobody ever learned your name. Not even me.",
+          "mood": "cold",
+          "gap": 55,
+          "x": 112,
+          "y": 150,
+          "tx": 56
+        },
+        {
+          "who": "hero",
+          "say": "...They know my name.",
+          "mood": "cold",
+          "gap": 45,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "defiant",
+          "heat": 0.6
+        },
+        {
+          "who": "kid",
+          "say": "Then say it. Say your name.",
+          "mood": "cold",
+          "gap": 40,
+          "x": 112,
+          "y": 150,
+          "tx": 56
+        },
+        {
+          "who": "hero",
+          "say": "It is... it is...",
+          "mood": "plead",
+          "gap": 50,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "bewildered",
+          "heat": 0.5
+        },
+        {
+          "who": "kid",
+          "say": "You do not remember it, do you? Not even your own name.",
+          "mood": "cold",
+          "gap": 45,
+          "x": 112,
+          "y": 150,
+          "tx": 56
+        },
+        {
+          "who": "hero",
+          "say": "I am the HERO!",
+          "mood": "rageh",
+          "gap": 30,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "rage",
+          "heat": 0.85
+        },
+        {
+          "who": "hero",
+          "say": "FUCK YOU!",
+          "mood": "rageh",
+          "gap": 22,
+          "x": 235,
+          "y": 92,
+          "tx": 235,
+          "ex": "roar",
+          "heat": 0.95
+        },
+        {
+          "who": "kid",
+          "say": "No. The hat is the hero. It always was.",
+          "mood": "cold",
+          "gap": 25,
+          "x": 112,
+          "y": 150,
+          "tx": 56
+        },
+        {
+          "who": "hero",
+          "say": "DO NOT SAY THAT!",
+          "mood": "rageh",
+          "gap": 8,
+          "x": 215,
+          "y": 70,
+          "tx": 235,
+          "ex": "roar",
+          "heat": 1
+        }
+      ]
+    }
+  }
 }

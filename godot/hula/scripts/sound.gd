@@ -55,9 +55,11 @@ func _ready() -> void:
 	if f3: vic = JSON.parse_string(f3.get_as_text())
 	var f2 := FileAccess.open("res://data/data_title.json", FileAccess.READ)
 	if f2: title = JSON.parse_string(f2.get_as_text())
-	for cs_id in ["c_fiesta", "c_theft", "c_fall", "c_hero", "c_climb", "c_mission", "c_pursuit1", "c_pursuit2", "c_reckon", "c_armada", "c_showdown"]:
-		var fc := FileAccess.open("res://data/data_" + cs_id + ".json", FileAccess.READ)
-		if fc: cutscenes[cs_id] = JSON.parse_string(fc.get_as_text())
+	var fcs := FileAccess.open("res://data/data_cutscenes.json", FileAccess.READ)
+	if fcs:
+		var cs_data = JSON.parse_string(fcs.get_as_text())
+		if cs_data and cs_data.has("data"):
+			cutscenes = cs_data["data"]
 	for i in song.size():
 		if song[i][7] == 0: loop_from = i; break
 	have = ResourceLoader.exists("res://audio/kick.ogg")
