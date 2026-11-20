@@ -86,6 +86,21 @@ func draw(canvas: CanvasItem) -> void:
 	if not active or display_text == "":
 		return
 
+	var speaker_colors = {
+		"baron": Color("#ff6a5a"),
+		"hero": Color("#ffd32a"),
+		"abuela": Color("#ff9ecb"),
+		"kid": Color("#7fe3ff"),
+		"guitar": Color("#9be37a"),
+		"chorus": Color("#e8d4b8")
+	}
+
+	var font = ThemeDB.fallback_font
+	var speaker_color = speaker_colors.get(display_speaker, Color.WHITE)
+
+	# Draw speaker character bubble
+	_draw_speaker(canvas, font, speaker_color)
+
 	# Draw dialogue box at bottom
 	var box_height := 80.0
 	var box_y := 360.0 - box_height
@@ -98,19 +113,22 @@ func draw(canvas: CanvasItem) -> void:
 	canvas.draw_style_box(bg, box_rect)
 
 	# Speaker name (left)
-	var font = ThemeDB.fallback_font
-	var speaker_color = Color.WHITE
-	if display_speaker == "baron":
-		speaker_color = Color("#ff6a5a")
-	elif display_speaker == "hero":
-		speaker_color = Color("#ffd32a")
-	elif display_speaker == "abuela":
-		speaker_color = Color("#ff9ecb")
-
 	canvas.draw_string(font, Vector2(20, box_y + 25), display_speaker.to_upper(), -1, -1, 14, speaker_color)
 
 	# Dialogue text (wrapped)
 	canvas.draw_string(font, Vector2(20, box_y + 50), display_text, -1, 720, 16, Color.WHITE)
+
+func _draw_speaker(canvas: CanvasItem, font: Font, col: Color) -> void:
+	var x = current_event.get("x", 180)
+	var y = current_event.get("y", 150)
+	var scale_x = 772.0 / 320.0
+	x = int(x * scale_x)
+	var radius := 20.0
+	canvas.draw_circle(Vector2(x, y), radius, col)
+	canvas.draw_circle(Vector2(x, y), radius - 2, Color(0, 0, 0, 0.5))
+	var label = display_speaker.substr(0, 3).to_upper()
+	var text_size = font.get_string_size(label, -1, -1, 10)
+	canvas.draw_string(font, Vector2(x - text_size.x / 2, y + radius + 10), label, -1, -1, 10, col)
 
 func is_active() -> bool:
 	return active
