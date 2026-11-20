@@ -30,6 +30,7 @@ blender --background --factory-startup --python tools\face_jaw.py     -- <in.ble
 blender --background --factory-startup --python tools\face_rebuild.py -- <in.blend> <out.blend>
 blender --background --factory-startup --python tools\face_lips.py    -- <in.blend> <out.blend>
 blender --background --factory-startup --python tools\face_mouth2.py  -- <in.blend> <out.blend>
+blender --background --factory-startup --python tools\face_chin.py    -- <in.blend> <out.blend>
 blender --background --factory-startup --python tools\verify_rig.py   -- <in.blend> <out.png>
 blender --background --factory-startup --python tools\pose_test.py
 ```
@@ -40,9 +41,12 @@ Pipeline order: `face_merge` → `face_sculpt` → `face_shapes` → `face_jaw` 
 group; `face_lips.py` squashes the old lip tubes in depth; `face_mouth2.py` replaces those
 tubes with lip geometry that is part of the head (upper lip on the head bone, lower lip on
 the jaw), restores some lip depth, colours it `lip_mouth`, adds lip-corner motion to the
-smile/frown/pucker keys and a `lip_up` key for talk. The mouth's teeth are not in this
-master, so `hero3d.gd` keeps the procedural control teeth visible over the glb. All are
-**one-off** passes: running one twice compounds the change; there is no automatic inverse.
+smile/frown/pucker keys and a `lip_up` key for talk. `face_sculpt.py`'s chin step runs
+before the rebuild on `jaw_0`, so it never reaches the master; `face_chin.py` is the
+one-off post-pass for the merged mesh: it pushes the chin forward/up and carries the same
+delta into every shape key. The mouth's teeth are not in this master, so `hero3d.gd`
+keeps the procedural control teeth visible over the glb. All are **one-off** passes:
+running one twice compounds the change; there is no automatic inverse.
 
 `rig_to_armature.py` converts the exported node hierarchy into a real Blender armature.
 Check each tool's docstring before rerunning it: the `face_*.py` passes rewrite the
