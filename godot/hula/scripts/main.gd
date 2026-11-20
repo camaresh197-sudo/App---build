@@ -68,8 +68,8 @@ func start_run() -> void:
 var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
-	hero3d.portrait_on = state == S.PLAY or state == S.OVER or (state == S.MENU and not menu.in_hub)
-	hero3d.auto_dance = state == S.MENU
+	hero3d.portrait_on = state == S.PLAY or state == S.OVER or state == S.SECRET or (state == S.MENU and not menu.in_hub)
+	hero3d.auto_dance = state == S.MENU or state == S.SECRET
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
 	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
 	if want != _want:
@@ -170,7 +170,7 @@ func _draw() -> void:
 	draw_set_transform(off)
 	_sky(R)
 	if state == S.SECRET:
-		menu.secret(R, t); _below(R, Color(0.03, 0.03, 0.08, 0.85))
+		_hero(Vector2(FW / 2, 160), t); menu.secret(R, t); _below(R, Color(0.03, 0.03, 0.08, 0.85)); _portrait_hud()
 	elif state == S.MENU:
 		if menu.in_hub:
 			menu.hub(R, t, Callable(self, "_hero")); _below(R, Color(0.03, 0.03, 0.08, 0.8))
