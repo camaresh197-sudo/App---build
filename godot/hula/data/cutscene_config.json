@@ -1,0 +1,78 @@
+{
+  "cutscenes": {
+    "c_fiesta": {
+      "name": "FIESTA",
+      "scenes": [
+        {
+          "id": "THE FIESTA NEVER ENDS",
+          "audio_file": "res://audio/cutscene_fiesta.ogg",
+          "background": "res://art/scene_fiesta.webp",
+          "bg_color": "#1a0a1f",
+          "light_color": "#ffb366",
+          "particles": {
+            "type": "confetti",
+            "count": 80,
+            "lifetime": 4.0,
+            "velocity_min": 50,
+            "velocity_max": 200
+          }
+        }
+      ]
+    },
+    "c_theft": {
+      "name": "THEFT",
+      "scenes": [
+        {
+          "id": "THE PROMISE",
+          "audio_file": "res://audio/cutscene_theft.ogg",
+          "background": "res://art/scene_theft.webp",
+          "bg_color": "#0a1a2f",
+          "light_color": "#66ccff",
+          "particles": {
+            "type": "smoke",
+            "count": 30,
+            "lifetime": 3.0,
+            "velocity_min": 20,
+            "velocity_max": 80
+          }
+        }
+      ]
+    },
+    "c_fall": {
+      "name": "FALL",
+      "scenes": []
+    },
+    "c_hero": {
+      "name": "HERO",
+      "scenes": []
+    },
+    "c_climb": {
+      "name": "CLIMB",
+      "scenes": []
+    },
+    "c_mission": {
+      "name": "MISSION",
+      "scenes": []
+    },
+    "c_pursuit1": {
+      "name": "PURSUIT 1",
+      "scenes": []
+    },
+    "c_pursuit2": {
+      "name": "PURSUIT 2",
+      "scenes": []
+    },
+    "c_reckon": {
+      "name": "RECKON",
+      "scenes": []
+    },
+    "c_armada": {
+      "name": "ARMADA",
+      "scenes": []
+    },
+    "c_showdown": {
+      "name": "SHOWDOWN",
+      "scenes": []
+    }
+  }
+}

@@ -1,5 +1,5 @@
 extends Node
-# Cutscene player: displays dialogue synced to music
+# Cutscene player: displays dialogue synced to music + scene background + audio
 class_name CutscenePlayer
 
 var snd: Node
@@ -18,8 +18,57 @@ var display_speaker := ""
 var display_expr := ""
 var fallback_timing := false  # use wall-clock if music stops
 
+var scene_bg: Node2D        # background/scene rendering node
+var scene_config: Dictionary = {}  # loaded cutscene config
+
 func _ready() -> void:
-	pass
+	_load_scene_config()
+	_setup_scene_bg()
+
+func _load_scene_config() -> void:
+	var f = FileAccess.open("res://data/cutscene_config.json", FileAccess.READ)
+	if f:
+		var data = JSON.parse_string(f.get_as_text())
+		if data and data.has("cutscenes"):
+			scene_config = data["cutscenes"]
+
+func _setup_scene_bg() -> void:
+	scene_bg = Node2D.new()
+	scene_bg.position = Vector2.ZERO
+	add_child(scene_bg)
+	move_child(scene_bg, 0)
+
+func _apply_scene_config(cutscene_id: String, scene_name: String) -> void:
+	if not scene_config.has(cutscene_id):
+		return
+
+	var cs_data = scene_config[cutscene_id]
+	if not cs_data.has("scenes"):
+		return
+
+	for scene_data in cs_data["scenes"]:
+		if scene_data.has("id") and scene_data["id"] == scene_name:
+			# Load background
+			if scene_data.has("background"):
+				var bg = load(scene_data["background"])
+				if bg and scene_bg:
+					var sprite = Sprite2D.new()
+					sprite.texture = bg
+					sprite.position = Vector2(386, 180)
+					scene_bg.add_child(sprite)
+
+			# Apply theme colors
+			if scene_data.has("bg_color") and scene_bg:
+				var color_rect = ColorRect.new()
+				color_rect.color = Color(scene_data["bg_color"])
+				color_rect.anchor_left = 0
+				color_rect.anchor_top = 0
+				color_rect.anchor_right = 1
+				color_rect.anchor_bottom = 1
+				scene_bg.add_child(color_rect)
+				scene_bg.move_child(color_rect, 0)
+
+			break
 
 func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: String, scene_name: String) -> void:
 	snd = snd_node
@@ -34,6 +83,13 @@ func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: St
 	current_event = {}
 	display_text = ""
 	display_speaker = ""
+
+	# Clear previous scene
+	for child in scene_bg.get_children():
+		child.queue_free()
+
+	# Apply scene configuration
+	_apply_scene_config(cutscene_id, scene_name)
 
 	# Load events for this scene
 	if snd and snd.cutscenes.has(cutscene_id):
