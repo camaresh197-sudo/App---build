@@ -266,7 +266,10 @@ func _strum(v: Array, dl: float, down: bool, vol: float) -> void:
 const ARP := [[0,1,2,3,2,1], [0,2,1,3,2,1], [3,2,1,0,1,2], [0,1,2,1,2,3], [0,2,3,2,1,0]]
 const STRUMV := [[1,2,4,5], [1,2,3,5], [1,3,4,5]]
 func _step(st: int, dl: float) -> void:
-	var data_array := song if not cur.begins_with("c_") else (cutscenes.get(cur, []) as Array)
+	# Cutscenes use choreography data, not sequencer data - skip audio generation
+	if cur.begins_with("c_"): return
+
+	var data_array := song
 	var nb := data_array.size()
 	if nb == 0: return
 	var bi := st / 6
