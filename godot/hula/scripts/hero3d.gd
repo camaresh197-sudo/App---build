@@ -1403,7 +1403,8 @@ func _load_cutscene_choreography(track: String) -> void:
 	var f := FileAccess.open("res://data/data_" + track + ".json", FileAccess.READ)
 	if f:
 		var data = JSON.parse_string(f.get_as_text())
-		if data is Array: _cur_choreography = data
+		if data is Array and data.size() > 0: _cur_choreography = data
+		else: _cur_choreography = []  # empty choreography falls back to default CYC
 
 func _gstep() -> void:
 	var now := Time.get_ticks_msec()
@@ -1418,18 +1419,21 @@ func _gstep() -> void:
 			_last_track = cur_track
 			_load_cutscene_choreography(cur_track)
 
+		var cyc = _cur_choreography if _cur_choreography.size() > 0 else CYC
+		if cyc.size() == 0: cyc = CYC  # fallback to default if choreography is empty
+
 		if not _cyclic:                     # (re)start the cycle from the top whenever auto-dance comes on
 			_cyclic = true; _cyc_i = 0; _cyc_t = 0.0
-			var cyc = _cur_choreography if _cur_choreography.size() > 0 else CYC
 			gest = cyc[0][0]
 			if cyc[0][1] != "": arm_kick(cyc[0][1], 2.2)
 		_cyc_t += dt
-		var cyc = _cur_choreography if _cur_choreography.size() > 0 else CYC
-		while _cyc_t >= float(cyc[_cyc_i][2]):
+		var guard := 0
+		while _cyc_t >= float(cyc[_cyc_i][2]) and guard < 100:
 			_cyc_t -= float(cyc[_cyc_i][2])
 			_cyc_i = (_cyc_i + 1) % cyc.size()
 			gest = cyc[_cyc_i][0]
 			if cyc[_cyc_i][1] != "": arm_kick(cyc[_cyc_i][1], 2.2)
+			guard += 1
 	elif _cyclic:
 		_cyclic = false; gest = "hula"      # back to the plain hula when auto-dance stops
 	_life(dt)
