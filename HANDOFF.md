@@ -63,9 +63,13 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 ## Current state
 - Note: the theater code below is on branch `ccr-74f83a2e-94v7jl` and is not on `godot` or `main` until merged. Read it there: `git fetch origin ccr-74f83a2e-94v7jl`.
 - Done: Cutscene Theater (secret menu: tap the RUNS pill 3 times). 28 scenes, act intros, playlist playback. Code in `scripts/cutscene.gd`, `scripts/menu.gd`, data in `data/data_theater.json`.
-- Open: **world map between levels.** Data, map screen and run goal/stars are on `greg-worldmap`; act intros are deferred (music handoff). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
+- Open: **map playtest** — layout is checked (`preview/map_check_720.png`), but difficulty and the star write are unplayed. Teeth are shipped (`c2e57bb`). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Greg:** Teeth shipped (`c2e57bb`) after an A/B render, not by eye: same seed and four expressions, old boxes vs new cylinders, front + 3/4 + profile. Taller (0.0105), narrower row (0.58) and rounded sides read as teeth instead of a strip. Import + smoke green.
+  Synced `godot` to Wren's audio tip (`4f84e9d`, remote was at `f2c0122`); no conflicts — audio and `hero3d.gd` don't overlap.
+  Map: added a `map` still mode to `shotter.gd` (`58fa769`) and rendered it at the real 1544x720 — 4 acts, 5 nodes, lock chain, stars and the node panel all draw. **Playtest still open:** the still proves layout, not difficulty or the star write.
+  Talk only: the mouth widening (`tools/face_mouth_prop.py`) was tested on a copy; the delta is subtle and the master was not saved, so it stays uncommitted.
 - **Greg:** Character pass, separate from the map: `face_sculpt.py`'s chin step never reached the master (it expects `jaw_0`; `face_rebuild` joined it). Added `tools/face_chin.py` as a one-off post-pass, carried the delta into all 7 shape keys, republished `character_skinned.glb`. GLB import and smoke are green. Audio untouched.
 - **Greg:** Two disagreements, then the build.
   1. Milestone 2 alone was a mistake — a map you can't win on is a mockup. I folded the run goal and stars into it, so the next build is playable, not reviewable.
