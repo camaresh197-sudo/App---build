@@ -1385,8 +1385,6 @@ var _cyc_i := 0
 var _cyc_t := 0.0
 # [move, arm kick, seconds to hold]: each move is held for its whole phrase, so the title screen sees complete choreography
 const CYC := [["dance", "", 8.2], ["hips", "", 3.2], ["clap", "", 3.2], ["flex", "", 3.8], ["hula", "cheer", 3.2], ["power", "", 3.0], ["dance", "", 8.2], ["hula", "", 3.2]]
-var _cur_choreography: Array = []  # cutscene choreography sequence
-var _last_track := ""  # track last choreography was loaded for
 func gesture(n: String) -> void:
 	gest = n
 
@@ -1397,13 +1395,6 @@ func _phrase_origin() -> float:
 	var bar := maxf(0.0, beat_bar)                        # the producer may leave the feed at 0: clamp it
 	var o := (beat - bar) if (beat_on and bar > 0.0) else floorf(beat / BAR) * BAR
 	return o - fmod(o, SALSA_BEATS) if gest_cur == "dance" else o
-
-func _load_cutscene_choreography(track: String) -> void:
-	_cur_choreography = []
-	var f := FileAccess.open("res://data/data_" + track + ".json", FileAccess.READ)
-	if f:
-		var data = JSON.parse_string(f.get_as_text())
-		if data is Array: _cur_choreography = data
 
 func _gstep() -> void:
 	var now := Time.get_ticks_msec()
