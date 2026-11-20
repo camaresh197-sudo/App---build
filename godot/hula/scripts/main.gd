@@ -48,6 +48,9 @@ func _input(e: InputEvent) -> void:
 	if e is InputEventScreenTouch:
 		var pos := _to_field(e.position)
 		if e.pressed:
+			# Skip button clicks during cutscenes
+			if cutscene and cutscene.is_active():
+				return
 			for b in buttons:
 				if (b[0] as Rect2).has_point(pos):
 					snd.sfx("click"); (b[1] as Callable).call(); return
@@ -173,7 +176,10 @@ func _draw() -> void:
 	draw_set_transform(off)
 	_sky(R)
 	if state == S.SECRET:
-		_hero(Vector2(FW / 2, 160), t); menu.secret(R, t); _below(R, Color(0.03, 0.03, 0.08, 0.85)); _portrait_hud()
+		_hero(Vector2(FW / 2, 160), t)
+		if not (cutscene and cutscene.is_active()):
+			menu.secret(R, t)
+		_below(R, Color(0.03, 0.03, 0.08, 0.85)); _portrait_hud()
 	elif state == S.MENU:
 		if menu.in_hub:
 			menu.hub(R, t, Callable(self, "_hero")); _below(R, Color(0.03, 0.03, 0.08, 0.8))
