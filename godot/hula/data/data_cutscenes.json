@@ -1,0 +1,15 @@
+{
+  "cutscenes": [
+    {"id": "c_fiesta", "name": "FIESTA", "desc": "Opening celebration"},
+    {"id": "c_theft", "name": "THEFT", "desc": "The heist"},
+    {"id": "c_fall", "name": "FALL", "desc": "Taking flight"},
+    {"id": "c_hero", "name": "HERO", "desc": "Rising star"},
+    {"id": "c_climb", "name": "CLIMB", "desc": "Ascending"},
+    {"id": "c_mission", "name": "MISSION", "desc": "The challenge"},
+    {"id": "c_pursuit1", "name": "PURSUIT 1", "desc": "Chase begins"},
+    {"id": "c_pursuit2", "name": "PURSUIT 2", "desc": "Full speed"},
+    {"id": "c_reckon", "name": "RECKON", "desc": "Reckoning"},
+    {"id": "c_armada", "name": "ARMADA", "desc": "The fleet"},
+    {"id": "c_showdown", "name": "SHOWDOWN", "desc": "Final battle"}
+  ]
+}
