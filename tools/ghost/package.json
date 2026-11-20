@@ -1,0 +1,7 @@
+{
+  "name": "ghost-boy",
+  "private": true,
+  "type": "module",
+  "dependencies": { "three": "*" },
+  "devDependencies": { "esbuild": "*" }
+}

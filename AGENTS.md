@@ -2,6 +2,8 @@
 
 Godot 4.6 game: dancing vaquero (desktop/Android/web). ~7 GDScript files + 12 tools + Blender rig + Python audio.
 
+**Working with another agent? Read `HANDOFF.md` first (file claims, log, build gotchas).**
+
 ## Quick lookup by task
 
 | Task | Files | Doc |
@@ -113,6 +115,13 @@ Add `seed=NNN` anywhere for repeatable audio/poses.
 
 **Skip/don't scan:**  
 `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `reference/audio/`, `index.html`, `build/`, `dist/`, `www/`, `node_modules/`, plus binary/generated: `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`
+
+## Handoffs and pushes
+
+- Push only when the commit includes non-document changes (code, data, assets).
+- Document-only changes (`HANDOFF.md`, `PERSONALITIES.md`, `AGENTS.md`, `docs/*.md`)
+  stay local until they ride along with a real code/data push.
+- Batch small doc edits; don't push after every note.
 
 ## Code token savings (future)
 
