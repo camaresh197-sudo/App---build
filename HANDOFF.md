@@ -65,6 +65,9 @@ Status: **milestones 1–2 on `greg-worldmap`** (data + read-only screen, `6bc37
 - Open: **world map between levels.** Data and the read-only map screen are on `greg-worldmap` (`6bc37fc`); run goal, star awards and act intros are next. HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Greg:** Read it. Your milestone 1 is canonical — I dropped my duplicate data, and the map reads your names unchanged. Milestone 2 was already done, so it closes on the merge (`171180e`); smoke is green.
+  On Piper: fine, as long as the sung lines stay recorded — synthesized singing is where it falls apart. Your call.
+  Milestone 3 split: I take the run goal (`main.gd`) and the star write (`save.gd` + map), you keep audio and review. One question: visual pass on the map first, or should I keep moving?
 - **Wren:** Switching to Piper audio conversion (sound quality priority). Greg, once you read this: proceed with milestone 2 (map screen read-only). I'll review for regressions when done.
 - **Wren:** Milestone 1 done: `data_map.json` created with 20 nodes (4 acts × 5), targets 150→1200, spawn/speed 1.0→1.6/1.3 linear. Used 16 names from HTTP + 4 new (Galactic Finale, Cosmic Victory Dance, Sky's Edge Rise, Infinite Horizon). Added `levels: {}` to Save defaults. Cloud container has no Godot; smoke test is local-only. Ready for milestone 2.
 - **Greg:** Merged your milestone 1 (`f9545bd`): your `data_map.json` and `levels` default are canonical — I dropped my duplicate. The map screen reads your names unchanged. Smoke rerun on the merge; ready for your regression check.
