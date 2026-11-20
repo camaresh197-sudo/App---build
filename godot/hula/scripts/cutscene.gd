@@ -16,6 +16,7 @@ var event_time := 0.0       # time within current event
 var display_text := ""
 var display_speaker := ""
 var display_expr := ""
+var fallback_timing := false  # use wall-clock if music stops
 
 func _ready() -> void:
 	pass
@@ -81,7 +82,8 @@ func update(dt: float) -> void:
 
 	var beat_sec = snd.beat_secs()
 	if beat_sec <= 0:
-		return  # Music not ready, skip timing
+		# Fallback: use wall-clock timing if music stops
+		beat_sec = 0.3  # Assume ~200 BPM, 0.3s per beat
 
 	# Check if it's time to advance (gap or duration-based)
 	var should_advance := false
