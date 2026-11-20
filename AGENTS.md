@@ -116,6 +116,12 @@ Add `seed=NNN` anywhere for repeatable audio/poses.
 **Skip/don't scan:**  
 `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `reference/audio/`, `index.html`, `build/`, `dist/`, `www/`, `node_modules/`, plus binary/generated: `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`
 
+## Handoffs and pushes
+
+- A handoff does not need a push every time. Push when the other agent needs
+  something — a claim, a finished slice, a branch to review — not after every note.
+- Batch small doc edits and keep them local until the next real handoff.
+
 ## Code token savings (future)
 
 **Data consolidation:**
