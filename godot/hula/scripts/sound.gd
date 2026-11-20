@@ -583,7 +583,7 @@ func _vstep(st: int, dl: float) -> void:
 		elif sec == "v-B": vk = "B%d" % bar
 		elif sec == "v-C": vk = "C%d" % bar
 		elif sec == "v-tag": vk = "tag%d" % bar
-		elif sec == "v-F": vk = ["B0", "B1", "B6", "B7"][clampi(bar, 0, 3)]
+		elif sec == "v-F": vk = "F%d" % bar
 		if vox.has(vk):
 			# one clip per line: each clip is pre-rendered as a small detuned ensemble (choir), so a separate
 			# unison double is no longer played here (two takes at the same pitch comb-filtered into a metallic edge).
