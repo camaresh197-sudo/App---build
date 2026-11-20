@@ -5,7 +5,35 @@ over reading a whole file (hero3d.gd is ~26k tokens). Regenerate after moving
 functions: `py tools\codemap.py`. Constants are listed by name only; grep
 `^const` for their values, or `^var` for mutable state.
 
-## `scripts/hero3d.gd` - 1724 lines, ~26181 tokens whole
+## `scripts/cutscene.gd` - 190 lines, ~1308 tokens whole
+
+```text
+  23  func _ready() -> void
+  26  func _load_data() -> void
+  41  func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: String, scene_name: ...
+  73  func _advance_event() -> void
+  99  func update(dt: float) -> void
+ 125  func skip() -> void
+ 134  func draw(canvas: CanvasItem) -> void
+ 176  func _draw_speaker(canvas: CanvasItem, font: Font, col: Color) -> void
+ 189  func is_active() -> bool
+```
+
+## `scripts/cutscene_scene.gd` - 79 lines, ~576 tokens whole
+
+```text
+  13  func _ready() -> void
+  19  func _setup_background() -> void
+  29  func _setup_lighting() -> void
+  34  func _setup_particles() -> void
+  51  func _setup_audio() -> void
+  56  func load_cutscene_audio(audio_path: String) -> void
+  64  func set_scene_theme(bg_color: Color, light_color: Color) -> void
+  68  func set_particle_effect(emission_shape: int, emission_range: float, velocity_min: float, velocity...
+  77  func stop() -> void
+```
+
+## `scripts/hero3d.gd` - 1724 lines, ~26193 tokens whole
 
 ```text
    4  const VW
@@ -133,7 +161,7 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
 1717  func set_cos(hat_i: int, hoop_i: int, defs: Dictionary) -> void
 ```
 
-## `scripts/main.gd` - 284 lines, ~3263 tokens whole
+## `scripts/main.gd` - 296 lines, ~3374 tokens whole
 
 ```text
    3  const FW
@@ -141,28 +169,28 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
    6  const Save
    7  const Menu
   28  func _ready() -> void
-  43  func _input(e: InputEvent) -> void
-  59  func _to_field(p: Vector2) -> Vector2
-  62  func start_run() -> void
-  69  func _process(dt: float) -> void
- 141  func _director(dt: float) -> void
- 154  func _right() -> float
- 159  func _fps(R: float) -> void
- 166  func _draw() -> void
- 195  func _vis_h() -> float
- 198  func _below(R: float, col: Color) -> void
- 202  func _sky(R: float) -> void
- 218  func _hero(p: Vector2, tm: float, k := 1.0) -> void
- 227  func _ship(sh: Dictionary) -> void
- 239  func _btn(r: Rect2, label: String, col: Color, fn: Callable, fs := 22) -> void
- 248  func _menu(R: float) -> void
- 258  func _toast(R: float) -> void
- 265  func _hud(R: float) -> void
- 272  func _portrait_hud() -> void
- 279  func _over(R: float) -> void
+  45  func _input(e: InputEvent) -> void
+  66  func _to_field(p: Vector2) -> Vector2
+  69  func start_run() -> void
+  76  func _process(dt: float) -> void
+ 149  func _director(dt: float) -> void
+ 162  func _right() -> float
+ 167  func _fps(R: float) -> void
+ 174  func _draw() -> void
+ 207  func _vis_h() -> float
+ 210  func _below(R: float, col: Color) -> void
+ 214  func _sky(R: float) -> void
+ 230  func _hero(p: Vector2, tm: float, k := 1.0) -> void
+ 239  func _ship(sh: Dictionary) -> void
+ 251  func _btn(r: Rect2, label: String, col: Color, fn: Callable, fs := 22) -> void
+ 260  func _menu(R: float) -> void
+ 270  func _toast(R: float) -> void
+ 277  func _hud(R: float) -> void
+ 284  func _portrait_hud() -> void
+ 291  func _over(R: float) -> void
 ```
 
-## `scripts/menu.gd` - 308 lines, ~4635 tokens whole
+## `scripts/menu.gd` - 346 lines, ~5132 tokens whole
 
 ```text
    3  const Save
@@ -192,15 +220,18 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
  229  func stats(ox: float) -> void
  241  func _sum(d: Dictionary) -> int
  246  func settings(ox: float) -> void
- 275  -- secret song test (tap the RUNS pill on the title three times) --
- 276  const TRACKS
- 277  const READY
- 278  const TNAME
- 280  func _secret_tap() -> void
- 287  func secret(R: float, t: float) -> void
+ 276  -- secret song test (tap the RUNS pill on the title three times) --
+ 277  const TRACKS
+ 278  const SONGS
+ 279  const CUTSCENES
+ 280  const READY
+ 281  const TNAME
+ 285  func _secret_tap() -> void
+ 293  func _load_cutscene_data() -> void
+ 304  func secret(R: float, t: float) -> void
 ```
 
-## `scripts/save.gd` - 28 lines, ~337 tokens whole
+## `scripts/save.gd` - 28 lines, ~338 tokens whole
 
 ```text
    3  const PATH
@@ -209,6 +240,23 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
   23  static func save() -> void
   27  static func rank(id: String) -> int: return int(data.skills.get(id, 0))
   28  static func skill_cost(s: Dictionary) -> int: return int(round(s.base * pow(1.7, rank(s.id))))
+```
+
+## `scripts/scene_generator.gd` - 135 lines, ~901 tokens whole
+
+```text
+   7  func generate_background(scene_id: String) -> void
+  34  func _scene_fiesta() -> void
+  47  func _scene_theft() -> void
+  63  func _scene_fall() -> void
+  70  func _scene_hero() -> void
+  77  func _scene_climb() -> void
+  92  func _scene_mission() -> void
+ 100  func _scene_pursuit1() -> void
+ 107  func _scene_pursuit2() -> void
+ 115  func _scene_reckon() -> void
+ 122  func _scene_armada() -> void
+ 130  func _scene_showdown() -> void
 ```
 
 ## `scripts/shotter.gd` - 472 lines, ~5519 tokens whole
@@ -222,7 +270,7 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
  460  func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void
 ```
 
-## `scripts/sound.gd` - 504 lines, ~7163 tokens whole
+## `scripts/sound.gd` - 533 lines, ~7525 tokens whole
 
 ```text
    4  const E
@@ -231,48 +279,51 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
   10  const SFX_LVL
   12  const RANGE
   13  const NVOICE
-  43  func _ready() -> void
-  61  func _buses() -> void
-  87  func set_volumes(music10: int, sfx10: int) -> void
-  98  -- sample bank --
-  99  func _stream(key: String) -> AudioStream
- 105  func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
- 121  func play(name: String, o := {}) -> void
- 150  func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void
- 152  func hit(name: String, dl: float, v: float, ref: float) -> void
- 155  -- sfx --
- 156  func sfx(n: String, vol := 1.0) -> void
- 173  -- music --
- 179  const BEAT_SECS
- 180  const BEATS_BAR
- 181  func start_music(track := "game") -> void
- 190  func stop_music() -> void
- 199  func beat_pos() -> float
- 206  func bar_pos() -> float
- 210  func beat_secs() -> float
- 213  func beats_per_bar() -> int
- 216  func is_playing() -> bool
- 219  func _process(dt: float) -> void
- 247  func _harmony(m: int, v: Array, r: int) -> int
- 255  func _strum(v: Array, dl: float, down: bool, vol: float) -> void
- 261  const ARP
- 262  const STRUMV
- 263  func _step(st: int, dl: float) -> void
- 329  -- title song (ranchera polka, 16 sixteenth-steps per bar) --
- 330  const TE
- 331  func _lead(kind: String, m: int, dur: float, dl: float, v: Array) -> void
- 340  func _tstep(st: int, dl: float) -> void
- 391  -- victory fanfare (instrumental: the tune is carried by the lead instruments) --
- 392  const VE
- 393  const VOX_GAIN
- 395  const VFILL
- 400  const VGRUNT
- 405  const VGRUNT_V
- 406  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
- 409  func _vstep(st: int, dl: float) -> void
+  44  func _ready() -> void
+  67  func _buses() -> void
+  93  func set_volumes(music10: int, sfx10: int) -> void
+ 104  -- sample bank --
+ 105  func _stream(key: String) -> AudioStream
+ 111  func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
+ 127  func play(name: String, o := {}) -> void
+ 156  func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void
+ 158  func hit(name: String, dl: float, v: float, ref: float) -> void
+ 161  -- sfx --
+ 162  func sfx(n: String, vol := 1.0) -> void
+ 179  -- cutscene audio --
+ 182  func play_cutscene_audio(audio_path: String) -> void
+ 192  func stop_cutscene_audio() -> void
+ 196  -- music --
+ 202  const BEAT_SECS
+ 203  const BEATS_BAR
+ 204  func start_music(track := "game") -> void
+ 214  func stop_music() -> void
+ 223  func beat_pos() -> float
+ 230  func bar_pos() -> float
+ 234  func beat_secs() -> float
+ 237  func beats_per_bar() -> int
+ 240  func is_playing() -> bool
+ 243  func _process(dt: float) -> void
+ 271  func _harmony(m: int, v: Array, r: int) -> int
+ 279  func _strum(v: Array, dl: float, down: bool, vol: float) -> void
+ 285  const ARP
+ 286  const STRUMV
+ 287  func _step(st: int, dl: float) -> void
+ 358  -- title song (ranchera polka, 16 sixteenth-steps per bar) --
+ 359  const TE
+ 360  func _lead(kind: String, m: int, dur: float, dl: float, v: Array) -> void
+ 369  func _tstep(st: int, dl: float) -> void
+ 420  -- victory fanfare (instrumental: the tune is carried by the lead instruments) --
+ 421  const VE
+ 422  const VOX_GAIN
+ 424  const VFILL
+ 429  const VGRUNT
+ 434  const VGRUNT_V
+ 435  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
+ 438  func _vstep(st: int, dl: float) -> void
 ```
 
-## `scripts/updater.gd` - 176 lines, ~2067 tokens whole
+## `scripts/updater.gd` - 181 lines, ~2095 tokens whole
 
 ```text
    7  const MANIFEST_URL
@@ -289,8 +340,20 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
  110  func _save_state() -> void
  114  func _say(t: String, secs := 6.0) -> void
  117  func _process(dt: float) -> void
- 122  func _fetch_manifest() -> void
- 126  func _on_done(result: int, code: int, _h: PackedStringArray, body: PackedByteArray) -> void
- 146  func _plan() -> void
- 165  func _next() -> void
+ 122  func check_for_updates() -> void
+ 127  func _fetch_manifest() -> void
+ 131  func _on_done(result: int, code: int, _h: PackedStringArray, body: PackedByteArray) -> void
+ 151  func _plan() -> void
+ 170  func _next() -> void
+```
+
+## `scripts/voice_manager.gd` - 64 lines, ~470 tokens whole
+
+```text
+  10  func _ready() -> void
+  13  func _setup_voice_players() -> void
+  21  func play_dialogue(speaker: String, text: String) -> void
+  47  func _tts_speak(speaker: String, text: String, player: AudioStreamPlayer) -> void
+  52  func stop_all_voices() -> void
+  56  func get_voice_duration(speaker: String, text: String) -> float
 ```
