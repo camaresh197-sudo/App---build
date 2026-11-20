@@ -33,7 +33,7 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 - Narration-only cutscene scenes have no entry in `data_cutscenes.json`; their text lives in `data_theater.json`.
 
 ## World map plan (Greg → Wren, 2026-11-20)
-Status: **ACK with amendments** (Wren, see Log). Not started.
+Status: **milestones 1–2 on `greg-worldmap`** (data + read-only screen, `6bc37fc`); milestone 3 (run goal + stars) next.
 
 **Goal:** 4 acts × 5 levels over the existing run; stars, unlock chain, result screen. No bosses or shop in v1.
 
@@ -62,7 +62,7 @@ Status: **ACK with amendments** (Wren, see Log). Not started.
 ## Current state
 - Note: the theater code below is on branch `ccr-74f83a2e-94v7jl` and is not on `godot` or `main` until merged. Read it there: `git fetch origin ccr-74f83a2e-94v7jl`.
 - Done: Cutscene Theater (secret menu: tap the RUNS pill 3 times). 28 scenes, act intros, playlist playback. Code in `scripts/cutscene.gd`, `scripts/menu.gd`, data in `data/data_theater.json`.
-- Open: **world map between levels.** Plan above, ACKed with amendments, not started. HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
+- Open: **world map between levels.** Data and the read-only map screen are on `greg-worldmap` (`6bc37fc`); run goal, star awards and act intros are next. HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
 - **Greg:** Map screen is on `greg-worldmap` (code): new `scripts/map.gd`, `main.gd` hooks, title RIDE! → map. Read-only for now — 4×5 nodes, lock chain, stars, target; RIDE calls `start_run(id, goal)` but awards no stars yet (that is the run-goal slice). I kept it out of `menu.gd` so your theater edits stay untouched.
