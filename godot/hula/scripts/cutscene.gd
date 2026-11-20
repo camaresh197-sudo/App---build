@@ -29,14 +29,24 @@ func start(snd_node: Node, hero3d_node: Node, main_node: Node2D, cutscene_id: St
 	cur_scene = scene_name
 	cur_event_idx = 0
 	event_time = 0.0
-	active = true
+	active = false
+	current_event = {}
+	display_text = ""
+	display_speaker = ""
 
 	# Load events for this scene
-	if snd.cutscenes.has(cutscene_id) and snd.cutscenes[cutscene_id].has(scene_name):
-		events = snd.cutscenes[cutscene_id][scene_name]
-		_advance_event()
+	if snd and snd.cutscenes.has(cutscene_id):
+		if snd.cutscenes[cutscene_id] is Dictionary and snd.cutscenes[cutscene_id].has(scene_name):
+			events = snd.cutscenes[cutscene_id][scene_name]
+			if events is Array and events.size() > 0:
+				active = true
+				_advance_event()
+			else:
+				events = []
+		else:
+			events = []
 	else:
-		active = false
+		events = []
 
 func _advance_event() -> void:
 	if cur_event_idx >= events.size():
@@ -59,10 +69,14 @@ func _advance_event() -> void:
 		hero3d.expr(display_expr)
 
 func update(dt: float) -> void:
-	if not active:
+	if not active or not snd:
 		return
 
 	event_time += dt
+
+	var beat_sec = snd.beat_secs()
+	if beat_sec <= 0:
+		return  # Music not ready, skip timing
 
 	# Check if it's time to advance (gap or duration-based)
 	var should_advance := false
@@ -70,12 +84,12 @@ func update(dt: float) -> void:
 	# If there's a gap, use it as the event duration
 	if current_event.has("gap"):
 		var gap_beats = float(current_event.get("gap", 0))
-		var gap_secs = gap_beats * snd.beat_secs()
+		var gap_secs = gap_beats * beat_sec
 		if event_time >= gap_secs:
 			should_advance = true
 	else:
 		# Default: show for 2 beats
-		var default_secs = 2.0 * snd.beat_secs()
+		var default_secs = 2.0 * beat_sec
 		if event_time >= default_secs:
 			should_advance = true
 
