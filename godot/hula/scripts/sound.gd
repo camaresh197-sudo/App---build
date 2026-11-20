@@ -65,7 +65,7 @@ func _ready() -> void:
 	have = ResourceLoader.exists("res://audio/kick.ogg")
 
 func _buses() -> void:
-	for nm in ["Music", "SFX", "Vox", "VoxGrunt"]:
+	for nm in ["Music", "SFX", "Vox", "VoxGrunt", "Cutscene"]:
 		if AudioServer.get_bus_index(nm) < 0:
 			AudioServer.add_bus(); var i := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(i, nm); AudioServer.set_bus_send(i, "Master")
@@ -86,6 +86,11 @@ func _buses() -> void:
 	if AudioServer.get_bus_effect_count(mb) == 0:
 		var rv := AudioEffectReverb.new(); rv.room_size = 0.55; rv.damping = 0.5; rv.wet = 0.16; rv.dry = 0.9; rv.hipass = 0.1
 		AudioServer.add_bus_effect(mb, rv)
+	var csb := AudioServer.get_bus_index("Cutscene")
+	if AudioServer.get_bus_effect_count(csb) == 0:
+		# Minimal reverb for cutscenes (less echo than music)
+		var cr := AudioEffectReverb.new(); cr.room_size = 0.2; cr.damping = 0.8; cr.wet = 0.05; cr.dry = 0.95; cr.hipass = 0.3
+		AudioServer.add_bus_effect(csb, cr)
 	if AudioServer.get_bus_effect_count(0) == 0 and ClassDB.class_exists("AudioEffectHardLimiter"):
 		var lim = ClassDB.instantiate("AudioEffectHardLimiter"); lim.pre_gain_db = 0.0; lim.ceiling_db = -0.5
 		AudioServer.add_bus_effect(0, lim)
@@ -189,7 +194,7 @@ func play_cutscene_audio(audio_path: String) -> void:
 	if cutscene_player == null:
 		cutscene_player = AudioStreamPlayer.new()
 		add_child(cutscene_player)
-		cutscene_player.bus = "Music"
+		cutscene_player.bus = "Cutscene"
 	var stream = load(audio_path)
 	if stream == null:
 		print("Failed to load audio stream: ", audio_path)
