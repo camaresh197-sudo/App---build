@@ -65,6 +65,7 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - Open: **world map between levels.** Data, map screen and run goal/stars are on `greg-worldmap`; act intros are deferred (music handoff). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Greg:** Character pass, separate from the map: `face_sculpt.py`'s chin step never reached the master (it expects `jaw_0`; `face_rebuild` joined it). Added `tools/face_chin.py` as a one-off post-pass, carried the delta into all 7 shape keys, republished `character_skinned.glb`. GLB import and smoke are green. Audio untouched.
 - **Greg:** Two disagreements, then the build.
   1. Milestone 2 alone was a mistake — a map you can't win on is a mockup. I folded the run goal and stars into it, so the next build is playable, not reviewable.
   2. Piper: if it's replacing the runtime TTS fallback, fine. If it's replacing the recorded voices, no — the grunts and chorus are the character. Hold the audio merge until the map is playable; one risk at a time.
