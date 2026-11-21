@@ -1,0 +1,291 @@
+{
+  "words": {
+    "a": {
+      "say": "a",
+      "ipa": "ˈeɪ",
+      "pron": "ˈeɪ",
+      "syllables": 1
+    },
+    "all": {
+      "say": "all",
+      "ipa": "ˈɔːl",
+      "pron": "ˈɔːl",
+      "syllables": 1
+    },
+    "am": {
+      "say": "am",
+      "ipa": "æm",
+      "pron": "æm",
+      "syllables": 1
+    },
+    "and": {
+      "say": "and",
+      "ipa": "ænd",
+      "pron": "ænd",
+      "syllables": 1
+    },
+    "baked": {
+      "say": "baked",
+      "ipa": "bˈeɪkt",
+      "pron": "bˈeɪkt",
+      "syllables": 1
+    },
+    "bate": {
+      "say": "bate",
+      "ipa": "bˈeɪt",
+      "pron": "bˈeɪt",
+      "syllables": 1
+    },
+    "cuz": {
+      "say": "cuz",
+      "ipa": "kˈʌz",
+      "pron": "kˈʌz",
+      "syllables": 1
+    },
+    "date": {
+      "say": "date",
+      "ipa": "dˈeɪt",
+      "pron": "dˈeɪt",
+      "syllables": 1
+    },
+    "day": {
+      "say": "day",
+      "ipa": "dˈeɪ",
+      "pron": "dˈeɪ",
+      "syllables": 1
+    },
+    "done": {
+      "say": "done",
+      "ipa": "dˈʌn",
+      "pron": "dˈʌn",
+      "syllables": 1
+    },
+    "feel": {
+      "say": "feel",
+      "ipa": "fˈiːl",
+      "pron": "fˈiːl",
+      "syllables": 1
+    },
+    "for": {
+      "say": "for",
+      "ipa": "fɔːɹ",
+      "pron": "fɔːɹ",
+      "syllables": 1
+    },
+    "fun": {
+      "say": "fun",
+      "ipa": "fˈʌn",
+      "pron": "fˈʌn",
+      "syllables": 1
+    },
+    "gay": {
+      "say": "gay",
+      "ipa": "ɡeɪ",
+      "pron": "/ɡeɪ/",
+      "syllables": 1,
+      "phonics": [
+        {
+          "grapheme": "g",
+          "sound": "/ɡ/",
+          "hint": "hard G, as in give or go"
+        },
+        {
+          "grapheme": "ay",
+          "sound": "/eɪ/",
+          "hint": "vowel team (digraph), long A, as in day, stay, play"
+        }
+      ],
+      "nato": [
+        "Golf",
+        "Alpha",
+        "Yankee"
+      ]
+    },
+    "has": {
+      "say": "has",
+      "ipa": "hˈæz",
+      "pron": "hˈæz",
+      "syllables": 1
+    },
+    "he": {
+      "say": "he",
+      "ipa": "hiː",
+      "pron": "hiː",
+      "syllables": 1
+    },
+    "he'll": {
+      "say": "he'll",
+      "ipa": "hiːl",
+      "pron": "hiːl",
+      "syllables": 1
+    },
+    "hey": {
+      "say": "hey",
+      "ipa": "hˈeɪ",
+      "pron": "hˈeɪ",
+      "syllables": 1
+    },
+    "hug": {
+      "say": "hug",
+      "ipa": "hˈʌɡ",
+      "pron": "hˈʌɡ",
+      "syllables": 1
+    },
+    "i": {
+      "say": "i",
+      "ipa": "ˈaɪ",
+      "pron": "ˈaɪ",
+      "syllables": 1
+    },
+    "i'm": {
+      "say": "i'm",
+      "ipa": "aɪm",
+      "pron": "aɪm",
+      "syllables": 1
+    },
+    "is": {
+      "say": "is",
+      "ipa": "ɪz",
+      "pron": "ɪz",
+      "syllables": 1
+    },
+    "jake": {
+      "say": "jake",
+      "ipa": "dʒˈeɪk",
+      "pron": "dʒˈeɪk",
+      "syllables": 1
+    },
+    "jake's": {
+      "say": "jake's",
+      "ipa": "dʒˈeɪkz",
+      "pron": "dʒˈeɪkz",
+      "syllables": 1
+    },
+    "jeff": {
+      "say": "jeff",
+      "ipa": "dʒˈɛf",
+      "pron": "dʒˈɛf",
+      "syllables": 1
+    },
+    "jeff's": {
+      "say": "jeff's",
+      "ipa": "dʒˈɛfs",
+      "pron": "dʒˈɛfs",
+      "syllables": 1
+    },
+    "like": {
+      "say": "like",
+      "ipa": "lˈaɪk",
+      "pron": "lˈaɪk",
+      "syllables": 1
+    },
+    "make": {
+      "say": "make",
+      "ipa": "mˈeɪk",
+      "pron": "mˈeɪk",
+      "syllables": 1
+    },
+    "mom": {
+      "say": "mom",
+      "ipa": "mˈɑːm",
+      "pron": "mˈɑːm",
+      "syllables": 1
+    },
+    "most": {
+      "say": "most",
+      "ipa": "mˈoʊst",
+      "pron": "mˈoʊst",
+      "syllables": 1
+    },
+    "next": {
+      "say": "next",
+      "ipa": "nˈɛkst",
+      "pron": "nˈɛkst",
+      "syllables": 1
+    },
+    "of": {
+      "say": "of",
+      "ipa": "ʌv",
+      "pron": "ʌv",
+      "syllables": 1
+    },
+    "on": {
+      "say": "on",
+      "ipa": "ˈɔn",
+      "pron": "ˈɔn",
+      "syllables": 1
+    },
+    "plays": {
+      "say": "plays",
+      "ipa": "plˈeɪz",
+      "pron": "plˈeɪz",
+      "syllables": 1
+    },
+    "proud": {
+      "say": "proud",
+      "ipa": "pɹˈaʊd",
+      "pron": "pɹˈaʊd",
+      "syllables": 1
+    },
+    "shame": {
+      "say": "shame",
+      "ipa": "ʃˈeɪm",
+      "pron": "ʃˈeɪm",
+      "syllables": 1
+    },
+    "so": {
+      "say": "so",
+      "ipa": "sˈoʊ",
+      "pron": "sˈoʊ",
+      "syllables": 1
+    },
+    "tall": {
+      "say": "tall",
+      "ipa": "tˈɔːl",
+      "pron": "tˈɔːl",
+      "syllables": 1
+    },
+    "that": {
+      "say": "that",
+      "ipa": "ðˈæt",
+      "pron": "ðˈæt",
+      "syllables": 1
+    },
+    "the": {
+      "say": "the",
+      "ipa": "ðə",
+      "pron": "ðə",
+      "syllables": 1
+    },
+    "their": {
+      "say": "their",
+      "ipa": "ðɛɹ",
+      "pron": "ðɛɹ",
+      "syllables": 1
+    },
+    "to": {
+      "say": "to",
+      "ipa": "tuː",
+      "pron": "tuː",
+      "syllables": 1
+    },
+    "wants": {
+      "say": "wants",
+      "ipa": "wˈɔnts",
+      "pron": "wˈɔnts",
+      "syllables": 1
+    },
+    "what": {
+      "say": "what",
+      "ipa": "wˌʌt",
+      "pron": "wˌʌt",
+      "syllables": 1
+    },
+    "with": {
+      "say": "with",
+      "ipa": "wɪð",
+      "pron": "wɪð",
+      "syllables": 1
+    }
+  }
+}

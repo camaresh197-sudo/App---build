@@ -52,11 +52,11 @@ Master (Hard Limiter @ -0.5dB)
 ---
 
 ### 4. VOX BUS
-**Purpose:** Sung vocal performances (game songs)  
-**Character:** Clear, cohesive, with gentle space  
+**Purpose:** Sung vocal performances (game songs)
+**Character:** Clear and dry — the clips already carry their own ensemble; space here reads as echo
 **Effects:**
 - Compressor: -10dB threshold, 1.5:1 ratio, 12ms attack, 180ms release (preserves dynamics)
-- Reverb: 0.5 room size, 0.6 damping, 15% wet (vocals sound like an ensemble in a small room)
+- Reverb: 0.3 room size, 0.75 damping, 5% wet (near-dry; 15% + 0.5 room made the rendered vocal doubles read as a slap/echo)
 
 **Content:** Mariachi vocals, choir lines (vox/*.ogg samples)  
 **Boost:** Same as Music (1.15x game, 1.8x title, 0.6x victory)
@@ -68,7 +68,7 @@ Master (Hard Limiter @ -0.5dB)
 **Character:** Separated from main vocals to prevent ducking issues  
 **Effects:**
 - Compressor: -4dB threshold, 2.5:1 ratio, 5ms attack, 120ms release (keeps peaks controlled)
-- Reverb: 0.5 room size, 0.6 damping, 10% wet (matches Vox but slightly drier)
+- Reverb: 0.3 room size, 0.75 damping, 4% wet (matches Vox, near-dry)
 
 **Content:** Character reactions, ad-libs  
 **Boost:** Same as Music/Vox

@@ -18,3 +18,6 @@ godot/hula/audio/**/*.import
 # Piper voice models: 60-120 MB binaries, downloaded per machine
 tools/models/
 
+
+# Piper speech cache (word/line renders reused across calls)
+tools/.cache/

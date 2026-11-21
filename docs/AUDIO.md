@@ -48,12 +48,62 @@ the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
   section; each clip is pre-rolled by its lead-in so the first syllable lands on the
   downbeat, and plays at `VOX_GAIN` (2.4) on the Vox bus.
 - The clips are rendered, not recorded: Piper speech is re-pitched to the song's melody
-  contour with WORLD (`tools/piper_sing.py`). The originals are backed up in
+  with WORLD (`tools/piper_sing.py`). The originals are backed up in
   `tools/vox_backup/originals/` (`--restore` puts them back).
 - Chorus grunts: bank `audio/grunt_r<midi>[_2].ogg` (`RANGE["grunt"]`), scheduled by
   `VGRUNT` as `[section, bar, step]`, pitched to the bar's chord root `r`, routed to the
   separate VoxGrunt bus (its own compressor, so grunts don't pump the sung line).
   Keep them off `v-hold` bars and the final bar.
+
+### How the singer works (`tools/piper_sing.py`)
+
+The pipeline is a mouth transplant, not a vocoder trick: Ryan sings the lyric on a
+melody borrowed from the *original* performance, never from the current clip (re-running
+on an already-sung clip would borrow from itself).
+
+1. **Melody** — `tools/vox_backup/originals/<id>.ogg` is analyzed with WORLD; its F0
+   contour and duration are the target.
+2. **Speech** — Piper (`en_US-ryan-high` by default) speaks the words from
+   `data_lyrics.json`.
+3. **Sing the notes.** Ryan's voiced runs are merged to match the song's note spans in
+   order (`equalize_runs`), then a piecewise time map stretches each pair onto its span.
+   The melody is classified into **plateaus** (held) and **glides** (slides). A plateau
+   gets one steady note; a glide keeps the performance's own contour. Every pitch is
+   therefore the performance's, never an average across a slide — that is what keeps the
+   line in tune.
+4. **Humanise.** A singer is never dead on the grid: each note lands ±6 cents off centre,
+   upward leaps get a scoop, vibrato (4.8–6.2 Hz, per-note depth) keeps one phase across
+   note boundaries, and the whole line drifts and jitters by a few cents. The RNG is
+   seeded from the clip id, so a re-render is repeatable.
+5. **Legato.** Unvoiced holes of 15–80 ms inside a line are voiced so the consonants ride
+   the vowel; syllables join instead of stuttering. Longer gaps (commas, musical rests)
+   are kept.
+6. **Output.** WORLD resynthesis, normalize (0.89 peak), 6 ms edge fades, 44.1 kHz mono
+   Ogg. The clip is a **single dry lead** — no delayed doubles, so the Vox bus reverb is
+   not doubled into an echo.
+
+### Chorus timing (two-bar lines)
+
+See `docs/VICTORY_LYRICS.md` for every line's bars, words, syllables and notes.
+`v-B` is eight bars but **four two-bar lines**: bars 0–1, 2–3, 4–5, 6–7 map to `B0`–`B3`,
+and `sound.gd` plays one only on even bars. Clips `B4`–`B7` are no longer triggered.
+
+Chorus clips are rendered in **grid mode** (`CHORUS_GRID` in `piper_sing.py`): the notes
+come from `data_victory.json`, not from the old take, and each syllable's **vowel** is
+anchored to a beat using Piper's phoneme alignments (one syllable per beat, last one held
+to the end of the phrase; 0.15 s of consonant sits before the first beat, which
+`data_vox.json`'s lead-in puts ahead of the downbeat). This needs `onnx`
+(`pip install onnx`, or `piper-tts[alignment]`); without it Piper returns no alignments
+and the clip falls back to the old contour path.
+
+Flags: `--flow notes|contour` (`notes` is the singer above; `contour` is the old
+speech-rhythm path), `--vibrato 0..1`, `--only A2,B0` for a quick single-clip render,
+`--force` to re-render, `--restore`, `--dry-run`.
+
+Checks: `vox_note_check.py` reports voiced-run wander (robotic = too flat) and run count;
+`vox_pitch_check.py` reports per-frame movement (its "big jump" flags are usually harvest
+octave errors on rendered audio — see its docstring); `vox_ab_check.py` compares takes.
+
 
 ## Where to change what
 
@@ -64,6 +114,7 @@ the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
 | Track loudness | `boost` in `start_music()` |
 | Song notes / structure | `data_song.json`, `data_title.json`, `data_victory.json` |
 | Victory lyric clips | `data_vox.json` + `audio/vox/` |
+| Vocal tone (robotic / stutter) | humanise + legato in `tools/piper_sing.py` |
 | Grunt placements / level | `VGRUNT`, `VGRUNT_V` + `tools/vox_grunt.py` |
 | Re-render a sample bank | the matching `tools/vox_*.py`, then `--import` |
 
@@ -74,8 +125,9 @@ the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
 ```powershell
 py tools\vox_grunt.py          # rebuild the grunt bank (all roots, 2 takes)
 py tools\vox_choir.py --src <dir-of-original-ogg>
-py tools\piper_sing.py         # current vocal pass: Piper voice sung on the melody (--force, --restore, --dry-run)
+py tools\piper_sing.py         # the singer: Piper on the melody (--force, --only A2,B0, --flow, --vibrato, --restore, --dry-run)
 py tools\vox_singer.py --src <dir>   # older WORLD voice conversion; --style/--lisp/--tipsy/--dopey
+py tools\lyrics_doc.py             # rebuild docs/VICTORY_LYRICS.md (bars, words, syllables, notes, IPA)
 ```
 
 Checks: `vox_pitch_check.py`, `vox_note_check.py`, `vox_ab_check.py`.
@@ -85,6 +137,9 @@ real time and prints PRE/POST peak/RMS/crest/clip plus music-bus levels, and wri
 
 ## Gotchas
 
+- **"There's an echo."** Check the Vox bus before the clips: `AudioEffectReverb` at 15% wet with a 0.5 room reads as a slap behind a single dry lead. The clips themselves carry no delay (verify with an envelope autocorrelation at 50–300 ms); they are one dry take by design.
+- **"It stutters between words."** Measure holes, don't guess: 15–80 ms unvoiced gaps inside a line are the singer's fault (fixed by the legato pass), while 150 ms+ gaps are commas and musical rests and should stay. `vox_note_check.py` reports run counts; the spectrogram of a clip makes the holes obvious.
+- **"Robotic."** A dead-flat plateau is the tell: `vox_note_check.py` wander near 0 cents. The singer adds per-note detune, scoops, vibrato and drift; if it comes back, check that the humanise step still runs after the plateau loop.
 - Audio and art `.import` files are tracked, and every audio one uses default settings
   (`loop=false`, `bpm=0`). A fresh `godot --headless --import` rewrites many of them with
   no real change; don't commit that churn (`git checkout -- '*.import'`).
