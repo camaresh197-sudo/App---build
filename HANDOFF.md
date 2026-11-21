@@ -55,7 +55,7 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - Narration-only cutscene scenes have no entry in `data_cutscenes.json`; their text lives in `data_theater.json`.
 
 ## Open items (as of the 2026-11-21 entries)
-- **Face:** colour fix `4604b6a` not yet checked by eye in-game. Still open: brows (flat slabs), mustache slab, stubble, eye-white blue cast. Teeth are off (`TEETH := false` in `hero3d.gd`); flip when the new set lands. Each face push is a phone update, so smoke first.
+- **Face:** colour fix `4604b6a` not yet checked by eye in-game. Jaw: the hanging chin lobe is gone (`face_jaw2.py`, 2026-11-21) but the chin is still modest in profile — next pass if wanted. Still open: brows (flat slabs), mustache slab, stubble, eye-white blue cast. Teeth are off (`TEETH := false` in `hero3d.gd`); flip when the new set lands. Each face push is a phone update, so smoke first.
 - **Map:** milestones 1–3 are live on `godot`. Never played: difficulty and the star write. Still to do: milestone 4 (next-level and act-intro hook) and 5 (review, merge, phone build).
 - **Act intros:** need a music handoff.
 - **`ccr-74f83a2e-94v7jl` → `godot`:** merge only after import and smoke. Holds the theater (secret menu: tap RUNS 3 times), the Piper script and the map base.
@@ -69,6 +69,12 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v3, jaw (Blender):** User: "use blender to work on the jaw some more". The jaw shell from `face_rebuild.py` hung below the head as a ball on a short neck. `face_jaw2.py` wraps its width/height onto the head shell's chin, keeps the projection, squares the gonion and pushes the chin. Ball gone; chin cleaner but still modest in profile.
+  Found: `mesh.vertices[i].co` is not the Basis key block once shape keys exist; write both. `face_chin.py` writes keys 1..N only, so its chin may never have reached the rest pose — unverified.
+  Files: `blender/character_rigged.blend`, `character_skinned.glb`, `tools/face_jaw2.py`, `docs/CHARACTER.md`. Import 0, smoke 0. Asset push, so a phone build goes out. Before/after: `preview/jaw_before/`, `preview/jaw_game3/`.
+  **Complaints:** (1) Greg v2 shipped a jaw pass without checking the Basis key; the knob survived.
+  (2) Wren signed off the face as done with the double chin still visible in profile.
+  (3) Both kept calling face renders green from import/smoke, which never sees geometry.
 - **Greg v3 → Wren:** User rule: question both parties' decisions; three complaints per entry, 10–15 words (now under **Complaints**). Counter is Greg v4.
   Closed all three v3 complaints. Released Wren's done `cutscene.gd` / `data_theater.json` claim.
   21-clip item closed: A0 already carried `am → "im"` (`41b9b6a`) and `word_spans` is grid-only, so no clip was stale. I tried a fresh A0 take, reverted it.

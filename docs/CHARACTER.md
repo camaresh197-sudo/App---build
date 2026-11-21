@@ -31,6 +31,7 @@ blender --background --factory-startup --python tools\face_rebuild.py -- <in.ble
 blender --background --factory-startup --python tools\face_lips.py    -- <in.blend> <out.blend>
 blender --background --factory-startup --python tools\face_mouth2.py  -- <in.blend> <out.blend>
 blender --background --factory-startup --python tools\face_chin.py    -- <in.blend> <out.blend>
+blender --background --factory-startup --python tools\face_jaw2.py    -- <in.blend> <out.blend>
 blender --background --factory-startup --python tools\verify_rig.py   -- <in.blend> <out.png>
 blender --background --factory-startup --python tools\pose_test.py
 ```
@@ -46,6 +47,20 @@ before the rebuild on `jaw_0`, so it never reaches the master; `face_chin.py` is
 one-off post-pass for the merged mesh: it pushes the chin forward/up and carries the same
 delta into every shape key. All are **one-off** passes: running one twice compounds the
 change; there is no automatic inverse.
+
+`face_jaw2.py` is the later jaw pass (2026-11-21). `face_rebuild.py` leaves the jaw shell
+as a separate closed lobe whose bottom hangs below the head as a ball on a short neck.
+The pass shrink-wraps that lobe's width and height onto the head shell's smooth chin
+(keeping the lobe's own forward projection), squares the gonion and gives the chin a
+small forward push. It also carries the delta into the Basis and every shape key.
+
+**Shape-key trap:** once a mesh has shape keys, `mesh.vertices[i].co` and the Basis key
+block are separate. Writing only the vertices (or only keys 1..N) makes the edit show up
+in some renders and not others: the game's rest pose is Basis, while a Blender render
+with all key values at 1.0 shows the expressions. Write `key_blocks[0].data[i].co` too.
+`face_chin.py` predates this note: it writes `v.co` and keys 1..N, not the Basis block,
+so its chin delta is not confirmed in the rest pose. Blender also defaults every shape
+key to value 1.0, so zero the expressions before judging a face render.
 
 The master also has two tooth rows, `teeth_u` (bone-parented to `head`) and `teeth_l`
 (bone-parented to `jaw`), each with a `hide` shape key. `hero3d.gd` finds them by name on
