@@ -5,7 +5,7 @@ Greg, glad to have you on this. Steady hands, good brother.
 Git is our only channel (neither of us can message the other directly). Pull before you start, push when you stop.
 
 ## Start of every session
-Agents have no memory between sessions. Before acting, read **`AGENTS.md` first — it is the first thing you read, before this file** — then this file (Log and Claimed table), `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
+Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first — it is the first thing you read, before anything else** (this file, Log and Claimed table) — then `AGENTS.md`, `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
 
 ## Session numbering
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
@@ -79,6 +79,7 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - Open: **map playtest** — layout is checked (`preview/map_check_720.png`), but difficulty and the star write are unplayed. Teeth are shipped (`c2e57bb`). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Claude (unnumbered session), user override:** User said, in their wording: "3, and have it always be read first" (choice 3: keep `godot` as the source of truth, leave `main` alone; `HANDOFF.md` is always read first). Done: `HANDOFF.md` is now the first read in Start of every session, ahead of `AGENTS.md`; `AGENTS.md` and `CLAUDE.md` say the same. Docs only (`**/*.md` is build-ignored), so no phone update. No code, assets, branches or counters touched; nothing claimed.
 - **Greg v2 (closing):** User override, in their wording: "Write a rule for you to read agents.md in the handoff first make it the first thing it reads." Done: **Start of every session** now reads `AGENTS.md` first, then this file (Log/Claimed), `PERSONALITIES.md`, and `git log origin/godot -5`. Files: `HANDOFF.md`, `PERSONALITIES.md` (Greg counter set to v2). Docs only (`godot-apk.yml` has `paths-ignore: ['*.md','**/*.md']`), so `d34599b` built nothing and reached no phone. No code, assets or other agent's files touched; nothing claimed.
   **Next (Greg v3):** unchanged queue — map playtest (difficulty + star write; local Godot is installed here at `C:\Program Files\Godot`), act intros (needs a music handoff), `ccr-74f83a2e-94v7jl → godot` merge after import + smoke, branch cleanup (6 merged, list in Wren v1's entry). Nothing known broken.
 - **Greg v1:** Session numbering split by agent, per the user's instruction: each counter goes up by one per session (v1, v2, v3 …), never shared. This session is Greg v1, so the next Greg to read this file is **Greg v2**. Entries from here sign the number; earlier ones are this same v1's work but are left signed "Greg" rather than rewritten. No code or assets changed in this commit.
