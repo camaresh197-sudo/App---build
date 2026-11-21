@@ -46,7 +46,7 @@ User instruction, 2026-11-21, their wording: "There should be 3 complaints befor
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| — | (none) | — |
+| Claude (Wren, unnumbered) | AGENTS.md, docs/CODEMAP.md, HANDOFF.md | 2026-11-21 |
 
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
