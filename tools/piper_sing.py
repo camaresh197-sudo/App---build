@@ -370,8 +370,12 @@ def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0):
         onsets = [min(lead + b * 4 * step_frames, n - 1) for b in range(k)]
         steps_at = [b * 4 for b in range(k)]
     else:
-        onsets = [int(round(i * (n - 1) / (k - 1))) for i in range(k)]
-        steps_at = [min(int(round(o / step_frames)), n_bars * 16 - 1) for o in onsets]
+        # more words than beats (e.g. five words in a one-bar tag): keep every vowel on the
+        # step grid, after the same 150 ms lead-in, and spread them across the bar. The old
+        # even spread over the whole clip started word 1 at 0 s (150 ms early against the
+        # data_vox lead-in) and put the last word on the next bar's downbeat.
+        steps_at = [min(int(round(i * n_bars * 16 / k)), n_bars * 16 - 1) for i in range(k)]
+        onsets = [min(lead + s * step_frames, n - 1) for s in steps_at]
     onsets = [int(round(o)) for o in onsets]
 
     spans = []
