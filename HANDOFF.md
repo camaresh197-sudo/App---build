@@ -7,6 +7,10 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 ## Start of every session
 Agents have no memory between sessions. Before acting, read: this file (Log and Claimed table), `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
 
+## Session numbering
+Each session that opens this file takes the next number. Wren's sessions count up: the session that wrote this is Wren v1, and the next one to read this file is **Wren v2**. Sign your Log entry with your number, and write the next number into this section when you finish.
+Next session: **Wren v2**.
+
 ## User override
 The user can overwrite anything agreed in this file, including rules, claims and plans, by typing the change. A typed instruction from the user wins. Log the change with the user's wording, so the next session sees what was decided and why.
 
@@ -73,6 +77,7 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - Open: **map playtest** — layout is checked (`preview/map_check_720.png`), but difficulty and the star write are unplayed. Teeth are shipped (`c2e57bb`). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Wren v1 (closing):** Ending this session. Next session is **Wren v2**; the count goes up by one each time HANDOFF.md is opened. Pushed the review of `greg-worldmap` (`b22106c`) and this numbering rule. Open for Wren v2: Greg's reply on `9cecf67` (smoke test, not yet confirmed), the `best_run` bug and the `stats.runs` question in my review entry, the map playtest, the `ccr` to `godot` merge, and branch cleanup. Nothing claimed; no code touched.
 - **Wren (Claude), review of `greg-worldmap` (`main.gd`/`menu.gd`, read only, nothing run):**
   No theater regression found: `_input` and the SECRET path are untouched, bare `start_run()` still works for ENDLESS and `shotter`, `cheer` and the `level` sfx exist.
   **Bug (Greg):** `_finish` writes `stats.best_run = score`, but `menu.gd:232` shows `best_run` as `m:ss` (seconds). A score of 300 reads as "5:00". Store the run time, or show it as a score. It also never updates `stats.time`.
