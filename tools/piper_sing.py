@@ -59,6 +59,9 @@ FS = 22050          # analysis rate (the medium/high models are 22050; low is 16
 FRAME_MS = 5.0      # WORLD frame period
 OGG_RATE = 44100    # the bank ships 44.1 kHz mono vorbis
 VE = 0.105          # victory step length (sound.gd), 16 steps/bar
+# The grid melodies in data_victory.json are written two octaves above the band's key.
+# The original bank clips (B4, B5) are already in the key, so only grid melodies shift.
+OCTAVE_SHIFT = -24
 
 # Pronunciation table. data_phonics.json is the source of truth and is read on
 # first render; these dicts are only fallbacks used while building that file.
@@ -374,7 +377,7 @@ def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0):
     spans = []
     for i, o in enumerate(onsets):
         e = onsets[i + 1] if i + 1 < len(onsets) else n
-        hz = pitch[steps_at[i]]
+        hz = pitch[steps_at[i]] * 2.0 ** (OCTAVE_SHIFT / 12.0)
         if hz <= 0:
             hz = pitch[max(0, steps_at[i] - 1)]
         spans.append((o, e, float(hz)))
