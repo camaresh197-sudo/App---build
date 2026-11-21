@@ -1,8 +1,0 @@
-{
-  "name": "hula-vaquero",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "archiver": "^7.0.0"
-  }
-}
