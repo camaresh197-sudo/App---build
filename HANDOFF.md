@@ -36,7 +36,6 @@ The user can overwrite anything agreed in this file, including rules, claims and
 | Who | Files | Since |
 |---|---|---|
 | Wren | `scripts/cutscene.gd`, `data/data_theater.json` (adds `play_act(i)` helper) | 2026-11-20 |
-| Greg | `scripts/main.gd`, `scripts/menu.gd` (best_run display + map close on start_run; small review fixes) | 2026-11-21 |
 
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
