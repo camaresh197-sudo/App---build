@@ -1,37 +1,52 @@
 name: Release
-# The primary app is the Godot build. This workflow used to build the Capacitor
-# (web) APK; it now builds the Godot APK from the `godot` branch, which is where
-# the Godot project lives. The web build moved to the separate `legacy` repo.
+# The primary app is the Godot build. The Godot project lives on the `godot`
+# branch; this workflow exports its debug APK. The web build lives in the
+# separate `legacy` repo.
 on:
   push: { branches: [main] }
   workflow_dispatch: {}
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true   # a newer push supersedes an in-flight build
 env:
   GODOT_VER: 4.6.3
 jobs:
   apk:
-    # the Godot build is the app this workflow ships
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-        with: { ref: godot, fetch-depth: 0 }   # the Godot project lives on the godot branch
+        with: { ref: godot }   # shallow clone: the build never reads git history
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 17 }
       - uses: android-actions/setup-android@v3
         with:
           packages: 'platform-tools platforms;android-35 build-tools;35.0.1 cmdline-tools;latest'
+      # Godot binary + export templates are ~1 GB together; cache them per version.
+      - name: Restore Godot cache
+        id: godot-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/godot-dl
+          key: godot-${{ env.GODOT_VER }}-linux
+      - name: Download Godot and export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/godot-dl && cd ~/godot-dl
+          base=https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable
+          wget -q "$base/Godot_v${GODOT_VER}-stable_linux.x86_64.zip"
+          wget -q "$base/Godot_v${GODOT_VER}-stable_export_templates.tpz"
+          unzip -q Godot_v${GODOT_VER}-stable_linux.x86_64.zip
+          unzip -q Godot_v${GODOT_VER}-stable_export_templates.tpz -d tpl
       - name: Install Godot and export templates
         run: |
-          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_linux.x86_64.zip
-          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VER}-stable/Godot_v${GODOT_VER}-stable_export_templates.tpz
-          unzip -q Godot_v${GODOT_VER}-stable_linux.x86_64.zip
+          cd ~/godot-dl
+          sudo install -m 755 Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
           mkdir -p ~/.local/share/godot/export_templates/${GODOT_VER}.stable
-          unzip -q Godot_v${GODOT_VER}-stable_export_templates.tpz -d tpl
-          mv tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VER}.stable/
-          mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot 2>/dev/null || sudo mv Godot_v${GODOT_VER}-stable_linux.x86_64 /usr/local/bin/godot
+          cp -r tpl/templates/* ~/.local/share/godot/export_templates/${GODOT_VER}.stable/
       - name: Stamp the build number
         run: |
-          echo -n "${{ github.run_number }}" > godot/hula/build.txt
-          echo -n "${{ github.run_number }}" > godot/hula/version.txt
+          echo -n "${{ github.run_number }}" | tee godot/hula/build.txt godot/hula/version.txt > /dev/null
       - name: Debug keystore and editor settings
         run: |
           cp godot/debug.keystore debug.keystore   # fixed key, so every new APK installs over the last one
@@ -56,3 +71,5 @@ jobs:
         with:
           name: HulaVaquero-apk
           path: godot/hula/build/HulaVaquero.apk
+          if-no-files-found: error
+          retention-days: 14
