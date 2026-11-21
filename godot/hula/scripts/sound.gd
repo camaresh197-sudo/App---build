@@ -340,7 +340,10 @@ func _process(dt: float) -> void:
 		p.volume_db = db
 	if playing:
 		var guard := 0
-		while now >= next_t and guard < 4:
+		# schedule steps LOOK_AHEAD early: the audio is queued to the exact beat (dl > 0). Firing a step only
+		# once its time had passed made dl <= 0, so every sung clip started on the beat and its vowel landed
+		# about 0.15 s late, after its lead-in was clamped to zero.
+		while now >= next_t - LOOK_AHEAD and guard < 4:
 			if step % (6 if cur == "game" else 16) == 0: bar_t = next_t   # a bar's step 0 sounds at next_t: mark the boundary
 			if cur == "menu": _tstep(step, next_t - now)
 			elif cur == "victory": _vstep(step, next_t - now)
@@ -506,6 +509,7 @@ var have_vox := true
 # The lines are two bars each, so a bar is "sung" when its own bar or the bar before starts a line.
 const DUCK_SUNG := 0.4
 var duck_gain := 1.0
+const LOOK_AHEAD := 0.2     # seconds a step is scheduled before its beat
 func _vox_key(sec: String, bar: int) -> String:
 	if sec == "v-A": return "A%d" % bar
 	if sec == "v-B": return "B%d" % (bar >> 1) if bar % 2 == 0 else ""
