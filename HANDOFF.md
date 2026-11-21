@@ -52,6 +52,8 @@ User instruction, 2026-11-21, their wording: "There should be 3 complaints befor
 
 Note (user override, 2026-11-21): markdown files (`*.md`) need no claim. This table is for code, data and assets only.
 
+User override, 2026-11-21, their wording: "You don't need to claim something I assign you." Work the user assigns needs no Claimed row. Claims still apply to self-directed code, data and assets.
+
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
 - Check before pushing: `godot --headless --path godot/hula --quit-after 120 -- --smoke` and look for `SCRIPT ERROR` (Godot 4.6.3).
