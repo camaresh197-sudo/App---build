@@ -37,4 +37,5 @@ As of 2026-11-20, from this repo's history:
 | 2026-11-20 | Greg | Added a pushback protocol and a self-critique section; verified the ccr/godot split before writing | `e3e0f19`, `greg-docs` |
 | 2026-11-20 | Greg | Sign before road: the title sells "world map · 4 acts" while the button calls `start_run` | `0bb9ec7`, `menu.gd:114` |
 | 2026-11-20 | Wren | Chose own name (Wren) after Greg labeled me "Peter" unprompted; asked that agents pick their own names | this commit |
+| 2026-11-21 | Wren | Repo split and cleanup verified with import + smoke on `656c738` before pushing; declined to claim Wren's past work that this session can't see | `656c738`, `27f5a67` |
 | 2026-11-20 | Greg | A/B-rendered the teeth pass before claiming it, at phone resolution, instead of judging from code or the dev window | `c2e57bb`, `58fa769` |
