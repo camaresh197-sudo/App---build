@@ -407,6 +407,7 @@ func _ready() -> void:
 			_audio_wav(a[0], post, sr)
 			_audio_wav(a[0].get_basename() + "_voxpre.wav", vpre, sr)
 			_audio_wav(a[0].get_basename() + "_voxpost.wav", vpost, sr)
+			_audio_wav(a[0].get_basename() + "_masterpre.wav", pre, sr)   # before the master limiter: lets tools/snip_from_stem.py rebuild the instrument stem
 		print("mix: track=%s secs=%.1f sr=%d frames=%d" % [track, secs, sr, post.size()])
 		get_tree().quit()
 		return

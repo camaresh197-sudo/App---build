@@ -135,9 +135,8 @@ python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox \
   from the game. Instrument, drum or ducking changes need a new extraction. Every real-time
   run has a slightly different timeline (the game clock is frame-driven), so the stem, its
   vox bus and the clip positions must come from the same run.
-- Re-extracting the stem needs the master before the limiter. `shotter.gd` `mix` currently
-  writes only the post-limiter master, and the pre-limiter capture is not in the repo yet:
-  add `_audio_wav(a[0].get_basename() + "_masterpre.wav", pre, sr)` next to the voxpost line.
+- Re-extracting the stem needs the master before the limiter. `shotter.gd` `mix` writes it as
+  `<out>_masterpre.wav`, next to the post-limiter master and the `_voxpre`/`_voxpost` files.
 - Known gap: clip `C2` does not match in the current run (score 0.21), so snips over that line
   will miss it until this is checked.
 
