@@ -63,7 +63,8 @@ def safe_name(text: str) -> str:
     name = text.lower().replace(" ", "_")
     for c in '?*:"<>|/\\':
         name = name.replace(c, "")
-    return name
+    # a leading dot makes a hidden file that Godot never imports ("...sorry" lines)
+    return name.lstrip(".")
 
 
 def find_ffmpeg() -> str:

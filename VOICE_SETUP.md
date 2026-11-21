@@ -14,6 +14,7 @@ godot/hula/audio/voice/[speaker]/[dialogue].ogg
 **Dialogue filename:** 
 - Lowercase, spaces → underscores
 - Characters Windows filenames can't hold (`? * : " < > | / \`) are stripped
+- Leading dots are stripped (a dot-prefixed file is hidden from Godot's import): "...They know my name." → `they_know_my_name..ogg`
 - Example: "Promise me" → `promise_me.ogg`, "Why? I looked up to you." → `why_i_looked_up_to_you..ogg`
 
 ## Example Structure
@@ -66,7 +67,6 @@ Pre-recorded clips play without any flag. `tts_enabled` only reaches a placehold
 ## Known issues
 
 - 53 files in `audio/voice/` (~0.8 MB of 1.7 MB) match no current line: older renders whose names kept punctuation or were truncated. `_safe_name()` never looks them up. Safe to delete once confirmed.
-- Two hero lines begin with `...`, so their files start with a dot (`...they_know_my_name..ogg`, `...sorry._sorry...ogg`). Godot's import skips dot-prefixed files (neither has a `.import`), so they cannot load and the line plays silent. Fix by stripping leading dots in both `_safe_name()` and `piper_batch.py`, then renaming the two files.
 
 ## Silence Lines
 

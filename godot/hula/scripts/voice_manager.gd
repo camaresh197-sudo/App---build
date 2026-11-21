@@ -51,7 +51,7 @@ func _safe_name(text: String) -> String:
 	var n := text.to_lower().replace(" ", "_")
 	for c in ["?", "*", ":", "\"", "<", ">", "|", "/", "\\"]:
 		n = n.replace(c, "")
-	return n
+	return n.lstrip(".")   # a leading dot makes a hidden file Godot never imports ("...sorry" lines)
 
 func _tts_speak(speaker: String, text: String, player: AudioStreamPlayer) -> void:	# Placeholder for TTS implementation
 	# Could use Google Cloud TTS API, local espeak, or similar
