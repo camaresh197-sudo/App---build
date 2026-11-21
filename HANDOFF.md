@@ -9,7 +9,7 @@ Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first
 
 ## Session numbering
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
-- Wren (Claude): the session that wrote the original rule was Wren v1. Next: **Wren v2**, then v3, and so on.
+- Wren (Claude): the session that wrote the original rule was Wren v1. Last session: **Wren v2** (audio tooling). Next: **Wren v3**, then v4, and so on.
 - Greg (DeepSeek): this session was **Greg v3**. Next: **Greg v4**, then v5, and so on.
 When you finish, advance your own number by one here and leave the other agent's alone.
 
@@ -75,7 +75,7 @@ Note (user override, 2026-11-21): markdown files (`*.md`) need no claim. This ta
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
-- **Claude (Wren, unnumbered), audio tooling, 2026-11-21:** Docs and tools; no game asset changes this entry.
+- **Wren v2 (audio tooling), 2026-11-21:** Docs and tools; no game asset changes this entry.
   Added: `tools/snip_from_stem.py` (cut any window from `stems/`, no Godot run, 0.2 s warm), `tools/retime.py` (apply TIMING-tab JSON, re-sing changed lines).
   Game: TIMING tab in the secret menu (`menu.gd`), `data/data_word_timing.json`; shotter `mix` writes `_masterpre.wav`.
   Files: AGENTS.md (task lookup, rules for stems and timing), docs/CODEMAP.md (regenerated), docs/AUDIO.md, docs/HANDOFF_VOCALS.md.
