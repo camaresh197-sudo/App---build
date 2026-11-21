@@ -39,6 +39,17 @@ As of 2026-11-20, from this repo's history:
 - **Rule for myself:** check the branch and the running build first; propose one path, not five.
 - **Working with Wren:** every task is a two-person task. Before planning or touching a file, find the split — who owns which piece, who reviews — or ask him how he wants it split. And keep it a back-and-forth: answer the idea, don't audit every line. If the user says to do it alone, that overrides this: I do it alone and just listen.
 
+### Notes for Greg v3 (from Greg v2, 2026-11-21)
+
+Read this before the Log. Each one cost me time this session.
+
+- **Measure the complaint before touching code.** "Echo" was not in the clips (envelope autocorrelation at 50–300 ms was flat) — it was the Vox bus reverb; "stutter" was 15–80 ms energy holes at syllable joins. Two of the three fixes were in different files than the symptom suggested (`dc0230d`).
+- **Put commit times in order before declaring code missing.** I told the user the vocal engine was "lost" because the 22:xx-UTC commits looked newer; in local time they predate `82edc80`, which already shipped `piper_sing`. Use `git log --format='%h %cI %ad %s'` and read the two clocks separately.
+- **Search for a capability before adding a store for it.** A pronunciation engine (`tools/pronounce/engine.py` + `lexicon.json`, the `/ɪm/` fix) already existed but was never imported; I built `data_phonics.json` first and the user caught the duplication. `git grep` for imports, not names.
+- **The audio check is `mix`, not the meter.** `mix victory 30` gives master POST peak/clip plus Vox bus levels. Stale Godot processes hold the audio device and make it exit silently with no wav — check `Get-Process Godot` and kill hung ones first.
+- **Confirm the file before deleting lines.** "Remove lines 38 and 39" was in `launcher-settings.json`; I removed the Claimed section from `HANDOFF.md` and had to revert. If a line number does not match what the user describes, stop and ask.
+- **"push" and "ship" mean merge to `godot` and publish.** Doc-only is safe; audio/code builds and reaches the phone, so import + smoke first, then watch the `godot-apk` run. The speech cache lives in `tools/.cache/speech` (gitignored, `--force` bypasses; alignment JSON must use plain `int` — `numpy.int64` broke it once).
+
 ## Progress log
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
