@@ -216,6 +216,44 @@ def equalize_runs(orig: list, ryan: list) -> list:
     return [a, b]
 
 
+def melody_segments(cents: np.ndarray, voiced: np.ndarray, slope_max: float = 12.0,
+                    fit_max: float = 4.0, min_plateau: int = 5) -> list:
+    """Classify a shaped melody into held notes and slides.
+
+    A plateau is a voiced stretch whose smoothed slope is small AND whose linear
+    fit is near-flat (the fit rejects slow slides that a slope window can hide).
+    Everything else voiced is a glide and keeps the melody's own contour - which
+    is what keeps every pitch in tune: notes come from the performance, never
+    from an average of a slide.
+    Returns (start, end, kind, note_cents); every voiced frame is covered.
+    """
+    n = len(cents)
+    x = np.arange(n)
+    xv = x[voiced]
+    filled = np.interp(x, xv, cents[voiced])
+    slope = np.convolve(np.gradient(filled), np.ones(7) / 7.0, mode="same")
+    is_flat = voiced & (np.abs(slope) <= slope_max)
+    segs = []
+    i = 0
+    while i < n:
+        if not voiced[i]:
+            i += 1
+            continue
+        flat = is_flat[i]
+        j = i + 1
+        while j < n and voiced[j] and is_flat[j] == flat:
+            j += 1
+        if flat and j - i >= min_plateau:
+            fit = np.polyfit(x[i:j], cents[i:j], 1)[0]
+            if abs(fit) <= fit_max:
+                segs.append((i, j, "plateau", float(np.median(cents[i:j]))))
+                i = j
+                continue
+        segs.append((i, j, "glide", 0.0))
+        i = j
+    return segs
+
+
 def warp_along(mat: np.ndarray, src_idx: np.ndarray) -> np.ndarray:
     """Resample along the frame axis following an explicit fractional index map."""
     i = np.floor(src_idx).astype(int)
@@ -279,29 +317,30 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                 ap = warp_along(ap_r, src_idx)
                 f0_rw = warp_along(f0_r.reshape(-1, 1), src_idx).ravel()
 
-                # one note per span: median of the shaped melody, onset glide from
-                # the previous note, vibrato fading in only on held notes
+                # hold where the melody rests, slide where it moves: plateau
+                # stretches get one steady note (+vibrato on long holds), glide
+                # stretches keep the shaped melody's own contour, so every pitch
+                # is the performance's, never an average of a slide
+                ref = max(float(np.median(melody[melody > 0])), 1e-6)
+                cents_curve = 1200.0 * np.log2(np.maximum(melody, 1e-6) / ref)
+                vmask = melody > 0
                 fps = 1000.0 / FRAME_MS
                 new_f0 = np.zeros(nc)
-                prev = 0.0
-                for (os_, oe_) in o_runs:
-                    seg = melody[os_:oe_]
-                    v = seg > 0
-                    if not v.any():
-                        continue
-                    note = float(np.median(seg[v]))
-                    L = oe_ - os_
+                for (ss, se, kind, note_c) in melody_segments(cents_curve, vmask):
+                    L = se - ss
                     t = np.arange(L)
+                    if kind == "glide":
+                        new_f0[ss:se] = melody[ss:se]      # the real slide, in tune
+                        continue
+                    note = ref * np.power(2.0, note_c / 1200.0)
                     f = np.full(L, note)
-                    g = min(8, max(2, L // 4))         # ~40 ms glide from the last note
-                    if prev > 0:
-                        f[:g] = prev + (note - prev) * (t[:g] / g)
-                    if L >= 50:                        # 250 ms: a held note earns its vibrato
+                    g = min(5, max(2, L // 4))             # settle onto the note
+                    f[:g] = melody[ss:ss + g] + (f[:g] - melody[ss:ss + g]) * (t[:g] / g)
+                    if L >= 50:                            # 250 ms: a held note earns its vibrato
                         depth = 40.0 if L >= 100 else 28.0
                         ramp = np.clip((t - 24) / 40.0, 0.0, 1.0)
                         f = f * np.power(2.0, depth * np.sin(2 * np.pi * 5.5 * t / fps) * ramp / 1200.0)
-                    new_f0[os_:oe_] = f
-                    prev = note
+                    new_f0[ss:se] = f
                 new_f0[f0_rw <= 0] = 0.0               # consonants stay consonants
             else:
                 # fallback: the old contour path (linear warp + shaped melody)
