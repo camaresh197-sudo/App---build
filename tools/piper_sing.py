@@ -142,7 +142,46 @@ def fill_gaps(f0: np.ndarray) -> np.ndarray:
     return y
 
 
-def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights) -> dict:
+def shape_melody(f0: np.ndarray, win: int = 9, max_step: float = 50.0, max_dev: float = 250.0,
+                 vib: float = 0.65) -> np.ndarray:
+    """Shape a borrowed melody so it can be imposed on a different phoneme layout.
+
+    The original contour is smooth on its own vowels; dropped onto another
+    singer's voiced runs it arrives at arbitrary phase, so vibrato swings and
+    note leaps turn into instant 300-600 cent steps that sound like cracks.
+    Median-filter in cents (kills octave glitches, keeps slow vibrato), scale
+    the vibrato detail down (it arrives at the wrong phase on the new vowels,
+    where full depth reads as warble), then cap the per-frame slope while
+    staying anchored to the real melody (real leaps still happen, spread over a
+    few frames instead of one).
+    """
+    voiced = f0 > 0
+    out = f0.astype(float).copy()
+    if int(voiced.sum()) < win:
+        return out
+    x = np.arange(len(f0))
+    curve = np.interp(x, x[voiced], f0[voiced])           # continuous Hz curve over the gaps
+    ref = max(float(np.median(f0[voiced])), 1e-6)
+    cents = 1200.0 * np.log2(np.maximum(curve, 1e-6) / ref)
+
+    def medfilt(v: np.ndarray, w: int) -> np.ndarray:
+        r = w // 2
+        pad = np.pad(v, r, mode="edge")
+        return np.array([np.median(pad[i:i + w]) for i in range(len(v))])
+
+    cents = medfilt(cents, win)                           # octave glitches out
+    slow = medfilt(cents, 41)                             # the note line (~205 ms)
+    cents = slow + (cents - slow) * vib                   # vibrato at reduced depth
+    target = cents.copy()
+    for i in range(1, len(cents)):
+        step = float(np.clip(cents[i] - cents[i - 1], -max_step, max_step))
+        cents[i] = min(max(cents[i - 1] + step, target[i] - max_dev), target[i] + max_dev)
+    out = ref * np.power(2.0, cents / 1200.0)
+    out[~voiced] = 0.0                                    # unvoiced stays unvoiced
+    return out
+
+
+def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: float = 0.65) -> dict:
     # the melody comes from the ORIGINAL bank clip, not the current one: after a
     # first Ryan pass the file on disk is already sung, so re-running would
     # otherwise borrow its melody from Ryan's render instead of the performance
@@ -153,7 +192,7 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights) -> dict:
     nc = len(f0_c)
     dur = len(x0) / FS
 
-    melody = fill_gaps(f0_c)
+    melody = shape_melody(fill_gaps(f0_c), vib=vib)
     takes = []
     base_hz = 0.0
     with tempfile.TemporaryDirectory() as td:
@@ -213,12 +252,15 @@ def main() -> int:
                     help="one voice; comma-separated renders one take per voice and mixes them (chorus-style, can smear)")
     ap.add_argument("--mix", default="1,1,0.6",
                     help="take weights, comma-separated; ryan-low is a 16 kHz model, so it sits under the two 22 kHz takes")
+    ap.add_argument("--vibrato", type=float, default=0.65,
+                    help="how much of the original clip's vibrato survives (0 = straight notes, 1 = full depth)")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--restore", action="store_true", help="put the original clips back")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     voices = [v.strip() for v in args.voice.split(",") if v.strip()]
     weights = [float(x) for x in args.mix.split(",")]
+    ps_vib = args.vibrato
 
     vox_map = json.loads(DATA_VOX.read_text(encoding="utf-8"))
     lyrics = json.loads(LYRICS.read_text(encoding="utf-8"))["victory_vocals"]
@@ -248,7 +290,7 @@ def main() -> int:
         if args.dry_run:
             print(f"would sing {clip_id}: {text!r}")
             continue
-        info = sing_clip(clip_id, text, voices, weights)
+        info = sing_clip(clip_id, text, voices, weights, ps_vib)
         report.append(info)
         print(f"  {clip_id}: '{text}'  melody {info['melody_hz']} Hz, "
               f"Ryan base {info['ryan_hz']} Hz, {info['dur']} s, {info['takes']} takes")
