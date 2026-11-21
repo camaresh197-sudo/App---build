@@ -184,9 +184,9 @@ func _process(dt: float) -> void:
 			_finish(true)
 		elif hp <= 0:
 			_finish(false)
-		while state == S.PLAY and xp >= _xp_need():
+		while Legacy.on() and state == S.PLAY and xp >= _xp_need():
 			xp -= _xp_need(); level += 1; pending_picks += 1
-		if state == S.PLAY and pending_picks > 0:
+		if Legacy.on() and state == S.PLAY and pending_picks > 0:
 			_open_pick()
 	for p in pops:
 		p.p += p.v * dt; p.life -= dt
@@ -395,9 +395,10 @@ func _hud(R: float) -> void:
 	draw_rect(Rect2(10, 8, 160, 16), Color(0, 0, 0, 0.4))
 	draw_rect(Rect2(10, 8, 160 * clamp(hp / mx, 0, 1), 16), Color("2ecc71"))
 	draw_string(f, Vector2(14, 21), "HP %d/%d" % [int(max(hp, 0)), int(mx)], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
-	draw_rect(Rect2(10, 27, 160, 6), Color(0, 0, 0, 0.4))
-	draw_rect(Rect2(10, 27, 160 * clamp(xp / _xp_need(), 0, 1), 6), Color("9b59b6"))
-	draw_string(f, Vector2(176, 34), "LV %d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	if Legacy.on():
+		draw_rect(Rect2(10, 27, 160, 6), Color(0, 0, 0, 0.4))
+		draw_rect(Rect2(10, 27, 160 * clamp(xp / _xp_need(), 0, 1), 6), Color("9b59b6"))
+		draw_string(f, Vector2(176, 34), "LV %d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
 	draw_string(f, Vector2(R - 130, 24), "SCORE %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("ffd32a"))
 	if run_target > 0:
 		draw_string(f, Vector2(R - 130, 42), "TARGET %d" % run_target, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("9aa3c7"))

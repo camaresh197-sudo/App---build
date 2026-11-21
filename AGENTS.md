@@ -15,6 +15,7 @@ Godot 4.6 game (desktop/Android/web). Read `HANDOFF.md` first when another agent
 | World map | `scripts/map.gd`, `data/data_map.json` | — |
 | Cutscenes | `scripts/cutscene.gd`, `data/data_cutscenes.json` | — |
 | Legacy HTML5 build (reference) | — | docs/legacy.md |
+| Legacy version tasks | `scripts/legacy.gd` (switch) | docs/legacy_checklist.md |
 
 `godot/hula/FILES.md` maps roles to files. `docs/CODEMAP.md` gives line anchors per script.
 

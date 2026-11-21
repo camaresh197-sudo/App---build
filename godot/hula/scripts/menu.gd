@@ -271,6 +271,16 @@ func settings(ox: float) -> void:
 			txt(Vector2(r.position.x + r.size.x - 26, r.position.y + 34), "›", 22, Color("7d86ad"))
 			var lab: String = ("%d%%" % (v * 10)) if kind == "vol" else ["Low", "Normal", "High"][v]
 			ctxt(r.position.x + r.size.x - 62, r.position.y + 33, lab, 13, Color("ffd32a"))
+	# legacy version switch (see scripts/legacy.gd and docs/legacy_checklist.md)
+	var lr := Rect2(ox + 324, 260, 302, 48)
+	var lon: bool = Legacy.on()
+	c.buttons.append([lr, func(): Save.data.opt["legacy"] = not lon; Save.save()])
+	rrect(lr, Color(0.12, 0.125, 0.22, 0.95), 10); rframe(lr, Color(1, 1, 1, 0.14), 1.2, 10)
+	txt(lr.position + Vector2(10, 20), "Legacy version", 13, Color.WHITE)
+	txt(lr.position + Vector2(10, 38), "Features ported from the HTML build", 10, Color("9aa3c7"), 180)
+	var lsw := Rect2(lr.position.x + lr.size.x - 54, lr.position.y + 14, 42, 20)
+	rrect(lsw, Color("2ecc71") if lon else Color("4a4f6e"), 10)
+	c.draw_circle(Vector2(lsw.position.x + (32 if lon else 10), lsw.position.y + 10), 7.5, Color.WHITE)
 	button(Rect2(ox + 14, 260, 302, 48), "CHECK FOR UPDATES", Color("3498db"), func(): c.snd.sfx("click"); Updater.check_for_updates(), 14)
 
 # ---------- secret theater / song test (tap the RUNS pill on the title three times) ----------
