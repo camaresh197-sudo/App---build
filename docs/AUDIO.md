@@ -84,6 +84,7 @@ on an already-sung clip would borrow from itself).
 
 ### Chorus timing (two-bar lines)
 
+See `docs/VICTORY_LYRICS.md` for every line's bars, words, syllables and notes.
 `v-B` is eight bars but **four two-bar lines**: bars 0–1, 2–3, 4–5, 6–7 map to `B0`–`B3`,
 and `sound.gd` plays one only on even bars. Clips `B4`–`B7` are no longer triggered.
 
