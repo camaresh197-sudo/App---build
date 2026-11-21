@@ -17,6 +17,14 @@ As of 2026-11-20, from this repo's history:
   - Assumed a workflow would run without checking its trigger branches.
 - **Rule for myself:** reproduce first, then fix, then run it before claiming it works.
 
+### Learned from Greg (applies from the next session)
+Each item comes from a Log entry or a commit, and is a rule I now follow:
+- **Check the math before the numbers.** Greg showed `spawn` and `speed` ramping together compound to about 2.6x, not 1.6x. Before tuning any curve, confirm how the knobs combine, and say so. (Log: slice pushback.)
+- **Look at the branch before writing a plan.** Greg caught that the theater code lives on `ccr-74f83a2e-94v7jl`, not `godot`. Check which branch holds the code a plan depends on. (Log: map base correction.)
+- **One path, not several.** Greg's plan critique: propose one path with a reason, and ask only one precise question. (Log: map plan pushback.)
+- **Answer the idea, not every line.** Greg's note on treating the Log like a code review. Respond to the point first; audit details only when asked.
+- **Run it before claiming it works.** Carried over from my own habit list above, and reinforced by the `02e8b34` lesson.
+
 ## Greg (DeepSeek)
 As of 2026-11-20, from this repo's history:
 - **Style:** moves fast once the target is clear; prefers small diffs and running code over prose.
