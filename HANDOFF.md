@@ -38,6 +38,7 @@ The user can overwrite anything agreed in this file, including rules, claims and
 | Who | Files | Since |
 |---|---|---|
 | Wren | `scripts/cutscene.gd`, `data/data_theater.json` (adds `play_act(i)` helper) | 2026-11-20 |
+| Greg v2 | `tools/piper_sing.py`, `scripts/sound.gd` (Vox bus), `audio/vox/*.ogg` — de-robot + de-echo + legato | 2026-11-21 |
 | Greg v2 | `tools/piper_sing.py`, `godot/hula/audio/vox/*.ogg` (re-sing the victory bank) | 2026-11-21 |
 
 ## Gotchas we already hit
@@ -80,6 +81,7 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - Open: **map playtest** — layout is checked (`preview/map_check_720.png`), but difficulty and the star write are unplayed. Teeth are shipped (`c2e57bb`). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Greg v2 (in progress, `greg-voicefix`):** User: "remove robotic sound and echo. Also sometimes there stutters between words." Measured first: the clips have no echo (flat autocorrelation at 50–300 ms), so the echo is the Vox bus reverb — wet 0.15 → 0.05, room 0.5 → 0.3. The stutter is real in the clips: 15–80 ms energy holes at syllable joins. `piper_sing.py` now humanises (per-note ±6 c detune, scoops into upward leaps, continuous-phase 4.8–6.2 Hz vibrato, drift + jitter) and voices short holes so syllables join; `--only` added for test renders. Not rendered or checked yet; `godot` untouched.
 - **Greg v2:** Re-sang the 22 victory clips with `tools/piper_sing.py --force` (notes flow, Ryan high, vibrato 0.65), per the user's choice; merged to `godot` in `2a95938` on the user's "push". **Correcting my own first read:** the 22:xx UTC commits (`f2c0122`…`53f082a`) are *earlier* than the 18:55–19:38 work, and `82edc80` already shipped piper_sing — the bank was not stuck on a lost engine, so this is a fresh Piper roll of the same pipeline, not a new engine. Durations unchanged, per-clip levels within ~2 dB, peaks ≤ −0.8 dBFS; note/pitch checks comparable; import 0, smoke 0 (no SCRIPT ERROR); `mix victory 30` POST peak −2.6 dBFS, RMS −21.4, clip 0. Listen, then say merge.
 - **Claude (unnumbered session), user override:** User said, in their wording: "3, and have it always be read first" (choice 3: keep `godot` as the source of truth, leave `main` alone; `HANDOFF.md` is always read first). Done: `HANDOFF.md` is now the first read in Start of every session, ahead of `AGENTS.md`; `AGENTS.md` and `CLAUDE.md` say the same. Docs only (`**/*.md` is build-ignored), so no phone update. No code, assets, branches or counters touched; nothing claimed.
 - **Greg v2 (closing):** User override, in their wording: "Write a rule for you to read agents.md in the handoff first make it the first thing it reads." Done: **Start of every session** now reads `AGENTS.md` first, then this file (Log/Claimed), `PERSONALITIES.md`, and `git log origin/godot -5`. Files: `HANDOFF.md`, `PERSONALITIES.md` (Greg counter set to v2). Docs only (`godot-apk.yml` has `paths-ignore: ['*.md','**/*.md']`), so `d34599b` built nothing and reached no phone. No code, assets or other agent's files touched; nothing claimed.
