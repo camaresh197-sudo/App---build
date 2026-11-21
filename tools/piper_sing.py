@@ -25,6 +25,7 @@ chorus, so prefer a single model unless you want that effect.
 """
 
 import argparse
+import hashlib
 import json
 import re
 import shutil
@@ -37,6 +38,7 @@ from pathlib import Path
 
 import numpy as np
 import pyworld
+import soundfile as sf
 
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
@@ -46,6 +48,7 @@ LYRICS = HULA / "data" / "data_lyrics.json"
 DATA_VOX = HULA / "data" / "data_vox.json"
 DATA_VICTORY = HULA / "data" / "data_victory.json"
 MODELS = TOOLS / "models"
+CACHE = TOOLS / ".cache" / "speech"
 BACKUP = TOOLS / "vox_backup" / "originals"
 
 sys.path.insert(0, str(TOOLS))
@@ -55,6 +58,41 @@ FS = 22050          # analysis rate (the medium/high models are 22050; low is 16
 FRAME_MS = 5.0      # WORLD frame period
 OGG_RATE = 44100    # the bank ships 44.1 kHz mono vorbis
 VE = 0.105          # victory step length (sound.gd), 16 steps/bar
+
+# Pronunciation table. data_phonics.json is the source of truth and is read on
+# first render; these dicts are only fallbacks used while building that file.
+SAY = {}                         # display spelling -> text handed to Piper
+PRON = {}                        # display spelling -> what the sheet shows
+PHONICS = HULA / "data" / "data_phonics.json"
+_PHONICS = None
+
+
+def phonics() -> dict:
+    """Read data_phonics.json once per process (the engine's word table)."""
+    global _PHONICS
+    if _PHONICS is None:
+        if PHONICS.exists():
+            _PHONICS = json.loads(PHONICS.read_text(encoding="utf-8")).get("words", {})
+        else:
+            _PHONICS = {}
+    return _PHONICS
+
+
+def spoken(text: str) -> str:
+    table = phonics()
+
+    def swap(m):
+        w = m.group(0)
+        entry = table.get(w.lower())
+        if entry and entry.get("say"):
+            return entry["say"]
+        return SAY.get(w.lower(), w)
+
+    return re.sub(r"[A-Za-z']+", swap, text)
+
+
+def words_of(text: str) -> list:
+    return re.findall(r"[A-Za-z']+", text)
 
 # Chorus phrases are two bars each: bars 0-1, 2-3, 4-5, 6-7 of v-B.
 CHORUS_GRID = {"B0": ("v-B", 0, 2), "B1": ("v-B", 2, 2),
@@ -347,16 +385,75 @@ def aligned_voice(name):
     return _ALIGNED[name]
 
 
-def synth_aligned(text: str, voice: str):
-    """Synthesize and return (audio, [(phoneme, start_sample, end_sample)])."""
+def _fit(x: np.ndarray, sr: int) -> np.ndarray:
+    """Resample to the WORLD analysis rate if the voice shipped another one."""
+    if sr == FS:
+        return x
+    n = int(len(x) * FS / sr)
+    return np.interp(np.linspace(0, len(x) - 1, n), np.arange(len(x)), x)
+
+
+def _key(text: str, voice: str) -> str:
+    return hashlib.sha1(f"{voice}|{text}".encode("utf-8")).hexdigest()[:20]
+
+
+def synth_audio(text: str, voice: str, use_cache: bool = True):
+    """Piper speech as (mono float at FS), read from the on-disk cache when present."""
+    CACHE.mkdir(parents=True, exist_ok=True)
+    wav = CACHE / f"{voice}_{_key(text, voice)}.wav"
+    if use_cache and wav.exists():
+        x, sr = sf.read(str(wav), dtype="float64", always_2d=True)
+        return _fit(x[:, 0], sr), FS
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td) / "a.wav"
+        piper_gen.synthesize(text, voice, str(tmp), str(MODELS))
+        x, sr = sf.read(str(tmp), dtype="float64", always_2d=True)
+        if use_cache:
+            shutil.copy2(tmp, wav)
+    return _fit(x[:, 0], sr), FS
+
+
+def synth_aligned(text: str, voice: str, use_cache: bool = True):
+    """Synthesize and return (audio, [(phoneme, start_sample, end_sample)]).
+
+    The audio and its alignment are cached together; a second call reads them
+    from disk instead of running Piper again.
+    """
+    CACHE.mkdir(parents=True, exist_ok=True)
+    k = _key(text, voice)
+    wav = CACHE / f"al_{voice}_{k}.wav"
+    js = CACHE / f"al_{voice}_{k}.json"
+    if use_cache and wav.exists() and js.exists():
+        x, sr = sf.read(str(wav), dtype="float64", always_2d=True)
+        phonemes = [tuple(p) for p in json.loads(js.read_text(encoding="utf-8"))]
+        return _fit(x[:, 0], sr), phonemes
     chunks = list(aligned_voice(voice).synthesize(text, include_alignments=True))
     audio = np.concatenate([np.asarray(c.audio_float_array, dtype=np.float64) for c in chunks])
     phonemes, off = [], 0
     for c in chunks:
         for a in (c.phoneme_alignments or []):
-            phonemes.append((a.phoneme, off, off + a.num_samples))
-            off += a.num_samples
+            phonemes.append((str(a.phoneme), int(off), int(off + a.num_samples)))
+            off += int(a.num_samples)
+    if use_cache:
+        sf.write(str(wav), audio, chunks[0].sample_rate)
+        js.write_text(json.dumps(phonemes, ensure_ascii=False), encoding="utf-8")
     return audio, phonemes
+
+
+def word_spans(phonemes: list) -> list:
+    """One span per word (space-separated), from the first to the last phoneme."""
+    out, cur = [], None
+    for (p, a, b) in phonemes:
+        if p == " ":
+            if cur is not None:
+                out.append((cur[0], cur[1])); cur = None
+        elif cur is None:
+            cur = [a, b]
+        else:
+            cur[1] = b
+    if cur is not None:
+        out.append((cur[0], cur[1]))
+    return out
 
 
 def nuclei_spans(phonemes: list) -> list:
@@ -377,10 +474,10 @@ def nuclei_spans(phonemes: list) -> list:
 
 
 def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: float = 0.65,
-              flow: str = "notes", grid=None) -> dict:
+              flow: str = "notes", grid=None, use_cache: bool = True) -> dict:
     spans = []
     if grid:
-        melody, spans = grid_melody(*grid, syllables=syllable_count(text))
+        melody, spans = grid_melody(*grid, syllables=len(words_of(text)))
         nc = len(melody)
         dur = nc * FRAME_MS / 1000.0
         f0_c = melody.copy()
@@ -403,10 +500,10 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                 # Grid mode: Piper's phoneme alignments say exactly when each
                 # vowel starts. Put every vowel on its beat, keep the consonants
                 # in the gaps, and sing one note per syllable.
-                audio, phonemes = synth_aligned(text, voice)
+                audio, phonemes = synth_aligned(spoken(text), voice, use_cache)
                 f0_r, sp_r, ap_r = analyze(audio)
                 nr = len(f0_r)
-                nuc = nuclei_spans(phonemes)
+                nuc = word_spans(phonemes)
                 if len(nuc) == len(spans):
                     vsf0 = nuc[0][0] / FS * 1000.0 / FRAME_MS
                     lead = float(spans[0][0])
@@ -468,9 +565,7 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                     if (f0_r > 0).any() and base_hz == 0.0:
                         base_hz = float(np.median(f0_r[f0_r > 0]))
                     continue
-            rwav = Path(td) / f"take_{i}.wav"
-            piper_gen.synthesize(text, voice, str(rwav), str(MODELS))
-            xr = load_wav_mono(rwav, FS)
+            xr, _ = synth_audio(spoken(text), voice, use_cache)
             f0_r, sp_r, ap_r = analyze(xr)
             nr = len(f0_r)
 
@@ -667,7 +762,7 @@ def main() -> int:
             print(f"would sing {clip_id}: {text!r}")
             continue
         info = sing_clip(clip_id, text, voices, weights, ps_vib, ps_flow,
-                         grid=CHORUS_GRID.get(clip_id))
+                         grid=CHORUS_GRID.get(clip_id), use_cache=not args.force)
         report.append(info)
         print(f"  {clip_id}: '{text}'  melody {info['melody_hz']} Hz, "
               f"Ryan base {info['ryan_hz']} Hz, {info['dur']} s, {info['takes']} takes")
