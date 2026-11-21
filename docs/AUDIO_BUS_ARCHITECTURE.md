@@ -76,15 +76,14 @@ Master (Hard Limiter @ -0.5dB)
 ---
 
 ### 6. CUTSCENE BUS
-**Purpose:** Story dialogue audio (Mexican Spanish text-to-speech)  
-**Character:** Clean, intelligible, intimate  
+**Purpose:** Per-scene audio beds (`audio_file` in `data/cutscene_config.json`), played by `play_cutscene_audio()`. Spoken dialogue does not use this bus: `VoiceManager` plays it on Vox.  
+**Character:** Clean, tight  
 **Effects:**
 - Compressor: -18dB threshold, 3:1 ratio, 15ms attack, 200ms release, +1dB makeup gain (consistent dialogue levels)
 - Reverb: 0.2 room size, 0.8 damping, 5% wet (minimal echo, focus on clarity)
 
-**Content:** `audio/cutscene_*.ogg` (20 files, ~1.3 MB), played through `play_cutscene_audio()`
-**Speakers:** hero, baron, abuela, kid, guitar, chorus. Voice clips live in
-`audio/voice/<speaker>/` (see `VOICE_SETUP.md`).
+**Content:** `audio/cutscene_*.ogg` (20 files, ~1.3 MB)
+**Dialogue:** speakers hero, baron, abuela, kid, guitar, chorus; clips in `audio/voice/<speaker>/` (see `VOICE_SETUP.md`), on the Vox bus.
 
 ---
 
@@ -179,4 +178,4 @@ snd.set_volumes(music_level, sfx_level)  # 0-10 scale
 **Audio Too Quiet:** Adjust bus volume with `set_volumes()` or check Save.data.opt settings  
 **Audio Distorted:** Master limiter is engaged; check mix levels  
 **Echo/Reverb Excessive:** Reduce reverb wet percentage on problematic bus  
-**Dialogue Unclear:** Cutscene bus compression may be too aggressive; reduce ratio or threshold
+**Dialogue Unclear:** dialogue plays on the Vox bus; check its compressor (−10 dB, 1.5:1)

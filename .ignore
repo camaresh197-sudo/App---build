@@ -16,3 +16,6 @@ dist/
 www/
 node_modules/
 __pycache__/
+godot/hula/data/character_rig.json
+tools/vox_backup/
+docs/HANDOFF_LOG.md

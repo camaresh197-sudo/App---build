@@ -57,11 +57,16 @@ Piper TTS pipeline (implemented):
   one take), time-warp the speech to the clip's melody and duration, resynthesize. The melody always comes
   from `tools/vox_backup/originals/` when present, so re-running never borrows the melody from a previous render.
 - `tools/piper_gen.py` — single-line generator (model dir: `tools/models/`, `.onnx` + `.onnx.json`);
-  loaded models are cached per voice so a batch doesn't reload a 120 MB model per line.
+  loaded models are cached per voice so a batch doesn't reload a 120 MB model per line. Models are not in the repo: `tools/models/` is gitignored; fetch them with `tools/download_piper_models.sh`.
 - `voice_manager.gd` resolves lines via `_safe_name()` (same rule as `piper_batch.py`) and plays them on the Vox bus.
 - Cutscene playback is wired in `cutscene.gd`: each line speaks when shown, and the scene waits for the voice.
 
-Enable: `voice_mgr.tts_enabled = true`
+Pre-recorded clips play without any flag. `tts_enabled` only reaches a placeholder that logs a warning; it does not synthesize anything.
+
+## Known issues
+
+- 53 files in `audio/voice/` (~0.8 MB of 1.7 MB) match no current line: older renders whose names kept punctuation or were truncated. `_safe_name()` never looks them up. Safe to delete once confirmed.
+- Two hero lines begin with `...`, so their files start with a dot (`...they_know_my_name..ogg`, `...sorry._sorry...ogg`). Godot's import skips dot-prefixed files (neither has a `.import`), so they cannot load and the line plays silent. Fix by stripping leading dots in both `_safe_name()` and `piper_batch.py`, then renaming the two files.
 
 ## Silence Lines
 
