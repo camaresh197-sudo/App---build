@@ -181,7 +181,51 @@ def shape_melody(f0: np.ndarray, win: int = 9, max_step: float = 50.0, max_dev: 
     return out
 
 
-def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: float = 0.65) -> dict:
+def runs_of(mask: np.ndarray, min_len: int = 5) -> list:
+    """Contiguous True runs as (start, end) frame pairs, min_len or longer."""
+    idx = np.where(mask)[0]
+    if len(idx) == 0:
+        return []
+    br = np.where(np.diff(idx) > 1)[0]
+    starts = np.concatenate(([idx[0]], idx[br + 1]))
+    ends = np.concatenate((idx[br], [idx[-1]]))
+    return [(int(s), int(e) + 1) for s, e in zip(starts, ends) if e + 1 - s >= min_len]
+
+
+def equalize_runs(orig: list, ryan: list) -> list:
+    """Merge the smallest-gap runs on the longer side until both lists match.
+
+    The song holds few long vowels (legato); speech has one short run per
+    syllable. Merging Ryan's adjacent runs maps two spoken syllables onto one
+    held note, which is what the song does. Returns [orig, ryan] or [None, None]
+    if they refuse to match.
+    """
+    a, b = list(orig), list(ryan)
+    guard = 0
+    while len(a) != len(b):
+        longer = a if len(a) > len(b) else b
+        if len(longer) < 2:
+            return [None, None]
+        gaps = [longer[i + 1][0] - longer[i][1] for i in range(len(longer) - 1)]
+        i = int(np.argmin(gaps))
+        longer[i] = (longer[i][0], longer[i + 1][1])
+        del longer[i + 1]
+        guard += 1
+        if guard > 64:
+            return [None, None]
+    return [a, b]
+
+
+def warp_along(mat: np.ndarray, src_idx: np.ndarray) -> np.ndarray:
+    """Resample along the frame axis following an explicit fractional index map."""
+    i = np.floor(src_idx).astype(int)
+    frac = (src_idx - i)[..., None]
+    j = np.minimum(i + 1, mat.shape[0] - 1)
+    return mat[i] * (1.0 - frac) + mat[j] * frac
+
+
+def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: float = 0.65,
+              flow: str = "notes") -> dict:
     # the melody comes from the ORIGINAL bank clip, not the current one: after a
     # first Ryan pass the file on disk is already sung, so re-running would
     # otherwise borrow its melody from Ryan's render instead of the performance
@@ -201,16 +245,71 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
             piper_gen.synthesize(text, voice, str(rwav), str(MODELS))
             xr = load_wav_mono(rwav, FS)
             f0_r, sp_r, ap_r = analyze(xr)
+            nr = len(f0_r)
 
-            # 1) time-warp the speech frames onto the clip's duration
-            sp = warp_frames(sp_r, nc)
-            ap = warp_frames(ap_r, nc)
+            if flow == "notes":
+                # SING, don't talk on a tune: the song holds few long vowels
+                # (legato), speech fires one short run per syllable. Map Ryan's
+                # voiced runs onto the song's note spans in order, stretch each
+                # pair to the note's duration, and put one steady note (with
+                # vibrato that grows in) on every span.
+                o_runs, r_runs = equalize_runs(runs_of(melody > 0, min_len=8),
+                                               runs_of(f0_r > 0, min_len=5))
+                ok = o_runs is not None and len(o_runs) > 0
+            else:
+                ok = False
 
-            # 2) borrow the melody: clip F0 where the take is voiced, gaps filled,
-            #    unvoiced where the take is unvoiced (consonants stay consonants)
-            f0_rw = warp_frames(f0_r.reshape(-1, 1), nc).ravel()
-            voiced_r = f0_rw > 0
-            new_f0 = np.where(voiced_r, melody, 0.0)
+            if ok:
+                # piecewise time map: Ryan's run k lands exactly on note span k,
+                # the consonant gaps in between map proportionally
+                out_pts, src_pts = [0.0], [0.0]
+                for (os_, oe_), (rs_, re_) in zip(o_runs, r_runs):
+                    out_pts += [float(os_), float(oe_)]
+                    src_pts += [float(rs_), float(re_)]
+                out_pts.append(float(nc))
+                src_pts.append(float(nr))
+                for p in range(1, len(out_pts)):       # keep the map strictly increasing
+                    if out_pts[p] <= out_pts[p - 1]:
+                        out_pts[p] = out_pts[p - 1] + 1e-3
+                    if src_pts[p] <= src_pts[p - 1]:
+                        src_pts[p] = src_pts[p - 1] + 1e-3
+                src_idx = np.interp(np.arange(nc), out_pts, src_pts)
+                src_idx = np.clip(src_idx, 0.0, float(nr - 1))
+                sp = warp_along(sp_r, src_idx)
+                ap = warp_along(ap_r, src_idx)
+                f0_rw = warp_along(f0_r.reshape(-1, 1), src_idx).ravel()
+
+                # one note per span: median of the shaped melody, onset glide from
+                # the previous note, vibrato fading in only on held notes
+                fps = 1000.0 / FRAME_MS
+                new_f0 = np.zeros(nc)
+                prev = 0.0
+                for (os_, oe_) in o_runs:
+                    seg = melody[os_:oe_]
+                    v = seg > 0
+                    if not v.any():
+                        continue
+                    note = float(np.median(seg[v]))
+                    L = oe_ - os_
+                    t = np.arange(L)
+                    f = np.full(L, note)
+                    g = min(8, max(2, L // 4))         # ~40 ms glide from the last note
+                    if prev > 0:
+                        f[:g] = prev + (note - prev) * (t[:g] / g)
+                    if L >= 50:                        # 250 ms: a held note earns its vibrato
+                        depth = 40.0 if L >= 100 else 28.0
+                        ramp = np.clip((t - 24) / 40.0, 0.0, 1.0)
+                        f = f * np.power(2.0, depth * np.sin(2 * np.pi * 5.5 * t / fps) * ramp / 1200.0)
+                    new_f0[os_:oe_] = f
+                    prev = note
+                new_f0[f0_rw <= 0] = 0.0               # consonants stay consonants
+            else:
+                # fallback: the old contour path (linear warp + shaped melody)
+                sp = warp_frames(sp_r, nc)
+                ap = warp_frames(ap_r, nc)
+                f0_rw = warp_frames(f0_r.reshape(-1, 1), nc).ravel()
+                voiced_r = f0_rw > 0
+                new_f0 = np.where(voiced_r, melody, 0.0)
 
             takes.append(pyworld.synthesize(new_f0, sp, ap, FS))
             if (f0_r > 0).any() and base_hz == 0.0:
@@ -254,6 +353,9 @@ def main() -> int:
                     help="take weights, comma-separated; ryan-low is a 16 kHz model, so it sits under the two 22 kHz takes")
     ap.add_argument("--vibrato", type=float, default=0.65,
                     help="how much of the original clip's vibrato survives (0 = straight notes, 1 = full depth)")
+    ap.add_argument("--flow", choices=["notes", "contour"], default="notes",
+                    help="notes: align syllables to the song's held notes and sing steady notes; "
+                         "contour: the old path (speech rhythm, melody painted over it)")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--restore", action="store_true", help="put the original clips back")
     ap.add_argument("--dry-run", action="store_true")
@@ -261,6 +363,7 @@ def main() -> int:
     voices = [v.strip() for v in args.voice.split(",") if v.strip()]
     weights = [float(x) for x in args.mix.split(",")]
     ps_vib = args.vibrato
+    ps_flow = args.flow
 
     vox_map = json.loads(DATA_VOX.read_text(encoding="utf-8"))
     lyrics = json.loads(LYRICS.read_text(encoding="utf-8"))["victory_vocals"]
@@ -290,7 +393,7 @@ def main() -> int:
         if args.dry_run:
             print(f"would sing {clip_id}: {text!r}")
             continue
-        info = sing_clip(clip_id, text, voices, weights, ps_vib)
+        info = sing_clip(clip_id, text, voices, weights, ps_vib, ps_flow)
         report.append(info)
         print(f"  {clip_id}: '{text}'  melody {info['melody_hz']} Hz, "
               f"Ryan base {info['ryan_hz']} Hz, {info['dur']} s, {info['takes']} takes")
