@@ -57,6 +57,9 @@ the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
 
 ### How the singer works (`tools/piper_sing.py`)
 
+See `docs/VOCAL.md` for the full vocal pipeline — singer, chorus grid, phonics
+table, speech cache and the findings behind the echo/stutter/robotic fixes.
+
 The pipeline is a mouth transplant, not a vocoder trick: Ryan sings the lyric on a
 melody borrowed from the *original* performance, never from the current clip (re-running
 on an already-sung clip would borrow from itself).

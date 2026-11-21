@@ -7,7 +7,7 @@ Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session, 
 | Task | Start with | Doc |
 |---|---|---|
 | Song / music | `data/data_song.json`, `scripts/sound.gd` | docs/AUDIO.md |
-| Vocals / lyric clips | `data/data_vox.json`, `tools/vox_*.py` | docs/AUDIO.md |
+| Vocals / lyric clips | `data/data_vox.json`, `tools/vox_*.py`, `data/data_phonics.json` | docs/VOCAL.md |
 | Character pose, gesture, face | `scripts/hero3d.gd`, `data/data_expr.json` | docs/CHARACTER.md |
 | Mesh, rig, teeth, lips | `blender/character_rigged.blend` (master), `tools/blend_to_glb.py` | docs/CHARACTER.md |
 | Scoring, input, 2D game loop | `scripts/main.gd` | docs/CODEMAP.md |
@@ -89,7 +89,7 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 | `art/character_skinned.glb` | Exported mesh (from the Blender master) | via export |
 | `blender/character_rigged.blend` | Master mesh and rig (Blender only) | ✓ (Blender) |
 | `tools/` | Python: Blender passes, audio synthesis, codemap | ✓ |
-| `docs/` | CODEMAP, AUDIO, CHARACTER, AUDIO_BUS_ARCHITECTURE | ✓ |
+| `docs/` | CODEMAP, AUDIO, VOCAL, CHARACTER, AUDIO_BUS_ARCHITECTURE | ✓ |
 | `build/`, `dist/`, `www/`, `node_modules/` | Generated | ✗ |
 
 ## Reply style
