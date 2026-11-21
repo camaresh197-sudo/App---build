@@ -137,8 +137,11 @@ python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox \
   vox bus and the clip positions must come from the same run.
 - Re-extracting the stem needs the master before the limiter. `shotter.gd` `mix` writes it as
   `<out>_masterpre.wav`, next to the post-limiter master and the `_voxpre`/`_voxpost` files.
-- Known gap: clip `C2` does not match in the current run (score 0.21), so snips over that line
-  will miss it until this is checked.
+- Dropouts: a run can lose a sung line. In the run in `stems/`, the vox bus is silent from 36 to
+  38 s, so `C2` never played. The snip tool warns and places a missing line at the spacing of its
+  neighbours (two bars = one line apart). Only lines the sequence sings are placed or estimated
+  (`SUNG` in `tools/snip_from_stem.py`); the calibration gain uses only lines that were actually sung.
+  Check the warnings after every new run, and find out why a line dropped before trusting the mix.
 
 ## Where to change what
 
