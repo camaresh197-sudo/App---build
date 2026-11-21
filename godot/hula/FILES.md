@@ -3,17 +3,17 @@
 ## By Role
 
 ### Composers (music/audio)
-- **Main song:** `data/data_song.json` → `scripts/sound.gd:146`
-- **Title theme:** `data/data_title.json` → `scripts/sound.gd:148`
-- **Victory fanfare:** `data/data_victory.json` → `scripts/sound.gd:149`
-- **Lyric clips:** `data/data_vox.json` → `scripts/sound.gd:147`
+- **Main song:** `data/data_song.json` → loaded in `scripts/sound.gd` `_ready` (~L50)
+- **Title theme:** `data/data_title.json` → loaded in `scripts/sound.gd` `_ready` (~L56)
+- **Victory fanfare:** `data/data_victory.json` → loaded in `scripts/sound.gd` `_ready` (~L54)
+- **Lyric clips:** `data/data_vox.json` → loaded in `scripts/sound.gd` `_ready` (~L52)
 - **SFX routing:** `scripts/sound.gd:1-100` (mixer buses)
 
 ### Character Artists
 - **Face expressions:** `data/data_expr.json` (20K keyframes)
-- **3D rig code:** `scripts/hero3d.gd:1-100` (procedural rig)
+- **3D rig / face code:** `scripts/hero3d.gd` (slice it with `docs/CODEMAP.md`)
 - **Master blend:** `../blender/character_rigged.blend` (edit in Blender)
-- **GLB export:** `art/character.glb`
+- **GLB the game loads:** `art/character_skinned.glb` (export from the master with `tools/blend_to_glb.py`)
 
 ### UI/Menu Designers
 - **Menu structure:** `data/data_menu.json` → `scripts/menu.gd`
