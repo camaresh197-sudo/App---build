@@ -9,15 +9,15 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
 | `scripts/card_deck.gd` | 112 | 890 |
 | `scripts/cutscene.gd` | 298 | 2492 |
 | `scripts/cutscene_scene.gd` | 79 | 576 |
-| `scripts/hero3d.gd` | 1783 | 27414 |
+| `scripts/hero3d.gd` | 1784 | 27436 |
 | `scripts/legacy.gd` | 10 | 126 |
 | `scripts/main.gd` | 465 | 4945 |
 | `scripts/map.gd` | 231 | 1841 |
-| `scripts/menu.gd` | 387 | 5633 |
+| `scripts/menu.gd` | 462 | 6515 |
 | `scripts/save.gd` | 28 | 345 |
 | `scripts/scene_generator.gd` | 135 | 901 |
-| `scripts/shotter.gd` | 500 | 5893 |
-| `scripts/sound.gd` | 611 | 8133 |
+| `scripts/shotter.gd` | 501 | 5931 |
+| `scripts/sound.gd` | 626 | 8398 |
 | `scripts/updater.gd` | 181 | 2095 |
 | `scripts/voice_manager.gd` | 72 | 592 |
 
@@ -103,110 +103,111 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  323  const RIG_GLB
  324  const RIG_REF
  337  const TEETH
- 342  func _load_rig() -> void
- 436  func _rig_sync() -> void
- 457  -- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable --
- 458  const PS
- 466  func _layer(n: Node, layer: int) -> void
- 470  func _portrait() -> void
- 476  func ptex() -> Texture2D: return pvp.get_texture()
- 478  -- life: moods, reactions, where he looks, talking --
- 490  const BLINK
- 492  func mood(n: String) -> void
- 498  func react(n: String, secs := 0.7) -> void
- 501  -- face --
- 518  const SPR
- 523  const LIP_N
- 526  const HEAD_A
- 527  const HEAD_B
- 528  const HEAD_C
- 529  const EYE_X
- 530  const EYE_Y
- 531  const EYE_Z
- 532  const EYE_R
- 533  const TOOTH_U
- 534  const TOOTH_L
- 535  const TOOTH_H
- 536  const TOOTH_D
- 537  const TOOTH_GAP
- 541  const JAW_P
- 542  const JAW_OPEN
- 545  const MOUTH_DY
- 547  func _load_expr() -> void
- 556  func expr_names() -> Array: return expr_db.keys()
- 558  func set_expr(name: String, snap := false) -> void
- 562  func _set_target(name: String, snap := false) -> void
- 572  func hz(x: float, y: float) -> float
- 580  func _head_mesh() -> ArrayMesh
- 630  func _face_pt(p: Vector3) -> Vector3
- 638  func _socket_pt(p: Vector3) -> Vector3
- 649  func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMater...
- 810  func _cap(r: float, ang: float, with_uv: bool, rings := 10, seg := 32) -> ArrayMesh
- 835  func _hair_cap(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick :...
- 850  func _hair_pt(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick: f...
- 860  func _lidmesh(r: float, upper: bool, base: Color, shade: Color) -> ArrayMesh
- 890  func _tube(mi: MeshInstance3D, pts: Array, rad: Array, ry := 1.0, ring := 8) -> void
- 913  func _skin_tex() -> ImageTexture
- 927  func _tooth_tex() -> ImageTexture:         # a single tooth: ivory body, shaded incisal edge at v=...
- 941  func _iris_tex() -> ImageTexture
- 963  const FSOFT
- 969  func _raw(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
- 970  func _pose_v(k: String) -> float: return _raw(k) + float(_cp.get(k, 0.0))
- 971  func _fp(k: String) -> float: return _pose_v(k) + float(fc.get(k, 0.0))
- 976  func _couple(dt: float) -> void
-1006  func _apply_face() -> void
-1238  func face_update() -> void
-1297  func _mouth_meshes() -> void
-1317  func _set_hide(mi: MeshInstance3D, v: float) -> void
-1325  func _fp_raw(k: String) -> float: return float(fx.get(k, 0.0))
-1327  func _thin_torus() -> TorusMesh
-1330  -- pose --
-1344  const MUSCLE
-1350  const L1
-1351  const L2
-1352  const FOOT_Y
-1353  const FOOT_X
-1354  const BPS
-1355  const BAR
-1356  const SALSA_BEATS
-1357  const FLEX_BEATS
-1358  const POWER_BEATS
-1365  func _muscle(key: String, fam: String, exact: Vector3) -> Vector3
-1383  func _neutral() -> Dictionary
-1387  const MKEYS
-1388  func _mix(a: Dictionary, b: Dictionary, k: float) -> Dictionary
-1393  func _move_hula(phase: float, bank: float) -> Dictionary
-1407  func _sd(i: int) -> float:       # alternating side per beat
-1410  func _al(a: Array, b: Array, m: float) -> Array
-1415  func _ft(d: float, lift := 0.0, out := 0.0, wide := 0.0, fwd := 0.0) -> Vector3:      # a foot tar...
-1418  -- gestures: dance moves --
-1430  const GMOOD
-1436  const CYC
-1437  func gesture(n: String) -> void
-1443  func _phrase_origin() -> float
-1448  func _gstep() -> void
-1480  const MICRO
-1481  func _life(dt: float) -> void
-1492  func _move(n: String, b: float) -> Dictionary:       # b = the move's local beat position, off the...
-1582  func _spine_set(r: Vector3) -> void:       # the bend is shared between the lumbar and the mid-spine
-1587  func _leg_ik(side: String, d: float, tgt: Vector3, out: float, pitch: float) -> void
-1607  func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void
-1656  func _hand_joints(side: String, d: float, ph: float, wave: float) -> void
-1671  -- arms --
-1675  const A_SHZ
-1676  const A_SHX
-1677  const A_ELZ
-1678  const A_ELX
-1679  const A_HDZ
-1686  func arm_kick(n: String, secs := 0.6) -> void
-1688  func arm_clear() -> void
-1692  const ARM_K
-1697  func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void
-1738  -- secondary motion: the hat and the hair lag behind the body and get thrown by the arms --
-1741  func _secondary(phase: float, c: float) -> void
-1769  func set_hoop(col_a: Color, col_b: Color) -> void
-1772  const HAT_COL
-1774  func set_cos(hat_i: int, hoop_i: int, defs: Dictionary) -> void
+ 338  const HOOP
+ 343  func _load_rig() -> void
+ 437  func _rig_sync() -> void
+ 458  -- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable --
+ 459  const PS
+ 467  func _layer(n: Node, layer: int) -> void
+ 471  func _portrait() -> void
+ 477  func ptex() -> Texture2D: return pvp.get_texture()
+ 479  -- life: moods, reactions, where he looks, talking --
+ 491  const BLINK
+ 493  func mood(n: String) -> void
+ 499  func react(n: String, secs := 0.7) -> void
+ 502  -- face --
+ 519  const SPR
+ 524  const LIP_N
+ 527  const HEAD_A
+ 528  const HEAD_B
+ 529  const HEAD_C
+ 530  const EYE_X
+ 531  const EYE_Y
+ 532  const EYE_Z
+ 533  const EYE_R
+ 534  const TOOTH_U
+ 535  const TOOTH_L
+ 536  const TOOTH_H
+ 537  const TOOTH_D
+ 538  const TOOTH_GAP
+ 542  const JAW_P
+ 543  const JAW_OPEN
+ 546  const MOUTH_DY
+ 548  func _load_expr() -> void
+ 557  func expr_names() -> Array: return expr_db.keys()
+ 559  func set_expr(name: String, snap := false) -> void
+ 563  func _set_target(name: String, snap := false) -> void
+ 573  func hz(x: float, y: float) -> float
+ 581  func _head_mesh() -> ArrayMesh
+ 631  func _face_pt(p: Vector3) -> Vector3
+ 639  func _socket_pt(p: Vector3) -> Vector3
+ 650  func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMater...
+ 811  func _cap(r: float, ang: float, with_uv: bool, rings := 10, seg := 32) -> ArrayMesh
+ 836  func _hair_cap(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick :...
+ 851  func _hair_pt(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick: f...
+ 861  func _lidmesh(r: float, upper: bool, base: Color, shade: Color) -> ArrayMesh
+ 891  func _tube(mi: MeshInstance3D, pts: Array, rad: Array, ry := 1.0, ring := 8) -> void
+ 914  func _skin_tex() -> ImageTexture
+ 928  func _tooth_tex() -> ImageTexture:         # a single tooth: ivory body, shaded incisal edge at v=...
+ 942  func _iris_tex() -> ImageTexture
+ 964  const FSOFT
+ 970  func _raw(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
+ 971  func _pose_v(k: String) -> float: return _raw(k) + float(_cp.get(k, 0.0))
+ 972  func _fp(k: String) -> float: return _pose_v(k) + float(fc.get(k, 0.0))
+ 977  func _couple(dt: float) -> void
+1007  func _apply_face() -> void
+1239  func face_update() -> void
+1298  func _mouth_meshes() -> void
+1318  func _set_hide(mi: MeshInstance3D, v: float) -> void
+1326  func _fp_raw(k: String) -> float: return float(fx.get(k, 0.0))
+1328  func _thin_torus() -> TorusMesh
+1331  -- pose --
+1345  const MUSCLE
+1351  const L1
+1352  const L2
+1353  const FOOT_Y
+1354  const FOOT_X
+1355  const BPS
+1356  const BAR
+1357  const SALSA_BEATS
+1358  const FLEX_BEATS
+1359  const POWER_BEATS
+1366  func _muscle(key: String, fam: String, exact: Vector3) -> Vector3
+1384  func _neutral() -> Dictionary
+1388  const MKEYS
+1389  func _mix(a: Dictionary, b: Dictionary, k: float) -> Dictionary
+1394  func _move_hula(phase: float, bank: float) -> Dictionary
+1408  func _sd(i: int) -> float:       # alternating side per beat
+1411  func _al(a: Array, b: Array, m: float) -> Array
+1416  func _ft(d: float, lift := 0.0, out := 0.0, wide := 0.0, fwd := 0.0) -> Vector3:      # a foot tar...
+1419  -- gestures: dance moves --
+1431  const GMOOD
+1437  const CYC
+1438  func gesture(n: String) -> void
+1444  func _phrase_origin() -> float
+1449  func _gstep() -> void
+1481  const MICRO
+1482  func _life(dt: float) -> void
+1493  func _move(n: String, b: float) -> Dictionary:       # b = the move's local beat position, off the...
+1583  func _spine_set(r: Vector3) -> void:       # the bend is shared between the lumbar and the mid-spine
+1588  func _leg_ik(side: String, d: float, tgt: Vector3, out: float, pitch: float) -> void
+1608  func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void
+1657  func _hand_joints(side: String, d: float, ph: float, wave: float) -> void
+1672  -- arms --
+1676  const A_SHZ
+1677  const A_SHX
+1678  const A_ELZ
+1679  const A_ELX
+1680  const A_HDZ
+1687  func arm_kick(n: String, secs := 0.6) -> void
+1689  func arm_clear() -> void
+1693  const ARM_K
+1698  func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void
+1739  -- secondary motion: the hat and the hair lag behind the body and get thrown by the arms --
+1742  func _secondary(phase: float, c: float) -> void
+1770  func set_hoop(col_a: Color, col_b: Color) -> void
+1773  const HAT_COL
+1775  func set_cos(hat_i: int, hoop_i: int, defs: Dictionary) -> void
 ```
 
 ## `scripts/legacy.gd`
@@ -323,12 +324,20 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  289  const READY
  290  const TNAME
  291  const STORY_LABELS
- 297  func _secret_tap() -> void
- 305  func _read_json(path: String) -> Dictionary
- 311  func _load_theater_data() -> void
- 323  func _play_list(items: Array, from := 0) -> void
- 329  func _play_cutscene_id(cs_id: String) -> void
- 335  func secret(R: float, t: float) -> void
+ 298  const TIMING_GAP
+ 305  func _secret_tap() -> void
+ 313  func _read_json(path: String) -> Dictionary
+ 319  func _load_theater_data() -> void
+ 331  func _play_list(items: Array, from := 0) -> void
+ 337  func _play_cutscene_id(cs_id: String) -> void
+ 343  func _timing_load() -> void
+ 353  func _timing_nudge(lid: String, i: int, d: float) -> void
+ 360  func _timing_payload() -> Dictionary
+ 366  func _timing_save() -> void
+ 373  func _timing_copy() -> void
+ 377  func _timing_reset(lid: String) -> void
+ 382  func _draw_timing(ox: float) -> void
+ 408  func secret(R: float, t: float) -> void
 ```
 
 ## `scripts/save.gd`
@@ -364,10 +373,10 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
 ```text
    5  const SEED
    6  func _ready() -> void
- 461  -- audio QA helpers (used by the "mix" mode) --
- 462  func _db(x: float) -> float
- 467  func _audio_report(tag: String, x: PackedVector2Array, sr: int) -> void
- 488  func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void
+ 462  -- audio QA helpers (used by the "mix" mode) --
+ 463  func _db(x: float) -> float
+ 468  func _audio_report(tag: String, x: PackedVector2Array, sr: int) -> void
+ 489  func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void
 ```
 
 ## `scripts/sound.gd`
@@ -386,41 +395,44 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  172  func _stream(key: String) -> AudioStream
  178  func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
  194  func play(name: String, o := {}) -> void
- 223  func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void
- 225  func hit(name: String, dl: float, v: float, ref: float) -> void
- 228  -- sfx --
- 229  func sfx(n: String, vol := 1.0) -> void
- 246  -- cutscene audio --
- 249  func play_cutscene_audio(audio_path: String) -> void
- 268  func stop_cutscene_audio() -> void
- 272  -- music --
- 278  const BEAT_SECS
- 279  const BEATS_BAR
- 280  func start_music(track := "game") -> void
- 290  func stop_music() -> void
- 299  func beat_pos() -> float
- 306  func bar_pos() -> float
- 310  func beat_secs() -> float
- 313  func beats_per_bar() -> int
- 316  func is_playing() -> bool
- 319  func _process(dt: float) -> void
- 347  func _harmony(m: int, v: Array, r: int) -> int
- 355  func _strum(v: Array, dl: float, down: bool, vol: float) -> void
- 361  const ARP
- 362  const STRUMV
- 363  func _step(st: int, dl: float) -> void
- 434  -- title song (ranchera polka, 16 sixteenth-steps per bar) --
- 435  const TE
- 436  func _lead(kind: String, m: int, dur: float, dl: float, v: Array) -> void
- 445  func _tstep(st: int, dl: float) -> void
- 496  -- victory fanfare (instrumental: the tune is carried by the lead instruments) --
- 497  const VE
- 498  const VOX_GAIN
- 500  const VFILL
- 505  const VGRUNT
- 510  const VGRUNT_V
- 511  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
- 514  func _vstep(st: int, dl: float) -> void
+ 227  func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void
+ 229  func hit(name: String, dl: float, v: float, ref: float) -> void
+ 232  -- sfx --
+ 233  func sfx(n: String, vol := 1.0) -> void
+ 250  -- cutscene audio --
+ 253  func play_cutscene_audio(audio_path: String) -> void
+ 272  func stop_cutscene_audio() -> void
+ 276  -- music --
+ 282  const BEAT_SECS
+ 283  const BEATS_BAR
+ 284  func start_music(track := "game") -> void
+ 295  func stop_music() -> void
+ 304  func beat_pos() -> float
+ 311  func bar_pos() -> float
+ 315  func beat_secs() -> float
+ 318  func beats_per_bar() -> int
+ 321  func is_playing() -> bool
+ 324  func _process(dt: float) -> void
+ 355  func _harmony(m: int, v: Array, r: int) -> int
+ 363  func _strum(v: Array, dl: float, down: bool, vol: float) -> void
+ 369  const ARP
+ 370  const STRUMV
+ 371  func _step(st: int, dl: float) -> void
+ 442  -- title song (ranchera polka, 16 sixteenth-steps per bar) --
+ 443  const TE
+ 444  func _lead(kind: String, m: int, dur: float, dl: float, v: Array) -> void
+ 453  func _tstep(st: int, dl: float) -> void
+ 504  -- victory fanfare (instrumental: the tune is carried by the lead instruments) --
+ 505  const VE
+ 506  const VOX_GAIN
+ 510  const DUCK_SUNG
+ 512  const LOOK_AHEAD
+ 513  func _vox_key(sec: String, bar: int) -> String
+ 520  const VFILL
+ 525  const VGRUNT
+ 530  const VGRUNT_V
+ 531  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
+ 534  func _vstep(st: int, dl: float) -> void
 ```
 
 ## `scripts/updater.gd`

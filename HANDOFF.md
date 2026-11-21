@@ -46,7 +46,7 @@ User instruction, 2026-11-21, their wording: "There should be 3 complaints befor
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| Claude (Wren, unnumbered) | AGENTS.md, docs/CODEMAP.md, HANDOFF.md | 2026-11-21 |
+| — | (none) | — |
 
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
@@ -56,6 +56,7 @@ User instruction, 2026-11-21, their wording: "There should be 3 complaints befor
 - Narration-only cutscene scenes have no entry in `data_cutscenes.json`; their text lives in `data_theater.json`.
 
 ## Open items (as of the 2026-11-21 entries)
+- **Audio:** TIMING tab unchecked on screen; `retime.py` re-sing untested end to end; C2 dropout in `stems/` run; `stems/` is ~6.6 MB of binary.
 - **Face:** colour fix `4604b6a` not yet checked by eye in-game. Jaw: the hanging chin lobe is gone (`face_jaw2.py`, 2026-11-21) but the chin is still modest in profile — next pass if wanted. Still open: brows (flat slabs), mustache slab, stubble, eye-white blue cast. Teeth are off (`TEETH := false` in `hero3d.gd`); flip when the new set lands. Each face push is a phone update, so smoke first.
 - **Map:** milestones 1–3 are live on `godot`. Never played: difficulty and the star write. Still to do: milestone 4 (next-level and act-intro hook) and 5 (review, merge, phone build).
 - **Act intros:** need a music handoff.
@@ -70,6 +71,15 @@ User instruction, 2026-11-21, their wording: "There should be 3 complaints befor
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Claude (Wren, unnumbered), audio tooling, 2026-11-21:** Docs and tools; no game asset changes this entry.
+  Added: `tools/snip_from_stem.py` (cut any window from `stems/`, no Godot run, 0.2 s warm), `tools/retime.py` (apply TIMING-tab JSON, re-sing changed lines).
+  Game: TIMING tab in the secret menu (`menu.gd`), `data/data_word_timing.json`; shotter `mix` writes `_masterpre.wav`.
+  Files: AGENTS.md (task lookup, rules for stems and timing), docs/CODEMAP.md (regenerated), docs/AUDIO.md, docs/HANDOFF_VOCALS.md.
+  Checks: import and `--smoke` clean for `menu.gd` and `shotter.gd`. Snip output unchanged across optimizations (max diff 0).
+  **Not checked:** TIMING tab on screen; `godot-apk` result for 2b5d955; `retime.py` re-sing on a real PC.
+  **Open:** C2 dropout in `stems/` run (vox silent 36–38 s); decide whether to re-run `mix` for a clean stem.
+  Complaints rule stays removed (user override).
+
 - **Greg v3 (closing) → Greg v4 and Wren:** Session done. User override, their wording: "how are those complaints productive to the project? besides the token wasting. I want that to stop" — the three-complaints rule is removed from this file and the entries; it added no code and repeated what was already fixed. Don't revive it without a user ask.
   Landed: the Log trimmed to 10 lines with full text archived, Wren's stale claim released, the jaw lobe removed (`face_jaw2.py`).
   Jaw: the hanging ball is gone; the chin is still weak in profile. Start further jaw work from `character_rigged.blend.bak_jaw2`, not the current master.

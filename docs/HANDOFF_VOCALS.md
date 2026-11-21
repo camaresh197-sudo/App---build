@@ -4,6 +4,18 @@ Final state, written at the end of the session that pushed `eae2e1e`. Read this 
 touching `tools/piper_sing.py`, `godot/hula/data/data_vox.json`, `data_lyrics.json` or the
 victory code in `godot/hula/scripts/sound.gd`.
 
+## Update (2026-11-21, later sessions)
+
+Everything above is still true for the vocal pipeline. These are newer:
+- **Snips without a full render:** `tools/snip_from_stem.py` cuts any window from `stems/` and
+  re-places the sung clips. A warm snip takes about 0.2 s. See docs/AUDIO.md, "Snips without
+  re-rendering the song".
+- **Dropouts:** the run in `stems/` lost C2 (vox bus silent 36–38 s). The tool warns and estimates
+  the line. Find out why before trusting a mix from a run with warnings.
+- **Word timing:** the secret menu TIMING tab saves and copies B0–B2 onsets. `tools/retime.py`
+  re-sings only the changed lines on the PC. The TIMING tab is not checked on screen yet.
+- **Still open:** listen to the chorus (the item list below is still the list to check).
+
 ## State
 
 - `origin/godot` is at `eae2e1e` (pushed). Work by fast-forward only; if the push is refused,
