@@ -1,0 +1,9 @@
+{
+  "_note": "Word onsets in seconds from the start of each sung clip's first word (the 0.15 s lead-in is added by data_vox.json). Edit in the secret menu (TIMING tab), copy the JSON, then run tools/retime.py on the PC to re-sing the changed lines.",
+  "order": ["B0", "B1", "B2"],
+  "lines": {
+    "B0": {"section": "v-B", "bar": 0, "bars": 2, "words": ["Jeff", "is", "gay", "so", "gay"], "onsets": [0.0, 0.19, 0.43, 1.12, 1.91]},
+    "B1": {"section": "v-B", "bar": 2, "bars": 2, "words": ["Jeff", "is", "gay", "so", "gay"], "onsets": [0.0, 0.19, 0.43, 1.12, 1.91]},
+    "B2": {"section": "v-B", "bar": 4, "bars": 2, "words": ["Jeff", "is", "gay", "so", "gay"], "onsets": [0.0, 0.19, 0.43, 1.12, 1.91]}
+  }
+}

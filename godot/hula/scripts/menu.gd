@@ -292,7 +292,15 @@ const STORY_LABELS := ["ACT 1 INTRO", "ACT 2 INTRO", "ACT 3 INTRO", "ACT 4 INTRO
 var theater: Dictionary = {}       # data_theater.json: "acts" (4 intro lists) + "end" (28 ending scenes)
 var scene_text: Dictionary = {}    # scene title -> narration caption
 var cutscene_data: Dictionary = {}
-var song_test_tab := 0  # 0=THEATER, 1=SONGS, 2=MUSICAL
+var song_test_tab := 0  # 0=THEATER, 1=SONGS, 2=MUSICAL, 3=TIMING
+# ---- word timing editor (TIMING tab). Onsets are seconds into each sung line; edits are saved
+# on the phone and copied to the PC with tools/retime.py, which re-sings the changed lines.
+const TIMING_GAP := 0.05
+var timing: Dictionary = {}       # line id -> {words, onsets, ...}: defaults with saved onsets applied
+var timing_base: Dictionary = {}  # the shipped defaults, for RESET
+var timing_order: Array = []
+var timing_sel := "B0"
+var timing_msg := ""
 
 func _secret_tap() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
@@ -332,20 +340,85 @@ func _play_cutscene_id(cs_id: String) -> void:
 		items.append({"title": scene_name, "text": scene_text.get(scene_name, ""), "cs": cs_id})
 	_play_list(items, 0)
 
+func _timing_load() -> void:
+	var base: Dictionary = _read_json("res://data/data_word_timing.json")
+	timing_order = base.get("order", [])
+	timing_base = base.get("lines", {}).duplicate(true)
+	timing = timing_base.duplicate(true)
+	var saved: Dictionary = _read_json("user://word_timing.json").get("lines", {})
+	for lid in saved:
+		if timing.has(lid) and saved[lid].get("onsets") is Array:
+			timing[lid]["onsets"] = saved[lid]["onsets"]
+
+func _timing_nudge(lid: String, i: int, d: float) -> void:
+	var on: Array = timing[lid]["onsets"]
+	var lo := 0.0 if i == 0 else float(on[i - 1]) + TIMING_GAP
+	var hi := 9.9 if i + 1 >= on.size() else float(on[i + 1]) - TIMING_GAP
+	on[i] = snappedf(clampf(float(on[i]) + d, lo, hi), 0.01)
+	timing_msg = ""
+
+func _timing_payload() -> Dictionary:
+	var out := {}
+	for lid in timing:
+		out[lid] = timing[lid].duplicate(true)
+	return {"lines": out}
+
+func _timing_save() -> void:
+	var f := FileAccess.open("user://word_timing.json", FileAccess.WRITE)
+	if f == null:
+		timing_msg = "could not save on this phone"; return
+	f.store_string(JSON.stringify(_timing_payload(), "  "))
+	timing_msg = "saved on this phone"
+
+func _timing_copy() -> void:
+	DisplayServer.clipboard_set(JSON.stringify(_timing_payload(), "  "))
+	timing_msg = "copied: paste it into the chat"
+
+func _timing_reset(lid: String) -> void:
+	if timing_base.has(lid):
+		timing[lid] = timing_base[lid].duplicate(true)
+		timing_msg = "reset %s to the default" % lid
+
+func _draw_timing(ox: float) -> void:
+	if timing.is_empty(): _timing_load()
+	var hint := "tap - or + to move a word by 0.01 s. Edits reach the audio after a PC re-sing."
+	txt(Vector2(ox + 14, 50), timing_msg if timing_msg != "" else hint, 11, Color("ffd32a"))
+	for k in timing_order.size():
+		var lid: String = timing_order[k]
+		var r := Rect2(ox + 14 + k * 74, 70, 68, 26)
+		var on := lid == timing_sel
+		c.buttons.append([r, func(): timing_sel = lid; timing_msg = ""])
+		rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3), 1.5, 6)
+		ctxt(r.position.x + r.size.x / 2.0, r.position.y + 17, lid, 11, Color.WHITE)
+	var line: Dictionary = timing.get(timing_sel, {})
+	var words: Array = line.get("words", [])
+	var onsets: Array = line.get("onsets", [])
+	for i in mini(words.size(), onsets.size()):
+		var x := ox + 14 + (i % 5) * 124
+		var y := 110 + (i / 5) * 62
+		var idx := i
+		var lid2 := timing_sel
+		txt(Vector2(x, y + 14), "%s  %.2f s" % [words[i], float(onsets[i])], 13, Color.WHITE)
+		button(Rect2(x, y + 22, 52, 28), "-", Color("c0392b"), func(): _timing_nudge(lid2, idx, -0.01), 16)
+		button(Rect2(x + 60, y + 22, 52, 28), "+", Color("16a085"), func(): _timing_nudge(lid2, idx, 0.01), 16)
+	button(Rect2(ox + 14, 250, 150, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
+	button(Rect2(ox + 174, 250, 150, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
+	button(Rect2(ox + 334, 250, 170, 36), "RESET LINE", Color("c0392b"), func(): _timing_reset(timing_sel), 14)
+
 func secret(R: float, t: float) -> void:
 	var ox := (R - 640.0) / 2.0
 	c.draw_rect(Rect2(0, 0, R, 360), Color(0.03, 0.03, 0.08, 0.85))
 	if theater.is_empty(): _load_theater_data()
 
 	txt(Vector2(ox + 14, 26), "CUTSCENE THEATER", 18, Color.WHITE)
-	for tab_idx in 3:
-		var tr := Rect2(ox + 270 + tab_idx * 124, 8, 118, 24)
+	for tab_idx in 4:
+		var tr := Rect2(ox + 262 + tab_idx * 90, 8, 86, 24)
 		var is_on := tab_idx == song_test_tab
 		var idx := tab_idx
 		c.buttons.append([tr, func(): song_test_tab = idx; song_test = ""; sec_msg = ""])
 		rrect(tr, Color("16a085") if is_on else Color("2d3a6b"), 7)
 		rframe(tr, Color("ffd32a") if is_on else Color(1, 1, 1, 0.4), 2.0 if is_on else 1.0, 7)
-		ctxt(tr.position.x + tr.size.x / 2.0, tr.position.y + 17, ["THEATER", "SONGS", "MUSICAL"][tab_idx], 12, Color.WHITE)
+		ctxt(tr.position.x + tr.size.x / 2.0, tr.position.y + 17, ["THEATER", "SONGS", "MUSICAL", "TIMING"][tab_idx], 11, Color.WHITE)
 
 	if song_test_tab == 0:
 		txt(Vector2(ox + 14, 50), "pick a scene to watch", 12, Color("ffd32a"))
@@ -366,6 +439,8 @@ func secret(R: float, t: float) -> void:
 			c.buttons.append([r, func(): _play_list(end_list, from)])
 			rrect(r, Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.2, 6)
 			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 16, "%d. %s" % [i + 1, end_list[i]["title"]], 9, Color.WHITE)
+	elif song_test_tab == 3:
+		_draw_timing(ox)
 	else:
 		var msg: String = ("now playing: " + TNAME.get(song_test, song_test)) if song_test != "" else (sec_msg if sec_msg != "" else "pick a track to hear it")
 		txt(Vector2(ox + 14, 50), msg, 12, Color("ffd32a"))

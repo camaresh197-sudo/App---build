@@ -117,6 +117,16 @@ CHORUS_GRID.update({"C0": ("v-C", 0, 2), "C2": ("v-C", 2, 2),
                     "F0": ("v-F", 0, 2, 0.0, GAY_WORD), "B6": ("v-F", 2, 2, 0.0, GAY_WORD)})
 
 
+# Word timing edited in the game (secret menu, TIMING tab) and copied to tools/retime.py.
+# A line with "onsets" in data_word_timing.json gets explicit word times; others keep the grid above.
+WORD_TIMING = ROOT / "godot" / "hula" / "data" / "data_word_timing.json"
+if WORD_TIMING.exists():
+    for _id, _line in json.loads(WORD_TIMING.read_text(encoding="utf-8")).get("lines", {}).items():
+        if _line.get("onsets"):
+            CHORUS_GRID[_id] = (_line["section"], int(_line["bar"]), int(_line["bars"]), 0.0, 0.0,
+                                [float(x) for x in _line["onsets"]])
+
+
 def find_ffmpeg() -> str:
     import shutil as sh
     ff = sh.which("ffmpeg")

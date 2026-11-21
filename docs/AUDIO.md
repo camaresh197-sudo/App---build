@@ -112,6 +112,23 @@ Checks: `vox_note_check.py` reports voiced-run wander (robotic = too flat) and r
 octave errors on rendered audio — see its docstring); `vox_ab_check.py` compares takes.
 
 
+## Word timing from the phone
+
+Secret menu (tap RUNS three times on the title), **TIMING** tab: nudge each word's onset by 0.01 s,
+then **SAVE** (kept on the phone) or **COPY** (puts the JSON on the clipboard; paste it into the chat
+or a file). Data lives in `godot/hula/data/data_word_timing.json`.
+
+On the PC, from the repo root:
+
+```bash
+python3 tools/retime.py timing_from_phone.json --dry-run   # shows what changed
+python3 tools/retime.py timing_from_phone.json              # writes the data, re-sings only changed lines
+```
+
+`piper_sing.py` reads the onsets from the data file, so a re-sing needs `piper-tts[alignment]`,
+`pyworld`, `soundfile` and the Ryan voice model in `tools/models/`. The phone shows edits
+immediately but plays the old clip until the PC re-sing is merged and the app is updated.
+
 ## Snips without re-rendering the song
 
 The instruments are fixed, so a lyric or timing change does not need a full `mix victory`.
