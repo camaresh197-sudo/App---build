@@ -92,3 +92,7 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 | `tools/` | Python: Blender passes, audio synthesis, codemap | ✓ |
 | `docs/` | CODEMAP, AUDIO, CHARACTER, AUDIO_BUS_ARCHITECTURE | ✓ |
 | `build/`, `dist/`, `www/`, `node_modules/` | Generated | ✗ |
+
+## Reply style
+- Keep replies brief by default. Solve quickly, don't loop. Give more detail only when the user asks.
+- When the user asks to stop repeating, don't restate earlier messages: give new facts and the next action only.
