@@ -581,7 +581,9 @@ func _vstep(st: int, dl: float) -> void:
 	if s == 0 and not hold and have_vox:
 		var vk := ""
 		if sec == "v-A": vk = "A%d" % bar
-		elif sec == "v-B": vk = "B%d" % bar
+		elif sec == "v-B":
+			# the chorus sings in two-bar phrases: one line every other bar
+			if bar % 2 == 0: vk = "B%d" % (bar >> 1)
 		elif sec == "v-C": vk = "C%d" % bar
 		elif sec == "v-tag": vk = "tag%d" % bar
 		elif sec == "v-F": vk = "F%d" % bar
