@@ -82,21 +82,6 @@ def spec():
     ]
 
 
-def grid_table(add, rows_in, max_words):
-    """Rows come in pairs: a word row and an IPA row directly under it."""
-    head = ["Line", "Section", "Bars", "Syll."] + [str(i + 1) for i in range(max_words)]
-    add("| " + " | ".join(head) + " |")
-    add("|" + "---|" * len(head))
-    for r in rows_in:
-        w = r["words"] + [""] * (max_words - len(r["words"]))
-        p = r["ipa"] + [""] * (max_words - len(r["ipa"]))
-        add(f"| **{r['line']}** | {r['section']} | {r['bars']} | {r['syllables']} | "
-            + " | ".join(w) + " |")
-        add("| ↳ IPA | | | | " + " | ".join(p) + " |")
-        add(f"| ↳ notes | | | | " + " | ".join(
-            [r["notes"][0]] + [""] * (max_words - 1)) + " |")
-
-
 def main():
     v, lyr, vox = load()
     from piper import PiperVoice
@@ -144,7 +129,17 @@ def main():
                 "notes": [note_s], "nts": nts,
             })
 
-    max_words = max(len(r["words"]) for r in lines)
+    max_words_all = max(len(r["words"]) for r in lines)
+    titles = {
+        "v-A": "Verse 1",
+        "v-B": "Chorus",
+        "v-C": "Verse 2",
+        "v-tag": "Tag",
+        "v-F": "Finale",
+    }
+    by_section = {}
+    for r in lines:
+        by_section.setdefault(r["section"], []).append(r)
 
     out = []
     add = out.append
@@ -156,26 +151,24 @@ def main():
     add("Step = sixteenth slot (0.105 s, 16 per bar); four steps = one beat.")
     add("Excel copies: `docs/victory_lines.csv`, `docs/victory_chorus.csv`.")
     add("")
-
-    add("## Lyrics sheet")
+    add("Sections, in song order: " + " → ".join(
+        f"{titles[s]} (`{s}`)" for s in by_section if s in titles) + ".")
     add("")
-    add("| Line | Section | Bars | Syll. | Row | " + " | ".join(
-        str(i + 1) for i in range(max_words)) + " | Notes (step:note) |")
-    add("|---|---|---|---|---|" + "---|" * max_words + "---|")
 
-    def line_rows(rows_in):
-        out2 = []
+    for sec, rows_in in by_section.items():
+        mw = max(len(r["words"]) for r in rows_in)
+        add(f"## {titles.get(sec, sec)} (`{sec}`)")
+        add("")
+        add("| Line | Bars | Syll. | Row | " + " | ".join(
+            str(i + 1) for i in range(mw)) + " | Notes (step:note) |")
+        add("|---|---|---|---|" + "---|" * mw + "---|")
         for r in rows_in:
-            w = r["words"] + [""] * (max_words - len(r["words"]))
-            p = r["ipa"] + [""] * (max_words - len(r["ipa"]))
-            out2.append(f"| **{r['line']}** | {r['section']} | {r['bars']} | "
-                        f"{r['syllables']} | words | " + " | ".join(w)
-                        + f" | {r['note_s']} |")
-            out2.append("| | | | | IPA | " + " | ".join(p) + " | |")
-        return out2
-
-    for r in line_rows(lines):
-        add(r)
+            w = r["words"] + [""] * (mw - len(r["words"]))
+            p = r["ipa"] + [""] * (mw - len(r["ipa"]))
+            add(f"| **{r['line']}** | {r['bars']} | {r['syllables']} | words | "
+                + " | ".join(w) + f" | {r['note_s']} |")
+            add("| | | | IPA | " + " | ".join(p) + " | |")
+        add("")
 
     add("")
     add("## Chorus sheet — one word per beat")
@@ -212,12 +205,12 @@ def main():
     with CSV_LINES.open("w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["line", "section", "bars", "syllables"] +
-                   [f"word{i+1}" for i in range(max_words)] +
-                   [f"ipa{i+1}" for i in range(max_words)] + ["notes"])
+                   [f"word{i+1}" for i in range(max_words_all)] +
+                   [f"ipa{i+1}" for i in range(max_words_all)] + ["notes"])
         for r in lines:
             w.writerow([r["line"], r["section"], r["bars"], r["syllables"]] +
-                       r["words"] + [""] * (max_words - len(r["words"])) +
-                       r["ipa"] + [""] * (max_words - len(r["ipa"])) + [r["note_s"]])
+                       r["words"] + [""] * (max_words_all - len(r["words"])) +
+                       r["ipa"] + [""] * (max_words_all - len(r["ipa"])) + [r["note_s"]])
     with CSV_CHORUS.open("w", newline="", encoding="utf-8-sig") as f:
         w = csv.writer(f)
         w.writerow(["line", "bars", "beat", "step", "word", "ipa", "note", "midi"])

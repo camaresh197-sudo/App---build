@@ -6,50 +6,73 @@ notes sit in the last column. The chorus sheet adds a note row under each word.
 Step = sixteenth slot (0.105 s, 16 per bar); four steps = one beat.
 Excel copies: `docs/victory_lines.csv`, `docs/victory_chorus.csv`.
 
-## Lyrics sheet
+Sections, in song order: Verse 1 (`v-A`) → Chorus (`v-B`) → Verse 2 (`v-C`) → Tag (`v-tag`) → Finale (`v-F`).
 
-| Line | Section | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| **A0** | v-A | 0 | 7 | words | I | am | Jeff | and | I'm | so | gay | 0:G5 3:B5 6:D6 12:G5 |
-| | | | | IPA | ˈaɪ | æm | dʒˈɛf | ænd | aɪm | sˈoʊ | ɡˈeɪ | |
-| **A2** | v-A | 2 | 7 | words | I | like | Jake's | mom | cuz | of | Jake | 0:B5 2:G5 5:B5 |
-| | | | | IPA | ˈaɪ | lˈaɪk | dʒˈeɪkz | mˈɑːm | kˈʌz | ʌv | dʒˈeɪk | |
-| **A4** | v-A | 4 | 7 | words | Jake's | mom | plays | with | Jeff | all | day | 0:B5 3:D6 6:B5 10:G5 |
-| | | | | IPA | dʒˈeɪkz | mˈɑːm | plˈeɪz | wɪð | dʒˈɛf | ˈɔːl | dˈeɪ | |
-| **A6** | v-A | 6 | 7 | words | To | make | Jeff | feel | proud | and | gay | 0:E5 3:G5 7:C6 10:G5 |
-| | | | | IPA | tuː | mˈeɪk | dʒˈɛf | fˈiːl | pɹˈaʊd | ænd | ɡˈeɪ | |
-| **B0** | v-B | 0–1 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **B1** | v-B | 2–3 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:A5 4:C6 8:B5 12:A5 16:A5 (last held) |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **B2** | v-B | 4–5 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **B3** | v-B | 6–7 | 7 | words | Gay | gay | gay | gay | Jeff's | so | gay | 0:A5 4:D6 8:D6 12:F#5 16:G5 20:B5 24:D6 (last held) |
-| | | | | IPA | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | dʒˈɛfs | sˈoʊ | ɡˈeɪ | |
-| **C0** | v-C | 0 | 7 | words | Jake | is | baked | Jeff | wants | to | bate | 0:G5 3:B5 6:D6 12:B5 |
-| | | | | IPA | dʒˈeɪk | ɪz | bˈeɪkt | dʒˈɛf | wˈɔnts | tuː | bˈeɪt | |
-| **C2** | v-C | 2 | 7 | words | He | has | done | the | most | the | day | 0:G5 3:C6 6:G5 10:C6 |
-| | | | | IPA | hiː | hˈæz | dˈʌn | ðə | mˈoʊst | ðə | dˈeɪ | |
-| **C4** | v-C | 4 | 7 | words | He'll | hug | Jake | on | their | next | date | 0:G5 3:B5 6:D6 10:B5 |
-| | | | | IPA | hiːl | hˈʌɡ | dʒˈeɪk | ˈɔn | ðɛɹ | nˈɛkst | dˈeɪt | |
-| **C6** | v-C | 6 | 7 | words | What | a | shame | that | Jake | is | tall | 0:E5 2:E5 4:A5 7:C6 10:A5 |
-| | | | | IPA | wˌʌt | ˈeɪ | ʃˈeɪm | ðˈæt | dʒˈeɪk | ɪz | tˈɔːl | |
-| **tag0** | v-tag | 0 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:G5 2:G5 4:C6 |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **tag1** | v-tag | 1 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:D6 4:F#5 |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **tag2** | v-tag | 2 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:B5 3:B5 6:D6 9:D6 12:B5 |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **tag3** | v-tag | 3 | 4 | words | Gay | gay | gay | gay |  |  |  | 0:D6 |
-| | | | | IPA | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ |  |  |  | |
-| **F0** | v-F | 0 | 5 | words | Jeff | is | gay | So | gay |  |  | 0:G5 2:G5 4:C6 8:G5 10:E5 |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **F1** | v-F | 1 | 4 | words | Fun | for | all | hey |  |  |  | 0:B5 2:B5 4:D6 8:D6 10:G5 |
-| | | | | IPA | fˈʌn | fɔːɹ | ˈɔːl | hˈeɪ |  |  |  | |
-| **B6** | v-F | 2 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:A5 2:A5 4:D6 8:D6 10:F#5 |
-| | | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
-| **B7** | v-F | 3 | 4 | words | Gay | gay | gay | gay |  |  |  | 0:G5 3:B5 6:D6 9:D6 |
-| | | | | IPA | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ |  |  |  | |
+## Verse 1 (`v-A`)
+
+| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **A0** | 0 | 7 | words | I | am | Jeff | and | I'm | so | gay | 0:G5 3:B5 6:D6 12:G5 |
+| | | | IPA | ˈaɪ | æm | dʒˈɛf | ænd | aɪm | sˈoʊ | ɡˈeɪ | |
+| **A2** | 2 | 7 | words | I | like | Jake's | mom | cuz | of | Jake | 0:B5 2:G5 5:B5 |
+| | | | IPA | ˈaɪ | lˈaɪk | dʒˈeɪkz | mˈɑːm | kˈʌz | ʌv | dʒˈeɪk | |
+| **A4** | 4 | 7 | words | Jake's | mom | plays | with | Jeff | all | day | 0:B5 3:D6 6:B5 10:G5 |
+| | | | IPA | dʒˈeɪkz | mˈɑːm | plˈeɪz | wɪð | dʒˈɛf | ˈɔːl | dˈeɪ | |
+| **A6** | 6 | 7 | words | To | make | Jeff | feel | proud | and | gay | 0:E5 3:G5 7:C6 10:G5 |
+| | | | IPA | tuː | mˈeɪk | dʒˈɛf | fˈiːl | pɹˈaʊd | ænd | ɡˈeɪ | |
+
+## Chorus (`v-B`)
+
+| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **B0** | 0–1 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
+| **B1** | 2–3 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:A5 4:C6 8:B5 12:A5 16:A5 (last held) |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
+| **B2** | 4–5 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ |  |  | |
+| **B3** | 6–7 | 7 | words | Gay | gay | gay | gay | Jeff's | so | gay | 0:A5 4:D6 8:D6 12:F#5 16:G5 20:B5 24:D6 (last held) |
+| | | | IPA | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | dʒˈɛfs | sˈoʊ | ɡˈeɪ | |
+
+## Verse 2 (`v-C`)
+
+| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **C0** | 0 | 7 | words | Jake | is | baked | Jeff | wants | to | bate | 0:G5 3:B5 6:D6 12:B5 |
+| | | | IPA | dʒˈeɪk | ɪz | bˈeɪkt | dʒˈɛf | wˈɔnts | tuː | bˈeɪt | |
+| **C2** | 2 | 7 | words | He | has | done | the | most | the | day | 0:G5 3:C6 6:G5 10:C6 |
+| | | | IPA | hiː | hˈæz | dˈʌn | ðə | mˈoʊst | ðə | dˈeɪ | |
+| **C4** | 4 | 7 | words | He'll | hug | Jake | on | their | next | date | 0:G5 3:B5 6:D6 10:B5 |
+| | | | IPA | hiːl | hˈʌɡ | dʒˈeɪk | ˈɔn | ðɛɹ | nˈɛkst | dˈeɪt | |
+| **C6** | 6 | 7 | words | What | a | shame | that | Jake | is | tall | 0:E5 2:E5 4:A5 7:C6 10:A5 |
+| | | | IPA | wˌʌt | ˈeɪ | ʃˈeɪm | ðˈæt | dʒˈeɪk | ɪz | tˈɔːl | |
+
+## Tag (`v-tag`)
+
+| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | Notes (step:note) |
+|---|---|---|---|---|---|---|---|---|---|
+| **tag0** | 0 | 5 | words | Jeff | is | gay | so | gay | 0:G5 2:G5 4:C6 |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ | |
+| **tag1** | 1 | 5 | words | Jeff | is | gay | so | gay | 0:D6 4:F#5 |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ | |
+| **tag2** | 2 | 5 | words | Jeff | is | gay | so | gay | 0:B5 3:B5 6:D6 9:D6 12:B5 |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ | |
+| **tag3** | 3 | 4 | words | Gay | gay | gay | gay |  | 0:D6 |
+| | | | IPA | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ |  | |
+
+## Finale (`v-F`)
+
+| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | Notes (step:note) |
+|---|---|---|---|---|---|---|---|---|---|
+| **F0** | 0 | 5 | words | Jeff | is | gay | So | gay | 0:G5 2:G5 4:C6 8:G5 10:E5 |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ | |
+| **F1** | 1 | 4 | words | Fun | for | all | hey |  | 0:B5 2:B5 4:D6 8:D6 10:G5 |
+| | | | IPA | fˈʌn | fɔːɹ | ˈɔːl | hˈeɪ |  | |
+| **B6** | 2 | 5 | words | Jeff | is | gay | so | gay | 0:A5 2:A5 4:D6 8:D6 10:F#5 |
+| | | | IPA | dʒˈɛf | ɪz | ɡˈeɪ | sˈoʊ | ɡˈeɪ | |
+| **B7** | 3 | 4 | words | Gay | gay | gay | gay |  | 0:G5 3:B5 6:D6 9:D6 |
+| | | | IPA | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ | ɡˈeɪ |  | |
+
 
 ## Chorus sheet — one word per beat
 
