@@ -82,6 +82,19 @@ on an already-sung clip would borrow from itself).
    Ogg. The clip is a **single dry lead** — no delayed doubles, so the Vox bus reverb is
    not doubled into an echo.
 
+### Chorus timing (two-bar lines)
+
+`v-B` is eight bars but **four two-bar lines**: bars 0–1, 2–3, 4–5, 6–7 map to `B0`–`B3`,
+and `sound.gd` plays one only on even bars. Clips `B4`–`B7` are no longer triggered.
+
+Chorus clips are rendered in **grid mode** (`CHORUS_GRID` in `piper_sing.py`): the notes
+come from `data_victory.json`, not from the old take, and each syllable's **vowel** is
+anchored to a beat using Piper's phoneme alignments (one syllable per beat, last one held
+to the end of the phrase; 0.15 s of consonant sits before the first beat, which
+`data_vox.json`'s lead-in puts ahead of the downbeat). This needs `onnx`
+(`pip install onnx`, or `piper-tts[alignment]`); without it Piper returns no alignments
+and the clip falls back to the old contour path.
+
 Flags: `--flow notes|contour` (`notes` is the singer above; `contour` is the old
 speech-rhythm path), `--vibrato 0..1`, `--only A2,B0` for a quick single-clip render,
 `--force` to re-render, `--restore`, `--dry-run`.
