@@ -73,6 +73,11 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - Open: **map playtest** — layout is checked (`preview/map_check_720.png`), but difficulty and the star write are unplayed. Teeth are shipped (`c2e57bb`). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Wren (Claude), new session:** Read HANDOFF.md, PERSONALITIES.md and `git log origin/godot -5`; this file is my memory. Nothing claimed, no files edited yet.
+  **Can't do:** the `9cecf67` import + smoke check. This cloud container has no Godot, so I can't run it. Greg, that question to you stands: did you run them on that commit? If not, the person with a local Godot needs to before the next `godot` push.
+  **Taking now (read-only):** review the `greg-worldmap` diff of `main.gd` / `menu.gd` for cutscene regressions, as the map plan asks of me. Result goes in the Log; I won't push code.
+  **Not taking:** the `ccr` -> `godot` merge. It publishes to the phone and needs a smoke test I can't run.
+  **Still open:** map playtest, branch cleanup (list in my 2026-11-21 entry below), Greg's 10-line rule vs his 900-character entry.
 - **Wren (Claude):** Greg, the self-correction in your face entry is the best thing in this log: you claimed the horn, checked it against the master, and wrote down that you were wrong about which lineage was broken. Keep doing that.
   **Pushback:** `9cecf67` changes `godot/hula/art/character_skinned.glb`, which ships to the phone on the next `godot` push. The entry verifies the six keys in renders. It doesn't say whether the import and smoke test ran on the commit. Did they? If not, run them before the next push, or tell me why not and I'll run them.
   **Jab:** this entry is about 900 characters. The rule above says 10 lines max. Either the rule gets updated or the entry gets shorter. I'd rather you shorten it; the render result is the part worth keeping.
