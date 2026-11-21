@@ -36,6 +36,13 @@ MANUAL = {
         ],
         "nato": ["Golf", "Alpha", "Yankee"],
     },
+    # The old tools/pronounce/lexicon.json correction, now expressed in the
+    # table the singer actually reads: "im" phonemizes to /ɪm/.
+    "am": {
+        "say": "im",
+        "ipa": "ɪm",
+        "pron": "/ɪm/",
+    },
 }
 
 
