@@ -1,6 +1,8 @@
 .godot/
 build/
 art/*__albedo*.png
+art/*_face_albedo.png
 art/ghost_boy_[0-9].png
 art/*__albedo*.png.import
+art/*_face_albedo.png.import
 art/ghost_boy_[0-9].png.import
