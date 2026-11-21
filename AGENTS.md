@@ -61,7 +61,7 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 **Paths and assets**
 - `res://` paths are case-sensitive; sample names must match the bank exactly.
 - Never hand-edit `*.import` or `*.uid`. Rerun `--import`. Audio and art `.import` files are tracked, and a fresh import rewrites many with no real change: don't commit that churn (`git checkout -- '*.import'`).
-- The web (HTTP) build is archived in the separate `legacy` repo. Nothing here depends on it; all its art and audio already live in `godot/hula/`.
+- The web (HTTP) build source is archived in the separate `legacy` repo, which is not yet on GitHub. Until it is published, the legacy files (`docs/legacy*.md`, `scripts/legacy.gd`) stay here. Nothing in the Godot build depends on the web build; its art and audio already live in `godot/hula/`.
 
 **Character rig**
 - `character_rig.json` is the baseline the glb rig is matched against. If you change a control joint's position or scale formula in `hero3d.gd` (`_apply_face`, `pose`), regenerate it with `rigref`, or that joint's geometry drifts. Details in docs/CHARACTER.md.
