@@ -127,6 +127,7 @@ py tools\vox_grunt.py          # rebuild the grunt bank (all roots, 2 takes)
 py tools\vox_choir.py --src <dir-of-original-ogg>
 py tools\piper_sing.py         # the singer: Piper on the melody (--force, --only A2,B0, --flow, --vibrato, --restore, --dry-run)
 py tools\vox_singer.py --src <dir>   # older WORLD voice conversion; --style/--lisp/--tipsy/--dopey
+py tools\lyrics_doc.py             # rebuild docs/VICTORY_LYRICS.md (bars, words, syllables, notes, IPA)
 ```
 
 Checks: `vox_pitch_check.py`, `vox_note_check.py`, `vox_ab_check.py`.
