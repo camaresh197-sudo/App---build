@@ -53,7 +53,7 @@ jobs:
       - name: Debug keystore and editor settings
         run: |
           cp godot/debug.keystore debug.keystore   # fixed key, so every new APK installs over the last one
-          mkdir -p ~/.config/godot godot_tmp
+          mkdir -p ~/.config/godot
           (cd godot/hula && godot --headless --import || true)
           cat > ~/.config/godot/editor_settings-4.6.tres <<EOF
           [gd_resource type="EditorSettings" format=3]
