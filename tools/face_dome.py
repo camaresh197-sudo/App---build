@@ -1,13 +1,19 @@
 """Tuck the scalp dome under the hair cap on the master face.
 
 The skull dome (top z=0.147 local) pokes ~19 mm through the hair cap shell
-(head_118, top z=0.128) as a skin horn at the crown's top-front. This lowers
-verts above the cap by a smooth falloff so the dome sits ~5 mm under it, in the
-basis AND every shape key (standard carried-delta practice).
+(head_118, top z=0.128) as a skin horn at the crown's top-front. This compresses
+the crown verts toward an interior line by a smooth proportional squeeze (not a
+hard flatten - a plateau at the cap height z-fights against the cap shell),
+in the basis AND every shape key (standard carried-delta practice).
 
     blender --background --factory-startup --python face_dome.py -- <in.blend> <out.blend>
 
-One-off: running it twice keeps lowering the dome.
+One-off: running it twice keeps compressing the crown.
+
+Scope note (2026-11-21): written for the 03c3011-era master, whose scalp dome
+poked through the hair cap at 3/4 angles. The godot-branch master (teeth
+commits) no longer shows the poke - VERIFY with tools/crown_check.py before
+running this on a newer master.
 """
 import sys
 import bpy
@@ -16,9 +22,9 @@ argv = sys.argv[sys.argv.index("--") + 1:]
 SRC, DST = argv[0], argv[1]
 bpy.ops.wm.open_mainfile(filepath=SRC)
 
-CAP_TOP = 0.128
-TARGET = 0.123   # dome rests this far below the cap shell
-BAND = 0.018     # falloff width below the cap top
+T = 0.105    # the crown compresses toward this line - well under the cap shell (0.128)
+K = 0.24     # fraction of the height above T that survives: smooth, no plateau
+XMAX, YLO, YHI = 0.10, -0.10, 0.10
 
 head = None
 for o in bpy.data.objects:
@@ -27,31 +33,17 @@ for o in bpy.data.objects:
             head = o
 me = head.data
 
-moved = {}
-for i, v in enumerate(me.vertices):
-    z = v.co.z
-    if z <= TARGET:
-        continue
-    w = 1.0 if z >= CAP_TOP else (CAP_TOP - z) / BAND   # full push above the cap, fading below it
-    if w <= 0.0:
-        continue
-    dz = -(z - TARGET) * w
-    if abs(dz) < 1e-5:
-        continue
-    moved[i] = dz
-
-# Basis (key_blocks[0]) shares storage with the mesh verts, so iterating every
-# key block lowers the basis and carries the same delta into all expressions.
-if me.shape_keys:
-    for kb in me.shape_keys.key_blocks:
-        for i, dz in moved.items():
-            kb.data[i].co.z += dz
-else:
-    for i, dz in moved.items():
-        me.vertices[i].co.z += dz
+moved = 0
+# Basis (key_blocks[0]) and the mesh verts are separate storage in Blender 5.x;
+# iterating every key block covers both.
+for kb in me.shape_keys.key_blocks:
+    for co in kb.data:
+        p = co.co
+        if p.z > T and abs(p.x) < XMAX and YLO < p.y < YHI:
+            co.co.z = T + K * (p.z - T)
+            moved += 1
 
 me.update()
-top = max(v.co.z for v in me.vertices)
-print("DOME: %d verts lowered, new scalp top z %.3f (cap %.3f)" % (len(moved), top, CAP_TOP))
+print("DOME: compressed %d coords, crown tops now <= %.3f (cap 0.128)" % (moved, T + K * 0.042))
 bpy.ops.wm.save_as_mainfile(filepath=DST)
 print("DOME: saved", DST)

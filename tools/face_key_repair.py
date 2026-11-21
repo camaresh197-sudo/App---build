@@ -19,6 +19,12 @@ This pass, per key:
 
 One-off. Idempotence: not guaranteed - it subtracts the stale field, which is
 only present once. Keep a backup of the input.
+
+Scope note (2026-11-21): this targets the 03c3011-era master, whose keys were
+recomputed in a stale local frame. The godot-branch master's keys were re-authored
+healthy in the teeth commits (f2c20e8/b92b630) - VERIFY the keys render sanely
+(tools/expr_check.py) before running this on any newer master; on a healthy
+master this pass makes the smile worse, not better.
 """
 import sys
 import bpy

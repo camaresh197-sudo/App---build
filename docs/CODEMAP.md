@@ -39,7 +39,7 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
   77  func stop() -> void
 ```
 
-## `scripts/hero3d.gd` - 1741 lines, ~26597 tokens whole
+## `scripts/hero3d.gd` - 1760 lines, ~26870 tokens whole
 
 ```text
    4  const VW
@@ -68,104 +68,105 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
  318  -- the rig comes from the file --
  323  const RIG_GLB
  324  const RIG_REF
- 334  func _load_rig() -> void
- 418  func _rig_sync() -> void
- 439  -- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable --
- 440  const PS
- 448  func _layer(n: Node, layer: int) -> void
- 452  func _portrait() -> void
- 458  func ptex() -> Texture2D: return pvp.get_texture()
- 460  -- life: moods, reactions, where he looks, talking --
- 472  const BLINK
- 474  func mood(n: String) -> void
- 480  func react(n: String, secs := 0.7) -> void
- 483  -- face --
- 500  const SPR
- 505  const LIP_N
- 508  const HEAD_A
- 509  const HEAD_B
- 510  const HEAD_C
- 511  const EYE_X
- 512  const EYE_Y
- 513  const EYE_Z
- 514  const EYE_R
- 515  const TOOTH_U
- 516  const TOOTH_L
- 517  const TOOTH_H
- 518  const TOOTH_D
- 519  const TOOTH_GAP
- 523  const JAW_P
- 524  const JAW_OPEN
- 527  const MOUTH_DY
- 529  func _load_expr() -> void
- 538  func expr_names() -> Array: return expr_db.keys()
- 540  func set_expr(name: String, snap := false) -> void
- 544  func _set_target(name: String, snap := false) -> void
- 554  func hz(x: float, y: float) -> float
- 562  func _head_mesh() -> ArrayMesh
- 612  func _face_pt(p: Vector3) -> Vector3
- 620  func _socket_pt(p: Vector3) -> Vector3
- 631  func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMater...
- 792  func _cap(r: float, ang: float, with_uv: bool, rings := 10, seg := 32) -> ArrayMesh
- 817  func _hair_cap(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick :...
- 832  func _hair_pt(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick: f...
- 842  func _lidmesh(r: float, upper: bool, base: Color, shade: Color) -> ArrayMesh
- 872  func _tube(mi: MeshInstance3D, pts: Array, rad: Array, ry := 1.0, ring := 8) -> void
- 895  func _skin_tex() -> ImageTexture
- 909  func _tooth_tex() -> ImageTexture:         # a single tooth: ivory body, shaded incisal edge at v=...
- 923  func _iris_tex() -> ImageTexture
- 945  const FSOFT
- 951  func _raw(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
- 952  func _pose_v(k: String) -> float: return _raw(k) + float(_cp.get(k, 0.0))
- 953  func _fp(k: String) -> float: return _pose_v(k) + float(fc.get(k, 0.0))
- 958  func _couple(dt: float) -> void
- 988  func _apply_face() -> void
-1214  func face_update() -> void
-1273  func _mouth_meshes() -> void
-1293  func _fp_raw(k: String) -> float: return float(fx.get(k, 0.0))
-1295  func _thin_torus() -> TorusMesh
-1298  -- pose --
-1312  const MUSCLE
-1318  const L1
-1319  const L2
-1320  const FOOT_Y
-1321  const FOOT_X
-1322  const BPS
-1323  const BAR
-1324  const SALSA_BEATS
-1325  const FLEX_BEATS
-1326  const POWER_BEATS
-1333  func _muscle(key: String, fam: String, exact: Vector3) -> Vector3
-1351  func _neutral() -> Dictionary
-1355  const MKEYS
-1356  func _mix(a: Dictionary, b: Dictionary, k: float) -> Dictionary
-1361  func _move_hula(phase: float, bank: float) -> Dictionary
-1375  func _sd(i: int) -> float:       # alternating side per beat
-1378  func _al(a: Array, b: Array, m: float) -> Array
-1383  func _ft(d: float, lift := 0.0, out := 0.0, wide := 0.0, fwd := 0.0) -> Vector3:      # a foot tar...
-1386  -- gestures: dance moves --
-1398  const GMOOD
-1404  const CYC
-1405  func gesture(n: String) -> void
-1411  func _phrase_origin() -> float
-1416  func _gstep() -> void
-1448  const MICRO
-1449  func _life(dt: float) -> void
-1460  func _move(n: String, b: float) -> Dictionary:       # b = the move's local beat position, off the...
-1550  func _spine_set(r: Vector3) -> void:       # the bend is shared between the lumbar and the mid-spine
-1555  func _leg_ik(side: String, d: float, tgt: Vector3, out: float, pitch: float) -> void
-1575  func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void
-1624  func _hand_joints(side: String, d: float, ph: float, wave: float) -> void
-1639  -- arms --
-1646  func arm_kick(n: String, secs := 0.6) -> void
-1648  func arm_clear() -> void
-1652  const ARM_K
-1657  func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void
-1698  -- secondary motion: the hat and the hair lag behind the body and get thrown by the arms --
-1701  func _secondary(phase: float, c: float) -> void
-1729  func set_hoop(col_a: Color, col_b: Color) -> void
-1732  const HAT_COL
-1734  func set_cos(hat_i: int, hoop_i: int, defs: Dictionary) -> void
+ 337  func _load_rig() -> void
+ 424  func _rig_sync() -> void
+ 445  -- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable --
+ 446  const PS
+ 454  func _layer(n: Node, layer: int) -> void
+ 458  func _portrait() -> void
+ 464  func ptex() -> Texture2D: return pvp.get_texture()
+ 466  -- life: moods, reactions, where he looks, talking --
+ 478  const BLINK
+ 480  func mood(n: String) -> void
+ 486  func react(n: String, secs := 0.7) -> void
+ 489  -- face --
+ 506  const SPR
+ 511  const LIP_N
+ 514  const HEAD_A
+ 515  const HEAD_B
+ 516  const HEAD_C
+ 517  const EYE_X
+ 518  const EYE_Y
+ 519  const EYE_Z
+ 520  const EYE_R
+ 521  const TOOTH_U
+ 522  const TOOTH_L
+ 523  const TOOTH_H
+ 524  const TOOTH_D
+ 525  const TOOTH_GAP
+ 529  const JAW_P
+ 530  const JAW_OPEN
+ 533  const MOUTH_DY
+ 535  func _load_expr() -> void
+ 544  func expr_names() -> Array: return expr_db.keys()
+ 546  func set_expr(name: String, snap := false) -> void
+ 550  func _set_target(name: String, snap := false) -> void
+ 560  func hz(x: float, y: float) -> float
+ 568  func _head_mesh() -> ArrayMesh
+ 618  func _face_pt(p: Vector3) -> Vector3
+ 626  func _socket_pt(p: Vector3) -> Vector3
+ 637  func _face(head: Node3D, skin: StandardMaterial3D, white: StandardMaterial3D, black: StandardMater...
+ 798  func _cap(r: float, ang: float, with_uv: bool, rings := 10, seg := 32) -> ArrayMesh
+ 823  func _hair_cap(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick :...
+ 838  func _hair_pt(A: float, B: float, C: float, y_front: float, y_side: float, y_back: float, thick: f...
+ 848  func _lidmesh(r: float, upper: bool, base: Color, shade: Color) -> ArrayMesh
+ 878  func _tube(mi: MeshInstance3D, pts: Array, rad: Array, ry := 1.0, ring := 8) -> void
+ 901  func _skin_tex() -> ImageTexture
+ 915  func _tooth_tex() -> ImageTexture:         # a single tooth: ivory body, shaded incisal edge at v=...
+ 929  func _iris_tex() -> ImageTexture
+ 951  const FSOFT
+ 957  func _raw(k: String) -> float: return float(fx.get(k, 0.0)) + float(fo.get(k, 0.0))
+ 958  func _pose_v(k: String) -> float: return _raw(k) + float(_cp.get(k, 0.0))
+ 959  func _fp(k: String) -> float: return _pose_v(k) + float(fc.get(k, 0.0))
+ 964  func _couple(dt: float) -> void
+ 994  func _apply_face() -> void
+1225  func face_update() -> void
+1284  func _mouth_meshes() -> void
+1304  func _set_hide(mi: MeshInstance3D, v: float) -> void
+1312  func _fp_raw(k: String) -> float: return float(fx.get(k, 0.0))
+1314  func _thin_torus() -> TorusMesh
+1317  -- pose --
+1331  const MUSCLE
+1337  const L1
+1338  const L2
+1339  const FOOT_Y
+1340  const FOOT_X
+1341  const BPS
+1342  const BAR
+1343  const SALSA_BEATS
+1344  const FLEX_BEATS
+1345  const POWER_BEATS
+1352  func _muscle(key: String, fam: String, exact: Vector3) -> Vector3
+1370  func _neutral() -> Dictionary
+1374  const MKEYS
+1375  func _mix(a: Dictionary, b: Dictionary, k: float) -> Dictionary
+1380  func _move_hula(phase: float, bank: float) -> Dictionary
+1394  func _sd(i: int) -> float:       # alternating side per beat
+1397  func _al(a: Array, b: Array, m: float) -> Array
+1402  func _ft(d: float, lift := 0.0, out := 0.0, wide := 0.0, fwd := 0.0) -> Vector3:      # a foot tar...
+1405  -- gestures: dance moves --
+1417  const GMOOD
+1423  const CYC
+1424  func gesture(n: String) -> void
+1430  func _phrase_origin() -> float
+1435  func _gstep() -> void
+1467  const MICRO
+1468  func _life(dt: float) -> void
+1479  func _move(n: String, b: float) -> Dictionary:       # b = the move's local beat position, off the...
+1569  func _spine_set(r: Vector3) -> void:       # the bend is shared between the lumbar and the mid-spine
+1574  func _leg_ik(side: String, d: float, tgt: Vector3, out: float, pitch: float) -> void
+1594  func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void
+1643  func _hand_joints(side: String, d: float, ph: float, wave: float) -> void
+1658  -- arms --
+1665  func arm_kick(n: String, secs := 0.6) -> void
+1667  func arm_clear() -> void
+1671  const ARM_K
+1676  func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void
+1717  -- secondary motion: the hat and the hair lag behind the body and get thrown by the arms --
+1720  func _secondary(phase: float, c: float) -> void
+1748  func set_hoop(col_a: Color, col_b: Color) -> void
+1751  const HAT_COL
+1753  func set_cos(hat_i: int, hoop_i: int, defs: Dictionary) -> void
 ```
 
 ## `scripts/main.gd` - 369 lines, ~3972 tokens whole
@@ -305,15 +306,15 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
  130  func _scene_showdown() -> void
 ```
 
-## `scripts/shotter.gd` - 476 lines, ~5572 tokens whole
+## `scripts/shotter.gd` - 500 lines, ~5893 tokens whole
 
 ```text
    5  const SEED
    6  func _ready() -> void
- 437  -- audio QA helpers (used by the "mix" mode) --
- 438  func _db(x: float) -> float
- 443  func _audio_report(tag: String, x: PackedVector2Array, sr: int) -> void
- 464  func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void
+ 461  -- audio QA helpers (used by the "mix" mode) --
+ 462  func _db(x: float) -> float
+ 467  func _audio_report(tag: String, x: PackedVector2Array, sr: int) -> void
+ 488  func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void
 ```
 
 ## `scripts/sound.gd` - 608 lines, ~8084 tokens whole
@@ -393,7 +394,7 @@ functions: `py tools\codemap.py`. Constants are listed by name only; grep
  170  func _next() -> void
 ```
 
-## `scripts/voice_manager.gd` - 72 lines, ~570 tokens whole
+## `scripts/voice_manager.gd` - 72 lines, ~592 tokens whole
 
 ```text
   10  func _ready() -> void
