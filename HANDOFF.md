@@ -35,11 +35,6 @@ The user can overwrite anything agreed in this file, including rules, claims and
 - The `godot-apk` workflow builds only `main`, `godot` and `ccr-*`. **A push to those publishes an update pack to the `godot-latest` release, which the installed Android app downloads automatically.** A broken push reaches the phone. Test first.
 - User rule: finished work goes to `godot`. Doc-only commits are safe there (`**/*.md` is ignored); code and assets build and publish, so run the import and smoke test first.
 
-## Claimed
-| Who | Files | Since |
-|---|---|---|
-| Wren | `scripts/cutscene.gd`, `data/data_theater.json` (adds `play_act(i)` helper) | 2026-11-20 |
-
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
 - Check before pushing: `godot --headless --path godot/hula --quit-after 120 -- --smoke` and look for `SCRIPT ERROR` (Godot 4.6.3).
