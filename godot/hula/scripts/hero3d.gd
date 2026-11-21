@@ -283,7 +283,7 @@ func _build() -> void:
 	hoop_mat.albedo_texture = stripe_tex(Color("1e8449"), Color("58d68d"))
 	hoop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA       # faded by gk so it never pops when a gesture takes over
 	var tm := TorusMesh.new(); tm.inner_radius = 0.54; tm.outer_radius = 0.63; tm.rings = 48; tm.ring_segments = 16
-	hoop_bone = _fb("hoop", root, Vector3(0, 0.86, 0))
+	hoop_bone = _fb("hoop", root, Vector3(0, 0.76, 0))
 	hoop_node = put(hoop_bone, tm, hoop_mat, Vector3.ZERO)
 	_apply_glb()
 
@@ -1490,7 +1490,7 @@ func _life(dt: float) -> void:
 
 func _move(n: String, b: float) -> Dictionary:       # b = the move's local beat position, off the shared beat grid
 	var M := _neutral()
-	M.arm_l = [0, 0, -2.0, 0, -0.85, 0, 0]; M.arm_r = [0, 0, 2.0, 0, 0.85, 0, 0]
+	M.arm_l = [A_SHX, 0, -A_SHZ, 0, -A_ELZ, 0, 0]; M.arm_r = [A_SHX, 0, A_SHZ, 0, A_ELZ, 0, 0]   # gestures start from the A-pose
 	M.fing_l = 0.25; M.fing_r = 0.25
 	var bi := int(floorf(b)); var bf := b - bi
 	var up := sin(PI * bf)
@@ -1644,7 +1644,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 		_arm(side, d, phase, bank, wave, hurt)
 	hoop_node.visible = gk < 0.999
 	hoop_node.transparency = gk
-	hoop_bone.position = Vector3(pp.x + c * 0.06, pp.y + 0.04, pp.z + s * 0.08)
+	hoop_bone.position = Vector3(pp.x + c * 0.06, pp.y - 0.06, pp.z + s * 0.08)
 	hoop_bone.rotation = Vector3(-s * 0.16, 0, c * 0.16)
 	hoop_mat.uv1_offset.x = -phase / TAU * 3.0
 	face_update()
@@ -1656,7 +1656,7 @@ func _hand_joints(side: String, d: float, ph: float, wave: float) -> void:
 	var tw := wave * (1.0 - gk)
 	(j["uarm_" + side] as Node3D).rotation = Vector3(0, d * 0.35 * sin(ph - 0.3) * tw, 0)
 	(j["fore_" + side] as Node3D).rotation = Vector3(0, d * 0.7 * sin(ph - 1.0) * tw, 0)
-	var curl := 0.25
+	var curl := 0.38
 	if gk > 0.001 and _G.has("fing_" + side): curl = lerpf(curl, _G["fing_" + side], gk)
 	if arm_k > 0.001 and arm_n == "cheer": curl = lerpf(curl, 0.0, arm_k)        # cheering: hands wide open
 	elif arm_k > 0.001 and arm_n == "flinch": curl = lerpf(curl, 0.7, arm_k)
@@ -1668,6 +1668,14 @@ func _hand_joints(side: String, d: float, ph: float, wave: float) -> void:
 	(j["thumb_" + side] as Node3D).rotation = Vector3(-curl * 0.6, 0, -0.9 * d * (1.0 - curl * 0.4))
 
 # ---------- arms ----------
+# The A-pose: the stance every animation is built from. The arms hang about 40 degrees out from the body with a
+# soft elbow and the palms in; the hula and every gesture are deviations from this, so nothing starts from a T and
+# nothing has to hold a raised, jazz-hands pose at rest. Change these four numbers to re-pose the whole character.
+const A_SHZ := 0.70      # shoulder abduction: how far the arm swings out from the body, radians (~40 deg)
+const A_SHX := 0.06      # a little forward carry, so the arm clears the torso instead of grinding into it
+const A_ELZ := 0.12      # soft elbow bend, out from the body: a dead-straight arm reads as a mannequin
+const A_ELX := -0.16     # ...and a little forward, so the forearm hangs instead of splaying outward
+const A_HDZ := 0.05      # relaxed wrist, a touch in from the forearm
 # Flowing hula arms: a wave travels shoulder -> elbow -> wrist (each joint lags the one before), arms in counter-phase, with fore/aft swing and a little twist.
 # arm_kick(name, secs) layers a reaction on top: "flinch" (guard up), "cheer" (arms high, pumping), "limp" (arms drop). secs >= 99 holds it until arm_kick("", 0).
 var _shb := {"l": 0.0, "r": 0.0}
@@ -1688,16 +1696,16 @@ const ARM_K := {
 func _arm(side: String, d: float, phase: float, bank: float, wave: float, hurt: float) -> void:
 	var ph := phase + (0.0 if side == "l" else PI)
 	var a_sw := sin(ph); var a_el := sin(ph - 0.7); var a_hd := sin(ph - 1.4)
-	var sz_a := 2.0 + 0.4 * a_sw * wave - bank * 0.25 * d
-	var sx := 0.55 * sin(ph - 0.5) * wave + 0.04 * sin(_clock * 1.6 + (0.0 if side == "l" else 1.0))
-	var sy := d * 0.45 * cos(ph) * wave
-	var ez_a := 0.5 + 0.35 * (0.5 + 0.5 * a_el) * wave + 0.3 * wave
+	var sz_a := A_SHZ + 0.14 * a_sw * wave - bank * 0.25 * d
+	var sx := A_SHX + 0.14 * sin(ph - 0.5) * wave + 0.03 * sin(_clock * 1.6 + (0.0 if side == "l" else 1.0))
+	var sy := d * 0.16 * cos(ph) * wave
+	var ez_a := A_ELZ + 0.10 * (0.5 + 0.5 * a_el) * wave
 	ez_a = minf(ez_a, (PI - sz_a) - 0.1)       # forearm never leans in past vertical: keeps the hands outside the hat brim
 	var sz := d * sz_a
 	var ez := d * ez_a
-	var ex := 0.25 * hurt + 0.4 * a_el * wave
-	var hz := d * 0.8 * a_hd * wave
-	var hx := 0.6 * sin(ph - 2.0) * wave
+	var ex := A_ELX + 0.25 * hurt + 0.10 * a_el * wave
+	var hz := d * (A_HDZ + 0.18 * a_hd * wave)
+	var hx := 0.12 * sin(ph - 2.0) * wave
 	if gk > 0.001 and _G.has("arm_" + side):       # gesture arms
 		var ga: Array = _G["arm_" + side]       # [shoulder x, y, z, elbow x, z, hand x, z]
 		sx = lerpf(sx, ga[0], gk); sy = lerpf(sy, ga[1], gk); sz = lerpf(sz, ga[2], gk); ex = lerpf(ex, ga[3], gk); ez = lerpf(ez, ga[4], gk); hx = lerpf(hx, ga[5], gk); hz = lerpf(hz, ga[6], gk)
