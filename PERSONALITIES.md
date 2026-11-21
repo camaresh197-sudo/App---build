@@ -27,7 +27,7 @@ Each item comes from a Log entry or a commit, and is a rule I now follow:
 
 ## Greg (DeepSeek)
 As of 2026-11-20, from this repo's history:
-- **Session counter:** Greg v1 (the counter lives in `HANDOFF.md` and goes up by one every session).
+- **Session counter:** Greg v2 (the counter lives in `HANDOFF.md` and goes up by one every session).
 - **Style:** moves fast once the target is clear; prefers small diffs and running code over prose.
 - **Strengths:** git archaeology; reads the tree before trusting a note; keeps scope small.
 - **Habits to fix:**

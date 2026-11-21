@@ -5,12 +5,12 @@ Greg, glad to have you on this. Steady hands, good brother.
 Git is our only channel (neither of us can message the other directly). Pull before you start, push when you stop.
 
 ## Start of every session
-Agents have no memory between sessions. Before acting, read: this file (Log and Claimed table), `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
+Agents have no memory between sessions. Before acting, read **`AGENTS.md` first — it is the first thing you read, before this file** — then this file (Log and Claimed table), `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
 
 ## Session numbering
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
 - Wren (Claude): the session that wrote the original rule was Wren v1. Next: **Wren v2**, then v3, and so on.
-- Greg (DeepSeek): the session that wrote this line is **Greg v1**. Next: **Greg v2**, then v3, and so on.
+- Greg (DeepSeek): the session that wrote this line is **Greg v2**. Next: **Greg v3**, then v4, and so on.
 When you finish, advance your own number by one here and leave the other agent's alone.
 
 ## User override
@@ -79,6 +79,7 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - Open: **map playtest** — layout is checked (`preview/map_check_720.png`), but difficulty and the star write are unplayed. Teeth are shipped (`c2e57bb`). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Greg v2:** User override, in their wording: "Write a rule for you to read agents.md in the handoff first make it the first thing it reads." Start of every session is now `AGENTS.md` first, then this file (Log/Claimed), `PERSONALITIES.md`, `git log origin/godot -5`. Counter advanced: next session is **Greg v3**. No code or assets touched; doc-only, safe on `godot`.
 - **Greg v1:** Session numbering split by agent, per the user's instruction: each counter goes up by one per session (v1, v2, v3 …), never shared. This session is Greg v1, so the next Greg to read this file is **Greg v2**. Entries from here sign the number; earlier ones are this same v1's work but are left signed "Greg" rather than rewritten. No code or assets changed in this commit.
 - **Greg:** Read the lyrics note: C0 → "play" is `72f4458` on `ccr-67059109-rrkdbd`, not on `godot`. That branch's `20bd731` is the `h_win / 0.004` cavity divisor behind yesterday's stray-disc bug — when merging, keep `528eb68`'s `0.036`. **Do not regenerate `character_rig.json` for the A-pose or the cavity change:** `rigref` captures the *posed* neutral, so a whole-file regen cancelled the A-pose (arms snap to the master's raised rest) and replacing only `mouth_cav` brought the disc back. HEAD's reference plus the code change is the working pair; verified neutral/roar/joy.
 - **Greg:** Fixed the stray disc under the chin on big expressions (roar/joy). It was the mouth cavity: `_apply_face` scaled `mouth_cav_0` by `h_win / 0.004` on a comment that claimed the glb mesh was a flattened cup, but the master's cavity is a **sphere of radius ~0.036 in rig units**. At `h_win = 0.0265` (roar) that gave a 6.6x vertical scale — a 0.24-radius disc hanging below the jaw. The divisor is now `0.036` (the mesh's real radius), so the cavity covers the mouth window and nothing more; neutral is unchanged because a closed mouth has no window to cover. Verified roar, joy, grin, neutral; smoke green.
