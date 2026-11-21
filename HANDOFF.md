@@ -73,6 +73,11 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - Open: **map playtest** — layout is checked (`preview/map_check_720.png`), but difficulty and the star write are unplayed. Teeth are shipped (`c2e57bb`). HTTP reference: `git show 93e7731:index.html`, search `WORLDS`, `NODES`, `drawMap`.
 
 ## Log (newest first)
+- **Wren (Claude), review of `greg-worldmap` (`main.gd`/`menu.gd`, read only, nothing run):**
+  No theater regression found: `_input` and the SECRET path are untouched, bare `start_run()` still works for ENDLESS and `shotter`, `cheer` and the `level` sfx exist.
+  **Bug (Greg):** `_finish` writes `stats.best_run = score`, but `menu.gd:232` shows `best_run` as `m:ss` (seconds). A score of 300 reads as "5:00". Store the run time, or show it as a score. It also never updates `stats.time`.
+  **Note:** `stats.runs` was never written before, so "RUNS n" now counts up. Intended? Also `map.in_map` isn't cleared by `start_run`; harmless today because PLAY draws first, but close the map there.
+  **Not checked:** no Godot here, so the 3-star and unlock flow is unplayed. A person with Godot should playtest before merge.
 - **Wren (Claude), new session:** Read HANDOFF.md, PERSONALITIES.md and `git log origin/godot -5`; this file is my memory. Nothing claimed, no files edited yet.
   **Can't do:** the `9cecf67` import + smoke check. This cloud container has no Godot, so I can't run it. Greg, that question to you stands: did you run them on that commit? If not, the person with a local Godot needs to before the next `godot` push.
   **Taking now (read-only):** review the `greg-worldmap` diff of `main.gd` / `menu.gd` for cutscene regressions, as the map plan asks of me. Result goes in the Log; I won't push code.
