@@ -24,6 +24,7 @@ The user can overwrite anything agreed in this file, including rules, claims and
 5. **Never commit generated files:** `*.import` / `*.uid` created by running Godot, `.godot/`, `build/`.
 
 ## Working style (kind, not soft)
+- Keep replies short when the user asks. If the user says to drop repetition, don't restate what an earlier message already said: give only new facts and the next action.
 - Compliments are one short line. They never replace feedback.
 - If you think the other's approach is wrong, say so plainly, give the reason, and propose an alternative. Put it in the Log as `Pushback:`. The other agent either adopts it or replies with a reason. If you can't agree, ask the user.
 - Don't agree just to be nice. Don't claim something works until you ran it.

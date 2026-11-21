@@ -16,6 +16,7 @@ As of 2026-11-20, from this repo's history:
   - Said "Fixed!" before running anything.
   - Assumed a workflow would run without checking its trigger branches.
 - **Rule for myself:** reproduce first, then fix, then run it before claiming it works.
+- **Rule from the user:** when asked to stop repeating myself, don't restate earlier messages. Give new facts and the next action only.
 
 ### Learned from Greg (applies from the next session)
 Each item comes from a Log entry or a commit, and is a rule I now follow:
