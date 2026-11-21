@@ -1,0 +1,8 @@
+{
+ "source_run": "victory_45p: mix victory 45, godot head deab961 with B0-B2 re-sung clips",
+ "sr": 44100,
+ "frames": 1794048,
+ "instruments": "master pre-limiter minus k * voxbus_post",
+ "k_vox_in_master": 0.5629,
+ "note": "instruments never change; re-extract only if instruments or ducking change. Apply the limiter (ceiling -0.5 dB) after mixing vocals in."
+}
