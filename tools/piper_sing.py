@@ -99,8 +99,8 @@ def words_of(text: str) -> list:
     return re.findall(r"[A-Za-z']+", text)
 
 # Chorus phrases are two bars each: bars 0-1, 2-3, 4-5, 6-7 of v-B.
-CHORUS_GRID = {"B0": ("v-B", 0, 2), "B1": ("v-B", 2, 2),
-               "B2": ("v-B", 4, 2), "B3": ("v-B", 6, 2)}
+CHORUS_GRID = {"B0": ("v-B", 0, 2, 7.0), "B1": ("v-B", 2, 2, 7.0),
+               "B2": ("v-B", 4, 2, 7.0), "B3": ("v-B", 6, 2, 7.0)}
 
 # Verse 1 phrases are also two bars each: bars 0-1, 2-3, 4-5, 6-7 of v-A.
 CHORUS_GRID.update({"A0": ("v-A", 0, 2), "A2": ("v-A", 2, 2),
