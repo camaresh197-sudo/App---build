@@ -74,17 +74,18 @@ victory code in `godot/hula/scripts/sound.gd`.
 
 Use this for chorus tweaks instead of a full Godot mix and a Piper re-sing.
 
-- Script: `tools/chorus_fast.py`. Usage:
-  `python3 tools/chorus_fast.py <master.wav> <voxpost.wav> <vox_clip_dir> <out.mp3> [anchor]`
-  Output is about 14 s, from 19.45 s in the victory track.
+- Script: `tools/snip_fast.py`. Usage (any snip, any sung clips):
+  `python3 tools/snip_fast.py --master M.wav --voxpost M_voxpost.wav --voxpre M_voxpre.wav --clips-dir godot/hula/audio/vox --start 19.45 --end 33.55 [--clips B0,B1] --out snip.mp3`
+  Clips are located by search in the dry bus, so no timing is assumed. Chorus = 19.45–33.55 s.
 - Inputs come from one Godot run: `mix victory 45` writes the master, `_voxpost` and `_voxpre` WAVs.
   The run needs a display (`xvfb-run`) and the project imported (`--import`). Those files are
   not in the repo; regenerate them when you need them.
 - Instruments = master minus vox bus, so the game's ducking and mix are reused. Only the clips change.
 - Clip positions come from cross-correlating each clip with the dry vox bus (`voxpre`). Found at
-  B0 19.506, B1 22.571, B2 25.543, B3 28.608 s. Lines are about 3.0 s apart, not 3.36 s.
-- Vocal gain is calibrated against the game's vox bus (about 1.6). Residual about 0.32: the
-  bus reverb is not modelled, so listen before trusting the level.
+  A0 6.503, A2 9.568, A4 12.633, A6 15.698, B0 19.506, B1 22.571, B2 25.543, B3 28.608, C0 32.417,
+  C2 35.482 s. Lines are about 3.0 s apart, not 3.36 s. Clips with score below `--min-score` (0.5) are skipped.
+- Vocal gain is calibrated against the game's vox bus over the snip (about 1.6). Chorus residual
+  0.11. Listen before trusting the level.
 - The cached instrument stem is only valid while instruments and the sung-bar pattern stay the
   same. After any change to those, do one new Godot run first.
 - Status: B0–B2 are re-sung on the reference spacing (`REF_GAY_ONSETS` in `tools/piper_sing.py`
