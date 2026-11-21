@@ -350,10 +350,14 @@ func _load_rig() -> void:
 			for i in rig_skel.get_bone_count(): rig_bone[rig_skel.get_bone_name(i)] = i
 		elif nd is MeshInstance3D: by[String(nd.name)] = nd
 		for c in nd.get_children(): stack.append(c)
-	if rig_skel == null: return
+	if rig_skel == null:   # no skeleton -> same story: nothing to drive, free the glb scene
+		rig_scene.queue_free(); rig_scene = null
+		return
 	# The file is exported from a settled expression, so the rig it was built from is that pose, not the build-time
 	# rest. The export writes those joint transforms to character_rig.json, and the game reads them here - no guessing.
-	if not FileAccess.file_exists(RIG_REF): return
+	if not FileAccess.file_exists(RIG_REF):   # no ref -> the glb cannot be driven: free it, the procedural build stays alone
+		rig_scene.queue_free(); rig_scene = null
+		return
 	var jf := FileAccess.open(RIG_REF, FileAccess.READ)
 	var refd = JSON.parse_string(jf.get_as_text()); jf.close()
 	var rest := {}
