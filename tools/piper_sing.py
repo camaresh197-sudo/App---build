@@ -99,8 +99,12 @@ def words_of(text: str) -> list:
     return re.findall(r"[A-Za-z']+", text)
 
 # Chorus phrases are two bars each: bars 0-1, 2-3, 4-5, 6-7 of v-B.
-CHORUS_GRID = {"B0": ("v-B", 0, 2, 7.0), "B1": ("v-B", 2, 2, 7.0),
-               "B2": ("v-B", 4, 2, 7.0), "B3": ("v-B", 6, 2, 7.0)}
+# "Jeff is gay so gay" as sung in the reference recording (Voice_Recorder_14): word starts about
+# 0.27 s apart, and the last word is short (about 0.35 s), with no hold.
+GAY_WORD = 0.27
+GAY_LAST = 0.35
+CHORUS_GRID = {"B0": ("v-B", 0, 2, 0.0, GAY_WORD), "B1": ("v-B", 2, 2, 0.0, GAY_WORD),
+               "B2": ("v-B", 4, 2, 0.0, GAY_WORD), "B3": ("v-B", 6, 2, 7.0)}
 
 # Verse 1 phrases are also two bars each: bars 0-1, 2-3, 4-5, 6-7 of v-A.
 CHORUS_GRID.update({"A0": ("v-A", 0, 2), "A2": ("v-A", 2, 2),
@@ -109,8 +113,8 @@ CHORUS_GRID.update({"A0": ("v-A", 0, 2), "A2": ("v-A", 2, 2),
 # Verse 2 phrases: two bars each (v-C). Tag and finale lines: one bar each.
 CHORUS_GRID.update({"C0": ("v-C", 0, 2), "C2": ("v-C", 2, 2),
                     "C4": ("v-C", 4, 2), "C6": ("v-C", 6, 2),
-                    "tag0": ("v-tag", 0, 2, 7.0), "tag2": ("v-tag", 2, 2, 7.0),
-                    "F0": ("v-F", 0, 2, 7.0), "B6": ("v-F", 2, 2, 7.0)})
+                    "tag0": ("v-tag", 0, 2, 0.0, GAY_WORD), "tag2": ("v-tag", 2, 2, 0.0, GAY_WORD),
+                    "F0": ("v-F", 0, 2, 0.0, GAY_WORD), "B6": ("v-F", 2, 2, 0.0, GAY_WORD)})
 
 
 def find_ffmpeg() -> str:
@@ -336,7 +340,7 @@ def syllable_count(text: str) -> int:
     return n
 
 
-def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, hold_to: float = 0.0):
+def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, hold_to: float = 0.0, word_secs: float = 0.0):
     """Target notes from the song data, one syllable per beat.
 
     Returns (f0, spans) where spans are (start_frame, end_frame, hz) per
@@ -364,7 +368,12 @@ def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, h
 
     k = max(1, syllables or n_bars * 4)
     lead = 30                                        # 150 ms, matches data_vox lead-in
-    if k <= n_bars * 4:
+    if word_secs > 0.0:
+        # free spacing (a reference phrasing): one word every word_secs, not tied to the step grid
+        wf = word_secs * 1000.0 / FRAME_MS
+        onsets = [lead + i * wf for i in range(k)]
+        steps_at = [min(int(o / step_frames), n_bars * 16 - 1) for o in onsets]
+    elif k <= n_bars * 4:
         onsets = [min(lead + b * 4 * step_frames, n - 1) for b in range(k)]
         steps_at = [b * 4 for b in range(k)]
     else:
@@ -379,6 +388,8 @@ def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, h
     spans = []
     for i, o in enumerate(onsets):
         e = onsets[i + 1] if i + 1 < len(onsets) else n
+        if i + 1 == len(onsets) and word_secs > 0.0:
+            e = min(n, o + int(round(GAY_LAST * 1000.0 / FRAME_MS)))   # short last word, then rest
         if i + 1 == len(onsets) and hold_to > 0.0:
             # the last word sustains until `hold_to` beats into the clip (its vowel is stretched over the hold)
             e = min(n, int(round(lead + hold_to * 4 * step_frames)))
@@ -500,7 +511,8 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
               flow: str = "notes", grid=None, use_cache: bool = True) -> dict:
     spans = []
     if grid:
-        melody, spans = grid_melody(*grid[:3], syllables=len(words_of(text)), hold_to=grid[3] if len(grid) > 3 else 0.0)
+        melody, spans = grid_melody(*grid[:3], syllables=len(words_of(text)), hold_to=grid[3] if len(grid) > 3 else 0.0,
+                                    word_secs=grid[4] if len(grid) > 4 else 0.0)
         nc = len(melody)
         dur = nc * FRAME_MS / 1000.0
         f0_c = melody.copy()
