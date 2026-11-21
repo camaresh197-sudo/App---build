@@ -128,7 +128,7 @@ python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox \
 - `stems/voxbus_post.flac` is the calibration reference; `stems/voxbus_dry.flac` is used to
   find each clip's position by normalised cross-correlation.
 - `stems/positions.json` caches positions and the clip-to-bus gain. It rebuilds when a clip
-  or stem file changes, or with `--rebuild-positions`. A warm snip takes about 1 s.
+  or stem file changes, or with `--rebuild-positions`. A warm snip takes about 0.2 s (no scipy import, cached clip lengths).
 - Clips are decoded with `soundfile`, not `ffmpeg`: `ffmpeg` upmixes mono to stereo with a
   −3 dB pan law, which is why older gains read 1.587 instead of about 1.10.
 - Limits: the output is not passed through the master limiter, so levels can differ slightly

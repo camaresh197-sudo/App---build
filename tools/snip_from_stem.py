@@ -18,7 +18,6 @@ Files in --stems (made once per Godot run):
 import argparse, hashlib, json, os, subprocess
 import numpy as np
 import soundfile as sf
-from scipy.signal import fftconvolve, resample_poly
 
 SR = 44100
 
@@ -37,21 +36,30 @@ def clip_key(clips_dir, ids, stems):
 
 
 def load_clip(path):
-    """Decode an OGG/WAV clip directly (no ffmpeg), stereo, at SR."""
+    """Decode an OGG/WAV clip directly (no ffmpeg), stereo, at SR. scipy is imported only if resampling."""
     x, sr = sf.read(path, dtype="float32", always_2d=True)
     if sr != SR:
+        from scipy.signal import resample_poly
         x = resample_poly(x, SR, sr, axis=0).astype(np.float32)
     if x.shape[1] == 1:
         x = np.repeat(x, 2, axis=1)
     return x
 
 
+def _xcorr_valid(d, c):
+    """Linear 'valid' cross-correlation of d with c via numpy FFT (no scipy)."""
+    n = len(d) + len(c) - 1
+    nfft = 1 << (n - 1).bit_length()
+    full = np.fft.irfft(np.fft.rfft(d, nfft) * np.fft.rfft(c[::-1], nfft), nfft)[len(c) - 1:len(d)]
+    return full
+
+
 def locate(dry_mono, clip_mono):
     """Best start (s) of the clip in the dry vox bus and its normalised score. Float64 for stability."""
     c = clip_mono.astype(np.float64); c -= c.mean()
     d = dry_mono.astype(np.float64); d -= d.mean()
-    cc = fftconvolve(d, c[::-1], mode="valid")
-    e = np.sqrt(np.maximum(fftconvolve(d * d, np.ones(len(c)), mode="valid"), 0.0)) + 1e-9
+    cc = _xcorr_valid(d, c)
+    e = np.sqrt(np.maximum(_xcorr_valid(d * d, np.ones(len(c))), 0.0)) + 1e-9
     ncc = cc / (e * np.linalg.norm(c) + 1e-9)
     i = int(np.argmax(ncc))
     return i / SR, float(ncc[i])
@@ -69,7 +77,7 @@ def build_positions(args, ids, key, meta):
         t, score = locate(dry, clip[:, 0])
         if score < args.min_score:
             continue
-        found[cid] = {"t": round(t, 4), "score": round(score, 3)}
+        found[cid] = {"t": round(t, 4), "score": round(score, 3), "frames": int(len(clip))}
         i = int(round(t * SR))
         canvas[i:i + len(clip)] += clip[: n - i]
     x = canvas.ravel(); y = np.repeat(vpost, 2)   # vpost is the mono channel, duplicated to stereo
@@ -119,7 +127,9 @@ def main():
         if cid not in ids:
             continue
         i = int(round(p["t"] * SR))
-        clip_len = sf.info(os.path.join(a.clips_dir, cid + ".ogg")).frames
+        clip_len = p.get("frames")
+        if clip_len is None:
+            clip_len = sf.info(os.path.join(a.clips_dir, cid + ".ogg")).frames
         if i >= b0 or i + clip_len <= a0:
             continue  # outside the window: never decoded
         clip = load_clip(os.path.join(a.clips_dir, cid + ".ogg"))
