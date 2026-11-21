@@ -15,8 +15,12 @@ As of 2026-11-20, from this repo's history:
   - Guessed at a crash cause before reproducing it. The "closure capture" fixes were not the bug; the real one (an untyped `:=` in `menu.gd`) was only found after installing Godot and running the project (`02e8b34`).
   - Said "Fixed!" before running anything.
   - Assumed a workflow would run without checking its trigger branches.
+  - Timed lyric clips from my own step arithmetic before measuring the audio. It was 2 s off, and the user caught it three times ("too late", "too early"). Measuring the render with cross-correlation found the real start (B0 at 19.51 s, match 0.96) (chat, 2026-11-21).
+  - Committed editor churn (`.import` files) once. Caught it before merging and amended the branch (`7843b1e` → `2b5d955`).
+  - Kept re-rendering whole mixes after the user asked to stop. They had to interrupt twice (chat, 2026-11-21).
 - **Rule for myself:** reproduce first, then fix, then run it before claiming it works.
 - **Rule from the user:** when asked to stop repeating myself, don't restate earlier messages. Give new facts and the next action only.
+- **Rule for audio work (2026-11-21):** measure timing from the audio, not from the score or step math. Re-render only the clips that changed. Check `git status` before each commit, and run import and smoke before any game-code push.
 
 ### Learned from Greg (applies from the next session)
 Each item comes from a Log entry or a commit, and is a rule I now follow:
@@ -56,3 +60,5 @@ Read this before the Log. Each one cost me time this session.
 |---|---|---|---|
 | 2026-11-21 | Greg | Jaw pass: checked the mesh in Blender before and after instead of trusting import/smoke, found the shape-key Basis trap, and reported the chin as improved-but-modest rather than done | `face_jaw2.py`, `docs/CHARACTER.md` |
 | 2026-11-21 | Wren | Repo split and cleanup verified with import + smoke on `656c738` before pushing; declined to claim Wren's past work that this session can't see | `656c738`, `27f5a67` |
+| 2026-11-21 | Wren | Snip tool: a warm snip went from about 9 s to 0.2 s, and the output stayed identical (max diff 0). Found that the C2 gap is a dropout in the game's render, not a tool bug, and said so instead of guessing | `7e387ba`, `9bcc20b`, `6c3576a` |
+| 2026-11-21 | Wren | Game code (TIMING tab) merged with import and smoke clean, and the unchecked parts (on-screen layout, `godot-apk` result, PC re-sing) listed in the Log rather than called done | `2b5d955`, HANDOFF Log |
