@@ -70,6 +70,26 @@ victory code in `godot/hula/scripts/sound.gd`.
 - Clear `tools/.cache/` (or use `--force`) after changing pronunciations.
 - Godot's `--import` rewrites `character*.glb.import`. Revert those before committing.
 
+## Fast chorus render (offline, seconds)
+
+Use this for chorus tweaks instead of a full Godot mix and a Piper re-sing.
+
+- Script: `tools/chorus_fast.py`. Usage:
+  `python3 tools/chorus_fast.py <master.wav> <voxpost.wav> <vox_clip_dir> <out.mp3> [anchor]`
+  Output is about 14 s, from 19.45 s in the victory track.
+- Inputs come from one Godot run: `mix victory 45` writes the master, `_voxpost` and `_voxpre` WAVs.
+  The run needs a display (`xvfb-run`) and the project imported (`--import`). Those files are
+  not in the repo; regenerate them when you need them.
+- Instruments = master minus vox bus, so the game's ducking and mix are reused. Only the clips change.
+- Clip positions come from cross-correlating each clip with the dry vox bus (`voxpre`). Found at
+  B0 19.506, B1 22.571, B2 25.543, B3 28.608 s. Lines are about 3.0 s apart, not 3.36 s.
+- Vocal gain is calibrated against the game's vox bus (about 1.6). Residual about 0.32: the
+  bus reverb is not modelled, so listen before trusting the level.
+- The cached instrument stem is only valid while instruments and the sung-bar pattern stay the
+  same. After any change to those, do one new Godot run first.
+- Status: B0–B2 are re-sung on the reference spacing (`REF_GAY_ONSETS` in `tools/piper_sing.py`
+  in the scratch copy only, not committed). Not heard yet. Not pushed to `godot`.
+
 ## Open items
 
 1. **Listen before trusting anything.** Check: the vowel timing after `f9caff9`, the reference
