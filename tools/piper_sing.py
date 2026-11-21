@@ -31,6 +31,7 @@ import subprocess
 import sys
 import tempfile
 import wave
+import zlib
 from pathlib import Path
 
 import numpy as np
@@ -318,30 +319,70 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                 f0_rw = warp_along(f0_r.reshape(-1, 1), src_idx).ravel()
 
                 # hold where the melody rests, slide where it moves: plateau
-                # stretches get one steady note (+vibrato on long holds), glide
-                # stretches keep the shaped melody's own contour, so every pitch
-                # is the performance's, never an average of a slide
+                # stretches get one steady note (with vibrato), glide stretches
+                # keep the shaped melody's own contour, so every pitch is the
+                # performance's, never an average of a slide.
+                #
+                # Then stop it sounding like a synthesiser: a singer is never
+                # dead on the grid. Each note lands a few cents off, upward leaps
+                # scoop, the vibrato keeps one phase across note boundaries, and
+                # the whole line drifts and jitters by cents. All of it is small
+                # enough to stay in tune.
                 ref = max(float(np.median(melody[melody > 0])), 1e-6)
                 cents_curve = 1200.0 * np.log2(np.maximum(melody, 1e-6) / ref)
                 vmask = melody > 0
                 fps = 1000.0 / FRAME_MS
                 new_f0 = np.zeros(nc)
+                rng = np.random.default_rng(zlib.crc32(clip_id.encode("utf-8")))
+                phase = float(rng.uniform(0.0, 2.0 * np.pi))
+                prev = 0.0
                 for (ss, se, kind, note_c) in melody_segments(cents_curve, vmask):
                     L = se - ss
                     t = np.arange(L)
                     if kind == "glide":
                         new_f0[ss:se] = melody[ss:se]      # the real slide, in tune
+                        prev = float(melody[ss:se][-1])
                         continue
-                    note = ref * np.power(2.0, note_c / 1200.0)
+                    detune = float(rng.normal(0.0, 6.0))   # nobody lands dead centre
+                    note = ref * np.power(2.0, (note_c + detune) / 1200.0)
                     f = np.full(L, note)
                     g = min(5, max(2, L // 4))             # settle onto the note
                     f[:g] = melody[ss:ss + g] + (f[:g] - melody[ss:ss + g]) * (t[:g] / g)
-                    if L >= 50:                            # 250 ms: a held note earns its vibrato
-                        depth = 40.0 if L >= 100 else 28.0
-                        ramp = np.clip((t - 24) / 40.0, 0.0, 1.0)
-                        f = f * np.power(2.0, depth * np.sin(2 * np.pi * 5.5 * t / fps) * ramp / 1200.0)
+                    # scoop up into a leap, like a singer reaching for the note
+                    if prev > 0.0 and 1200.0 * np.log2(note / prev) > 90.0:
+                        depth = float(rng.uniform(12.0, 28.0))
+                        k = min(int(0.045 * fps), max(3, L // 3))
+                        f[:k] = note * np.power(2.0, -depth * (1.0 - np.arange(k) / k) / 1200.0)
+                    # vibrato on anything long enough to hold, with a continuous
+                    # phase and a rate/depth that varies per note
+                    if L >= 24:
+                        rate = float(rng.uniform(4.8, 6.2))
+                        depth = float(rng.uniform(16.0, 26.0)) if L < 60 else float(rng.uniform(28.0, 44.0))
+                        ramp = np.clip((t - 0.10 * fps) / (0.15 * fps), 0.0, 1.0)
+                        f = f * np.power(2.0, depth * np.sin(phase + 2.0 * np.pi * rate * t / fps) * ramp / 1200.0)
+                        phase += 2.0 * np.pi * rate * L / fps
                     new_f0[ss:se] = f
+                    prev = note
                 new_f0[f0_rw <= 0] = 0.0               # consonants stay consonants
+                # ...except the tiny ones. A 15-80 ms hole between syllables is
+                # what reads as a stutter; sung words ride the vowel through it.
+                holes, start = [], None
+                for i, hole in enumerate(new_f0 <= 0.0):
+                    if hole and start is None:
+                        start = i
+                    elif not hole and start is not None:
+                        holes.append((start, i)); start = None
+                if start is not None:
+                    holes.append((start, nc))
+                for (a, b) in holes:
+                    if 3 <= b - a <= 16 and a > 0 and b < nc and new_f0[a - 1] > 0 and new_f0[b] > 0:
+                        new_f0[a:b] = np.exp(np.linspace(np.log(new_f0[a - 1]),
+                                                         np.log(new_f0[b]), b - a))
+                # slow drift + fine jitter over the whole line
+                drift = np.cumsum(rng.normal(0.0, 0.035, nc))
+                drift -= np.linspace(drift[0], drift[-1], nc)
+                jit = np.convolve(rng.normal(0.0, 1.8, nc), np.ones(3) / 3.0, mode="same")
+                new_f0 = new_f0 * np.power(2.0, (np.clip(drift, -7.0, 7.0) + jit) / 1200.0)
             else:
                 # fallback: the old contour path (linear warp + shaped melody)
                 sp = warp_frames(sp_r, nc)
@@ -396,6 +437,8 @@ def main() -> int:
                     help="notes: align syllables to the song's held notes and sing steady notes; "
                          "contour: the old path (speech rhythm, melody painted over it)")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--only", default="",
+                    help="comma-separated clip ids to render (testing; default: every used clip)")
     ap.add_argument("--restore", action="store_true", help="put the original clips back")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
@@ -410,6 +453,9 @@ def main() -> int:
     # unique source clips only (F2/F3 alias B6/B7 in the song data)
     used = {v[0] for v in vox_map.values()}
     ids = sorted(k for k in used if k in lyrics)
+    if args.only:
+        want = {x.strip() for x in args.only.split(",") if x.strip()}
+        ids = [k for k in ids if k in want]
 
     if args.restore:
         restored = 0

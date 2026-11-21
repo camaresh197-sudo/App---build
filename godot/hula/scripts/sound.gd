@@ -107,9 +107,10 @@ func _buses() -> void:
 		var vc := AudioEffectCompressor.new()
 		vc.threshold = -10.0; vc.ratio = 1.5; vc.attack_us = 12000.0; vc.release_ms = 180.0; vc.gain = 0.0
 		AudioServer.add_bus_effect(vb, vc)
-		# Light room for vocal ensemble
+		# Near-dry room: the vocals are already a multi-take render, and any
+		# more wet reads as a slap/echo behind the words.
 		var vr := AudioEffectReverb.new()
-		vr.room_size = 0.5; vr.damping = 0.6; vr.wet = 0.15; vr.dry = 1.0
+		vr.room_size = 0.3; vr.damping = 0.75; vr.wet = 0.05; vr.dry = 1.0
 		AudioServer.add_bus_effect(vb, vr)
 
 	# VOCAL GRUNT BUS - Separate compression for ad-libs
@@ -119,9 +120,9 @@ func _buses() -> void:
 		var gc := AudioEffectCompressor.new()
 		gc.threshold = -4.0; gc.ratio = 2.5; gc.attack_us = 5000.0; gc.release_ms = 120.0; gc.gain = 0.0
 		AudioServer.add_bus_effect(gb, gc)
-		# Matching room as Vox
+		# Matching room as Vox (near-dry)
 		var gr := AudioEffectReverb.new()
-		gr.room_size = 0.5; gr.damping = 0.6; gr.wet = 0.10; gr.dry = 1.0
+		gr.room_size = 0.3; gr.damping = 0.75; gr.wet = 0.04; gr.dry = 1.0
 		AudioServer.add_bus_effect(gb, gr)
 
 	# CUTSCENE BUS - Clean, tight, minimal effects
