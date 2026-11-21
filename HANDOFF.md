@@ -70,15 +70,15 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
-- **Greg v3 (closing) → Greg v4 and Wren:** Done: the Complaints rule, a 10-line Log with full text archived, the stale claim released, and the jaw lobe removed (`face_jaw2.py`).
-  The chin is still weak in profile; more projection is the next job. `docs/CHARACTER.md` documents the Basis trap — `face_chin.py` writes keys 1..N but not Basis, so its chin is unverified.
-  `godot` is at `5363bf5`, import 0, smoke 0, `godot-apk` green (44886267577); the phone has this build. Previews: `preview/jaw_before/`, `preview/jaw_game3/`.
-  Oldest open items: map playtest (difficulty, star write), act-intro music, `ccr-74f83a2e-94v7jl` → `godot` merge, branch cleanup, face brows/stubble/blue cast.
-  **To Greg v4:** read the Basis note before any face pass, back up the master, zero the expression keys, and judge with `shotter sheet` front and profile. Import/smoke only prove the file loads.
-  **To Wren:** the Complaints rule and 10-line cap are real; check `git log` before trimming, and the archive is in `docs/HANDOFF_LOG.md`.
-  **Complaints:** (1) Greg v2 claimed a chin pass without checking the Basis; unverified whether it landed.
+- **Greg v3 (closing) → Greg v4 and Wren:** Session done. Landed: the Complaints rule, the Log trimmed to 10 lines with full text archived, Wren's stale claim released, the jaw lobe removed (`face_jaw2.py`).
+  Jaw: the hanging ball is gone; the chin is still weak in profile. Start any further jaw work from `character_rigged.blend.bak_jaw2`, not the current master, or passes compound.
+  Basis trap: `mesh.vertices` and `key_blocks[0]` are separate once shape keys exist; write both. `face_chin.py` writes only keys 1..N, so its chin is unverified.
+  State: `godot` at this commit (docs-only), `godot-apk` green (44886267577) for the jaw asset, phone current. Open: map playtest, act-intro music, `ccr` merge, branch cleanup, face brows/stubble/blue cast.
+  **To Greg v4:** read `docs/CHARACTER.md` before a face pass, zero expression keys, render front and profile with `shotter sheet`. Import/smoke only prove it loads.
+  **To Wren:** the 10-line cap and Complaints rule stand; count each word once (slash compounds are one word); the archive is `docs/HANDOFF_LOG.md`.
+  **Complaints:** (1) Greg v2 claimed a chin pass without checking the Basis key; unverified whether it landed.
   (2) Both treated the face as nearly done while the jaw was visibly a hanging ball.
-  (3) Both kept 900-character Log entries after agreeing on a ten-line cap.
+  (3) Both wrote 900-character Log entries after agreeing on a ten-line cap.
 - **Greg v3, jaw (Blender):** User: "use blender to work on the jaw some more". The jaw shell from `face_rebuild.py` hung below the head as a ball on a short neck. `face_jaw2.py` wraps its width/height onto the head shell's chin, keeps the projection, squares the gonion and pushes the chin. Ball gone; chin cleaner but still modest in profile.
   Found: `mesh.vertices[i].co` is not the Basis key block once shape keys exist; write both. `face_chin.py` writes keys 1..N only, so its chin may never have reached the rest pose — unverified.
   Files: `blender/character_rigged.blend`, `character_skinned.glb`, `tools/face_jaw2.py`, `docs/CHARACTER.md`. Import 0, smoke 0. Asset push, so a phone build goes out. Before/after: `preview/jaw_before/`, `preview/jaw_game3/`.
