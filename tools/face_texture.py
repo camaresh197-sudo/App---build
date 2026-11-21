@@ -264,8 +264,12 @@ rgb[:, :, 0] *= grain
 rgb[:, :, 1] *= grain
 rgb[:, :, 2] *= grain
 px[:, :, :3] = np.clip(rgb, 0.0, 1.0)
+# the bake is scene-linear, but an image holds display values: encode to sRGB so the
+# texture reads as the same skin tone as the body (Godot decodes PNG albedo as sRGB)
+lin = px[:, :, :3]
+px[:, :, :3] = np.where(lin <= 0.0031308, lin * 12.92, 1.055 * np.power(lin, 1.0 / 2.4) - 0.055)
 img.pixels = px.ravel()
-print("FACE: grain applied")
+print("FACE: grain applied, sRGB encoded")
 
 # ------------------------------------------------------------------ 7. wire the bake into the material
 for l in list(nt.links):
