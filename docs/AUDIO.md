@@ -112,6 +112,35 @@ Checks: `vox_note_check.py` reports voiced-run wander (robotic = too flat) and r
 octave errors on rendered audio — see its docstring); `vox_ab_check.py` compares takes.
 
 
+## Snips without re-rendering the song
+
+The instruments are fixed, so a lyric or timing change does not need a full `mix victory`.
+The stem and vocal buses are saved once in `stems/`, and `tools/snip_from_stem.py` cuts any
+window from them and re-places the sung clips.
+
+```bash
+python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox \
+    --start 19.36 --end 33.50 --out snip.wav        # .mp3 also works
+```
+
+- `stems/instruments.flac` = pre-limiter master minus `k` × vox bus (`k` in `meta.json`).
+  The stem correlates at zero with the vox bus, so no vocals are left in it.
+- `stems/voxbus_post.flac` is the calibration reference; `stems/voxbus_dry.flac` is used to
+  find each clip's position by normalised cross-correlation.
+- `stems/positions.json` caches positions and the clip-to-bus gain. It rebuilds when a clip
+  or stem file changes, or with `--rebuild-positions`. A warm snip takes about 1 s.
+- Clips are decoded with `soundfile`, not `ffmpeg`: `ffmpeg` upmixes mono to stereo with a
+  −3 dB pan law, which is why older gains read 1.587 instead of about 1.10.
+- Limits: the output is not passed through the master limiter, so levels can differ slightly
+  from the game. Instrument, drum or ducking changes need a new extraction. Every real-time
+  run has a slightly different timeline (the game clock is frame-driven), so the stem, its
+  vox bus and the clip positions must come from the same run.
+- Re-extracting the stem needs the master before the limiter. `shotter.gd` `mix` currently
+  writes only the post-limiter master, and the pre-limiter capture is not in the repo yet:
+  add `_audio_wav(a[0].get_basename() + "_masterpre.wav", pre, sr)` next to the voxpost line.
+- Known gap: clip `C2` does not match in the current run (score 0.21), so snips over that line
+  will miss it until this is checked.
+
 ## Where to change what
 
 | Goal | Change |
@@ -124,6 +153,7 @@ octave errors on rendered audio — see its docstring); `vox_ab_check.py` compar
 | Vocal tone (robotic / stutter) | humanise + legato in `tools/piper_sing.py` |
 | Grunt placements / level | `VGRUNT`, `VGRUNT_V` + `tools/vox_grunt.py` |
 | Re-render a sample bank | the matching `tools/vox_*.py`, then `--import` |
+| Change a lyric's timing or audio, without a full render | `tools/snip_from_stem.py` (see above) |
 
 ## Tools
 
