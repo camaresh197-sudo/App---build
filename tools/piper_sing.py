@@ -681,7 +681,13 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                 if start is not None:
                     holes.append((start, nc))
                 for (a, b) in holes:
-                    if 3 <= b - a <= 16 and a > 0 and b < nc and new_f0[a - 1] > 0 and new_f0[b] > 0:
+                    # a gap inside one sustained note (same pitch both sides) is a stutter, not a
+                    # word break: ride the note through gaps up to 150 ms. A gap where the pitch
+                    # changes is a syllable boundary and keeps its short silence (the old 80 ms cap).
+                    same_note = a > 0 and b < nc and new_f0[a - 1] > 0 and new_f0[b] > 0 and \
+                        abs(1200.0 * np.log2(new_f0[b] / new_f0[a - 1])) < 200.0
+                    cap = 30 if same_note else 16
+                    if 3 <= b - a <= cap and a > 0 and b < nc and new_f0[a - 1] > 0 and new_f0[b] > 0:
                         new_f0[a:b] = np.exp(np.linspace(np.log(new_f0[a - 1]),
                                                          np.log(new_f0[b]), b - a))
                 # slow drift + fine jitter over the whole line
