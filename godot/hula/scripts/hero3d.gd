@@ -335,6 +335,7 @@ var rig_parts := 0
 # as teeth. TEETH = false hides the file's rows and the procedural fallback both (the mouth stays a dark cavity).
 # Flip it to true once the new set is in the master - nothing else needs to change.
 const TEETH := false
+const HOOP := false   # the hula hoop is hidden; flip to true to bring it back
 # the teeth in the master: two rows bone-parented to head (upper) and jaw (lower), each with a "hide" blend shape
 var rig_teeth_u: MeshInstance3D = null
 var rig_teeth_l: MeshInstance3D = null
@@ -1643,7 +1644,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 		(j["toe_" + side] as Node3D).rotation = Vector3(-float(M["fp" + side]) * 0.6, 0, 0)
 		_shb[side] = float(M["sh" + side])
 		_arm(side, d, phase, bank, wave, hurt)
-	hoop_node.visible = gk < 0.999
+	hoop_node.visible = HOOP and gk < 0.999
 	hoop_node.transparency = gk
 	hoop_bone.position = Vector3(pp.x + c * 0.06, pp.y - 0.06, pp.z + s * 0.08)
 	hoop_bone.rotation = Vector3(-s * 0.16, 0, c * 0.16)
