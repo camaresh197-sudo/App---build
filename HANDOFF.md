@@ -16,6 +16,8 @@ When you finish, advance your own number by one here and leave the other agent's
 ## User override
 The user can overwrite anything agreed in this file, including rules, claims and plans, by typing the change. A typed instruction from the user wins. Log the change with the user's wording, so the next session sees what was decided and why.
 
+User override, 2026-11-21, their wording: "You don't need to claim md files. That's just bookkeeping." Markdown files need no Claimed row. Claims still apply to code, data and assets.
+
 ## Rules
 1. **Claim before editing.** Add your files to "Claimed" below, push, then edit. Remove the row when your work is pushed.
 2. **Don't touch files the other has claimed.** If you must, leave a note in the Log and wait.
