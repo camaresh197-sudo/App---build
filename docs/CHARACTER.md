@@ -44,13 +44,44 @@ the jaw), restores some lip depth, colours it `lip_mouth`, adds lip-corner motio
 smile/frown/pucker keys and a `lip_up` key for talk. `face_sculpt.py`'s chin step runs
 before the rebuild on `jaw_0`, so it never reaches the master; `face_chin.py` is the
 one-off post-pass for the merged mesh: it pushes the chin forward/up and carries the same
-delta into every shape key. The mouth's teeth are not in this master, so `hero3d.gd`
-keeps the procedural control teeth visible over the glb. All are **one-off** passes:
-running one twice compounds the change; there is no automatic inverse.
+delta into every shape key. All are **one-off** passes: running one twice compounds the
+change; there is no automatic inverse.
+
+The master also has two tooth rows, `teeth_u` (bone-parented to `head`) and `teeth_l`
+(bone-parented to `jaw`), each with a `hide` shape key. `hero3d.gd` finds them by name on
+load and drives `hide` from the same show/hide logic it used for the procedural control
+teeth, which stay hidden whenever the file supplies its own.
 
 `rig_to_armature.py` converts the exported node hierarchy into a real Blender armature.
 Check each tool's docstring before rerunning it: the `face_*.py` passes rewrite the
 master mesh in place, so keep a backup and confirm which stage you are on.
+
+## The rig reference (`data/character_rig.json`)
+
+`hero3d.gd` drives the glb's armature bones every frame by copying each control joint's
+pose onto the matching bone (`_rig_sync()`), using a per-bone conversion matrix (`rig_c`)
+built from `data/character_rig.json` — a snapshot of every control joint's **world**
+transform at the moment the glb was authored. `RIG_REF` must point at wherever that file
+actually lives (`res://data/character_rig.json`); it silently stopped doing so for a
+while after `data/` was split out, which left the whole glb rig undriven — the file drew
+at its raw bind pose, under the still-visible procedural control mesh, which is what the
+texture-grid-looking artifact in this era's renders actually was.
+
+**If you change a control joint's own position/scale formula in `_apply_face()` or
+`pose()`** — anything that feeds `fr`/`j` node transforms, not just the face's shape
+keys — regenerate the reference, or that joint's glb geometry comes out scaled/skewed
+relative to the new formula (this is how the mouth cavity plate ended up stretched across
+the cheeks: its code-side scale formula changed, but the baked reference still reflected
+the old one). Regenerate with the harness, which settles the control rig with no glb
+overlay (`rig_skel = null`) and dumps the current joint transforms:
+
+```
+godot --headless --path godot/hula -- /tmp/out 0 rigref
+```
+
+Pass an expression name as a 4th harness arg (default `neutral`) to bake the reference at
+a different pose. Re-import and re-render a few expressions afterward to confirm the
+joint in question tracks correctly again.
 
 ## Gotchas
 
@@ -59,3 +90,6 @@ master mesh in place, so keep a backup and confirm which stage you are on.
 - The `.glb` and albedo PNGs are binary; don't scan or diff them (`AGENTS.md` token hygiene).
 - Visual checks are renders, not unit tests: use `pose_test.py` / `verify_rig.py` and the
   harness `face` mode (`-- face.png 1 face 3.2`) rather than guessing from code.
+- `tools/blend_to_glb.py` must pass `export_texcoords=True` explicitly: at least one
+  Blender version's glTF exporter drops the head's UVs (`TEXCOORD_0`) without it, which
+  mis-maps the face albedo into a visible grid.

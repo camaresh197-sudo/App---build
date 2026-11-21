@@ -1104,7 +1104,10 @@ func _apply_face() -> void:
 	var h_win := maxf(0.004, y_top - y_bot)
 	var zt := minf(zu_c, zl_c) + 0.0035
 	cav.position = Vector3(0, (y_top + y_bot) * 0.5, minf(zu_c, zl_c))
-	cav.scale = Vector3(w * 0.86 / 0.03, h_win * 0.44 / 0.03, 0.06)
+	# cav's glb mesh (mouth_cav_0) is a real modelled cavity sized for the resting mouth, skinned 1:1 to the
+	# "mouth_cav" bone - it is not the old procedural sphere, so it is scaled relative to its own rest size
+	# (w0, h_win's floor) rather than a 0.03-radius sphere, or it blows up past the lips when the mouth opens
+	cav.scale = Vector3(w / 0.036, h_win / 0.004, 1.0)
 	# teeth: two rows of separate teeth laid along the mouth arc, the upper row hanging from the upper lip and the
 	# lower row standing on the lower lip. The gaps between them (and the per-tooth texture) are what make them read
 	# as teeth instead of one white plate.

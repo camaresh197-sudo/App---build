@@ -265,6 +265,30 @@ func _ready() -> void:
 		lg.close()
 		get_tree().quit()
 		return
+	if a.size() > 2 and a[2] == "rigref":
+		# regenerate data/character_rig.json from the CURRENT code (no glb export, no .blend touched): settle the
+		# control rig at an expression, no glb overlay (rig_skel=null) so the pose is pure procedural code, and dump
+		# the control joints' world transforms - this is the baseline _load_rig()'s rig_c math maps onto the file's
+		# bones, so it must be regenerated whenever a bone's own control formula (e.g. mouth_cav's scale) changes
+		var hr = m.hero3d
+		m.set_process(false)
+		hr.rig_skel = null
+		hr.fixed_dt = 1.0 / 24.0
+		hr.set_expr(a[3] if a.size() > 3 else "neutral", true)
+		for i in 4:
+			hr.pose(0.0)
+			await get_tree().process_frame
+		var refr := {}
+		for name in hr.j:
+			var nd: Node3D = hr.j[name]
+			if not is_instance_valid(nd): continue
+			var gt: Transform3D = nd.global_transform
+			refr[name] = [gt.basis.x.x, gt.basis.x.y, gt.basis.x.z, gt.basis.y.x, gt.basis.y.y, gt.basis.y.z, gt.basis.z.x, gt.basis.z.y, gt.basis.z.z, gt.origin.x, gt.origin.y, gt.origin.z]
+		var jfr := FileAccess.open("res://data/character_rig.json", FileAccess.WRITE)
+		jfr.store_string(JSON.stringify(refr)); jfr.close()
+		print("rigref: wrote reference rig (%d joints) to res://data/character_rig.json" % refr.size())
+		get_tree().quit()
+		return
 	if a.size() > 2 and a[2] == "glb":
 		# authoring export: build the hero, settle it into one expression, then write the whole rig out as glTF
 		# (.glb) so it can be opened and edited in Blender. args: a[0]=res:// path, a[3]=expression (default neutral)
@@ -292,7 +316,7 @@ func _ready() -> void:
 			if not is_instance_valid(nd): continue
 			var gt: Transform3D = nd.global_transform
 			ref[name] = [gt.basis.x.x, gt.basis.x.y, gt.basis.x.z, gt.basis.y.x, gt.basis.y.y, gt.basis.y.z, gt.basis.z.x, gt.basis.z.y, gt.basis.z.z, gt.origin.x, gt.origin.y, gt.origin.z]
-		var jf := FileAccess.open("res://art/character_rig.json", FileAccess.WRITE)
+		var jf := FileAccess.open("res://data/character_rig.json", FileAccess.WRITE)
 		jf.store_string(JSON.stringify(ref)); jf.close()
 		print("glb: wrote reference rig (%d joints)" % ref.size())
 		# Drop the hidden parts before exporting. A hidden node is a part's on/off switch, so prune its whole subtree.
