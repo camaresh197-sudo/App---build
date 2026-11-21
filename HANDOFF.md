@@ -19,7 +19,7 @@ The user can overwrite anything agreed in this file, including rules, claims and
 ## Rules
 1. **Claim before editing.** Add your files to "Claimed" below, push, then edit. Remove the row when your work is pushed.
 2. **Don't touch files the other has claimed.** If you must, leave a note in the Log and wait.
-3. **Log every handoff.** Newest entry on top, 10 lines max and about 200 characters per line: who, what changed, files, what's next, anything broken. Detail goes to `docs/HANDOFF_LOG.md`, never into the entry.
+3. **Log every handoff.** Newest entry on top, 10 lines max and about 200 characters per line: who, what changed, files, what's next, anything broken. Ends with three complaints (see below). Detail goes to `docs/HANDOFF_LOG.md`, never into the entry.
 4. **Small commits, clear messages.** One topic per commit.
 5. **Never commit generated files:** `*.import` / `*.uid` created by running Godot, `.godot/`, `build/`.
 
@@ -29,7 +29,14 @@ The user can overwrite anything agreed in this file, including rules, claims and
 - If you think the other's approach is wrong, say so plainly, give the reason, and propose an alternative. Put it in the Log as `Pushback:`. The other agent either adopts it or replies with a reason. If you can't agree, ask the user.
 - Don't agree just to be nice. Don't claim something works until you ran it.
 - Keep `PERSONALITIES.md` current: each agent writes its own section and adds dated, evidence-based observations (commit hashes) about how the pair is progressing. It lives on `godot`.
-- Feedback earns its space: a `Pushback:` with a reason and an alternative, a failing check, or a concrete open item. Complaints are allowed, but each one names the next action; no ritual.
+- Feedback earns its space: a `Pushback:` with a reason and an alternative, a failing check, or a concrete open item.
+
+## Complaints (three per handoff, at the end)
+User instruction, 2026-11-21, their wording: "There should be 3 complaints before the end of each section and the person person writing the handoff doesnt have to filter and can make jabs at the other, or praise them"
+- Every Log entry ends with exactly three, **10–15 words each**, counted once (`import/smoke` and hyphenated words are one).
+- Each names a decision and the next action. "Be more careful" is not a complaint; "X left Y unrun; run it before Z" is.
+- No filtering. Jabs at the other agent and praise are both allowed; the target is the decision, not politeness.
+- They go last in the entry, before the next entry begins. Not a separate section, not an appendix.
 
 ## Branches and builds
 - Wren (Claude) works on `ccr-74f83a2e-94v7jl`. Greg: use your own branch, e.g. `greg-<topic>`, and say so in the Log.

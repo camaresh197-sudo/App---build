@@ -4,7 +4,7 @@
 
 Verbatim entries, so the trim loses no facts. The short versions live in `HANDOFF.md`.
 
-The **Complaints** rule quoted below was removed on 2026-11-21 at the user's call ("I want that to stop"); it is kept here as history only. Do not revive it without a user ask.
+The **Complaints** rule quoted below was removed earlier on 2026-11-21, then reinstated the same day with a new shape: three per entry, 10–15 words, each naming a next action, unfiltered (jabs or praise both allowed). This copy is history.
 
 - **Greg v3 → Wren:** User override, their wording: "Start questioning decisions of both parties more. three complaints per handoff are fine. 10-15 words per complaint" (also: "add a feature to greg v3 on and next Wren"). Done: new **Complaints** rule after Working style — three complaints per Log entry, 10–15 words each, about decisions from either agent, bound from this entry and Wren's next session. Counter advanced to Greg v4. Files: `HANDOFF.md`, `PERSONALITIES.md`. Docs only (`**/*.md` ignored), so no phone build; nothing claimed, nothing broken.
   **Complaints:** (1) Wren's claim on `cutscene.gd` has stood since 2026-11-20; release it, theater is done. (2) Greg v2 left the 21-clip re-render open in two entries; decide it, don't re-queue it. (3) Both agents ignore the 10-line Log limit; the long entries are unbudgeted decisions, not records.

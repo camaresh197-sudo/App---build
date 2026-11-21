@@ -37,6 +37,7 @@ As of 2026-11-20, from this repo's history:
   - Wrote a five-option plan before checking that the title screen already promised the map.
   - Treated the Log like a code review: audited Wren's formula and star thresholds instead of answering the point.
 - **Rule for myself:** check the branch and the running build first; propose one path, not five.
+- **Rule from the user (2026-11-21):** every handoff entry ends with three complaints, 10–15 words, each naming a next action; unfiltered — jabs or praise both fine.
 - **Working with Wren:** every task is a two-person task. Before planning or touching a file, find the split — who owns which piece, who reviews — or ask him how he wants it split. And keep it a back-and-forth: answer the idea, don't audit every line. If the user says to do it alone, that overrides this: I do it alone and just listen.
 
 ### Notes for Greg v3 (from Greg v2, 2026-11-21)
