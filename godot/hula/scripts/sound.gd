@@ -196,6 +196,9 @@ func play(name: String, o := {}) -> void:
 	if vox_only and not name.begins_with("vox/"): return
 	if solo_grunt and name != "grunt": return
 	if mute_grunt and name == "grunt": return
+	# capture the duck when the note is queued: a delayed note must keep the gain of its own bar
+	if duck_gain != 1.0 and not o.has("duck") and (name == "bass" or name == "guitar" or name == "bell"):
+		o = o.merged({"duck": duck_gain}, true)
 	var dl: float = o.get("dl", 0.0)
 	if dl > 0.0:
 		later.append([now + dl, play.bind(name, o.merged({"dl": 0.0}, true))]); return
@@ -210,6 +213,7 @@ func play(name: String, o := {}) -> void:
 	p.stream = pk[0]
 	p.pitch_scale = pow(2.0, (midi - pk[1]) / 12.0) * o.get("rate", 1.0) if midi >= 0 and pk[1] > 0 else o.get("rate", 1.0)
 	var v: float = o.get("v", 1.0) * o.get("trim", TRIM.get(name, 1.0))
+	v *= o.get("duck", 1.0)
 	p.bus = o.get("bus", "Music")
 	if name.begins_with("vox/"): p.bus = "Vox"
 	if p.bus == "Music" or p.bus == "Vox" or p.bus == "VoxGrunt": v *= boost
@@ -285,6 +289,7 @@ func start_music(track := "game") -> void:
 	if track.begins_with("c_") and not cutscenes.has(track): return
 	if playing and cur == track: return
 	if playing: stop_music()
+	duck_gain = 1.0
 	cur = track; boost = 1.8 if track == "menu" else (0.6 if track == "victory" else 1.15); playing = true; step = 0; next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
 
 func stop_music() -> void:
@@ -497,6 +502,17 @@ func _tstep(st: int, dl: float) -> void:
 const VE := 0.105
 const VOX_GAIN := 2.4
 var have_vox := true
+# option 1: while a sung line is on, the bass, strums, bell and chord stabs step back so the voice sits clear.
+# The lines are two bars each, so a bar is "sung" when its own bar or the bar before starts a line.
+const DUCK_SUNG := 0.4
+var duck_gain := 1.0
+func _vox_key(sec: String, bar: int) -> String:
+	if sec == "v-A": return "A%d" % bar
+	if sec == "v-B": return "B%d" % (bar >> 1) if bar % 2 == 0 else ""
+	if sec == "v-C": return "C%d" % bar
+	if sec == "v-tag": return "tag%d" % bar
+	if sec == "v-F": return "F%d" % bar
+	return ""
 const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-tag": 0.0}
 # Vocal ad-libs for the chorus singer: a deep, in-character grunt on the bar's chord root (r),
 # two per section on the strong steps (12/14) and the section-final bar, with an "unh-unh"
@@ -509,7 +525,7 @@ const VGRUNT := [["v-A", 3, 14], ["v-A", 7, 12], ["v-A", 7, 14],
 	["v-F", 1, 12], ["v-F", 3, 14]]
 const VGRUNT_V := 4.2   # grunt level (linear, before the Vox bus); the body is pre-normalized in the sample bank
 func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void:
-	for x in cv: note("trumpet", int(x) + add, dur, v, 0.05, dl)
+	for x in cv: note("trumpet", int(x) + add, dur, v * duck_gain, 0.05, dl)
 
 func _vstep(st: int, dl: float) -> void:
 	var nb := vic.size()
@@ -520,6 +536,8 @@ func _vstep(st: int, dl: float) -> void:
 	var hy: int = B[5]; var sec: String = B[6]; var bar: int = B[7]; var n: int = B[8]
 	var first: bool = B[9] == 1; var is_end: bool = B[10] == 1; var hold: bool = B[11] == 1; var of: String = B[12]
 	var fin: bool = B[13] == 1; var last: bool = B[14] == 1; var nxr: int = B[15]; var pre: bool = B[16] == 1
+	var sung := have_vox and (_vox_key(sec, bar) != "" or (bar > 0 and _vox_key(sec, bar - 1) != ""))
+	duck_gain = DUCK_SUNG if sung else 1.0
 	var hv := 0.9 + randf() * 0.2
 	var dd := maxf(0.0, dl)
 	var thin := last
@@ -579,15 +597,8 @@ func _vstep(st: int, dl: float) -> void:
 		if s == 4: _strum(cv, dd, false, 0.05)
 	# --- the sung line (one clip per lyric line, starting on the line's first bar) ---
 	if s == 0 and not hold and have_vox:
-		var vk := ""
-		if sec == "v-A": vk = "A%d" % bar
-		elif sec == "v-B":
-			# the chorus sings in two-bar phrases: one line every other bar
-			if bar % 2 == 0: vk = "B%d" % (bar >> 1)
-		elif sec == "v-C": vk = "C%d" % bar
-		elif sec == "v-tag": vk = "tag%d" % bar
-		elif sec == "v-F": vk = "F%d" % bar
-		if vox.has(vk):
+		var vk := _vox_key(sec, bar)
+		if vk != "" and vox.has(vk):
 			# one clip per line: each clip is pre-rendered as a small detuned ensemble (choir), so a separate
 			# unison double is no longer played here (two takes at the same pitch comb-filtered into a metallic edge).
 			play("vox/" + str(vox[vk][0]), {"v": VOX_GAIN, "dl": maxf(0.0, dd - float(vox[vk][1]) + 0.01)})
