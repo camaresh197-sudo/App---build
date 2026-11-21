@@ -80,6 +80,7 @@ func start_run(level_id := "", goal := 0) -> void:
 	run_target = goal
 	won = false
 	run_stars = 0
+	map.close()   # the RIDE! button launches from the map: PLAY draws first, but don't leave the map's state armed
 	var nd: Dictionary = {}
 	if level_id != "":
 		nd = map.node_by_id(level_id)

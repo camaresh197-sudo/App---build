@@ -229,7 +229,7 @@ func trophies(ox: float) -> void:
 func stats(ox: float) -> void:
 	var st: Dictionary = Save.data.stats
 	var rows := [["Runs played", st.runs], ["Balls popped", st.kills], ["Sombreros knocked off", st.hats], ["Bosses defeated", st.bosses],
-		["Gold earned (all time)", st.gold_all], ["Time in the sky", "%d:%02d" % [int(st.time) / 60, int(st.time) % 60]], ["Best run", "-" if st.best_run == 0 else "%d:%02d" % [int(st.best_run) / 60, int(st.best_run) % 60]],
+		["Gold earned (all time)", st.gold_all], ["Time in the sky", "%d:%02d" % [int(st.time) / 60, int(st.time) % 60]], ["Best run", "-" if st.best_run == 0 else str(int(st.best_run))],
 		["Best level", "-" if st.best_level == 0 else st.best_level], ["Best combo", "×%d" % st.best_combo], ["Most balls in a run", st.best_kills],
 		["Trophies", "%d / %d" % [(Save.data.ach as Dictionary).size(), (Save.defs.achs as Array).size()]], ["Skill ranks bought", _sum(Save.data.skills)]]
 	for i in rows.size():
