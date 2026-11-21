@@ -1,6 +1,6 @@
 # Hula Vaquero: Sky Ride — AGENTS.md
 
-Godot 4.6 game (desktop/Android/web). Read `HANDOFF.md` first when another agent is active.
+Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session, before acting** (see its Start of every session).
 
 ## Task lookup
 

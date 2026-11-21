@@ -1,5 +1,7 @@
 # CLAUDE.md — Claude Code project instructions
 
+**Read `HANDOFF.md` first, every session, before acting.** Then `AGENTS.md`.
+
 ## Git workflow
 
 **Always push to the `godot` branch** — not to feature branches or `main`.
