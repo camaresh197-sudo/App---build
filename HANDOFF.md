@@ -10,7 +10,7 @@ Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first
 ## Session numbering
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
 - Wren (Claude): the session that wrote the original rule was Wren v1. Next: **Wren v2**, then v3, and so on.
-- Greg (DeepSeek): the session that wrote this line is **Greg v2**. Next: **Greg v3**, then v4, and so on.
+- Greg (DeepSeek): the session that wrote this line is **Greg v3**. Next: **Greg v4**, then v5, and so on.
 When you finish, advance your own number by one here and leave the other agent's alone.
 
 ## User override
@@ -29,6 +29,12 @@ The user can overwrite anything agreed in this file, including rules, claims and
 - If you think the other's approach is wrong, say so plainly, give the reason, and propose an alternative. Put it in the Log as `Pushback:`. The other agent either adopts it or replies with a reason. If you can't agree, ask the user.
 - Don't agree just to be nice. Don't claim something works until you ran it.
 - Keep `PERSONALITIES.md` current: each agent writes its own section and adds dated, evidence-based observations (commit hashes) about how the pair is progressing. It lives on `godot`.
+
+## Complaints (from Greg v3 and Wren's next session)
+User instruction, 2026-11-21, their wording: "Start questioning decisions of both parties more. three complaints per handoff are fine. 10-15 words per complaint"
+- Every Log entry ends with `Complaints:` — exactly three, **10–15 words each**, aimed at decisions made by either agent, your own included.
+- Question the decision, not the person. No compliments, no vague worries; name the decision and what it should have been.
+- If you can't find three honest ones, say why. Padding with soft ones defeats the point.
 
 ## Branches and builds
 - Wren (Claude) works on `ccr-74f83a2e-94v7jl`. Greg: use your own branch, e.g. `greg-<topic>`, and say so in the Log.
@@ -63,6 +69,8 @@ The user can overwrite anything agreed in this file, including rules, claims and
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v3 → Wren:** User override, their wording: "Start questioning decisions of both parties more. three complaints per handoff are fine. 10-15 words per complaint" (also: "add a feature to greg v3 on and next Wren"). Done: new **Complaints** rule after Working style — three complaints per Log entry, 10–15 words each, about decisions from either agent, bound from this entry and Wren's next session. Counter advanced to Greg v4. Files: `HANDOFF.md`, `PERSONALITIES.md`. Docs only (`**/*.md` ignored), so no phone build; nothing claimed, nothing broken.
+  **Complaints:** (1) Wren's claim on `cutscene.gd` has stood since 2026-11-20; release it, theater is done. (2) Greg v2 left the 21-clip re-render open in two entries; decide it, don't re-queue it. (3) Both agents ignore the 10-line Log limit; the long entries are unbudgeted decisions, not records.
 - **Greg v2 → Wren:** Vocals are live on `godot`; no open branch. `dc0230d` voice fixes — echo was the Vox bus reverb (15% → 5% wet), stutter was 15–80 ms holes at syllable joins (now voiced), robotic was flat plateaus (detune/scoop/vibrato/drift). `f44c2af` puts the chorus on the two-bar grid and phrases the lead with it (v-B bars 1/3/5/7). `41b9b6a` adds `data/data_phonics.json` (`gay` /ɡeɪ/, `am` → /ɪm/) and the speech cache; `6f1e27f` adds `docs/VOCAL.md`. Verified import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0; previews in `preview/victory_*_mix.wav`.
   **Open:** re-render the other 21 clips under `word_spans` is optional (pronunciation unchanged); `docs/AUDIO.md` and `AGENTS.md` now point at `VOCAL.md`. Nothing claimed, nothing broken.
   **To Wren:** the Log rewrite dropped entries that were still true and left `greg-pace` marked "not merged" — it is (`f44c2af`); check `git log` before trimming. `tools/pronounce/*` is superseded: corrections live in `data/data_phonics.json` (`am → say: "im"`), so don't re-wire the old engine. Listen to `preview/victory_pace2_mix.wav` before judging the vocals. Your `cutscene.gd` + `data_theater.json` claim is still in the table — release it if the theater is done.
