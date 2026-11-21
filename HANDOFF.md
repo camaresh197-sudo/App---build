@@ -10,7 +10,7 @@ Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first
 ## Session numbering
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
 - Wren (Claude): the session that wrote the original rule was Wren v1. Next: **Wren v2**, then v3, and so on.
-- Greg (DeepSeek): the session that wrote this line is **Greg v3**. Next: **Greg v4**, then v5, and so on.
+- Greg (DeepSeek): this session was **Greg v3**. Next: **Greg v4**, then v5, and so on.
 When you finish, advance your own number by one here and leave the other agent's alone.
 
 ## User override
@@ -69,6 +69,15 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v3 (closing) → Greg v4 and Wren:** Done: the Complaints rule, a 10-line Log with full text archived, the stale claim released, and the jaw lobe removed (`face_jaw2.py`).
+  The chin is still weak in profile; more projection is the next job. `docs/CHARACTER.md` documents the Basis trap — `face_chin.py` writes keys 1..N but not Basis, so its chin is unverified.
+  `godot` is at `5363bf5`, import 0, smoke 0, `godot-apk` green (44886267577); the phone has this build. Previews: `preview/jaw_before/`, `preview/jaw_game3/`.
+  Oldest open items: map playtest (difficulty, star write), act-intro music, `ccr-74f83a2e-94v7jl` → `godot` merge, branch cleanup, face brows/stubble/blue cast.
+  **To Greg v4:** read the Basis note before any face pass, back up the master, zero the expression keys, and judge with `shotter sheet` front and profile. Import/smoke only prove the file loads.
+  **To Wren:** the Complaints rule and 10-line cap are real; check `git log` before trimming, and the archive is in `docs/HANDOFF_LOG.md`.
+  **Complaints:** (1) Greg v2 claimed a chin pass without checking the Basis; unverified whether it landed.
+  (2) Both treated the face as nearly done while the jaw was visibly a hanging ball.
+  (3) Both kept 900-character Log entries after agreeing on a ten-line cap.
 - **Greg v3, jaw (Blender):** User: "use blender to work on the jaw some more". The jaw shell from `face_rebuild.py` hung below the head as a ball on a short neck. `face_jaw2.py` wraps its width/height onto the head shell's chin, keeps the projection, squares the gonion and pushes the chin. Ball gone; chin cleaner but still modest in profile.
   Found: `mesh.vertices[i].co` is not the Basis key block once shape keys exist; write both. `face_chin.py` writes keys 1..N only, so its chin may never have reached the rest pose — unverified.
   Files: `blender/character_rigged.blend`, `character_skinned.glb`, `tools/face_jaw2.py`, `docs/CHARACTER.md`. Import 0, smoke 0. Asset push, so a phone build goes out. Before/after: `preview/jaw_before/`, `preview/jaw_game3/`.
@@ -100,4 +109,6 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - Older entries: `docs/HANDOFF_LOG.md`.
 
 ## Greg's notes
-(write here)
+(2026-11-21, Greg v3, closing) For Greg v4: `docs/CHARACTER.md` now carries the shape-key Basis trap — any face or rig pass must write `key_blocks[0]`, not just `mesh.vertices`. Back up the master before every one-off pass. Judge faces with `shotter sheet <dir> 0 sheet <exprs> <yaw>` and zero the expression keys; import/smoke prove the file loads, not that it looks right.
+Jaw state: the hanging lobe is gone (`face_jaw2.py`); the chin is still weak in profile, which is the next jaw job. If you reshape it again, start from `blender/character_rigged.blend.bak_jaw2` (untracked) rather than layering passes.
+Oldest open work: map playtest, act-intro music, the `ccr` → `godot` merge, branch cleanup. The Log archive is `docs/HANDOFF_LOG.md`; read it before trimming anything.
