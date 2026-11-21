@@ -321,7 +321,7 @@ func _apply_glb() -> void:
 # the code rebuilds or moves every frame (the hoop, the lip and mustache tubes) stay procedural and keep drawing from
 # the control rig, because a loaded skinned mesh is static geometry.
 const RIG_GLB := "res://art/character_skinned.glb"
-const RIG_REF := "res://art/character_rig.json"   # the joint transforms the .glb was exported from
+const RIG_REF := "res://data/character_rig.json"   # the joint transforms the .glb was exported from
 var rig_scene: Node3D
 var rig_skel: Skeleton3D
 var rig_bone := {}            # bone name -> skeleton bone index
@@ -330,6 +330,9 @@ var rig_c := {}               # bone name -> rest frame mapping (bone rest into 
 var rig_cinv := {}            # bone name -> inverse of rig_c
 var rig_pre := {}             # bone name -> parent's rig_c inverse
 var rig_parts := 0
+# the teeth in the master: two rows bone-parented to head (upper) and jaw (lower), each with a "hide" blend shape
+var rig_teeth_u: MeshInstance3D = null
+var rig_teeth_l: MeshInstance3D = null
 
 func _load_rig() -> void:
 	if not FileAccess.file_exists(RIG_GLB): return
@@ -404,10 +407,13 @@ func _load_rig() -> void:
 		for c in nd2.get_children(): hide.append(c)
 	# the merged master has no tooth meshes, so the glb cannot supply them; keep the
 	# procedural control teeth visible. Their bones are posed and visibility-toggled each frame.
+	rig_teeth_u = by.get("teeth_u") as MeshInstance3D
+	rig_teeth_l = by.get("teeth_l") as MeshInstance3D
+	# the procedural control teeth only draw when the file has no teeth of its own
 	for nm in ["tooth_u", "tooth_l"]:
 		for bone in fr.get(nm, []):
 			for c in (bone as Node3D).get_children():
-				if c is MeshInstance3D: (c as MeshInstance3D).layers = 1
+				if c is MeshInstance3D: (c as MeshInstance3D).layers = 0 if (rig_teeth_u != null and rig_teeth_l != null) else 1
 	print("hero3d: rig from %s: %d bones, %d parts" % [RIG_GLB, rig_skel.get_bone_count(), rig_parts])
 
 # copy the control rig onto the loaded skeleton, and carry each part's visibility across
@@ -1126,6 +1132,8 @@ func _apply_face() -> void:
 			tu.scale = Vector3(2.0 * spanw / TOOTH_U * TOOTH_GAP, ht + root, TOOTH_D)
 			tu.rotation.y = ft * 0.10
 	var l_on := t_on and mo > 0.45
+	if rig_teeth_u != null: _set_hide(rig_teeth_u, 0.0 if t_on else 1.0)
+	if rig_teeth_l != null: _set_hide(rig_teeth_l, 0.0 if l_on else 1.0)
 	for k in TOOTH_L:
 		var tl: Node3D = fr.tooth_l[k]
 		tl.visible = l_on
@@ -1285,6 +1293,14 @@ func _mouth_meshes() -> void:
 				if pts.is_empty(): pts.append(Vector3(-mp.x * 0.8, mp.y, mp.z)); rr.append(0.0125)        # carry on past the middle so the two halves join
 				pts.append(mp); rr.append(lerpf(0.0130, 0.0050, pow(m[2], 0.85)) * 0.95)
 		_tube(fr["mustm_l" if side == 0 else "mustm_r"], pts, rr, 1.0, 10)
+
+func _set_hide(mi: MeshInstance3D, v: float) -> void:
+	var m := mi.mesh
+	if m == null: return
+	for i in m.get_blend_shape_count():
+		if m.get_blend_shape_name(i) == "hide":
+			mi.set_blend_shape_value(i, v)
+			return
 
 func _fp_raw(k: String) -> float: return float(fx.get(k, 0.0))
 
