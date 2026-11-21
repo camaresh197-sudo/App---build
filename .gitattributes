@@ -6,7 +6,6 @@
 *.glb binary
 *.blend binary
 *.import binary
-index.html binary
 
 # GDScript/Python/JSON are text and diff normally.
 *.gd text

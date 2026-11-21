@@ -28,7 +28,7 @@
 - **Persistence:** `scripts/save.gd` ↔ `user://save.json`
 
 ### DevOps/Build
-- **Web build:** `prepare.mjs` + `reference/audio/` → `dist/`
+- **Web build:** archived in the `legacy` repo (not in this branch)
 - **APK build:** `build.ps1` → Android `.apk`
 - **Asset import:** `godot --headless --import`
 - **Test harness:** `scripts/shotter.gd` → screenshots, audio QA

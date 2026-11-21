@@ -23,7 +23,7 @@ Godot 4.6 game (desktop/Android/web). Read `HANDOFF.md` first when another agent
 - CODEMAP has one `## scripts/<name>.gd` section per script: `grep -n '^## ' docs/CODEMAP.md`, then read only yours (~3.9k tokens whole file).
 - After a Godot import, plain `git status` lists hundreds of `.import` files. Use `git status -s -- . ':(exclude)*.import' ':(exclude)*.uid'`.
 - Search with `grep --path`/`--include`, scoped to `godot/hula/scripts/`, `tools/`, `docs/`, `data/`.
-- Skip (binary or generated): `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `reference/audio/`, `index.html`, `build/`, `dist/`, `www/`, `node_modules/`, and `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`.
+- Skip (binary or generated): `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `build/`, and `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`.
 - `.ignore` and `.gitattributes` already filter these; keep both.
 - `git log -1 --format=%B <sha>` usually records the measurements and intent behind a change.
 
@@ -60,7 +60,7 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 **Paths and assets**
 - `res://` paths are case-sensitive; sample names must match the bank exactly.
 - Never hand-edit `*.import` or `*.uid`. Rerun `--import`. Audio and art `.import` files are tracked, and a fresh import rewrites many with no real change: don't commit that churn (`git checkout -- '*.import'`).
-- Web and Godot audio are separate: web uses `reference/audio/` + `prepare.mjs`; Godot uses `godot/hula/audio/`. Don't mix them.
+- The web (HTTP) build is archived in the separate `legacy` repo. Nothing here depends on it; all its art and audio already live in `godot/hula/`.
 
 **Character rig**
 - `character_rig.json` is the baseline the glb rig is matched against. If you change a control joint's position or scale formula in `hero3d.gd` (`_apply_face`, `pose`), regenerate it with `rigref`, or that joint's geometry drifts. Details in docs/CHARACTER.md.
@@ -89,6 +89,4 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 | `blender/character_rigged.blend` | Master mesh and rig (Blender only) | ✓ (Blender) |
 | `tools/` | Python: Blender passes, audio synthesis, codemap | ✓ |
 | `docs/` | CODEMAP, AUDIO, CHARACTER, AUDIO_BUS_ARCHITECTURE | ✓ |
-| `updater.js`, `prepare.mjs`, `native-setup.mjs`, `index.html` | Web/Capacitor packaging (`index.html` is an artifact) | — |
-| `reference/` | Old web assets (`prepare.mjs` only) | ✗ |
 | `build/`, `dist/`, `www/`, `node_modules/` | Generated | ✗ |

@@ -8,8 +8,6 @@
 *.webp
 *.glb
 *.blend
-index.html
-reference/audio/
 .godot/
 build/
 dist/
