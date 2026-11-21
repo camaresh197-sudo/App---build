@@ -21,8 +21,7 @@ Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session, 
 
 ## Read efficiently
 
-- `hero3d.gd` is ~1750 lines. Slice it with `docs/CODEMAP.md` (`read offset=… limit=…`), never read it whole.
-- CODEMAP has one `## scripts/<name>.gd` section per script: `grep -n '^## ' docs/CODEMAP.md`, then read only yours (~3.9k tokens whole file).
+- `hero3d.gd` is ~1750 lines: find your section with `grep -n '^## ' docs/CODEMAP.md`, then read only that range (`offset`/`limit`). Never read it whole.
 - After a Godot import, plain `git status` lists hundreds of `.import` files. Use `git status -s -- . ':(exclude)*.import' ':(exclude)*.uid'`.
 - Search with `grep --path`/`--include`, scoped to `godot/hula/scripts/`, `tools/`, `docs/`, `data/`.
 - Skip (binary or generated): `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `build/`, and `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`.
