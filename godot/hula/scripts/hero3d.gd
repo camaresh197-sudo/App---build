@@ -445,7 +445,7 @@ func _rig_sync() -> void:
 		hoop_glb.transparency = hoop_node.transparency
 
 # ---------- portrait: a close-up of the face (no hat) drawn in the HUD so expressions are readable ----------
-const PS := 160
+const PS := 320
 var pvp: SubViewport
 var pcam: Camera3D
 var portrait_on := false:
