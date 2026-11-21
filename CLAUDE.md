@@ -1,6 +1,6 @@
 # CLAUDE.md — Claude Code project instructions
 
-**Read `HANDOFF.md` first, every session, before acting** (user rule). Then `AGENTS.md`.
+**Read `HANDOFF.md` first, every session, before acting.** Then `AGENTS.md`.
 
 ## Git workflow
 
