@@ -57,7 +57,7 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 
 **Paths and assets**
 - `res://` paths are case-sensitive; sample names must match the bank exactly.
-- Never hand-edit `*.import` or `*.uid`. Rerun `--import`.
+- Never hand-edit `*.import` or `*.uid`. Rerun `--import`. Audio and art `.import` files are tracked, and a fresh import rewrites many with no real change: don't commit that churn (`git checkout -- '*.import'`).
 - Web and Godot audio are separate: web uses `reference/audio/` + `prepare.mjs`; Godot uses `godot/hula/audio/`. Don't mix them.
 
 **Character rig**

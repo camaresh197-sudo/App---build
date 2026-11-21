@@ -11,11 +11,14 @@ Entry point: `godot/hula/scripts/sound.gd` (~7k tokens whole; get line anchors f
   root and pitch-shifts. Add an octave by extending `RANGE` and rendering samples.
 - Drums: `kick[_2/_3]`, `snare[_2/_3]`, `hat`, `tom`, `shaker`, `clap`, `cymbal`.
   One-shots without a sample of their own borrow the closest drum (see `sfx()`).
-- `TRIM` = per-instrument balance; `SFX_LVL` = one-shot level; `boost` = per-track gain
-  set in `start_music()`. `SMP_MUS` scales sequencer notes.
-- Buses: Music / SFX / Vox → Master. Vox has a compressor (threshold −10 dB, ratio 2,
-  12 ms attack, 180 ms release) + short reverb; Master has a hard limiter at −0.5 dB.
-  `set_volumes()` is the player-facing mix (music also scales the Vox bus by 0.7).
+- `TRIM` = per-instrument balance; `SFX_LVL` = one-shot level; `SMP_MUS` scales sequencer
+  notes. `boost` = per-track gain set in `start_music()` (menu/title 1.8, game 1.15,
+  victory 0.6), applied to the Music, Vox and VoxGrunt buses only.
+- Buses: seven, all → Master (hard limiter, −0.5 dB ceiling): Music, SFX, Vox, VoxGrunt,
+  Cutscene, Ambient, UI. Per-bus effects and routing are in `AUDIO_BUS_ARCHITECTURE.md`.
+  Ambient and UI are created with effects but nothing routes to them yet.
+- `set_volumes()` is the player-facing mix: the music slider sets Music, Vox and VoxGrunt
+  (each ×0.7, muted at 0); the SFX slider sets SFX. It does not touch Cutscene, Ambient or UI.
 - `have` is gated on `res://audio/kick.ogg`; with no assets pack the game runs silent
   by design — every audio path is guarded.
 
@@ -24,7 +27,9 @@ Entry point: `godot/hula/scripts/sound.gd` (~7k tokens whole; get line anchors f
 Step length: game `E = 0.13 s` (6 steps/bar, 6/8), victory `VE = 0.105 s` (16 steps/bar),
 title `TE = 0.125 s` (16 steps/bar). Each JSON file is an array of bar records:
 
-- `data_song.json`: `[root, fifth, chord, melody, inst, bar, end_flag]`
+- `data_song.json`: `[root, fifth, chord, melody, inst, bar, end_run, intro]` — `end_run` = 1
+  plays the end-of-section run; `intro` = 1 marks intro bars (the loop restarts at the
+  first bar with `intro` = 0).
 - `data_title.json`: `[root, fifth, chord, melody, lead, intensity, section, bar,
   bars_in_section, first, is_end, next_root]`
 - `data_victory.json`: `[root, fifth, chord, melody, lead, intensity, section, bar,
@@ -39,11 +44,15 @@ the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
 ## Vocals and ad-libs
 
 - Victory lyrics: one clip per line, `audio/vox/<id>.ogg` (`A0`, `B7`, `tag2`, …), keyed
-  in `data_vox.json`. Lines start on bar 0 of their section; each clip is pre-rolled by
-  its lead-in so the first syllable lands on the downbeat, and plays at `VOX_GAIN` (2.4)
-  on the Vox bus.
+  in `data_vox.json`; the words live in `data_lyrics.json`. Lines start on bar 0 of their
+  section; each clip is pre-rolled by its lead-in so the first syllable lands on the
+  downbeat, and plays at `VOX_GAIN` (2.4) on the Vox bus.
+- The clips are rendered, not recorded: Piper speech is re-pitched to the song's melody
+  contour with WORLD (`tools/piper_sing.py`). The originals are backed up in
+  `tools/vox_backup/originals/` (`--restore` puts them back).
 - Chorus grunts: bank `audio/grunt_r<midi>[_2].ogg` (`RANGE["grunt"]`), scheduled by
-  `VGRUNT` as `[section, bar, step]`, pitched to the bar's chord root `r`, routed to Vox.
+  `VGRUNT` as `[section, bar, step]`, pitched to the bar's chord root `r`, routed to the
+  separate VoxGrunt bus (its own compressor, so grunts don't pump the sung line).
   Keep them off `v-hold` bars and the final bar.
 
 ## Where to change what
@@ -65,18 +74,22 @@ the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
 ```powershell
 py tools\vox_grunt.py          # rebuild the grunt bank (all roots, 2 takes)
 py tools\vox_choir.py --src <dir-of-original-ogg>
-py tools\vox_singer.py         # WORLD voice conversion; see --style/--lisp/--tipsy/--dopey
+py tools\piper_sing.py         # current vocal pass: Piper voice sung on the melody (--force, --restore, --dry-run)
+py tools\vox_singer.py --src <dir>   # older WORLD voice conversion; --style/--lisp/--tipsy/--dopey
 ```
+
+Checks: `vox_pitch_check.py`, `vox_note_check.py`, `vox_ab_check.py`.
 
 Audio QA is part of the main harness (see `AGENTS.md`): `mix victory 30` plays a track in
 real time and prints PRE/POST peak/RMS/crest/clip plus music-bus levels, and writes a wav.
 
 ## Gotchas
 
-- Audio `.import` files are intentionally untracked: every one uses default settings
-  (`loop=false`, `bpm=0`), so `godot --headless --import` regenerates them. Art `.import`
-  files are still tracked.
+- Audio and art `.import` files are tracked, and every audio one uses default settings
+  (`loop=false`, `bpm=0`). A fresh `godot --headless --import` rewrites many of them with
+  no real change; don't commit that churn (`git checkout -- '*.import'`).
 - New samples need `--import` before `load()` sees them; the bank is loaded by `res://`
   path (case-sensitive), not by UID.
-- The Vox bus runs a compressor: pushing `VGRUNT_V`/`VOX_GAIN` too hard will duck the
-  sung line for ~180 ms. Check the mix with the harness, not by ear alone.
+- The Vox bus runs a compressor (−10 dB, 1.5:1): pushing `VOX_GAIN` too hard squashes the
+  sung line. Grunts (`VGRUNT_V`) go to VoxGrunt instead, but still check the mix with the
+  harness, not by ear alone.

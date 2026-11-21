@@ -24,7 +24,7 @@ Master (Hard Limiter @ -0.5dB)
 - Hard Limiter: -0.5dB ceiling (protects against clipping)
 
 **Usage:** All audio routes through master  
-**Volume Control:** Set via `Save.data.opt.music` (affects Music/Vox/VoxGrunt) and `Save.data.opt.sfx` (affects SFX)
+**Volume Control:** `Save.data.opt.music` sets Music/Vox/VoxGrunt (each ×0.7, muted at 0) and `Save.data.opt.sfx` sets SFX, via `set_volumes()`. Cutscene, Ambient and UI are not touched.
 
 ---
 
@@ -35,8 +35,8 @@ Master (Hard Limiter @ -0.5dB)
 - Compressor: -20dB threshold, 2:1 ratio, 50ms attack, 300ms release (smooth level control)
 - Reverb: 0.55 room size, 0.5 damping, 16% wet (musical ambience)
 
-**Tracks:** game.gd, title.gd, victory.gd  
-**Boost:** Applied during gameplay (1.15x) and title (1.8x), reduced during victory (0.6x)
+**Tracks:** `game`, `menu` (title theme), `victory`, and the `c_*` cutscene tracks (`start_music()` in `sound.gd`)  
+**Boost:** 1.15x for game, 1.8x for the menu/title track, 0.6x for victory
 
 ---
 
@@ -63,7 +63,7 @@ Master (Hard Limiter @ -0.5dB)
 
 ---
 
-### 5. VOXGRANT BUS
+### 5. VOXGRUNT BUS
 **Purpose:** Ad-lib reactions, grunts, ad-libs during gameplay  
 **Character:** Separated from main vocals to prevent ducking issues  
 **Effects:**
@@ -82,14 +82,9 @@ Master (Hard Limiter @ -0.5dB)
 - Compressor: -18dB threshold, 3:1 ratio, 15ms attack, 200ms release, +1dB makeup gain (consistent dialogue levels)
 - Reverb: 0.2 room size, 0.8 damping, 5% wet (minimal echo, focus on clarity)
 
-**Content:** cutscene_*.ogg files (10 cutscenes, ~1.2 MB total)  
-**Voices:** Mexican Spanish (es-mx) with different voices per character:
-- hero: male voice 1
-- baron: male voice 2  
-- abuela: female voice 1
-- kid: child voice
-- guitar: male voice 3
-- chorus: female voice 2
+**Content:** `audio/cutscene_*.ogg` (20 files, ~1.3 MB), played through `play_cutscene_audio()`
+**Speakers:** hero, baron, abuela, kid, guitar, chorus. Voice clips live in
+`audio/voice/<speaker>/` (see `VOICE_SETUP.md`).
 
 ---
 
@@ -100,8 +95,8 @@ Master (Hard Limiter @ -0.5dB)
 - Compressor: -25dB threshold, 1.2:1 ratio, 100ms attack, 500ms release (transparent, only catches peaks)
 - Reverb: 0.8 room size, 0.3 damping, 25% wet (large, reverberant space)
 
-**Usage:** Optional background atmosphere tracks  
-**Volume Control:** Linked to Music volume
+**Usage:** Created and configured, but nothing routes to it yet  
+**Volume Control:** None (not touched by `set_volumes()`)
 
 ---
 
@@ -111,8 +106,8 @@ Master (Hard Limiter @ -0.5dB)
 **Effects:**
 - Compressor: -12dB threshold, 5:1 ratio, 5ms attack, 100ms release, +2dB makeup gain (punchy, controlled peaks)
 
-**Sounds:** Menu clicks, button presses, confirmations  
-**Volume Control:** Linked to SFX volume
+**Usage:** Created and configured, but nothing routes to it yet (menu clicks currently play on SFX)  
+**Volume Control:** None (not touched by `set_volumes()`)
 
 ---
 
@@ -123,12 +118,8 @@ Master (Hard Limiter @ -0.5dB)
 - -3dB to 0dB: Rare peaks (dialogue peaks, big explosions)
 - 0dB: Master limiting ceiling at -0.5dB
 
-**Current Calibration:**
-- Music: -15dB average
-- SFX: -20dB average (heavily compressed)
-- Vox: -18dB average
-- Dialogue: -16dB average (consistent)
-- Master: -6dB to -3dB peaks
+**Measuring:** average levels are not recorded here. Run the harness `mix` mode
+(see `AGENTS.md`) to print peak/RMS/crest and bus levels for a track.
 
 ---
 
@@ -152,21 +143,19 @@ snd.play_cutscene_audio("res://audio/cutscene_c_fiesta.ogg")  # Routes to Cutsce
 ### Setting Volumes
 ```gdscript
 snd.set_volumes(music_level, sfx_level)  # 0-10 scale
-# Sets Music/Vox/VoxGrunt bus to music_level
-# Sets SFX/UI bus to sfx_level
+# Sets Music/Vox/VoxGrunt buses from music_level (x0.7), SFX from sfx_level
+# Cutscene/Ambient/UI are not touched
 ```
 
 ---
 
 ## Performance Notes
 
-**CPU Cost:**
-- 2x Compressor + 1x Limiter = ~8% CPU on average game
-- 2x Reverb effects = ~12% CPU
-- Total audio system: ~20% CPU (acceptable)
+**Effects:** 1 limiter (Master), 7 compressors (one per bus except Master) and 5 reverbs
+(Music, Vox, VoxGrunt, Cutscene, Ambient). CPU cost has not been measured.
 
 **Memory:**
-- Cutscene audio: ~1.2 MB (10 OGG files)
+- Cutscene audio: ~1.3 MB (20 OGG files)
 - Voice pool: 40 simultaneous voices (instruments + effects)
 - Effect chains: Minimal overhead
 
