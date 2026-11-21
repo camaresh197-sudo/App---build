@@ -64,10 +64,6 @@ Piper TTS pipeline (implemented):
 
 Pre-recorded clips play without any flag. `tts_enabled` only reaches a placeholder that logs a warning; it does not synthesize anything.
 
-## Known issues
-
-- 53 files in `audio/voice/` (~0.8 MB of 1.7 MB) match no current line: older renders whose names kept punctuation or were truncated. `_safe_name()` never looks them up. Safe to delete once confirmed.
-
 ## Silence Lines
 
 If a speaker shouldn't have audio (chorus reactions, etc), create empty/silent `.ogg` file or leave blank for text-only display.
