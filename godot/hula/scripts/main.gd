@@ -2,8 +2,14 @@ extends Node2D
 # Hula Vaquero: Sky Ride (Godot port). Logical field 772x360 = 3088x1440 / 4.
 const FW := 772.0
 const FH := 360.0
-enum S { MENU, PLAY, OVER, SECRET }
+enum S { MENU, PLAY, OVER, SECRET, PICK }
 const Save = preload("res://scripts/save.gd")
+const CardDeck = preload("res://scripts/card_deck.gd")
+var deck: CardDeck = CardDeck.new()
+var level := 1
+var xp := 0.0
+var pending_picks := 0      # level-ups waiting for the player to choose
+var picks: Array = []       # the cards on screen right now
 const Menu = preload("res://scripts/menu.gd")
 const Map = preload("res://scripts/map.gd")
 var menu
@@ -87,7 +93,8 @@ func start_run(level_id := "", goal := 0) -> void:
 	run_spawn = float(nd.get("spawn", 1.0))
 	run_speed = float(nd.get("speed", 1.0))
 	hero3d.arm_clear(); hero3d.mood("grin"); hero3d.gaze = Vector2.ZERO
-	state = S.PLAY; hp = 100.0; score = 0; ships.clear(); shots.clear(); pops.clear()
+	deck.reset(); level = 1; xp = 0.0; pending_picks = 0; picks = []
+	state = S.PLAY; hp = deck.st.max_hp; score = 0; ships.clear(); shots.clear(); pops.clear()
 	player = Vector2(120, 180); target = player; t = 0.0; touch_id = -1
 	snd.start_music()
 
@@ -124,10 +131,16 @@ func _process(dt: float) -> void:
 	if state == S.PLAY:
 		player = player.lerp(target, 1.0 - pow(0.00001, dt))
 		player = player.clamp(Vector2(24, 24), Vector2(_right() - 24, FH - 24))
+		hp = minf(hp + float(deck.st.regen) * dt, float(deck.st.max_hp))
+		deck.tick_shield(dt)
 		fire_cd -= dt
 		if fire_cd <= 0.0:
 			fire_cd = 0.22
-			shots.append({"p": player + Vector2(18, -4), "v": Vector2(560, 0)}); snd.sfx("shoot")
+			var n: int = 1 + int(deck.st.extra)
+			for i in n:
+				var off: float = (i - (n - 1) / 2.0) * 9.0
+				shots.append({"p": player + Vector2(18, -4 + off), "v": Vector2(560, 0), "d": float(deck.st.dmg)})
+			snd.sfx("shoot")
 		spawn_cd -= dt
 		if spawn_cd <= 0.0:
 			spawn_cd = max(0.45, 1.3 - t * 0.012) / max(0.1, run_spawn)
@@ -139,13 +152,29 @@ func _process(dt: float) -> void:
 			var to_p: Vector2 = (player - sh.p).normalized()
 			sh.v = sh.v.lerp(to_p * 110.0 * run_speed, dt * 0.8) + Vector2(0, sin(sh.ph * 2.0) * 40.0 * dt)
 			sh.p += sh.v * dt
-			if sh.p.distance_to(player) < 26.0:
-				sh.hp = 0; hp -= 12.0; shake = 0.25; snd.sfx("hurt"); hero3d.react("pain", 0.6); hero3d.arm_kick("flinch", 0.5)
+			if sh.hp > 0.0 and sh.p.distance_to(player) < 26.0:
+				var ram: int = int(deck.st.ram)
+				if ram > 0:
+					# Spiked Bumper: the ball is hurt by the ram and bounces off instead of dying
+					sh.hp -= 1.5 * ram
+					sh.p += (sh.p - player).normalized() * 30.0
+				else:
+					sh.hp = 0.0
+				if int(deck.st.shield) > 0:
+					deck.st.shield -= 1
+				else:
+					hp -= deck.hit_damage()
+				shake = 0.25; snd.sfx("hurt"); hero3d.react("pain", 0.6); hero3d.arm_kick("flinch", 0.5)
 			for s in shots:
-				if s.p.distance_to(sh.p) < 22.0: sh.hp -= 1; s.p.x = 9999; snd.sfx("hit")
+				if s.p.distance_to(sh.p) < 22.0:
+					var dmg: float = float(s.get("d", 1.0))
+					if randf() < float(deck.st.crit): dmg *= 2.0
+					sh.hp -= dmg; s.p.x = 9999; snd.sfx("hit")
 		for sh in ships:
 			if sh.hp <= 0:
 				score += 10; snd.sfx("pop"); _combo += 1; _combo_t = 1.6
+				xp += 1.0 * float(deck.st.xp_mult)
+				if randf() < float(deck.st.heal_kill): hp = minf(hp + 5.0, float(deck.st.max_hp))
 				if _combo % 5 == 0: hero3d.react("laugh", 1.1); hero3d.arm_kick("cheer", 1.1)
 				for k in 8: pops.append({"p": sh.p, "v": Vector2.from_angle(randf() * TAU) * randf_range(40, 190), "life": 0.5})
 		ships = ships.filter(func(sh): return sh.hp > 0 and sh.p.x > -60)
@@ -155,6 +184,10 @@ func _process(dt: float) -> void:
 			_finish(true)
 		elif hp <= 0:
 			_finish(false)
+		while state == S.PLAY and xp >= _xp_need():
+			xp -= _xp_need(); level += 1; pending_picks += 1
+		if state == S.PLAY and pending_picks > 0:
+			_open_pick()
 	for p in pops:
 		p.p += p.v * dt; p.life -= dt
 	pops = pops.filter(func(p): return p.life > 0)
@@ -170,6 +203,29 @@ func _process(dt: float) -> void:
 		_restart_t = 0.0
 	queue_redraw()
 
+# XP needed to reach the next level. Grows a little each level.
+func _xp_need() -> float:
+	return 10.0 + 4.0 * float(level)
+
+# opens the card picker with three cards. Several queued level-ups show one picker after another.
+func _open_pick() -> void:
+	picks = deck.choices(3)
+	if picks.is_empty():
+		pending_picks = 0   # nothing left to offer: keep playing
+		return
+	state = S.PICK
+
+func _take_pick(i: int) -> void:
+	if i < 0 or i >= picks.size():
+		return
+	hp = deck.apply(str(picks[i].id), hp)
+	pending_picks -= 1
+	picks = []
+	if pending_picks > 0:
+		_open_pick()
+	else:
+		state = S.PLAY
+
 # the hero's face reacts to the game: looks at the nearest ship, flinches when one gets close, worries when hurt, laughs on a streak
 var _combo := 0
 var _combo_t := 0.0
@@ -184,7 +240,8 @@ func _director(dt: float) -> void:
 	else: hero3d.gaze = Vector2(0.6, 0.0)
 	hero3d.look = Vector2(hero3d.gaze.x * 0.5, 0.0)
 	if nd < 70.0 and hero3d.react_t <= 0.0: hero3d.react("startled", 0.35); hero3d.arm_kick("flinch", 0.3)
-	hero3d.mood("afraid" if hp <= 25.0 else ("worried" if hp <= 50.0 else ("determined" if ships.size() >= 5 else "grin")))
+	var hp_pct := hp * 100.0 / maxf(1.0, float(deck.st.max_hp))
+	hero3d.mood("afraid" if hp_pct <= 25.0 else ("worried" if hp_pct <= 50.0 else ("determined" if ships.size() >= 5 else "grin")))
 
 func _finish(win: bool) -> void:
 	state = S.OVER
@@ -254,6 +311,7 @@ func _draw() -> void:
 		_hud(R)
 		_portrait_hud()
 		if state == S.OVER: _over(R)
+		if state == S.PICK: _pick(R)
 	if cutscene: cutscene.draw(self)
 	_toast(R)
 	draw_set_transform(Vector2.ZERO)
@@ -333,9 +391,13 @@ func _toast(R: float) -> void:
 
 func _hud(R: float) -> void:
 	var f := ThemeDB.fallback_font
+	var mx := maxf(1.0, float(deck.st.max_hp))
 	draw_rect(Rect2(10, 8, 160, 16), Color(0, 0, 0, 0.4))
-	draw_rect(Rect2(10, 8, 160 * clamp(hp / 100.0, 0, 1), 16), Color("2ecc71"))
-	draw_string(f, Vector2(14, 21), "HP %d/100" % int(max(hp, 0)), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	draw_rect(Rect2(10, 8, 160 * clamp(hp / mx, 0, 1), 16), Color("2ecc71"))
+	draw_string(f, Vector2(14, 21), "HP %d/%d" % [int(max(hp, 0)), int(mx)], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	draw_rect(Rect2(10, 27, 160, 6), Color(0, 0, 0, 0.4))
+	draw_rect(Rect2(10, 27, 160 * clamp(xp / _xp_need(), 0, 1), 6), Color("9b59b6"))
+	draw_string(f, Vector2(176, 34), "LV %d" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
 	draw_string(f, Vector2(R - 130, 24), "SCORE %d" % score, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("ffd32a"))
 	if run_target > 0:
 		draw_string(f, Vector2(R - 130, 42), "TARGET %d" % run_target, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("9aa3c7"))
@@ -346,6 +408,38 @@ func _portrait_hud() -> void:
 	draw_rect(pr.grow(4), Color(0.05, 0.05, 0.12, 0.6))
 	draw_texture_rect(hero3d.ptex(), pr, false)
 	draw_rect(pr.grow(4), Color("e7b84a"), false, 2.0)
+
+func _pick(R: float) -> void:
+	var f := ThemeDB.fallback_font
+	draw_rect(Rect2(0, 0, R, _vis_h()), Color(0.03, 0.03, 0.08, 0.72))
+	draw_string(f, Vector2(R / 2 - 150, 40), "LEVEL %d! CHOOSE A POWER" % level, HORIZONTAL_ALIGNMENT_LEFT, -1, 24, Color("ffd32a"))
+	for i in picks.size():
+		var c: Dictionary = picks[i]
+		var r := Rect2(R / 2 - 260, 54 + i * 96, 520, 86)
+		var idx := i
+		buttons.append([r, func(): _take_pick(idx)])
+		var col := CardDeck.rarity_color(c)
+		draw_rect(Rect2(r.position + Vector2(0, 3), r.size), Color(0, 0, 0, 0.35))
+		draw_rect(r, Color(0.12, 0.12, 0.2, 0.96))
+		draw_rect(r, col, false, 2.0)
+		draw_string(f, r.position + Vector2(14, 28), String(c.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 18, col)
+		draw_string(f, r.position + Vector2(r.size.x - 90, 28), String(c.rarity).to_upper(), HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(col, 0.7))
+		var lines := _wrap(String(c.desc), f, 12, r.size.x - 28)
+		for li in lines.size():
+			draw_string(f, r.position + Vector2(14, 50 + li * 16), lines[li], HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+
+# splits text into lines no wider than w pixels
+func _wrap(text: String, f: Font, fs: int, w: float) -> Array:
+	var out: Array = []
+	var cur := ""
+	for word in text.split(" "):
+		var trial := word if cur == "" else cur + " " + word
+		if f.get_string_size(trial, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > w and cur != "":
+			out.append(cur); cur = word
+		else:
+			cur = trial
+	if cur != "": out.append(cur)
+	return out
 
 func _over(R: float) -> void:
 	var f := ThemeDB.fallback_font
