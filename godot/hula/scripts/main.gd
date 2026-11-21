@@ -106,7 +106,7 @@ func open_map() -> void:
 var _confirmed := false
 func _process(dt: float) -> void:
 	t += dt
-	hero3d.portrait_on = state == S.PLAY or state == S.OVER or state == S.SECRET or (state == S.MENU and not menu.in_hub and not map.in_map)
+	hero3d.portrait_on = state == S.PLAY or state == S.OVER or state == S.SECRET   # no face close-up on the main (title) screen
 	hero3d.auto_dance = state == S.MENU or state == S.SECRET
 	fps_s = lerpf(fps_s, 1.0 / maxf(dt, 0.0001), 0.08)
 	var want: String = "menu" if state == S.MENU else ("game" if state == S.PLAY else (menu.song_test if state == S.SECRET else ""))
@@ -301,7 +301,6 @@ func _draw() -> void:
 			menu.hub(R, t, Callable(self, "_hero")); _below(R, Color(0.03, 0.03, 0.08, 0.8))
 		else:
 			menu.title(R, t, Callable(self, "_hero"), ship_tex); _below(R, Color("4a2a3e"))
-		if not menu.in_hub and not map.in_map: _portrait_hud()
 	else:
 		for s in shots: draw_rect(Rect2(s.p - Vector2(8, 2), Vector2(16, 4)), Color(1, 0.9, 0.3))
 		for sh in ships: _ship(sh)
