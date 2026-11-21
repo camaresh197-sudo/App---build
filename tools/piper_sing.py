@@ -274,10 +274,12 @@ def syllable_count(text: str) -> int:
     """Rough English syllable count, enough for the lyric lines we sing."""
     n = 0
     for w in re.findall(r"[A-Za-z']+", text):
-        w = w.lower().replace("'", "")
+        w = w.lower()
+        w = re.sub(r"'s$", "", w)                   # possessive: Jake's -> jake
+        w = w.replace("'", "")                       # I'm -> im, he'll -> hell
+        # magic e: vowel + consonant + e (+ consonants) -> the e is silent
+        w = re.sub(r"([aeiouy])([^aeiouy])e([^aeiouy]*)$", r"\1\2\3", w)
         groups = re.findall(r"[aeiouy]+", w)
-        if len(groups) > 1 and w.endswith("e") and not w.endswith(("le", "ee", "ye")):
-            groups = groups[:-1]                    # silent final e
         n += max(1, len(groups))
     return n
 
