@@ -32,5 +32,6 @@ bpy.ops.export_scene.gltf(
     export_skins=True,
     export_yup=True,
     export_animations=False,
+    export_texcoords=True,   # keep UVMap on the face: without it the albedo is mis-mapped in Godot
 )
 print("GLB: wrote", DST)
