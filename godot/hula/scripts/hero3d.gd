@@ -328,6 +328,7 @@ var rig_bone := {}            # bone name -> skeleton bone index
 var rig_mesh := {}            # control mesh -> the glb mesh that replaces it
 var rig_c := {}               # bone name -> rest frame mapping (bone rest into the joint's rest)
 var rig_cinv := {}            # bone name -> inverse of rig_c
+var rig_hat_mats: Array = []  # the file's hat materials: the wardrobe recolours these on top of Blender's base
 var rig_pre := {}             # bone name -> parent's rig_c inverse
 var rig_parts := 0
 # the teeth in the master: two rows bone-parented to head (upper) and jaw (lower), each with a "hide" blend shape
@@ -384,20 +385,21 @@ func _load_rig() -> void:
 				if cm == hoop_node:
 					hoop_glb = g                 # the file's hoop takes the code's fade instead of drawing the control mesh
 					cm.layers = 0
+					# the file's own hoop material becomes the live one: the wardrobe recolour and the spin
+					# scroll write here, so Blender's texture shows until the wardrobe changes it
+					if g.mesh.get_surface_count() > 0 and g.mesh.surface_get_material(0) is StandardMaterial3D:
+						hoop_mat = (g.mesh.surface_get_material(0) as StandardMaterial3D).duplicate()
+						hoop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA   # faded by gk so it never pops
+						g.set_surface_override_material(0, hoop_mat)
 				else:
 					g.layers = cm.layers         # the glb mesh inherits the control mesh's render layer (e.g. the hat)
-					if cm == fr.get("head"):
-						# the head now carries the joined lip surfaces; keep the skin material for the
-						# rest of the head and the code's lip colour for the surface tagged lip_mouth
-						var gm: Mesh = g.mesh
-						var lm: Material = fr.get("lip_m")
-						for si in gm.get_surface_count():
-							var sm: Material = gm.surface_get_material(si)
-							var is_lip: bool = sm != null and sm.resource_name.to_lower().contains("lip")
-							g.set_surface_override_material(si, lm if (is_lip and lm != null) else cm.material_override)
-						g.material_override = null
-					else:
-						g.material_override = cm.material_override   # the file carries geometry; the code keeps its materials
+					# the file carries the materials too: Blender's albedo textures and colours are the source of
+					# truth, and no override is set here. The runtime recolours that Blender cannot author (the
+					# wardrobe's hat colour, the hoop's stripe scroll) mutate the imported materials instead.
+					if String(cm.name).begins_with("hat_"):
+						for si in g.mesh.get_surface_count():
+							var hsm: Material = g.mesh.surface_get_material(si)
+							if hsm != null and not rig_hat_mats.has(hsm): rig_hat_mats.append(hsm)
 					cm.layers = 0                # ...and the control mesh stops drawing
 					rig_mesh[cm] = g
 					rig_parts += 1
@@ -1754,7 +1756,9 @@ func set_cos(hat_i: int, hoop_i: int, defs: Dictionary) -> void:
 	var k := "%d_%d" % [hat_i, hoop_i]
 	if k == _cos_key: return
 	_cos_key = k
-	(hat_mats[0] as StandardMaterial3D).albedo_color = Color(HAT_COL[clampi(hat_i, 0, HAT_COL.size() - 1)])
+	var col := Color(HAT_COL[clampi(hat_i, 0, HAT_COL.size() - 1)])
+	(hat_mats[0] as StandardMaterial3D).albedo_color = col          # the procedural fallback build
+	for m in rig_hat_mats: (m as StandardMaterial3D).albedo_color = col   # the file's hat: recolour, don't replace
 	var h: Dictionary = defs.hoop[clampi(hoop_i, 0, defs.hoop.size() - 1)]
 	if h.get("c") != null: set_hoop(Color(h.c[0]), Color(h.c[1]))
 	else: set_hoop(Color("ff4fa3"), Color("48dbfb"))
