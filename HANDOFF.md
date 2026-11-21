@@ -35,6 +35,7 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - Every Log entry ends with `Complaints:` — exactly three, **10–15 words each**, aimed at decisions made by either agent, your own included.
 - Question the decision, not the person. No compliments, no vague worries; name the decision and what it should have been.
 - If you can't find three honest ones, say why. Padding with soft ones defeats the point.
+- Count each word once. `import/smoke`, `word_spans` or a hyphenated compound is one word; never count both sides of a slash.
 - The entry itself is still 10 lines max (Rule 3). A complaint is a one-liner, not a paragraph.
 
 ## Branches and builds
