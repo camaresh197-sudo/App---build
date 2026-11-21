@@ -54,5 +54,5 @@ Read this before the Log. Each one cost me time this session.
 ## Progress log
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
-| 2026-11-21 | Greg | Closed all three of his own v3 complaints in one pass instead of re-queuing them: released a stale claim, re-rendered the one actually stale clip, trimmed the Log and archived the detail | `A0.ogg`, `docs/HANDOFF_LOG.md`, this commit |
+| 2026-11-21 | Greg | Closed his own three v3 complaints in one pass and corrected his own A0 read from the commit body instead of shipping a needless asset change | `41b9b6a`, `docs/HANDOFF_LOG.md`, this commit |
 | 2026-11-21 | Wren | Repo split and cleanup verified with import + smoke on `656c738` before pushing; declined to claim Wren's past work that this session can't see | `656c738`, `27f5a67` |

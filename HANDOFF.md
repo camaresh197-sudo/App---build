@@ -59,7 +59,6 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - **Map:** milestones 1–3 are live on `godot`. Never played: difficulty and the star write. Still to do: milestone 4 (next-level and act-intro hook) and 5 (review, merge, phone build).
 - **Act intros:** need a music handoff.
 - **`ccr-74f83a2e-94v7jl` → `godot`:** merge only after import and smoke. Holds the theater (secret menu: tap RUNS 3 times), the Piper script and the map base.
-- **Vocals:** `A0.ogg` re-sang under the phonics table (`am → "im"`, Greg v3); measured clean, not heard by ear yet. Previews in `preview/victory_a0fix.wav`.
 - **Branch cleanup** (needs someone with repo rights): delete `ccr-1645d98d-2z4pyi`, `ccr-66397653-hltyir`, `ccr-d06671b1-azshga`, `claude/stoic-hopper-gh3gre`, `godot-4.6`, `greg-worldmap`. Confirm `greg-worldmap` is merged first. Keep `greg-docs`, `ccr-74f83a2e-94v7jl`, `ccr-67059109-rrkdbd`, `ccr-c3479097-yw0dml`, `ccr-cb8598a5-gdyhqn`, `claude/peaceful-cannon-v9niij`: each has work not on `godot`.
 - **Local clone drift:** a local `godot` checkout had 57 commits with no shared history with `origin/godot`. They were pushed to `origin/wren-local-godot` and not merged.
 
@@ -71,13 +70,12 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 
 ## Log (newest first)
 - **Greg v3 → Wren:** User rule: question both parties' decisions; three complaints per entry, 10–15 words (now under **Complaints**). Counter is Greg v4.
-  Fixed all three v3 complaints. Released Wren's stale `cutscene.gd` / `data_theater.json` claim.
-  Re-sang `A0.ogg`, the only lyric containing `am`; `word_spans` is grid-only, so no other clip was stale. 21-clip item closed.
-  Every Log entry trimmed; full text moved to `docs/HANDOFF_LOG.md`.
-  Checks: A0 3.125 s, RMS −1.5 dB vs original; import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0.
-  Audio changed: this push builds for the phone. Files: `A0.ogg`, `HANDOFF.md`, `PERSONALITIES.md`, `docs/HANDOFF_LOG.md`, `preview/victory_a0fix.wav`.
+  Closed all three v3 complaints. Released Wren's done `cutscene.gd` / `data_theater.json` claim.
+  21-clip item closed: A0 already carried `am → "im"` (`41b9b6a`) and `word_spans` is grid-only, so no clip was stale. I tried a fresh A0 take, reverted it.
+  Log trimmed to Rule 3; full text in `docs/HANDOFF_LOG.md`. Files: `HANDOFF.md`, `PERSONALITIES.md`, `docs/HANDOFF_LOG.md`.
+  Checks on the merged tree: import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0. Net docs-only, so no phone asset change.
   **Complaints:** (1) Wren kept a claim after the theater push; claims should expire with the work.
-  (2) Greg v2 counted 21 stale clips; `word_spans` is grid-only, so one was.
+  (2) Greg v2 counted 21 stale clips; `word_spans` is grid-only, so none was.
   (3) Both left `9cecf67` listed as unconfirmed after Greg answered it; close answered items.
 - **Greg v2 → Wren:** Vocals live on `godot`; no open branch. `dc0230d` fixed the echo, the syllable stutter and flat notes; `f44c2af` gridded the chorus and phrased the lead; `41b9b6a` adds `data_phonics.json` + speech cache; `6f1e27f` adds `docs/VOCAL.md`.
   Verified import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0; previews `preview/victory_*_mix.wav`.
