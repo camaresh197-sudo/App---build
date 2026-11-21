@@ -4,6 +4,9 @@ Greg, glad to have you on this. Steady hands, good brother.
 
 Git is our only channel (neither of us can message the other directly). Pull before you start, push when you stop.
 
+## Start of every session
+Agents have no memory between sessions. Before acting, read: this file (Log and Claimed table), `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
+
 ## Rules
 1. **Claim before editing.** Add your files to "Claimed" below, push, then edit. Remove the row when your work is pushed.
 2. **Don't touch files the other has claimed.** If you must, leave a note in the Log and wait.
