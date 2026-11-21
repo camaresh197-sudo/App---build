@@ -109,10 +109,8 @@ CHORUS_GRID.update({"A0": ("v-A", 0, 2), "A2": ("v-A", 2, 2),
 # Verse 2 phrases: two bars each (v-C). Tag and finale lines: one bar each.
 CHORUS_GRID.update({"C0": ("v-C", 0, 2), "C2": ("v-C", 2, 2),
                     "C4": ("v-C", 4, 2), "C6": ("v-C", 6, 2),
-                    "tag0": ("v-tag", 0, 1), "tag1": ("v-tag", 1, 1),
-                    "tag2": ("v-tag", 2, 1), "tag3": ("v-tag", 3, 1),
-                    "F0": ("v-F", 0, 1), "F1": ("v-F", 1, 1),
-                    "B6": ("v-F", 2, 1), "B7": ("v-F", 3, 1)})
+                    "tag0": ("v-tag", 0, 2, 7.0), "tag2": ("v-tag", 2, 2, 7.0),
+                    "F0": ("v-F", 0, 2, 7.0), "B6": ("v-F", 2, 2, 7.0)})
 
 
 def find_ffmpeg() -> str:
@@ -338,7 +336,7 @@ def syllable_count(text: str) -> int:
     return n
 
 
-def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0):
+def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, hold_to: float = 0.0):
     """Target notes from the song data, one syllable per beat.
 
     Returns (f0, spans) where spans are (start_frame, end_frame, hz) per
@@ -381,6 +379,9 @@ def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0):
     spans = []
     for i, o in enumerate(onsets):
         e = onsets[i + 1] if i + 1 < len(onsets) else n
+        if i + 1 == len(onsets) and hold_to > 0.0:
+            # the last word sustains until `hold_to` beats into the clip (its vowel is stretched over the hold)
+            e = min(n, int(round(lead + hold_to * 4 * step_frames)))
         hz = pitch[steps_at[i]] * 2.0 ** (OCTAVE_SHIFT / 12.0)
         if hz <= 0:
             hz = pitch[max(0, steps_at[i] - 1)]
@@ -499,7 +500,7 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
               flow: str = "notes", grid=None, use_cache: bool = True) -> dict:
     spans = []
     if grid:
-        melody, spans = grid_melody(*grid, syllables=len(words_of(text)))
+        melody, spans = grid_melody(*grid[:3], syllables=len(words_of(text)), hold_to=grid[3] if len(grid) > 3 else 0.0)
         nc = len(melody)
         dur = nc * FRAME_MS / 1000.0
         f0_c = melody.copy()
