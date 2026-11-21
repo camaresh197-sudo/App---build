@@ -25,6 +25,9 @@ import piper_sing as ps  # noqa: E402
 
 NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
+# Display-only respellings where the IPA glyphs are hard to read.
+IPA_DISPLAY = {"gay": "g'aye"}
+
 
 def nn(m):
     return f"{NAMES[int(m) % 12]}{int(m) // 12 - 1}"
@@ -68,7 +71,7 @@ def ipa_of(text, voice, cache):
             chunks = voice.phonemize(w)
             toks = [t for sent in chunks for t in sent if t.strip() and t not in ",.!?;:"]
             cache[key] = "".join(toks)
-        out.append(cache[key])
+        out.append(IPA_DISPLAY.get(key, cache[key]))
     return out
 
 
