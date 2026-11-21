@@ -222,7 +222,7 @@ func play(name: String, o := {}) -> void:
 	vstop[oi] = (now + dur) if dur > 0.0 else 0.0
 	vstart[oi] = now; vatt[oi] = o.get("att", 0.0)
 	if vatt[oi] > 0.0: p.volume_db = vbase[oi] - 40.0
-	p.play()
+	p.play(float(o.get("from", 0.0)))   # "from": start offset into the clip (word-level playback)
 
 func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void:
 	play(name, {"midi": midi, "dur": dur, "v": v / ref * SMP_MUS, "dl": dl, "att": att})

@@ -379,6 +379,21 @@ func _timing_reset(lid: String) -> void:
 		timing[lid] = timing_base[lid].duplicate(true)
 		timing_msg = "reset %s to the default" % lid
 
+# Preview with the edited timing, no re-sing. The shipped clip is cut at the shipped onsets and each
+# word is started at its edited onset (shift only: pitch and word length are unchanged). The clip
+# starts 0.15 s before its first word (data_vox.json lead-in), so both positions carry that offset.
+# A word runs to the next shipped onset; the last word runs to the end of the clip.
+const VOX_LEAD := 0.15
+func _timing_play(lid: String) -> void:
+	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
+	var edited: Array = timing.get(lid, {}).get("onsets", [])
+	if shipped.is_empty() or edited.size() != shipped.size():
+		c.snd.play("vox/" + lid, {"v": 2.4}); timing_msg = "playing %s (no word timing)" % lid; return
+	for i in shipped.size():
+		var dur := float(shipped[i + 1]) - float(shipped[i]) if i + 1 < shipped.size() else 0.0
+		c.snd.play("vox/" + lid, {"v": 2.4, "dl": VOX_LEAD + float(edited[i]), "from": VOX_LEAD + float(shipped[i]), "dur": dur})
+	timing_msg = "playing %s with edited timing" % lid
+
 func _draw_timing(ox: float) -> void:
 	if timing.is_empty(): _timing_load()
 	var hint := "tap - or + to move a word by 0.01 s. Edits reach the audio after a PC re-sing."
@@ -404,6 +419,8 @@ func _draw_timing(ox: float) -> void:
 	button(Rect2(ox + 14, 250, 150, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
 	button(Rect2(ox + 174, 250, 150, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
 	button(Rect2(ox + 334, 250, 170, 36), "RESET LINE", Color("c0392b"), func(): _timing_reset(timing_sel), 14)
+	var play_lid := timing_sel
+	button(Rect2(ox + 514, 250, 110, 36), "PLAY", Color("e67e22"), func(): _timing_play(play_lid), 14)
 
 func secret(R: float, t: float) -> void:
 	var ox := (R - 640.0) / 2.0
