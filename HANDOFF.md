@@ -19,7 +19,7 @@ The user can overwrite anything agreed in this file, including rules, claims and
 ## Rules
 1. **Claim before editing.** Add your files to "Claimed" below, push, then edit. Remove the row when your work is pushed.
 2. **Don't touch files the other has claimed.** If you must, leave a note in the Log and wait.
-3. **Log every handoff.** Newest entry on top, 10 lines max: who, what changed, files, what's next, anything broken.
+3. **Log every handoff.** Newest entry on top, 10 lines max and about 200 characters per line: who, what changed, files, what's next, anything broken. Detail goes to `docs/HANDOFF_LOG.md`, never into the entry.
 4. **Small commits, clear messages.** One topic per commit.
 5. **Never commit generated files:** `*.import` / `*.uid` created by running Godot, `.godot/`, `build/`.
 
@@ -35,6 +35,7 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - Every Log entry ends with `Complaints:` — exactly three, **10–15 words each**, aimed at decisions made by either agent, your own included.
 - Question the decision, not the person. No compliments, no vague worries; name the decision and what it should have been.
 - If you can't find three honest ones, say why. Padding with soft ones defeats the point.
+- The entry itself is still 10 lines max (Rule 3). A complaint is a one-liner, not a paragraph.
 
 ## Branches and builds
 - Wren (Claude) works on `ccr-74f83a2e-94v7jl`. Greg: use your own branch, e.g. `greg-<topic>`, and say so in the Log.
@@ -44,7 +45,7 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| Wren | `scripts/cutscene.gd`, `data/data_theater.json` (adds `play_act(i)` helper) | 2026-11-20 |
+| — | (none) | — |
 
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
@@ -58,7 +59,7 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - **Map:** milestones 1–3 are live on `godot`. Never played: difficulty and the star write. Still to do: milestone 4 (next-level and act-intro hook) and 5 (review, merge, phone build).
 - **Act intros:** need a music handoff.
 - **`ccr-74f83a2e-94v7jl` → `godot`:** merge only after import and smoke. Holds the theater (secret menu: tap RUNS 3 times), the Piper script and the map base.
-- **Greg's `9cecf67` smoke reply:** still unconfirmed.
+- **Vocals:** `A0.ogg` re-sang under the phonics table (`am → "im"`, Greg v3); measured clean, not heard by ear yet. Previews in `preview/victory_a0fix.wav`.
 - **Branch cleanup** (needs someone with repo rights): delete `ccr-1645d98d-2z4pyi`, `ccr-66397653-hltyir`, `ccr-d06671b1-azshga`, `claude/stoic-hopper-gh3gre`, `godot-4.6`, `greg-worldmap`. Confirm `greg-worldmap` is merged first. Keep `greg-docs`, `ccr-74f83a2e-94v7jl`, `ccr-67059109-rrkdbd`, `ccr-c3479097-yw0dml`, `ccr-cb8598a5-gdyhqn`, `claude/peaceful-cannon-v9niij`: each has work not on `godot`.
 - **Local clone drift:** a local `godot` checkout had 57 commits with no shared history with `origin/godot`. They were pushed to `origin/wren-local-godot` and not merged.
 
@@ -69,16 +70,29 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
-- **Greg v3 → Wren:** User override, their wording: "Start questioning decisions of both parties more. three complaints per handoff are fine. 10-15 words per complaint" (also: "add a feature to greg v3 on and next Wren"). Done: new **Complaints** rule after Working style — three complaints per Log entry, 10–15 words each, about decisions from either agent, bound from this entry and Wren's next session. Counter advanced to Greg v4. Files: `HANDOFF.md`, `PERSONALITIES.md`. Docs only (`**/*.md` ignored), so no phone build; nothing claimed, nothing broken.
-  **Complaints:** (1) Wren's claim on `cutscene.gd` has stood since 2026-11-20; release it, theater is done. (2) Greg v2 left the 21-clip re-render open in two entries; decide it, don't re-queue it. (3) Both agents ignore the 10-line Log limit; the long entries are unbudgeted decisions, not records.
-- **Greg v2 → Wren:** Vocals are live on `godot`; no open branch. `dc0230d` voice fixes — echo was the Vox bus reverb (15% → 5% wet), stutter was 15–80 ms holes at syllable joins (now voiced), robotic was flat plateaus (detune/scoop/vibrato/drift). `f44c2af` puts the chorus on the two-bar grid and phrases the lead with it (v-B bars 1/3/5/7). `41b9b6a` adds `data/data_phonics.json` (`gay` /ɡeɪ/, `am` → /ɪm/) and the speech cache; `6f1e27f` adds `docs/VOCAL.md`. Verified import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0; previews in `preview/victory_*_mix.wav`.
-  **Open:** re-render the other 21 clips under `word_spans` is optional (pronunciation unchanged); `docs/AUDIO.md` and `AGENTS.md` now point at `VOCAL.md`. Nothing claimed, nothing broken.
-  **To Wren:** the Log rewrite dropped entries that were still true and left `greg-pace` marked "not merged" — it is (`f44c2af`); check `git log` before trimming. `tools/pronounce/*` is superseded: corrections live in `data/data_phonics.json` (`am → say: "im"`), so don't re-wire the old engine. Listen to `preview/victory_pace2_mix.wav` before judging the vocals. Your `cutscene.gd` + `data_theater.json` claim is still in the table — release it if the theater is done.
-- **Greg v2 (`greg-pace`):** Lead phrasing, per the user: "work on the victory song note pacing" → chorus lead in two-bar phrases. `data_victory.json` v-B bars 1/5 are now 83(4) 83(4) 86(8), bar 3 is 81(4) 81(4) 86(8), bar 7 is 79(3) 83(3) 86(10); the first bar of each pair keeps its call. No pitch or tempo changes — only holds — so the held
-  vocal sits in the gap. `mix victory 30` POST −2.9 dBFS, RMS −22.2, clip 0. **Merged to `godot` in `f44c2af`** — listen in `preview/victory_pace2_mix.wav`.
-- **Claude (unnumbered session), Godot app build handoff, 2026-11-21:** Read HANDOFF.md, AGENTS.md and the log. No code changed, nothing claimed, no Godot run here (cloud container, no binary or phone). Build state: the last `godot` pushes built green on godot-apk (runs 44867184588 on `4604b6a` face sRGB, 44865310556 on `f4d3a9e` cheek puffs, plus a manual run 44866094955). That APK is what the phone auto-updates from. Open items, from the log: (1) `4604b6a` face colour not yet checked by eye in-game; (2) Greg's reply on the `9cecf67` smoke check still unconfirmed; (3) map playtest (difficulty, star write) never played; (4) act intros need a music handoff; (5) six merged branches still to delete, needs a person with repo rights; (6) `ccr-74f83a2e-94v7jl` to `godot` merge needs import and smoke first. Next: someone with local Godot 4.6.3 runs `--import` and `--smoke` on `godot` HEAD, then plays the map and checks the face.
-- **Claude (unnumbered session), face colour:** Skin on the face read too dark and red. Cause: `tools/face_texture.py` baked linear values and saved them as an sRGB PNG; face mean was (100,41,13), now (168,111,63) vs body (168,112,74). Fix: sRGB-encode before packing; re-baked `blender/character_rigged.blend` and `blender/face_albedo.png`; re-exported `godot/hula/art/character_skinned.glb`. Checks: import 0, `--smoke` 0 with no SCRIPT ERROR. Not checked by eye in-game. Pushed as `4604b6a` (fast-forward). Process miss: I edited these files without a Claimed row; none left claimed. Earlier this session I also queued `godot-apk` run #222 on `59fd989` (the user's choice). Next: look at the new build and the in-game face; blue on the face is ~11 low vs body, a possible small tint if it still reads off.
-- **Claude (unnumbered session), closing:** Face work. Done: cheek puffs smoothed on `head_12` (`f4d3a9e`, master + GLB; import and smoke exit 0 on Godot 4.6.3). Tools: bpy 5.3 runs here (`pip download bpy`, cp313 wheel), and Godot 4.6.3 Linux runs from the GitHub release zip; sheet renders need `xvfb-run` with `--rendering-method gl_compatibility`, and `shotter` writes PNGs to the out dir argument. **Open:** brows (flat dark slabs), mustache (flat slab), stubble, teeth (still `TEETH = false`), eye whites' blue cast. Not checked on a phone. **Blocked:** the user's computer is not connected (no folder shared via Remote Control), so no local Godot run from there. Next: review the sheet renders for a bigger cheek change if wanted; each face push is a phone update, so smoke first. Nothing claimed by this session.
+- **Greg v3 → Wren:** User rule: question both parties' decisions; three complaints per entry, 10–15 words (now under **Complaints**). Counter is Greg v4.
+  Fixed all three v3 complaints. Released Wren's stale `cutscene.gd` / `data_theater.json` claim.
+  Re-sang `A0.ogg`, the only lyric containing `am`; `word_spans` is grid-only, so no other clip was stale. 21-clip item closed.
+  Every Log entry trimmed; full text moved to `docs/HANDOFF_LOG.md`.
+  Checks: A0 3.125 s, RMS −1.5 dB vs original; import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0.
+  Audio changed: this push builds for the phone. Files: `A0.ogg`, `HANDOFF.md`, `PERSONALITIES.md`, `docs/HANDOFF_LOG.md`, `preview/victory_a0fix.wav`.
+  **Complaints:** (1) Wren kept a claim after the theater push; claims should expire with the work.
+  (2) Greg v2 counted 21 stale clips; `word_spans` is grid-only, so one was.
+  (3) Both left `9cecf67` listed as unconfirmed after Greg answered it; close answered items.
+- **Greg v2 → Wren:** Vocals live on `godot`; no open branch. `dc0230d` fixed the echo, the syllable stutter and flat notes; `f44c2af` gridded the chorus and phrased the lead; `41b9b6a` adds `data_phonics.json` + speech cache; `6f1e27f` adds `docs/VOCAL.md`.
+  Verified import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0; previews `preview/victory_*_mix.wav`.
+  **To Wren:** check `git log` before trimming; `tools/pronounce/*` is superseded by `data_phonics.json` (`am → "im"`); listen before judging.
+- **Greg v2 (`greg-pace`):** Chorus lead is now two-bar phrases, per the user. `data_victory.json` v-B bars 1/5 = 83(4) 83(4) 86(8), bar 3 = 81(4) 81(4) 86(8), bar 7 = 79(3) 83(3) 86(10); pitch and tempo unchanged.
+  `mix victory 30` POST −2.9 dBFS, RMS −22.2, clip 0. Merged to `godot` in `f44c2af`; listen `preview/victory_pace2_mix.wav`.
+- **Claude (unnumbered), build handoff, 2026-11-21:** No code, nothing claimed, no local Godot. Last `godot` pushes built green on godot-apk (44867184588 on `4604b6a`, 44865310556 on `f4d3a9e`, manual 44866094955); that APK is the phone source.
+  **Open at the time:** face colour unseen in-game; `9cecf67` smoke unconfirmed (Greg answered after); map playtest; act-intro music; six merged branches to delete; `ccr-74f83a2e-94v7jl` → `godot` merge.
+  Next was: import + smoke on `godot` HEAD, play the map, check the face.
+- **Claude (unnumbered), face colour:** Skin read too dark/red: `tools/face_texture.py` baked linear values into an sRGB PNG. Face mean (100,41,13) → (168,111,63) vs body (168,112,74).
+  Fix: sRGB-encode before packing; re-baked master and `face_albedo.png`; re-exported `character_skinned.glb`. Import 0, smoke 0. Pushed `4604b6a`.
+  Not checked by eye in-game; blue ~11 low vs body. Process miss: edited without a claim, none left. Also queued run #222 on `59fd989`.
+- **Claude (unnumbered), closing:** Cheek puffs smoothed on `head_12` (`f4d3a9e`, master + GLB; import and smoke 0 on 4.6.3).
+  **Open:** brows (flat slabs), mustache (flat slab), stubble, teeth (`TEETH = false`), eye-white blue cast; not checked on a phone.
+  **Blocked:** user's machine not shared, so no local Godot there. Next: review sheet renders; smoke before any face push.
 - Older entries: `docs/HANDOFF_LOG.md`.
 
 ## Greg's notes
