@@ -99,6 +99,10 @@ def words_of(text: str) -> list:
 CHORUS_GRID = {"B0": ("v-B", 0, 2), "B1": ("v-B", 2, 2),
                "B2": ("v-B", 4, 2), "B3": ("v-B", 6, 2)}
 
+# Verse 1 phrases are also two bars each: bars 0-1, 2-3, 4-5, 6-7 of v-A.
+CHORUS_GRID.update({"A0": ("v-A", 0, 2), "A2": ("v-A", 2, 2),
+                    "A4": ("v-A", 4, 2), "A6": ("v-A", 6, 2)})
+
 
 def find_ffmpeg() -> str:
     import shutil as sh
