@@ -32,6 +32,15 @@ except ImportError:
     sys.exit(1)
 
 
+def _attach(voice):
+    """Use pronounce/lexicon.json for word pronunciations, when the pronounce tool is present."""
+    try:
+        from pronounce.engine import attach_lexicon
+    except ImportError:
+        return voice
+    return attach_lexicon(voice)
+
+
 def list_voices():
     """Show available Piper voices."""
     voices = {
@@ -69,9 +78,11 @@ def synthesize(text, voice_name="en_US-male-medium", output_file=None, model_dir
             if not model_path.exists() or not config_path.exists():
                 raise FileNotFoundError(f"Model files not found in {model_dir}: {voice_name}.onnx/.json")
             _cache[key] = PiperVoice.load(str(model_path), config_path=str(config_path), use_cuda=False)
+            _cache[key] = _attach(_cache[key])
         else:
             # Try to load from installed models
             _cache[key] = PiperVoice.load(voice_name, use_cuda=False)
+            _cache[key] = _attach(_cache[key])
     voice = _cache[key]
 
     # New piper-tts (>=1.3) API: synthesize() returns an iterable of AudioChunk

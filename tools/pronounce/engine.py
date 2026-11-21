@@ -56,6 +56,20 @@ def phonemize_with_lexicon(text, base_phonemize, lex):
     return sentences
 
 
+def attach_lexicon(voice):
+    """Route a loaded PiperVoice's phonemizer through lexicon.json (used by the singer and piper_gen)."""
+    if getattr(voice, "_lexicon_attached", False):
+        return voice
+    base = voice.phonemize
+
+    def phonemize(text):
+        return phonemize_with_lexicon(text, base, load_lex())
+
+    voice.phonemize = phonemize
+    voice._lexicon_attached = True
+    return voice
+
+
 def load_voice(model=DEFAULT_MODEL):
     from piper import PiperVoice
     voice = PiperVoice.load(str(model), include_alignments=True)

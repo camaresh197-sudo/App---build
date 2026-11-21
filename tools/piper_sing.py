@@ -52,6 +52,7 @@ CACHE = TOOLS / ".cache" / "speech"
 BACKUP = TOOLS / "vox_backup" / "originals"
 
 sys.path.insert(0, str(TOOLS))
+sys.path.insert(0, str(TOOLS / "pronounce"))
 import piper_gen  # noqa: E402
 
 FS = 22050          # analysis rate (the medium/high models are 22050; low is 16 kHz and ffmpeg-resampled)
@@ -382,6 +383,8 @@ def aligned_voice(name):
         _ALIGNED[name] = PiperVoice.load(str(MODELS / f"{name}.onnx"),
                                          config_path=str(MODELS / f"{name}.onnx.json"),
                                          use_cuda=False, include_alignments=True)
+        from pronounce.engine import attach_lexicon
+        attach_lexicon(_ALIGNED[name])
     return _ALIGNED[name]
 
 
