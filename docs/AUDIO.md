@@ -95,7 +95,7 @@ See `docs/VICTORY_LYRICS.md` for every line's bars, words, syllables and notes.
 `v-B` is eight bars but **four two-bar lines**: bars 0–1, 2–3, 4–5, 6–7 map to `B0`–`B3`,
 and `sound.gd` plays one only on even bars. Clips `B4`–`B7` are no longer triggered.
 
-Chorus clips are rendered in **grid mode** (`CHORUS_GRID` in `piper_sing.py`): the notes
+Chorus clips are rendered in **grid mode** (B0–B2 take explicit onsets from `data_word_timing.json` when present) (`CHORUS_GRID` in `piper_sing.py`): the notes
 come from `data_victory.json`, not from the old take, and each syllable's **vowel** is
 anchored to a beat using Piper's phoneme alignments (one syllable per beat, last one held
 to the end of the phrase; 0.15 s of consonant sits before the first beat, which
@@ -113,6 +113,8 @@ octave errors on rendered audio — see its docstring); `vox_ab_check.py` compar
 
 
 ## Word timing from the phone
+
+Status: merged to `godot`; the TIMING tab has not been checked on screen yet.
 
 Secret menu (tap RUNS three times on the title), **TIMING** tab: nudge each word's onset by 0.01 s,
 then **SAVE** (kept on the phone) or **COPY** (puts the JSON on the clipboard; paste it into the chat
@@ -154,6 +156,8 @@ python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox \
   vox bus and the clip positions must come from the same run.
 - Re-extracting the stem needs the master before the limiter. `shotter.gd` `mix` writes it as
   `<out>_masterpre.wav`, next to the post-limiter master and the `_voxpre`/`_voxpost` files.
+  The stem is `masterpre − k × voxbus_post`; `k` (about 0.563) is the vox level inside the master,
+  fitted over the chorus and stored in `meta.json`.
 - Dropouts: a run can lose a sung line. In the run in `stems/`, the vox bus is silent from 36 to
   38 s, so `C2` never played. The snip tool warns and places a missing line at the spacing of its
   neighbours (two bars = one line apart). Only lines the sequence sings are placed or estimated
@@ -173,6 +177,7 @@ python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox \
 | Grunt placements / level | `VGRUNT`, `VGRUNT_V` + `tools/vox_grunt.py` |
 | Re-render a sample bank | the matching `tools/vox_*.py`, then `--import` |
 | Change a lyric's timing or audio, without a full render | `tools/snip_from_stem.py` (see above) |
+| Word onsets for B0–B2 | `godot/hula/data/data_word_timing.json` (edit in the TIMING tab, or directly) |
 
 ## Tools
 
@@ -184,6 +189,8 @@ py tools\vox_choir.py --src <dir-of-original-ogg>
 py tools\piper_sing.py         # the singer: Piper on the melody (--force, --only A2,B0, --flow, --vibrato, --restore, --dry-run)
 py tools\vox_singer.py --src <dir>   # older WORLD voice conversion; --style/--lisp/--tipsy/--dopey
 py tools\lyrics_doc.py             # rebuild docs/VICTORY_LYRICS.md (bars, words, syllables, notes, IPA)
+python3 tools/retime.py <file> [--dry-run]     # apply word timing copied from the TIMING tab; re-sings changed lines
+python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox --start S --end E --out x.wav
 ```
 
 Checks: `vox_pitch_check.py`, `vox_note_check.py`, `vox_ab_check.py`.
