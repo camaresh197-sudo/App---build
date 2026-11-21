@@ -3,7 +3,7 @@ extends Node
 # Samples live in res://audio (assets pack). Everything is guarded, so the game still runs silent if the pack hasn't arrived yet.
 const E := 0.13               # seconds per eighth-note slot (6 per bar, 6/8 feel)
 const SMP_MUS := 0.25
-const TRIM := {"guitar": 0.8, "bass": 1.39, "trumpet": 0.37, "violin": 0.23, "accordion": 0.27, "pad": 0.11, "choir": 0.47, "bell": 0.4, "kick": 1.25, "snare": 0.62, "hat": 0.3, "shaker": 0.38, "clap": 0.18, "cymbal": 0.26, "tom": 1.15, "impact": 1.43, "riser": 0.5, "crowd": 0.69}
+const TRIM := {"guitar": 1.0, "bass": 1.0, "trumpet": 1.0, "violin": 1.0, "accordion": 1.0, "pad": 1.0, "choir": 1.0, "bell": 1.0, "kick": 1.25, "snare": 0.62, "hat": 0.3, "shaker": 0.38, "clap": 0.18, "cymbal": 0.26, "tom": 1.15, "impact": 1.43, "riser": 0.5, "crowd": 0.69}
 # one-shot output gain (linear), independent of the instrument TRIM so the drums the SFX borrow do not set their level.
 # Measured so every SFX lands near the same peak; the old per-sample TRIM values spanned ~27 dB, which buried
 # shoot/coin/click under the music while hurt blared.

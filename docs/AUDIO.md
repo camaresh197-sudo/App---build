@@ -9,6 +9,10 @@ Entry point: `godot/hula/scripts/sound.gd` (~7k tokens whole; get line anchors f
 - Bank naming: `audio/<inst>_r<midi>[_2].ogg` (two takes), roots every 2 semitones.
   `RANGE` sets each instrument's span; `_pick()` snaps a requested midi to the nearest
   root and pitch-shifts. Add an octave by extending `RANGE` and rendering samples.
+- Rendering: `tools/sample_bank/render_bank.py --sf2 <soundfont.sf2>` rebuilds the
+  melodic instrument bank (accordion, bass, bell, choir, guitar, pad, trumpet, violin) from a
+  General MIDI soundfont. Each instrument has a target RMS that matches the mix it had, so
+  its `TRIM` is 1.0; edit the target there, not in `TRIM`.
 - Drums: `kick[_2/_3]`, `snare[_2/_3]`, `hat`, `tom`, `shaker`, `clap`, `cymbal`.
   One-shots without a sample of their own borrow the closest drum (see `sfx()`).
 - `TRIM` = per-instrument balance; `SFX_LVL` = one-shot level; `SMP_MUS` scales sequencer
