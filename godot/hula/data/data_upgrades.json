@@ -1,0 +1,748 @@
+{
+ "source": "Ported from the legacy HTML5 build (APK assets/public/index.html). Gameplay effects are NOT implemented in the Godot build yet.",
+ "card_sets": {
+  "race": [
+   "r_cannon",
+   "r_twin",
+   "r_hot",
+   "r_turbo",
+   "r_tires",
+   "r_plate",
+   "r_shell",
+   "r_hub",
+   "r_nitro",
+   "r_bumper",
+   "w_r_mines",
+   "w_r_chili",
+   "w_r_hub",
+   "w_r_scat",
+   "r_luck",
+   "r_repair",
+   "c_gold",
+   "c_study",
+   "c_dmg"
+  ],
+  "rpg": [
+   "p_machete",
+   "p_sweep",
+   "p_whirl",
+   "p_gun",
+   "w_p_hoop",
+   "w_p_lasso",
+   "w_p_nova",
+   "w_p_fire",
+   "w_p_storm",
+   "w_p_hoops",
+   "p_poncho",
+   "p_spurs",
+   "p_roll",
+   "p_tequila",
+   "p_eye",
+   "p_rage",
+   "c_gold",
+   "c_study",
+   "c_hp"
+  ]
+ },
+ "cards": [
+  {
+   "id": "r_cannon",
+   "name": "Salsa Cannon Mk II",
+   "rarity": "common",
+   "desc": "Cannon +1 level: more damage, extra shot every 3 levels.",
+   "max": 7
+  },
+  {
+   "id": "r_twin",
+   "name": "Twin Tortilla Launchers",
+   "rarity": "epic",
+   "desc": "Your guns fire +1 extra projectile.",
+   "max": 3
+  },
+  {
+   "id": "r_hot",
+   "name": "Hot Sauce Rounds",
+   "rarity": "common",
+   "desc": "15% chance on hit to set foes on fire.",
+   "max": 3
+  },
+  {
+   "id": "r_turbo",
+   "name": "Turbo Engine",
+   "rarity": "common",
+   "desc": "Top speed and steering +8%.",
+   "max": 4
+  },
+  {
+   "id": "r_tires",
+   "name": "Grippy Tires",
+   "rarity": "common",
+   "desc": "Steering +20%. Slicks and sand slow you less.",
+   "max": 3
+  },
+  {
+   "id": "r_plate",
+   "name": "Armor Plating",
+   "rarity": "common",
+   "desc": "+20 max HP and +1 armor.",
+   "max": 4
+  },
+  {
+   "id": "r_shell",
+   "name": "Taco Shell Shield",
+   "rarity": "rare",
+   "desc": "+1 shield that recharges every 15s.",
+   "max": 2
+  },
+  {
+   "id": "r_hub",
+   "name": "Magnet Hubcaps",
+   "rarity": "common",
+   "desc": "Pickup magnet +35.",
+   "max": 3
+  },
+  {
+   "id": "r_nitro",
+   "name": "Nitro Tank",
+   "rarity": "rare",
+   "desc": "Adds a NITRO button (or upgrades it): invincible speed burst.",
+   "max": 3
+  },
+  {
+   "id": "r_bumper",
+   "name": "Spiked Bumper",
+   "rarity": "rare",
+   "desc": "Ramming hurts foes much more and hurts you less.",
+   "max": 3
+  },
+  {
+   "id": "w_r_mines",
+   "name": "Salsa Mines",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: lobs explosive salsa jars down the road.",
+   "max": null
+  },
+  {
+   "id": "w_r_chili",
+   "name": "Chili Missiles",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: homing chili missiles that ignite foes.",
+   "max": null
+  },
+  {
+   "id": "w_r_hub",
+   "name": "Spinning Hubcaps",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: hubcaps orbit your car and smack foes.",
+   "max": null
+  },
+  {
+   "id": "w_r_scat",
+   "name": "Tortilla Scatter",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: a fan of flying tortillas.",
+   "max": null
+  },
+  {
+   "id": "r_luck",
+   "name": "Rabbit's Foot",
+   "rarity": "common",
+   "desc": "Luck +10 and power-up drops +20%.",
+   "max": 3
+  },
+  {
+   "id": "r_repair",
+   "name": "Guac Repair Kit",
+   "rarity": "common",
+   "desc": "Heal 40% now and regenerate +0.3 HP/s.",
+   "max": 2
+  },
+  {
+   "id": "p_machete",
+   "name": "Sharper Machete",
+   "rarity": "common",
+   "desc": "Machete +1 level: more damage and reach.",
+   "max": 7
+  },
+  {
+   "id": "p_sweep",
+   "name": "Wide Swing",
+   "rarity": "common",
+   "desc": "Machete arc 25% wider.",
+   "max": 3
+  },
+  {
+   "id": "p_whirl",
+   "name": "Whirlwind",
+   "rarity": "epic",
+   "desc": "Every 5 seconds the hero spins, slashing everything around.",
+   "max": null
+  },
+  {
+   "id": "p_gun",
+   "name": "Six-Shooter Mastery",
+   "rarity": "common",
+   "desc": "Six-Shooter +1 level: more damage, extra bullet every 3 levels.",
+   "max": 7
+  },
+  {
+   "id": "w_p_hoop",
+   "name": "Hoop Throw",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: hurl a hula hoop that returns to you.",
+   "max": null
+  },
+  {
+   "id": "w_p_lasso",
+   "name": "Lasso Spin",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: a spinning lasso lashes everything near you.",
+   "max": null
+  },
+  {
+   "id": "w_p_nova",
+   "name": "Cactus Nova",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: needles burst out in every direction.",
+   "max": null
+  },
+  {
+   "id": "w_p_fire",
+   "name": "Chili Fireballs",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: homing fireballs that ignite foes.",
+   "max": null
+  },
+  {
+   "id": "w_p_storm",
+   "name": "Storm Call",
+   "rarity": "epic",
+   "desc": "NEW WEAPON: lightning strikes random foes.",
+   "max": null
+  },
+  {
+   "id": "w_p_hoops",
+   "name": "Orbiting Hoops",
+   "rarity": "rare",
+   "desc": "NEW WEAPON: spare hoops circle the hero.",
+   "max": null
+  },
+  {
+   "id": "p_poncho",
+   "name": "Iron Poncho",
+   "rarity": "common",
+   "desc": "+10 max HP and +2 armor.",
+   "max": 4
+  },
+  {
+   "id": "p_spurs",
+   "name": "Swift Spurs",
+   "rarity": "common",
+   "desc": "Move speed +10%.",
+   "max": 4
+  },
+  {
+   "id": "p_roll",
+   "name": "Dodge Roll",
+   "rarity": "rare",
+   "desc": "Adds a ROLL button (or upgrades it): an invincible dash.",
+   "max": 3
+  },
+  {
+   "id": "p_tequila",
+   "name": "Liquid Courage",
+   "rarity": "rare",
+   "desc": "Foes you defeat have a 10% chance to heal you.",
+   "max": 3
+  },
+  {
+   "id": "p_eye",
+   "name": "Bandit's Eye",
+   "rarity": "common",
+   "desc": "Critical chance +8%.",
+   "max": 4
+  },
+  {
+   "id": "p_rage",
+   "name": "Fiesta Rage",
+   "rarity": "common",
+   "desc": "All damage +15%.",
+   "max": 5
+  },
+  {
+   "id": "c_gold",
+   "name": "Pot of Gold",
+   "rarity": "common",
+   "desc": "Run coins gained +15%.",
+   "max": 3
+  },
+  {
+   "id": "c_study",
+   "name": "Quick Study",
+   "rarity": "common",
+   "desc": "XP gained +10%.",
+   "max": 3
+  },
+  {
+   "id": "c_hp",
+   "name": "Toughness",
+   "rarity": "common",
+   "desc": "+15 max HP.",
+   "max": 4
+  },
+  {
+   "id": "c_dmg",
+   "name": "Firepower",
+   "rarity": "common",
+   "desc": "All damage +12%.",
+   "max": 4
+  }
+ ],
+ "relics": [
+  {
+   "id": "horseshoe",
+   "name": "Lucky Horseshoe",
+   "desc": "Luck +20: rarer powers and more gold drops."
+  },
+  {
+   "id": "badge",
+   "name": "Sheriff's Badge",
+   "desc": "Armor +3 (less damage from every hit)."
+  },
+  {
+   "id": "fang",
+   "name": "Rattlesnake Fang",
+   "desc": "10% chance to heal 2 HP on each kill."
+  },
+  {
+   "id": "watch",
+   "name": "Cracked Pocket Watch",
+   "desc": "Balls fall 10% slower."
+  },
+  {
+   "id": "tooth",
+   "name": "Golden Tooth",
+   "desc": "Gold gained +30%."
+  },
+  {
+   "id": "pan",
+   "name": "Prospector's Pan",
+   "desc": "Balls drop gold 50% more often."
+  },
+  {
+   "id": "owl",
+   "name": "Owl Feather",
+   "desc": "XP gained +20%."
+  },
+  {
+   "id": "flask",
+   "name": "Tequila Flask",
+   "desc": "Max HP +30, move speed -5%."
+  },
+  {
+   "id": "spur",
+   "name": "Silver Spur",
+   "desc": "Move speed +15%."
+  },
+  {
+   "id": "pelt",
+   "name": "Coyote Pelt",
+   "desc": "Dodge chance +8%."
+  },
+  {
+   "id": "totem",
+   "name": "Thunderbird Totem",
+   "desc": "Every 5s, lightning strikes a ball for 40."
+  },
+  {
+   "id": "phoenix",
+   "name": "Phoenix Feather",
+   "desc": "Revive once at 50% HP."
+  },
+  {
+   "id": "lodestone",
+   "name": "Lodestone",
+   "desc": "Pickup magnet range +40."
+  },
+  {
+   "id": "cursed",
+   "name": "Cursed Coin",
+   "desc": "Gold +60%, but you take 15% more damage."
+  },
+  {
+   "id": "moonshine",
+   "name": "Moonshine Jug",
+   "desc": "Damage +25%, max HP -15."
+  },
+  {
+   "id": "bandolier",
+   "name": "Bandolier",
+   "desc": "Gun fire rate +15%."
+  },
+  {
+   "id": "nail",
+   "name": "Rusty Nail",
+   "desc": "Balls that hit you take 30 damage."
+  },
+  {
+   "id": "holywater",
+   "name": "Holy Water",
+   "desc": "Regenerate 0.5 HP per second."
+  },
+  {
+   "id": "poster",
+   "name": "Wanted Poster",
+   "desc": "Balls have 20% more HP but drop double gold."
+  },
+  {
+   "id": "saguaro",
+   "name": "Saguaro Heart",
+   "desc": "Max HP +20 and fully heal now."
+  },
+  {
+   "id": "tinstar",
+   "name": "Tin Star Shield",
+   "desc": "A shield blocks one hit, recharging every 15s."
+  },
+  {
+   "id": "dustjar",
+   "name": "Dust Storm Jar",
+   "desc": "Every 20s, a dust storm slows all balls for 3s."
+  },
+  {
+   "id": "dice",
+   "name": "Mystery Dice",
+   "desc": "Each level up, a random stat improves."
+  },
+  {
+   "id": "necklace",
+   "name": "Chili Necklace",
+   "desc": "Burn chance +15% and burns deal +50%."
+  },
+  {
+   "id": "globe",
+   "name": "Mountain Snow Globe",
+   "desc": "Slow chance +15%."
+  },
+  {
+   "id": "hourglass",
+   "name": "Hourglass of Sand",
+   "desc": "Active skill cooldowns -20%."
+  },
+  {
+   "id": "ace",
+   "name": "Gambler's Ace",
+   "desc": "Crit chance +10% and crit damage +25%."
+  },
+  {
+   "id": "compass",
+   "name": "Broken Compass",
+   "desc": "Guns fire +2 projectiles, but aim wobbles."
+  },
+  {
+   "id": "vulture",
+   "name": "Vulture Skull",
+   "desc": "Kills have a 3% chance to drop a heart."
+  },
+  {
+   "id": "map",
+   "name": "Gold Nugget Map",
+   "desc": "Gain 20 gold every level up."
+  },
+  {
+   "id": "bell",
+   "name": "Old Mission Bell",
+   "desc": "When hurt, blast nearby balls away."
+  },
+  {
+   "id": "medbag",
+   "name": "Medicine Bag",
+   "desc": "Hearts heal twice as much."
+  },
+  {
+   "id": "belt",
+   "name": "Dynamite Belt",
+   "desc": "When hurt, explode for 60 damage around you."
+  },
+  {
+   "id": "wolf",
+   "name": "Wolf Howl Pendant",
+   "desc": "Below 30% HP, damage +50%."
+  },
+  {
+   "id": "eagle",
+   "name": "Eagle Eye Glass",
+   "desc": "Projectile speed +30% and crit +5%."
+  },
+  {
+   "id": "pinata",
+   "name": "Pi\\xF1ata",
+   "desc": "5% of popped balls burst into 5 gold coins."
+  },
+  {
+   "id": "canteen",
+   "name": "Bottomless Canteen",
+   "desc": "Heal 10 HP every level up."
+  },
+  {
+   "id": "lantern",
+   "name": "Ghost Town Lantern",
+   "desc": "Invincibility after a hit lasts 50% longer."
+  },
+  {
+   "id": "snakeoil",
+   "name": "Snake Oil",
+   "desc": "Every 30s, a random 10s buff: Fury, Haste, Rapid or Holy."
+  },
+  {
+   "id": "mirror",
+   "name": "Twin Mirror",
+   "desc": "10% chance each gun shot is duplicated."
+  },
+  {
+   "id": "chime",
+   "name": "Prairie Wind Chime",
+   "desc": "Every 10s, all pickups fly to you."
+  },
+  {
+   "id": "horn",
+   "name": "Bison Horn",
+   "desc": "Hits knock balls back upward."
+  },
+  {
+   "id": "juice",
+   "name": "Cactus Juice",
+   "desc": "Regenerate 1 HP/s, but max HP -10."
+  },
+  {
+   "id": "midas",
+   "name": "Midas Glove",
+   "desc": "Damage +1% per 25 gold earned this run (max 50%)."
+  },
+  {
+   "id": "clockwork",
+   "name": "Clockwork Heart",
+   "desc": "Gain +5 max HP every 60 seconds."
+  },
+  {
+   "id": "bullseye",
+   "name": "Bullseye Target",
+   "desc": "Your first hit on every ball is a critical."
+  },
+  {
+   "id": "bones",
+   "name": "Rerolling Bones",
+   "desc": "+2 rerolls for level-up choices."
+  },
+  {
+   "id": "blackcat",
+   "name": "Black Cat Tail",
+   "desc": "Each level up: 50% a free relic, 50% lose 5 max HP."
+  },
+  {
+   "id": "rod",
+   "name": "Lightning Rod",
+   "desc": "Chain lightning chance +15%."
+  },
+  {
+   "id": "comet",
+   "name": "Comet Charm",
+   "desc": "Every 8s, a comet smashes a ball for 80 and explodes."
+  },
+  {
+   "id": "gsombrero",
+   "name": "Golden Sombrero",
+   "desc": "Every 10th kill showers you with gold."
+  },
+  {
+   "id": "maracas",
+   "name": "Maracas",
+   "desc": "Every 7s, a shockwave around you deals 25 damage."
+  },
+  {
+   "id": "churro",
+   "name": "Churro Stash",
+   "desc": "Max HP +15 and regenerate 0.3 HP/s."
+  },
+  {
+   "id": "neon",
+   "name": "Cantina Neon Sign",
+   "desc": "Your combo timer lasts 1.5s longer."
+  },
+  {
+   "id": "armadillo",
+   "name": "Armadillo Shell",
+   "desc": "Armor +2, move speed -5%."
+  },
+  {
+   "id": "cactusjuice",
+   "name": "Cactus Juice",
+   "desc": "Regenerate 0.3 HP/s and 3% chance to heal on each kill."
+  },
+  {
+   "id": "gunbelt",
+   "name": "Silver Gunbelt",
+   "desc": "Crit chance +10% and crit damage +25%."
+  },
+  {
+   "id": "rainstick",
+   "name": "Rainstick",
+   "desc": "Every 12s, all balls slow to a crawl for 2s."
+  },
+  {
+   "id": "pinatastick",
+   "name": "Pi\\xF1ata Stick",
+   "desc": "Each kill has a 3% chance to drop a power-up."
+  },
+  {
+   "id": "luckyseven",
+   "name": "Lucky Seven",
+   "desc": "Every 7th kill explodes for 30 damage."
+  },
+  {
+   "id": "bighat",
+   "name": "Big Straw Hat",
+   "desc": "Max HP +10 and armor +1."
+  }
+ ],
+ "shop_items": [
+  {
+   "id": "guac",
+   "name": "Guacamole Bowl",
+   "desc": "Heal 60% of your max HP.",
+   "base": 28
+  },
+  {
+   "id": "stew",
+   "name": "Hearty Stew",
+   "desc": "+25 max HP and heal 25.",
+   "base": 48
+  },
+  {
+   "id": "stone",
+   "name": "Whetstone",
+   "desc": "All damage +12% for the rest of the run.",
+   "base": 60
+  },
+  {
+   "id": "poncho",
+   "name": "Poncho Patch",
+   "desc": "+2 armor.",
+   "base": 55
+  },
+  {
+   "id": "spurs",
+   "name": "Silver Spurs",
+   "desc": "Move speed +10%.",
+   "base": 50
+  },
+  {
+   "id": "dice",
+   "name": "Lucky Dice",
+   "desc": "+2 level-up rerolls.",
+   "base": 34
+  },
+  {
+   "id": "relic",
+   "name": "Mystery Relic",
+   "desc": "A random relic. Most help, some bite.",
+   "base": 95
+  },
+  {
+   "id": "tonic",
+   "name": "Fiesta Tonic",
+   "desc": "Gain a level now and pick a new power.",
+   "base": 110
+  },
+  {
+   "id": "crate",
+   "name": "Armory Crate",
+   "desc": "Unlock a random new weapon.",
+   "base": 130
+  },
+  {
+   "id": "tin",
+   "name": "Tin Star Shield",
+   "desc": "+1 shield that recharges every 15s.",
+   "base": 75
+  },
+  {
+   "id": "clover",
+   "name": "Four-Leaf Clover",
+   "desc": "Luck +12: rarer cards and more drops.",
+   "base": 45
+  }
+ ],
+ "weapon_names": {
+  "race": {
+   "skulls": "Ghost Exhaust",
+   "revolver": "Salsa Cannon",
+   "buckshot": "Tortilla Scatter",
+   "hoops": "Spinning Hubcaps",
+   "lasso": "Tow Cable",
+   "chili": "Chili Missiles",
+   "thunder": "Thunder Horn",
+   "cactus": "Spike Burst",
+   "dynamite": "Salsa Mines",
+   "sunbeam": "Headlight Beam",
+   "tumbleweed": "Rolling Barrels",
+   "trumpet": "Air Horn",
+   "boomerang": "Chorizo Chain",
+   "machete": "Machete"
+  },
+  "rpg": {
+   "skulls": "Calavera Spirits",
+   "revolver": "Six-Shooter",
+   "buckshot": "Scattergun",
+   "hoops": "Orbiting Hoops",
+   "lasso": "Lasso Spin",
+   "chili": "Chili Fireballs",
+   "thunder": "Storm Call",
+   "cactus": "Cactus Nova",
+   "dynamite": "Dynamite",
+   "sunbeam": "Sunbeam",
+   "tumbleweed": "Tumbleweed",
+   "trumpet": "Mariachi Trumpet",
+   "boomerang": "Hoop Throw",
+   "machete": "Machete"
+  }
+ },
+ "mx_phrases": [
+  "Arriba!",
+  "Andale!",
+  "Orale!",
+  "Que padre!",
+  "Viva Mexico!",
+  "Ajua!",
+  "Hijole!",
+  "Fiesta!",
+  "Que chido!",
+  "Echale ganas!",
+  "Ay caramba!",
+  "Muy bien!",
+  "Vamonos!",
+  "Eso es!",
+  "Ni modo!",
+  "Dale, dale, dale!",
+  "Que viva la fiesta!",
+  "Ay, compadre!"
+ ],
+ "ui_strings": {
+  "ambush_toast": "AMBUSH!",
+  "ambush_text": "Reinforcements are closing in",
+  "option_auto_pause": "Auto-pause when away",
+  "option_auto_pause_note": "Pause if you switch tabs or apps"
+ },
+ "active_names": {
+  "race": {
+   "dash": "Nitro",
+   "slow": "Siesta",
+   "cape": "Shockwave"
+  },
+  "rpg": {
+   "dash": "Roll",
+   "slow": "Siesta",
+   "cape": "Matador"
+  }
+ }
+}
