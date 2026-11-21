@@ -293,7 +293,6 @@ func _draw() -> void:
 		if not (cutscene and cutscene.is_active()):
 			menu.secret(R, t)
 		_below(R, Color(0.03, 0.03, 0.08, 0.85))
-		if menu.song_test_tab != 0: _portrait_hud()   # the theater grid uses that corner
 	elif state == S.MENU:
 		if map.in_map:
 			map.draw(R, t); _below(R, Color(0.03, 0.03, 0.08, 0.92))
