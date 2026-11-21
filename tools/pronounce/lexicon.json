@@ -46,5 +46,31 @@
         "date": "2026-11-20"
       }
     ]
+  },
+  "jake's": {
+    "ipa": [
+      "ˈ",
+      "d",
+      "ʒ",
+      "e",
+      "ɪ",
+      "k",
+      "s"
+    ],
+    "history": [
+      {
+        "ipa": [
+          "ˈ",
+          "d",
+          "ʒ",
+          "e",
+          "ɪ",
+          "k",
+          "s"
+        ],
+        "note": "from data/g2p/word_ipa.tsv (CMUdict): possessive of Jake ends /s/, Piper's table had /z/ (data_phonics.json 'jake's')",
+        "date": "2026-11-21"
+      }
+    ]
   }
 }
