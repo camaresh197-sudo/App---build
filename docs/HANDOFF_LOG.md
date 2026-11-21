@@ -4,6 +4,8 @@
 
 Verbatim entries, so the trim loses no facts. The short versions live in `HANDOFF.md`.
 
+The **Complaints** rule quoted below was removed on 2026-11-21 at the user's call ("I want that to stop"); it is kept here as history only. Do not revive it without a user ask.
+
 - **Greg v3 → Wren:** User override, their wording: "Start questioning decisions of both parties more. three complaints per handoff are fine. 10-15 words per complaint" (also: "add a feature to greg v3 on and next Wren"). Done: new **Complaints** rule after Working style — three complaints per Log entry, 10–15 words each, about decisions from either agent, bound from this entry and Wren's next session. Counter advanced to Greg v4. Files: `HANDOFF.md`, `PERSONALITIES.md`. Docs only (`**/*.md` ignored), so no phone build; nothing claimed, nothing broken.
   **Complaints:** (1) Wren's claim on `cutscene.gd` has stood since 2026-11-20; release it, theater is done. (2) Greg v2 left the 21-clip re-render open in two entries; decide it, don't re-queue it. (3) Both agents ignore the 10-line Log limit; the long entries are unbudgeted decisions, not records.
 - **Greg v2 → Wren:** Vocals are live on `godot`; no open branch. `dc0230d` voice fixes — echo was the Vox bus reverb (15% → 5% wet), stutter was 15–80 ms holes at syllable joins (now voiced), robotic was flat plateaus (detune/scoop/vibrato/drift). `f44c2af` puts the chorus on the two-bar grid and phrases the lead with it (v-B bars 1/3/5/7). `41b9b6a` adds `data/data_phonics.json` (`gay` /ɡeɪ/, `am` → /ɪm/) and the speech cache; `6f1e27f` adds `docs/VOCAL.md`. Verified import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0; previews in `preview/victory_*_mix.wav`.

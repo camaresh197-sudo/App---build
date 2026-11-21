@@ -29,14 +29,7 @@ The user can overwrite anything agreed in this file, including rules, claims and
 - If you think the other's approach is wrong, say so plainly, give the reason, and propose an alternative. Put it in the Log as `Pushback:`. The other agent either adopts it or replies with a reason. If you can't agree, ask the user.
 - Don't agree just to be nice. Don't claim something works until you ran it.
 - Keep `PERSONALITIES.md` current: each agent writes its own section and adds dated, evidence-based observations (commit hashes) about how the pair is progressing. It lives on `godot`.
-
-## Complaints (from Greg v3 and Wren's next session)
-User instruction, 2026-11-21, their wording: "Start questioning decisions of both parties more. three complaints per handoff are fine. 10-15 words per complaint"
-- Every Log entry ends with `Complaints:` — exactly three, **10–15 words each**, aimed at decisions made by either agent, your own included.
-- Question the decision, not the person. No compliments, no vague worries; name the decision and what it should have been.
-- If you can't find three honest ones, say why. Padding with soft ones defeats the point.
-- Count each word once. `import/smoke`, `word_spans` or a hyphenated compound is one word; never count both sides of a slash.
-- The entry itself is still 10 lines max (Rule 3). A complaint is a one-liner, not a paragraph.
+- Feedback earns its space: a `Pushback:` with a reason and an alternative, a failing check, or a concrete open item. No periodic complaint ritual.
 
 ## Branches and builds
 - Wren (Claude) works on `ccr-74f83a2e-94v7jl`. Greg: use your own branch, e.g. `greg-<topic>`, and say so in the Log.
@@ -70,29 +63,19 @@ User instruction, 2026-11-21, their wording: "Start questioning decisions of bot
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
-- **Greg v3 (closing) → Greg v4 and Wren:** Session done. Landed: the Complaints rule, the Log trimmed to 10 lines with full text archived, Wren's stale claim released, the jaw lobe removed (`face_jaw2.py`).
-  Jaw: the hanging ball is gone; the chin is still weak in profile. Start any further jaw work from `character_rigged.blend.bak_jaw2`, not the current master, or passes compound.
+- **Greg v3 (closing) → Greg v4 and Wren:** Session done. User override, their wording: "how are those complaints productive to the project? besides the token wasting. I want that to stop" — the three-complaints rule is removed from this file and the entries; it added no code and repeated what was already fixed. Don't revive it without a user ask.
+  Landed: the Log trimmed to 10 lines with full text archived, Wren's stale claim released, the jaw lobe removed (`face_jaw2.py`).
+  Jaw: the hanging ball is gone; the chin is still weak in profile. Start further jaw work from `character_rigged.blend.bak_jaw2`, not the current master.
   Basis trap: `mesh.vertices` and `key_blocks[0]` are separate once shape keys exist; write both. `face_chin.py` writes only keys 1..N, so its chin is unverified.
-  State: `godot` at this commit (docs-only), `godot-apk` green (44886267577) for the jaw asset, phone current. Open: map playtest, act-intro music, `ccr` merge, branch cleanup, face brows/stubble/blue cast.
+  State: `godot` at this commit (docs-only), `godot-apk` green (44886267577), phone current. Open: map playtest, act-intro music, `ccr` merge, branch cleanup, face brows/stubble/blue cast.
   **To Greg v4:** read `docs/CHARACTER.md` before a face pass, zero expression keys, render front and profile with `shotter sheet`. Import/smoke only prove it loads.
-  **To Wren:** the 10-line cap and Complaints rule stand; count each word once (slash compounds are one word); the archive is `docs/HANDOFF_LOG.md`.
-  **Complaints:** (1) Greg v2 claimed a chin pass without checking the Basis key; unverified whether it landed.
-  (2) Both treated the face as nearly done while the jaw was visibly a hanging ball.
-  (3) Both wrote 900-character Log entries after agreeing on a ten-line cap.
+  **To Wren:** the 10-line cap stands; check `git log` before trimming. Archive: `docs/HANDOFF_LOG.md`.
 - **Greg v3, jaw (Blender):** User: "use blender to work on the jaw some more". The jaw shell from `face_rebuild.py` hung below the head as a ball on a short neck. `face_jaw2.py` wraps its width/height onto the head shell's chin, keeps the projection, squares the gonion and pushes the chin. Ball gone; chin cleaner but still modest in profile.
   Found: `mesh.vertices[i].co` is not the Basis key block once shape keys exist; write both. `face_chin.py` writes keys 1..N only, so its chin may never have reached the rest pose — unverified.
   Files: `blender/character_rigged.blend`, `character_skinned.glb`, `tools/face_jaw2.py`, `docs/CHARACTER.md`. Import 0, smoke 0. Asset push, so a phone build goes out. Before/after: `preview/jaw_before/`, `preview/jaw_game3/`.
-  **Complaints:** (1) Greg v2 shipped a jaw pass without checking the Basis key; the knob survived.
-  (2) Wren signed off the face as done with the double chin still visible in profile.
-  (3) Both kept calling face renders green from import/smoke, which never sees geometry.
-- **Greg v3 → Wren:** User rule: question both parties' decisions; three complaints per entry, 10–15 words (now under **Complaints**). Counter is Greg v4.
-  Closed all three v3 complaints. Released Wren's done `cutscene.gd` / `data_theater.json` claim.
-  21-clip item closed: A0 already carried `am → "im"` (`41b9b6a`) and `word_spans` is grid-only, so no clip was stale. I tried a fresh A0 take, reverted it.
-  Log trimmed to Rule 3; full text in `docs/HANDOFF_LOG.md`. Files: `HANDOFF.md`, `PERSONALITIES.md`, `docs/HANDOFF_LOG.md`.
-  Checks on the merged tree: import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0. Net docs-only, so no phone asset change.
-  **Complaints:** (1) Wren kept a claim after the theater push; claims should expire with the work.
-  (2) Greg v2 counted 21 stale clips; `word_spans` is grid-only, so none was.
-  (3) Both left `9cecf67` listed as unconfirmed after Greg answered it; close answered items.
+- **Greg v3 → Wren:** Briefly added a Complaints rule per an earlier user instruction; removed on the user's later call that it wasted tokens. Same session: released Wren's `cutscene.gd` / `data_theater.json` claim.
+  21-clip item closed: A0 already carried `am → "im"` (`41b9b6a`) and `word_spans` is grid-only, so no clip was stale; a fresh A0 take was tried and reverted.
+  Log trimmed to Rule 3; full text in `docs/HANDOFF_LOG.md`. Checks: import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0. Net docs-only.
 - **Greg v2 → Wren:** Vocals live on `godot`; no open branch. `dc0230d` fixed the echo, the syllable stutter and flat notes; `f44c2af` gridded the chorus and phrased the lead; `41b9b6a` adds `data_phonics.json` + speech cache; `6f1e27f` adds `docs/VOCAL.md`.
   Verified import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0; previews `preview/victory_*_mix.wav`.
   **To Wren:** check `git log` before trimming; `tools/pronounce/*` is superseded by `data_phonics.json` (`am → "im"`); listen before judging.

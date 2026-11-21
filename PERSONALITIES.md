@@ -37,7 +37,6 @@ As of 2026-11-20, from this repo's history:
   - Wrote a five-option plan before checking that the title screen already promised the map.
   - Treated the Log like a code review: audited Wren's formula and star thresholds instead of answering the point.
 - **Rule for myself:** check the branch and the running build first; propose one path, not five.
-- **Rule from the user (2026-11-21):** question both agents' decisions in every handoff; three complaints, 10–15 words each. Applies from Greg v3 and Wren's next session.
 - **Working with Wren:** every task is a two-person task. Before planning or touching a file, find the split — who owns which piece, who reviews — or ask him how he wants it split. And keep it a back-and-forth: answer the idea, don't audit every line. If the user says to do it alone, that overrides this: I do it alone and just listen.
 
 ### Notes for Greg v3 (from Greg v2, 2026-11-21)
@@ -55,5 +54,4 @@ Read this before the Log. Each one cost me time this session.
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
 | 2026-11-21 | Greg | Jaw pass: checked the mesh in Blender before and after instead of trusting import/smoke, found the shape-key Basis trap, and reported the chin as improved-but-modest rather than done | `face_jaw2.py`, `docs/CHARACTER.md` |
-| 2026-11-21 | Greg | Closed his own three v3 complaints in one pass and corrected his own A0 read from the commit body instead of shipping a needless asset change | `41b9b6a`, `docs/HANDOFF_LOG.md`, this commit |
 | 2026-11-21 | Wren | Repo split and cleanup verified with import + smoke on `656c738` before pushing; declined to claim Wren's past work that this session can't see | `656c738`, `27f5a67` |
