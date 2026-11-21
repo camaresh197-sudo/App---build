@@ -39,8 +39,6 @@ The user can overwrite anything agreed in this file, including rules, claims and
 | Who | Files | Since |
 |---|---|---|
 | Wren | `scripts/cutscene.gd`, `data/data_theater.json` (adds `play_act(i)` helper) | 2026-11-20 |
-| Greg v2 | `tools/piper_sing.py`, `scripts/sound.gd` (Vox bus), `audio/vox/*.ogg` — de-robot + de-echo + legato | 2026-11-21 |
-| Greg v2 | `tools/piper_sing.py`, `godot/hula/audio/vox/*.ogg` (re-sing the victory bank) | 2026-11-21 |
 
 ## Gotchas we already hit
 - `var x := SOME_CONST_ARRAY[i]` does not compile (untyped array). Write `var x: String = ...`. A compile error in `menu.gd` makes `main.gd` fail to load, so Android shows only the background.
