@@ -34,32 +34,31 @@ SR = 44100
 def _grunt(root_midi, seed=0, variant=0):
     f0 = 440.0 * 2.0 ** ((root_midi - 69) / 12.0)
     # long enough to read as a whole word, not a blip
-    dur = 0.30 + 0.02 * variant
+    dur = 0.22 + 0.02 * variant      # a grunt is a short vocal burst, not a held tone
     n = int(SR * dur)
     t = np.arange(n) / SR
     # pitch: a fast crowing scoop UP into the hit, then a long ugly "unh" drop.
     # The body still resolves onto the chord root (the drop stays under a whole tone).
-    a = max(1, int(SR * 0.030))
-    b = max(a + 1, int(SR * 0.070))
+    a = max(1, int(SR * 0.020))
+    b = max(a + 1, int(SR * 0.050))
     semi = np.empty(n)
-    semi[:a] = np.linspace(-5.5 - 1.2 * variant, 2.0, a)
-    semi[a:b] = np.linspace(2.0, 1.6, b - a)
-    semi[b:] = np.linspace(1.6, -2.2 - 0.7 * variant, n - b)
+    semi[:a] = np.linspace(-3.0 - 0.8 * variant, 1.5, a)      # a short scoop up into the hit
+    semi[a:b] = np.linspace(1.5, 1.0, b - a)
+    semi[b:] = np.linspace(1.0, -4.0 - 0.7 * variant, n - b)  # the "uh" falls away
     f0c = f0 * 2.0 ** (semi / 12.0)
     ph = 2 * np.pi * np.cumsum(f0c) / SR
     # glottal source: a bright, rolled harmonic stack (cartoon big-lug, not polite)
     src = np.zeros(n)
     h = 1
-    while h * f0 < 9000.0:
-        src += (1.0 / h ** 0.55) * np.sin(h * ph + h * 0.37 + seed)
+    while h * f0 < 3500.0:          # fewer high harmonics: less buzz
+        src += (1.0 / h ** 1.2) * np.sin(h * ph + h * 0.37 + seed)
         h += 1
     src /= (np.max(np.abs(src)) + 1e-9)
     rng = np.random.RandomState(1000 + seed)
     breath = rng.randn(n) * 0.15
     sub = np.sin(0.5 * ph) * 0.22            # a little subharmonic: chest weight, not a sub-thump
     # deep 34 Hz AM growl (sidebands, no pitch shift) + a little 68 Hz grit
-    am = 0.55 + 0.45 * np.sin(2 * np.pi * 34.0 * t + 0.6 * variant)
-    am *= 1.0 + 0.10 * np.sin(2 * np.pi * 68.0 * t)
+    am = np.ones(n)                  # no 34/68 Hz wobble: that was the buzz
     x = (src + sub + breath) * am
     # vowel formants: wide-open /UH-AH/, deep male tract
     x = V._apply(x, [
@@ -73,13 +72,13 @@ def _grunt(root_midi, seed=0, variant=0):
     ])
     # envelope: near-instant attack, body, quick-but-not-clicky release
     at = int(SR * 0.004)
-    rl = int(SR * 0.070)
+    rl = int(SR * 0.090)
     env = np.ones(n)
     env[:at] = np.linspace(0.0, 1.0, at)
-    env[-rl:] = np.linspace(1.0, 0.0, rl) ** 1.4
+    env[-rl:] = np.linspace(1.0, 0.0, rl) ** 2.0
     x = x * env
     # the belt's brass drive and a hard tanh squash so the body stays loud and dirty
-    x = V._drive(x, 2.6, 0.55)
+    x = V._drive(x, 1.6, 0.4)
     x = np.tanh(x * (1.6 / (np.max(np.abs(x)) + 1e-9))) / np.tanh(1.6)
     # fixed body loudness before the consonant (the body is re-normalized after
     # the 'h' below, so this only sets a stable starting point):
