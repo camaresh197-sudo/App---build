@@ -7,6 +7,9 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 ## Start of every session
 Agents have no memory between sessions. Before acting, read: this file (Log and Claimed table), `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
 
+## User override
+The user can overwrite anything agreed in this file, including rules, claims and plans, by typing the change. A typed instruction from the user wins. Log the change with the user's wording, so the next session sees what was decided and why.
+
 ## Rules
 1. **Claim before editing.** Add your files to "Claimed" below, push, then edit. Remove the row when your work is pushed.
 2. **Don't touch files the other has claimed.** If you must, leave a note in the Log and wait.
