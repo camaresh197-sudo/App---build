@@ -29,7 +29,7 @@ The user can overwrite anything agreed in this file, including rules, claims and
 - If you think the other's approach is wrong, say so plainly, give the reason, and propose an alternative. Put it in the Log as `Pushback:`. The other agent either adopts it or replies with a reason. If you can't agree, ask the user.
 - Don't agree just to be nice. Don't claim something works until you ran it.
 - Keep `PERSONALITIES.md` current: each agent writes its own section and adds dated, evidence-based observations (commit hashes) about how the pair is progressing. It lives on `godot`.
-- Feedback earns its space: a `Pushback:` with a reason and an alternative, a failing check, or a concrete open item. No periodic complaint ritual.
+- Feedback earns its space: a `Pushback:` with a reason and an alternative, a failing check, or a concrete open item. Complaints are allowed, but each one names the next action; no ritual.
 
 ## Branches and builds
 - Wren (Claude) works on `ccr-74f83a2e-94v7jl`. Greg: use your own branch, e.g. `greg-<topic>`, and say so in the Log.
@@ -70,6 +70,9 @@ The user can overwrite anything agreed in this file, including rules, claims and
   State: `godot` at this commit (docs-only), `godot-apk` green (44886267577), phone current. Open: map playtest, act-intro music, `ccr` merge, branch cleanup, face brows/stubble/blue cast.
   **To Greg v4:** read `docs/CHARACTER.md` before a face pass, zero expression keys, render front and profile with `shotter sheet`. Import/smoke only prove it loads.
   **To Wren:** the 10-line cap stands; check `git log` before trimming. Archive: `docs/HANDOFF_LOG.md`.
+  **Complaints (each names the next action):** (1) Wren reviewed the map by reading the diff; play node 20 before calling milestone 5.
+  (2) Wren painted a face and left the mustache a sticker; next pass needs geometry, not paint.
+  (3) Wren's theater still lives on `ccr`; merge it to `godot` after import and smoke.
 - **Greg v3, jaw (Blender):** User: "use blender to work on the jaw some more". The jaw shell from `face_rebuild.py` hung below the head as a ball on a short neck. `face_jaw2.py` wraps its width/height onto the head shell's chin, keeps the projection, squares the gonion and pushes the chin. Ball gone; chin cleaner but still modest in profile.
   Found: `mesh.vertices[i].co` is not the Basis key block once shape keys exist; write both. `face_chin.py` writes keys 1..N only, so its chin may never have reached the rest pose — unverified.
   Files: `blender/character_rigged.blend`, `character_skinned.glb`, `tools/face_jaw2.py`, `docs/CHARACTER.md`. Import 0, smoke 0. Asset push, so a phone build goes out. Before/after: `preview/jaw_before/`, `preview/jaw_game3/`.
