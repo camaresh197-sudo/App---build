@@ -17,7 +17,11 @@ The original clips are copied to tools/vox_backup/originals/ once; pass
 already carry a Ryan marker are skipped.
 
 Usage:
-    python piper_sing.py [--voice en_US-ryan-medium] [--force] [--restore] [--dry-run]
+    python piper_sing.py [--voice en_US-ryan-high] [--force] [--restore] [--dry-run]
+
+--voice is one model by default. Comma-separated voices render one take per
+model and mix them into the clip, but independently-spoken takes smear like a
+chorus, so prefer a single model unless you want that effect.
 """
 
 import argparse
@@ -44,7 +48,7 @@ BACKUP = TOOLS / "vox_backup" / "originals"
 sys.path.insert(0, str(TOOLS))
 import piper_gen  # noqa: E402
 
-FS = 22050          # analysis rate (piper medium models are 22050)
+FS = 22050          # analysis rate (the medium/high models are 22050; low is 16 kHz and ffmpeg-resampled)
 FRAME_MS = 5.0      # WORLD frame period
 OGG_RATE = 44100    # the bank ships 44.1 kHz mono vorbis
 
@@ -138,32 +142,52 @@ def fill_gaps(f0: np.ndarray) -> np.ndarray:
     return y
 
 
-def sing_clip(clip_id: str, text: str, voice: str) -> dict:
-    orig = VOX / f"{clip_id}.ogg"
-    x0 = load_wav_mono(orig, FS)
+def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights) -> dict:
+    # the melody comes from the ORIGINAL bank clip, not the current one: after a
+    # first Ryan pass the file on disk is already sung, so re-running would
+    # otherwise borrow its melody from Ryan's render instead of the performance
+    src = BACKUP / f"{clip_id}.ogg"
+    src = src if src.exists() else VOX / f"{clip_id}.ogg"
+    x0 = load_wav_mono(src, FS)
     f0_c, _, _ = analyze(x0)                      # the melody to borrow
     nc = len(f0_c)
     dur = len(x0) / FS
 
-    with tempfile.TemporaryDirectory() as td:
-        rwav = Path(td) / "ryan.wav"
-        piper_gen.synthesize(text, voice, str(rwav), str(MODELS))
-        xr = load_wav_mono(rwav, FS)
-    f0_r, sp_r, ap_r = analyze(xr)
-    nr = len(f0_r)
-
-    # 1) time-warp Ryan's spectral frames onto the clip's duration
-    sp = warp_frames(sp_r, nc)
-    ap = warp_frames(ap_r, nc)
-
-    # 2) borrow the melody: clip F0 where Ryan is voiced, gaps filled,
-    #    unvoiced where Ryan is unvoiced (consonants stay consonants)
-    f0_rw = warp_frames(f0_r.reshape(-1, 1), nc).ravel()
     melody = fill_gaps(f0_c)
-    voiced_r = f0_rw > 0
-    new_f0 = np.where(voiced_r, melody, 0.0)
+    takes = []
+    base_hz = 0.0
+    with tempfile.TemporaryDirectory() as td:
+        for i, voice in enumerate(voices):
+            rwav = Path(td) / f"take_{i}.wav"
+            piper_gen.synthesize(text, voice, str(rwav), str(MODELS))
+            xr = load_wav_mono(rwav, FS)
+            f0_r, sp_r, ap_r = analyze(xr)
 
-    y = pyworld.synthesize(new_f0, sp, ap, FS)
+            # 1) time-warp the speech frames onto the clip's duration
+            sp = warp_frames(sp_r, nc)
+            ap = warp_frames(ap_r, nc)
+
+            # 2) borrow the melody: clip F0 where the take is voiced, gaps filled,
+            #    unvoiced where the take is unvoiced (consonants stay consonants)
+            f0_rw = warp_frames(f0_r.reshape(-1, 1), nc).ravel()
+            voiced_r = f0_rw > 0
+            new_f0 = np.where(voiced_r, melody, 0.0)
+
+            takes.append(pyworld.synthesize(new_f0, sp, ap, FS))
+            if (f0_r > 0).any() and base_hz == 0.0:
+                base_hz = float(np.median(f0_r[f0_r > 0]))
+
+    # merge the takes into one voice: every take is already warped to the same
+    # length, so an equal mix is sample-aligned. Takes are independent renders,
+    # so they sum in power, not phase; normalize afterwards.
+    w = np.array(args_mix_weights, dtype=float)
+    if len(takes) > 1:
+        w = w[:len(takes)] / np.sum(w[:len(takes)])
+        y = np.zeros_like(takes[0])
+        for take, wi in zip(takes, w):
+            y += take * wi
+    else:
+        y = takes[0]
     # normalize + tiny edge fades to avoid clicks
     peak = np.max(np.abs(y)) or 1.0
     y = y / peak * 0.89
@@ -178,17 +202,23 @@ def sing_clip(clip_id: str, text: str, voice: str) -> dict:
         "clip": clip_id,
         "dur": round(dur, 2),
         "melody_hz": round(float(np.median(f0m)), 1) if len(f0m) else 0,
-        "ryan_hz": round(float(np.median(f0_r[f0_r > 0])), 1) if (f0_r > 0).any() else 0,
+        "ryan_hz": round(base_hz, 1),
+        "takes": len(takes),
     }
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--voice", default="en_US-ryan-medium")
+    ap.add_argument("--voice", default="en_US-ryan-high",
+                    help="one voice; comma-separated renders one take per voice and mixes them (chorus-style, can smear)")
+    ap.add_argument("--mix", default="1,1,0.6",
+                    help="take weights, comma-separated; ryan-low is a 16 kHz model, so it sits under the two 22 kHz takes")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--restore", action="store_true", help="put the original clips back")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
+    voices = [v.strip() for v in args.voice.split(",") if v.strip()]
+    weights = [float(x) for x in args.mix.split(",")]
 
     vox_map = json.loads(DATA_VOX.read_text(encoding="utf-8"))
     lyrics = json.loads(LYRICS.read_text(encoding="utf-8"))["victory_vocals"]
@@ -218,11 +248,11 @@ def main() -> int:
         if args.dry_run:
             print(f"would sing {clip_id}: {text!r}")
             continue
-        info = sing_clip(clip_id, text, args.voice)
+        info = sing_clip(clip_id, text, voices, weights)
         report.append(info)
         print(f"  {clip_id}: '{text}'  melody {info['melody_hz']} Hz, "
-              f"Ryan base {info['ryan_hz']} Hz, {info['dur']} s")
-    print(f"done: {len(report)} clips re-sung with {args.voice}")
+              f"Ryan base {info['ryan_hz']} Hz, {info['dur']} s, {info['takes']} takes")
+    print(f"done: {len(report)} clips re-sung with {'+'.join(voices)}")
     return 0
 
 

@@ -14,3 +14,7 @@ godot/hula/audio/**/*.import
 *.blend1
 *.tmp
 *.log
+
+# Piper voice models: 60-120 MB binaries, downloaded per machine
+tools/models/
+

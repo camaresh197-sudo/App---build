@@ -45,7 +45,7 @@ def list_voices():
         print(f"  {voice_id:30} {desc}")
 
 
-def synthesize(text, voice_name="en_US-male-medium", output_file=None, model_dir=None):
+def synthesize(text, voice_name="en_US-male-medium", output_file=None, model_dir=None, _cache={}):
     """Synthesize text with Piper TTS.
 
     Args:
@@ -57,19 +57,22 @@ def synthesize(text, voice_name="en_US-male-medium", output_file=None, model_dir
     Returns:
         WAV bytes or None if written to file
     """
-    if model_dir:
-        # Load from local model files
-        model_path = Path(model_dir) / f"{voice_name}.onnx"
-        config_path = Path(model_dir) / f"{voice_name}.json"
-        if not config_path.exists():
-            # Piper's standard download naming is "<voice>.onnx.json"
-            config_path = Path(model_dir) / f"{voice_name}.onnx.json"
-        if not model_path.exists() or not config_path.exists():
-            raise FileNotFoundError(f"Model files not found in {model_dir}: {voice_name}.onnx/.json")
-        voice = PiperVoice.load(str(model_path), config_path=str(config_path), use_cuda=False)
-    else:
-        # Try to load from installed models
-        voice = PiperVoice.load(voice_name, use_cuda=False)
+    key = (str(model_dir), voice_name)
+    if key not in _cache:
+        if model_dir:
+            # Load from local model files
+            model_path = Path(model_dir) / f"{voice_name}.onnx"
+            config_path = Path(model_dir) / f"{voice_name}.json"
+            if not config_path.exists():
+                # Piper's standard download naming is "<voice>.onnx.json"
+                config_path = Path(model_dir) / f"{voice_name}.onnx.json"
+            if not model_path.exists() or not config_path.exists():
+                raise FileNotFoundError(f"Model files not found in {model_dir}: {voice_name}.onnx/.json")
+            _cache[key] = PiperVoice.load(str(model_path), config_path=str(config_path), use_cuda=False)
+        else:
+            # Try to load from installed models
+            _cache[key] = PiperVoice.load(voice_name, use_cuda=False)
+    voice = _cache[key]
 
     # New piper-tts (>=1.3) API: synthesize() returns an iterable of AudioChunk
     chunks = voice.synthesize(text)

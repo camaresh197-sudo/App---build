@@ -50,9 +50,14 @@ Voice lines auto-load when cutscene plays:
 
 Piper TTS pipeline (implemented):
 - `tools/piper_batch.py` — generates every cutscene line in `data_cutscenes.json` with per-character voices
-  (hero=ryan, baron=danny-low, abuela=amy, kid=bryce pitched +25%, guitar=joe, chorus=bryce+joe layered)
-  and files them under `audio/voice/`. Run `python tools/piper_batch.py [--force]`.
-- `tools/piper_gen.py` — single-line generator (model dir: `tools/models/`, `.onnx` + `.onnx.json`).
+  (hero=ryan-high, baron=danny-low, abuela=amy, kid=bryce pitched +25%, guitar=joe, chorus=bryce+joe layered)
+  and files them under `audio/voice/`. Run `python tools/piper_batch.py [--force] [--only <speaker>]`.
+  Prefer one model per character: independently-spoken takes smear like a chorus when mixed.
+- `tools/piper_sing.py` — sings the vox bank: speak the clip's lyric with `--voice` (default `en_US-ryan-high`,
+  one take), time-warp the speech to the clip's melody and duration, resynthesize. The melody always comes
+  from `tools/vox_backup/originals/` when present, so re-running never borrows the melody from a previous render.
+- `tools/piper_gen.py` — single-line generator (model dir: `tools/models/`, `.onnx` + `.onnx.json`);
+  loaded models are cached per voice so a batch doesn't reload a 120 MB model per line.
 - `voice_manager.gd` resolves lines via `_safe_name()` (same rule as `piper_batch.py`) and plays them on the Vox bus.
 - Cutscene playback is wired in `cutscene.gd`: each line speaks when shown, and the scene waits for the voice.
 
