@@ -331,6 +331,10 @@ var rig_cinv := {}            # bone name -> inverse of rig_c
 var rig_hat_mats: Array = []  # the file's hat materials: the wardrobe recolours these on top of Blender's base
 var rig_pre := {}             # bone name -> parent's rig_c inverse
 var rig_parts := 0
+# Teeth are switched off until they are remade: the current rows read as loose white blocks in a grin rather than
+# as teeth. TEETH = false hides the file's rows and the procedural fallback both (the mouth stays a dark cavity).
+# Flip it to true once the new set is in the master - nothing else needs to change.
+const TEETH := false
 # the teeth in the master: two rows bone-parented to head (upper) and jaw (lower), each with a "hide" blend shape
 var rig_teeth_u: MeshInstance3D = null
 var rig_teeth_l: MeshInstance3D = null
@@ -411,15 +415,21 @@ func _load_rig() -> void:
 		var nd2: Node = hide.pop_back()
 		if nd2 is MeshInstance3D: (nd2 as MeshInstance3D).layers = 0
 		for c in nd2.get_children(): hide.append(c)
-	# the merged master has no tooth meshes, so the glb cannot supply them; keep the
-	# procedural control teeth visible. Their bones are posed and visibility-toggled each frame.
+	# the file's two tooth rows, bone-parented to head (upper) and jaw (lower)
 	rig_teeth_u = by.get("teeth_u") as MeshInstance3D
 	rig_teeth_l = by.get("teeth_l") as MeshInstance3D
-	# the procedural control teeth only draw when the file has no teeth of its own
+	# while TEETH is off the rows stay in the file (so the remade set has something to match) but draw nothing:
+	# their meshes go to layer 0 and the references are dropped, which also skips the per-frame hide-blendshape write
+	if not TEETH:
+		for t in [rig_teeth_u, rig_teeth_l]:
+			if t != null: t.layers = 0
+		rig_teeth_u = null
+		rig_teeth_l = null
+	# the procedural control teeth only draw when the file has no teeth of its own and teeth are enabled at all
 	for nm in ["tooth_u", "tooth_l"]:
 		for bone in fr.get(nm, []):
 			for c in (bone as Node3D).get_children():
-				if c is MeshInstance3D: (c as MeshInstance3D).layers = 0 if (rig_teeth_u != null and rig_teeth_l != null) else 1
+				if c is MeshInstance3D: (c as MeshInstance3D).layers = 0 if (not TEETH or (rig_teeth_u != null and rig_teeth_l != null)) else 1
 	print("hero3d: rig from %s: %d bones, %d parts" % [RIG_GLB, rig_skel.get_bone_count(), rig_parts])
 
 # copy the control rig onto the loaded skeleton, and carry each part's visibility across
