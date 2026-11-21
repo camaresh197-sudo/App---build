@@ -103,6 +103,14 @@ CHORUS_GRID = {"B0": ("v-B", 0, 2), "B1": ("v-B", 2, 2),
 CHORUS_GRID.update({"A0": ("v-A", 0, 2), "A2": ("v-A", 2, 2),
                     "A4": ("v-A", 4, 2), "A6": ("v-A", 6, 2)})
 
+# Verse 2 phrases: two bars each (v-C). Tag and finale lines: one bar each.
+CHORUS_GRID.update({"C0": ("v-C", 0, 2), "C2": ("v-C", 2, 2),
+                    "C4": ("v-C", 4, 2), "C6": ("v-C", 6, 2),
+                    "tag0": ("v-tag", 0, 1), "tag1": ("v-tag", 1, 1),
+                    "tag2": ("v-tag", 2, 1), "tag3": ("v-tag", 3, 1),
+                    "F0": ("v-F", 0, 1), "F1": ("v-F", 1, 1),
+                    "B6": ("v-F", 2, 1), "B7": ("v-F", 3, 1)})
+
 
 def find_ffmpeg() -> str:
     import shutil as sh
