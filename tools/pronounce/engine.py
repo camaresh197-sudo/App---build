@@ -37,16 +37,32 @@ def _norm(tok):
     return re.sub(r"[^a-z']", "", tok.lower())
 
 
+def _sheet_words():
+    """Words the lyric sheet defines (data_phonics.json). The sheet is the source of truth for
+    the song, so lexicon overrides skip these and the sung phrase keeps Piper's in-context forms."""
+    p = HERE.parents[1] / "godot" / "hula" / "data" / "data_phonics.json"
+    if not p.exists():
+        return set()
+    return {k.lower() for k in json.loads(p.read_text(encoding="utf-8")).get("words", {})}
+
+
+SHEET = _sheet_words()
+
+
+def _overridden(key, lex):
+    return key in lex and bool(lex[key]["ipa"]) and key not in SHEET
+
+
 def phonemize_with_lexicon(text, base_phonemize, lex):
     """Lines with no lexicon word keep espeak's sentence output unchanged. Otherwise each word is
     phonemized alone, lexicon words are substituted, and the words are joined with spaces."""
-    if not any(_norm(w) in lex and lex[_norm(w)]["ipa"] for w in text.split()):
+    if not any(_overridden(_norm(w), lex) for w in text.split()):
         return base_phonemize(text)
     sentences = [[]]
     for w in text.split():
         key = _norm(w)
         tail = [c for c in w if c in ",.!?;:"]
-        if key in lex and lex[key]["ipa"]:
+        if _overridden(key, lex):
             seg = list(lex[key]["ipa"]) + tail
         else:
             seg = [t for s in base_phonemize(w) for t in s]
