@@ -963,9 +963,10 @@ func _draw_timing(ox: float) -> void:
 	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
 	# A/B and reset line
 	var ab_lid := timing_sel
-	button(Rect2(ox + 14, 340, 140, 16), "BEFORE", Color("7f8c8d"), func(): _timing_play_before(ab_lid), 10)
-	button(Rect2(ox + 164, 340, 140, 16), "CURRENT", Color("e67e22"), func(): _timing_play(ab_lid), 10)
-	button(Rect2(ox + 314, 340, 140, 16), "RESET LINE", Color("c0392b"), func(): _timing_reset(ab_lid), 10)
+	# BEFORE and CURRENT sit at the left end of this row (under PLAY), so A/B is always in reach
+	button(Rect2(ox + 14, 340, 66, 16), "BEFORE", Color("7f8c8d"), func(): _timing_play_before(ab_lid), 10)
+	button(Rect2(ox + 84, 340, 66, 16), "CURRENT", Color("e67e22"), func(): _timing_play(ab_lid), 10)
+	button(Rect2(ox + 164, 340, 140, 16), "RESET LINE", Color("c0392b"), func(): _timing_reset(ab_lid), 10)
 
 	# line picker: 3 columns so 16 lines fit above the buttons; drawn last over everything
 	if timing_menu_open:
