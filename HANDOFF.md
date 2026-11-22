@@ -38,6 +38,10 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (gay sounds like "geh"), 2026-11-22:** User: "It doesn't always speak out the words correctly. When I spell gay it sounds more like geh." Test with the Piper voice in a carrier phrase: at 1.0x "gay" came out "gain"; at 0.7x still "gain"; at 0.5x "I'll see you now". So the fit that squeezes an edited word to its length is the damage.
+  Change: `PiperVoice.sing_stream` now limits the fit to 0.8x-1.3x. Words edited shorter than that run slightly past their length.
+  Not done: diphthong phones (`e` then `ɪ`) default to short lengths, so a diphthong has little room; that needs its own default.
+  **Complaints:** (1) Wren let the fit go to 0.4x without a test; check any range change in the carrier test. (2) Diphthongs are split into two short phones; keep them together or lengthen the glide. (3) The user has not yet heard the 0.8x limit.
 - **Wren v3 (syllable pitch, phone preview), 2026-11-22:** User chose the phone option: pitch per syllable. WORLD is not in the game and GitHub blocks its repository here, so the phone uses PSOLA written in GDScript (`scripts/psola.gd`).
   Pitch: the clip's pitch is estimated by autocorrelation; pitch marks sit on each period's peak; grains are overlap-added at each period, so only the pitch moves. The first version was wrong (identity correlation -0.16); the fix was to step by the spacing to the next mark.
   Editor: ST -1 / ST +1 apply to the syllable of the selected phone, stored as `st` on that syllable's first phone (range -12..12). The header shows the syllable's pitch. Consonants before the first vowel are not pitched.

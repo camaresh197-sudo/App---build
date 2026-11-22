@@ -45,7 +45,9 @@ static func sing_stream(ipa: String, target := 0.0, info := {}, segs: Array = []
 	var natural := _wav_len(raw, rate)
 	info["natural"] = natural
 	if target > 0.05 and natural > 0.05:
-		var ls := clampf(target / natural, 0.4, 3.0)
+		# Piper stays intelligible only within about 0.8x-1.3x of its natural speed: at 0.5x "gay" became
+		# "I'll see you now". A word that is edited shorter than that runs slightly past its length instead.
+		var ls := clampf(target / natural, 0.8, 1.3)
 		if absf(ls - 1.0) > 0.05:
 			var fit: PackedByteArray = p.singIpa(ipa, 0.667, ls, 0.8)
 			if fit.size() > 44:
