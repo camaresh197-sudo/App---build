@@ -694,6 +694,7 @@ func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: 
 	var ipa: Array = line.get("ipa", [])
 	var w_ph: Array = line.get("phones", [])
 	var onsets: Array = line.get("onsets", [])
+	var sang := 0
 	for i in onsets.size():
 		var at := float(onsets[i])
 		if at < head - 0.001: continue
@@ -704,11 +705,15 @@ func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: 
 		if edited and st == null:
 			timing_msg = "%s  Piper gave no audio for '%s': real clip used" % [PiperVoice.status(), ipa[i]]
 		if st != null:
-			dur = maxf(0.05, _timing_word_len(lid, i))
+			dur = maxf(0.05, st.get_length()) + 0.03
+			sang += 1
 			c.snd.play_stream(st, {"v": 2.4, "dl": to_downbeat + at - head, "dur": dur, "bus": "Vox"})
 		elif i < shipped.size():
 			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
 				"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
+	if sang > 0 and not timing_msg.contains("no audio"):
+		timing_msg = "Piper sang %d edited word(s): natural %.2f s, fitted to %.2f s" % [
+			sang, float(piper_last.get("natural", 0.0)), float(piper_last.get("final", 0.0))]
 
 # length of word i in the shipped clip: to the next shipped onset, or the line's end. A moved word
 # keeps this length; the gap to its new neighbour must not cut or lengthen it.
@@ -717,15 +722,23 @@ func _timing_shipped_len(lid: String, i: int, line_len: float) -> float:
 	if i >= sh.size(): return 0.2
 	return maxf(0.05, (float(sh[i + 1]) if i + 1 < sh.size() else line_len) - float(sh[i]))
 
+var piper_last := {}     # what the last word Piper sang measured, for the status line
+var piper_info := {}     # same key as piper_cache -> {"natural", "final"} seconds, for the status line
+
 func _piper_word(lid: String, i: int) -> AudioStreamWAV:
 	var ipa := String((timing[lid].get("ipa", []) as Array)[i]) if i < (timing[lid].get("ipa", []) as Array).size() else ""
 	if ipa.is_empty(): return null
-	var key := "%s_%d_%s" % [lid, i, ipa]
+	var target := _timing_word_len(lid, i)
+	var key := "%s_%d_%s_%d" % [lid, i, ipa, int(round(target * 1000.0))]
 	if piper_cache.has(key):
+		piper_last = piper_info.get(key, {})
 		return piper_cache[key]
-	var st := PiperVoice.sing_stream(ipa)
+	var info := {}
+	var st := PiperVoice.sing_stream(ipa, target, info)
 	if st != null:
 		piper_cache[key] = st
+		piper_info[key] = info
+		piper_last = info
 	return st
 
 # A/B: play the shipped line exactly as it is today, ignoring every edit.

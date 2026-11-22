@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (Piper fits the word), 2026-11-22:** User: "Changing the ipa does nothing" (plugin working). Found: PLAY cut each Piper word at its edited LEN, but Piper's natural word is longer, so the last phones were chopped (an edit there was never heard) and length edits did nothing.
+  Change: `PiperVoice.sing_stream(ipa, target, info)` renders once to measure, then again with `length_scale = target / natural` (0.4 to 3.0); playback no longer truncates; the TIMING line reports "Piper sang N edited word(s): natural X s, fitted to Y s".
+  Checks: smoke clean (desktop has no plugin, so the Piper path itself is unrun). Not checked: on a phone.
+  Next: edit a phoneme in the FIRST half of a word and in the LAST half, press PLAY, and send the TIMING line.
+  **Complaints:** (1) Wren cannot run the plugin on a desktop; test the fit on a phone before trusting it. (2) Length is fitted per word, not per phone; per-phone lengths still do nothing. (3) The first PLAY renders twice per edited word; cache hits afterwards, but the first press may lag.
 - **Wren v3 (word locks), 2026-11-22:** User: "Lock the words I don't want to move." Each word box has a LOCK / LOCKED toggle (red box and red graph line when locked). A locked word's onset never moves (drag and nudge say it is locked); moving other words stops short of the nearest locked word, leaving room for the words between.
   Files: `menu.gd` (`_timing_locked`, `_timing_toggle_lock`, `_timing_set_onset`, word grid, graph colour). Locks are saved with the timing as `locks` (a bool per word), so COPY / SAVE carry them; `retime.py` ignores the key.
   Checks: smoke clean; harness on B0 with word 2 locked: neighbours stopped at 0.41 and 0.45, the locked word stayed at 0.43, and after unlocking it moved. Not checked: by finger on a phone.
