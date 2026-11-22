@@ -187,6 +187,8 @@ immediately but plays the old clip until the PC re-sing is merged and the app is
 **Coverage:** all 16 sung lines are editable (`tools/build_timing.py` fills the data; `tools/line_env.py`
 rebuilds the graphs). Onsets for the lines other than B0 to B2 come from the render grid, not from audio.
 
+**Edit-only diphthong samples (to do).** Word edits should get their own vowel+glide samples, e.g. `e|ɪ#edit`, rendered with Piper by `tools/diphone_bank.py`. The existing bank stays as it is. Until those exist, a diphthong plays as the shipped `e|ɪ` sample with its glide skipped. The bank path also applies syllable pitch (`st`) and the PLAY WORD button plays one word. Nothing here has been heard on a phone.
+
 ## Known problems
 
 See `HANDOFF.md` (Open items). Full text was moved to `docs/HANDOFF_LOG.md`.

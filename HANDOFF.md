@@ -20,6 +20,9 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - Shape keys: `mesh.vertices` and `key_blocks[0]` are separate. Write both (see `docs/CHARACTER.md`).
 
 ## Open items (as of 2026-11-22)
+- **Edit-only diphthong samples (TODO):** add vowel+glide samples for word editing (e.g. `e|ɪ#edit`, `a|ʊ#edit`), rendered with Piper by `tools/diphone_bank.py`. Existing bank entries stay unchanged; only the word-edit preview reads the new keys. Blocked here: no Piper model or `piper` package in this session. Owner: whoever runs the bank script with the model.
+- **"gay" by ear:** the diphthong now plays as one bank sample (commit 22f89ae). Confirm it says "gay", not "geh", on a phone.
+- **Branch cleanup and default branch:** 19 merged branches still on origin (list in the scratchpad notes). Needs someone with repo admin rights; the session's push was denied.
 - **TIMING tab (all unheard on a phone):** words move freely (onsets, bar-length handle on each word's right edge, LOCK toggles); the layout is new; the graph is 150 px with notes on both strips; IPA edits play through the Piper APK; per-syllable pitch (ST -1 / +1) is applied by the PSOLA shifter in `scripts/psola.gd`; the word fit is limited to 0.8x-1.3x; diphthongs are marked. Check each on a phone and send the TIMING status line.
 - **Piper APK:** the plugin and model load (status "plugin + model ready" once build 8+ is installed). The model lives in `piper-assets/` in the Android build. Rebuild with `piper-apk.yml` when plugin files change.
 - **Pitch in the PC re-sing:** `st` is kept per syllable in the data but `piper_sing.py` does not read it yet, so the clip and the phone preview will differ.
@@ -38,6 +41,8 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (timing-fixes), 2026-11-22:** Branch `timing-fixes` (on `godot`, 8702dbe): PLAY drift fix, locks kept on reset, diphone preview on, syllable pitch kept through sound edits and applied in the preview, PLAY WORD button, clearer sound editor, diphthongs played as one sample (22f89ae). Not run in Godot here; not heard on a phone.
+  **Complaints:** (1) Nothing above is confirmed by ear. (2) The edit-only diphthong samples need the Piper model; run `tools/diphone_bank.py`.
 - **Wren v3 (handoff and AUDIO.md), 2026-11-22:** Updated Open items to the state after the TIMING, Piper-model, PSOLA and diphthong work, and updated `docs/AUDIO.md` for per-syllable pitch (PSOLA, `st`), the 0.8x-1.3x fit, diphthong marks and the new word-length and lock controls. Docs only.
   **Complaints:** (1) Open items were not updated after each push; update them with the commit. (2) Nothing in TIMING is confirmed by ear yet. (3) The PC re-sing still ignores `st`; add it before the phone and the clip disagree for long.
 - **Wren v3 (diphthongs recognised), 2026-11-22:** User asked the game to recognise diphthongs and add a glide where needed. `_timing_mark_diphthongs` (menu.gd) marks a vowel (e a o ɔ ɑ æ ə ɛ) followed by ɪ or ʊ as one sound: both parts get `dip`, and minimum lengths (0.10 s vowel, 0.08 s glide). It runs when a word's phones are built and after palette edits and ADD.
