@@ -464,7 +464,9 @@ func _timing_reset(lid: String) -> void:
 	if timing_base.has(lid):
 		timing[lid] = (timing_base[lid] as Dictionary).duplicate(true)
 		timing_word = -1
-		timing_msg = "reset %s to the default" % lid
+		timing_phone = 0
+		timing_playhead = 0.0
+		timing_msg = "reset %s (press SAVE to keep it on this phone)" % lid
 
 # ---- per-word IPA and phone-length editing
 func _timing_sync_ipa() -> void:
@@ -607,6 +609,27 @@ func _timing_play(lid: String) -> void:
 			t += d
 
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
+
+# A/B: play the shipped line exactly as it is today, ignoring every edit.
+func _timing_play_before(lid: String) -> void:
+	var base: Dictionary = timing_base.get(lid, {})
+	var sec := String(base.get("section", "v-B"))
+	var bar := int(base.get("bar", 0))
+	var row: int = c.snd.victory_row_of(sec, bar)
+	if row < 0:
+		timing_msg = "no chorus bar for %s" % lid; return
+	var line_len: float = float(base.get("bars", 2)) * 16.0 * c.snd.VE
+	c.snd.have_vox = false
+	c.snd.start_victory_at(row)
+	var to_downbeat: float = c.snd.next_t - c.snd.now
+	timing_play_t0 = c.snd.now + to_downbeat
+	timing_play_len = line_len
+	timing_play_id += 1
+	var my_id := timing_play_id
+	c.snd.later.append([c.snd.now + to_downbeat + line_len, func(): if timing_play_id == my_id: _timing_stop()])
+	c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat, "from": VOX_LEAD, "dur": line_len + VOX_LEAD})
+	timing_msg = "BEFORE: shipped %s" % lid
+
 func _timing_stop() -> void:
 	timing_play_id += 1
 	timing_play_t0 = -1.0
@@ -715,6 +738,10 @@ func _draw_timing_graph(ox: float, lid: String) -> void:
 		c.draw_line(Vector2(px, r.position.y), Vector2(px, r.position.y + r.size.y), Color("e74c3c"), 2.0)
 	var base: Array = timing_base.get(lid, {}).get("onsets", [])
 	var edited: Array = line.get("onsets", [])
+	# shipped onsets as faint ghosts, so BEFORE and NOW line up visually
+	for i in base.size():
+		var bx := r.position.x + float(base[i]) / dur * r.size.x
+		c.draw_line(Vector2(bx, r.position.y), Vector2(bx, r.position.y + r.size.y), Color(1, 1, 1, 0.28), 1.0)
 	for i in base.size():
 		if i >= edited.size(): break
 		var x := r.position.x + float(edited[i]) / dur * r.size.x
@@ -796,6 +823,11 @@ func _draw_timing(ox: float) -> void:
 	button(Rect2(ox + 164, 300, 140, 36), "STOP", Color("c0392b"), func(): _timing_stop(), 14)
 	button(Rect2(ox + 314, 300, 140, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
 	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
+	# A/B and reset line
+	var ab_lid := timing_sel
+	button(Rect2(ox + 14, 340, 140, 16), "BEFORE", Color("7f8c8d"), func(): _timing_play_before(ab_lid), 10)
+	button(Rect2(ox + 164, 340, 140, 16), "CURRENT", Color("e67e22"), func(): _timing_play(ab_lid), 10)
+	button(Rect2(ox + 314, 340, 140, 16), "RESET LINE", Color("c0392b"), func(): _timing_reset(ab_lid), 10)
 
 	# line picker: 3 columns so 16 lines fit above the buttons; drawn last over everything
 	if timing_menu_open:

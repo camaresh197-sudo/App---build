@@ -28,6 +28,8 @@ graph. The line picker is three columns.
 - **Graph:** notes (from `data_victory.json`), the vocal strip and the instrument strip;
   `VOX` / `INST` / `NOTES` toggle them. Word blocks use the edited onset and phone lengths.
 - **Playhead:** tap the graph to set PLAY's start; the moving line tracks the sequencer.
+- **A/B:** `BEFORE` plays the shipped line, `CURRENT` plays the edited one; `RESET LINE`
+  restores the line. Shipped onsets stay as faint ticks behind the edited ones.
 
 ## Data and tools
 

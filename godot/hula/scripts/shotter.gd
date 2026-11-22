@@ -40,6 +40,9 @@ func _ready() -> void:
 			m.menu.timing_word = 0
 			m.menu.timing_phone = 0
 			m.menu._timing_phone_set("a")
+		if a.size() > 5 and a[5] == "before":
+			m.menu._timing_load()
+			m.menu._timing_play_before(m.menu.timing_sel)
 	if a.size() > 3 and a[2] == "hub": m.menu.open_hub(int(a[3]))
 	if a.size() > 2 and a[2] == "map":
 		m.open_map()   # a[3]=act, a[4]=node (both optional) so a locked node can be reviewed too
