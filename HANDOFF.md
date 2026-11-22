@@ -22,7 +22,7 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 ## Open items (as of 2026-11-22)
 - **TIMING tab:** PLAY against the beat, drag by finger, the graph, and the `328f8fe` word-length fix are unchecked on a phone. Onsets exist only for B0–B2; 13 sung lines have none.
 - **Audio:** B2 unsung in `mix victory 30`; the instrument stem over-subtracts where vocals sit; the vocal bus overdrives before the limiter (2026-11-21 mix, 1220 clipped samples).
-- **Per-phone re-sing:** `piper_sing.py` still reads `data_phonics.json`, so phone lengths change the preview but not the sung line.
+- **Per-phone re-sing:** now a whole-line pass with real alignments (Wren v3); unheard by ear. B0's held "gay" transcribes only partly.
 - **Face:** colour fix `4604b6a` unchecked in-game; brows, mustache, stubble, teeth open (`docs/CHARACTER.md`). The chin is weak in profile; start jaw work from `blender/character_rigged.blend.bak_jaw2`.
 - **Map:** playtest difficulty and star write; milestones 4–5 to do.
 - **Vocals (from the moved vocal hand-off):** nothing heard yet for the vowel-timing fix `f9caff9` or the reference spacing `eae2e1e`; listen to "Jeff is gay so gay", B3's hold and the stutter fill. `DUCK_SUNG = 0.4` is an untested guess. Check the `godot-apk` runs for both commits.
@@ -38,6 +38,12 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (gibberish root cause), 2026-11-22:** User: "It still produces gibberish. How do we fix this?" Cause: every custom-IPA path sent Piper `^ p1 p2 $` without the pad id after each phoneme; the voice is trained on `^ _ p1 _ p2 _ $`. Fixed in `piper_sing.py`, `PiperPlugin.kt`, `diphone_bank.py`.
+  Also: stress marks were dropped by the editor (now `m`/`x` keys on each phone); default phone lengths came from the broken renders (rebuilt: new `tools/phone_durations.py`); re-sing now renders the whole line in one pass and cuts phones at the model's real alignments.
+  Checks: recogniser on real `render_phones` output: A0 "I am Jeff and I'm so gay" (was empty), C0 "Shake the street, Jeff wants to bait" (was "I... I... I..."); B0 partial ("Jeff is here, so..."). Import 0, smoke clean. Not checked: by ear, the Kotlin plugin (no SDK), a phone.
+  Files: `tools/piper_sing.py`, `tools/phone_durations.py`, `tools/diphone_bank.py`, `android/piper/.../PiperPlugin.kt`, `menu.gd`, `data_phon_bank.json`, `di_bank.ogg` (rebuilt), `docs/TIMING_EDITOR.md`.
+  Next: plugin takes the whole line (edited words substituted) instead of one word; listen to B0 (held "gay"); rebuild the APK.
+  **Complaints:** (1) Greg shipped three previews on the same unpadded ids; compare against Piper's own ids first. (2) Greg's per-word plugin discards line context; pass the whole line next. (3) Wren should have diffed Piper's source in session one; run a recogniser before claiming.
 - **Greg v4 (embedded Piper), 2026-11-22:** User: "do number 2." Built the offline exact preview: `PiperPlugin.kt` runs the VITS model on-device via ONNX Runtime, `piper.gd` wraps it, and `_timing_play_piper` renders edited words while unchanged words keep the shipped clip.
   Build: new `piper-apk.yml` (AndroidPiper preset, Gradle build; the model is downloaded in CI, never committed). `godot-apk` now ignores `android/**`, `addons/**`, `tools/**` and `stems/**`, so plugin-only pushes do not rebuild packs and a broken plugin cannot block game updates.
   Install path: the Piper APK is a workflow artifact; install it on the phone once, then pack updates continue as before.

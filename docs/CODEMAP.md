@@ -11,14 +11,15 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
 | `scripts/cutscene_scene.gd` | 79 | 576 |
 | `scripts/hero3d.gd` | 1784 | 27436 |
 | `scripts/legacy.gd` | 10 | 126 |
-| `scripts/main.gd` | 465 | 4945 |
+| `scripts/main.gd` | 468 | 4999 |
 | `scripts/map.gd` | 231 | 1841 |
-| `scripts/menu.gd` | 462 | 6515 |
+| `scripts/menu.gd` | 1009 | 12932 |
+| `scripts/piper.gd` | 23 | 221 |
 | `scripts/save.gd` | 28 | 345 |
 | `scripts/scene_generator.gd` | 135 | 901 |
-| `scripts/shotter.gd` | 501 | 5931 |
-| `scripts/sound.gd` | 626 | 8398 |
-| `scripts/updater.gd` | 181 | 2095 |
+| `scripts/shotter.gd` | 524 | 6153 |
+| `scripts/sound.gd` | 686 | 9010 |
+| `scripts/updater.gd` | 181 | 2091 |
 | `scripts/voice_manager.gd` | 72 | 592 |
 
 ## `scripts/card_deck.gd`
@@ -228,32 +229,32 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
   14  const Map
   42  func _ready() -> void
   60  func _input(e: InputEvent) -> void
-  81  func _to_field(p: Vector2) -> Vector2
-  84  func start_run(level_id := "", goal := 0) -> void
- 101  func open_map() -> void
- 107  func _process(dt: float) -> void
- 207  func _xp_need() -> float
- 211  func _open_pick() -> void
- 218  func _take_pick(i: int) -> void
- 232  func _director(dt: float) -> void
- 246  func _finish(win: bool) -> void
- 269  func _back_to_map() -> void
- 273  func _right() -> float
- 278  func _fps(R: float) -> void
- 285  func _draw() -> void
- 322  func _vis_h() -> float
- 325  func _below(R: float, col: Color) -> void
- 329  func _sky(R: float) -> void
- 345  func _hero(p: Vector2, tm: float, k := 1.0) -> void
- 354  func _ship(sh: Dictionary) -> void
- 366  func _btn(r: Rect2, label: String, col: Color, fn: Callable, fs := 22) -> void
- 375  func _menu(R: float) -> void
- 385  func _toast(R: float) -> void
- 392  func _hud(R: float) -> void
- 406  func _portrait_hud() -> void
- 413  func _pick(R: float) -> void
- 433  func _wrap(text: String, f: Font, fs: int, w: float) -> Array
- 445  func _over(R: float) -> void
+  86  func _to_field(p: Vector2) -> Vector2
+  89  func start_run(level_id := "", goal := 0) -> void
+ 106  func open_map() -> void
+ 112  func _process(dt: float) -> void
+ 212  func _xp_need() -> float
+ 216  func _open_pick() -> void
+ 223  func _take_pick(i: int) -> void
+ 237  func _director(dt: float) -> void
+ 251  func _finish(win: bool) -> void
+ 274  func _back_to_map() -> void
+ 278  func _right() -> float
+ 283  func _fps(R: float) -> void
+ 290  func _draw() -> void
+ 325  func _vis_h() -> float
+ 328  func _below(R: float, col: Color) -> void
+ 332  func _sky(R: float) -> void
+ 348  func _hero(p: Vector2, tm: float, k := 1.0) -> void
+ 357  func _ship(sh: Dictionary) -> void
+ 369  func _btn(r: Rect2, label: String, col: Color, fn: Callable, fs := 22) -> void
+ 378  func _menu(R: float) -> void
+ 388  func _toast(R: float) -> void
+ 395  func _hud(R: float) -> void
+ 409  func _portrait_hud() -> void
+ 416  func _pick(R: float) -> void
+ 436  func _wrap(text: String, f: Font, fs: int, w: float) -> Array
+ 448  func _over(R: float) -> void
 ```
 
 ## `scripts/map.gd`
@@ -324,20 +325,55 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  289  const READY
  290  const TNAME
  291  const STORY_LABELS
- 298  const TIMING_GAP
- 305  func _secret_tap() -> void
- 313  func _read_json(path: String) -> Dictionary
- 319  func _load_theater_data() -> void
- 331  func _play_list(items: Array, from := 0) -> void
- 337  func _play_cutscene_id(cs_id: String) -> void
- 343  func _timing_load() -> void
- 353  func _timing_nudge(lid: String, i: int, d: float) -> void
- 360  func _timing_payload() -> Dictionary
- 366  func _timing_save() -> void
- 373  func _timing_copy() -> void
- 377  func _timing_reset(lid: String) -> void
- 382  func _draw_timing(ox: float) -> void
- 408  func secret(R: float, t: float) -> void
+ 300  const TIMING_GAP
+ 316  func _secret_tap() -> void
+ 324  func _read_json(path: String) -> Dictionary
+ 330  func _load_theater_data() -> void
+ 342  func _play_list(items: Array, from := 0) -> void
+ 348  func _play_cutscene_id(cs_id: String) -> void
+ 354  func _timing_load() -> void
+ 373  func _timing_word_ipa(w: String) -> String
+ 382  func _timing_split_ipa(ipa: String) -> Array
+ 409  func _timing_defaults(lid: String, line: Dictionary) -> void
+ 440  func _timing_word_len(lid: String, i: int) -> float
+ 450  func _timing_nudge(lid: String, i: int, d: float) -> void
+ 457  func _timing_payload() -> Dictionary
+ 463  func _timing_save() -> void
+ 470  func _timing_copy() -> void
+ 474  func _timing_reset(lid: String) -> void
+ 483  func _timing_sync_ipa() -> void
+ 494  func _timing_word_reset() -> void
+ 508  func _timing_phone_set(p: String) -> void
+ 522  func _timing_phone_dur(d: float) -> void
+ 533  func _timing_phone_del() -> void
+ 545  func _timing_phone_add() -> void
+ 556  func _timing_is_sketch(lid: String) -> bool
+ 567  const VOX_LEAD
+ 569  func _timing_play(lid: String) -> void
+ 630  func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void
+ 654  func _piper_word(lid: String, i: int) -> AudioStreamWAV
+ 666  func _timing_play_before(lid: String) -> void
+ 685  func _timing_stop() -> void
+ 706  func timing_grab(pos: Vector2, idx: int) -> bool
+ 720  func timing_move(x: float) -> void
+ 730  func timing_release() -> void
+ 735  func _timing_notes(lid: String) -> Array
+ 745  func _draw_timing_graph(ox: float, lid: String) -> void
+ 804  func _draw_env_strip(e: Dictionary, key: String, col: Color, rr: Rect2, dur: float) -> void
+ 819  func _timing_pick(lid: String) -> void
+ 823  func _timing_next() -> void
+ 828  func _draw_toggle(r: Rect2, label: String, on: bool, fn: Callable) -> void
+ 833  func _draw_timing(ox: float) -> void
+ 903  func _draw_timing_word(ox: float, line: Dictionary) -> void
+ 939  func _draw_timing_palette(ox: float) -> void
+ 954  func secret(R: float, t: float) -> void
+```
+
+## `scripts/piper.gd`
+
+```text
+   7  static func available() -> bool
+  11  static func sing_stream(ipa: String) -> AudioStreamWAV
 ```
 
 ## `scripts/save.gd`
@@ -373,10 +409,10 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
 ```text
    5  const SEED
    6  func _ready() -> void
- 462  -- audio QA helpers (used by the "mix" mode) --
- 463  func _db(x: float) -> float
- 468  func _audio_report(tag: String, x: PackedVector2Array, sr: int) -> void
- 489  func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void
+ 485  -- audio QA helpers (used by the "mix" mode) --
+ 486  func _db(x: float) -> float
+ 491  func _audio_report(tag: String, x: PackedVector2Array, sr: int) -> void
+ 512  func _audio_wav(path: String, x: PackedVector2Array, sr: int) -> void
 ```
 
 ## `scripts/sound.gd`
@@ -393,46 +429,52 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  160  func set_volumes(music10: int, sfx10: int) -> void
  171  -- sample bank --
  172  func _stream(key: String) -> AudioStream
- 178  func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
- 194  func play(name: String, o := {}) -> void
- 227  func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void
- 229  func hit(name: String, dl: float, v: float, ref: float) -> void
- 232  -- sfx --
- 233  func sfx(n: String, vol := 1.0) -> void
- 250  -- cutscene audio --
- 253  func play_cutscene_audio(audio_path: String) -> void
- 272  func stop_cutscene_audio() -> void
- 276  -- music --
- 282  const BEAT_SECS
- 283  const BEATS_BAR
- 284  func start_music(track := "game") -> void
- 295  func stop_music() -> void
- 304  func beat_pos() -> float
- 311  func bar_pos() -> float
- 315  func beat_secs() -> float
- 318  func beats_per_bar() -> int
- 321  func is_playing() -> bool
- 324  func _process(dt: float) -> void
- 355  func _harmony(m: int, v: Array, r: int) -> int
- 363  func _strum(v: Array, dl: float, down: bool, vol: float) -> void
- 369  const ARP
- 370  const STRUMV
- 371  func _step(st: int, dl: float) -> void
- 442  -- title song (ranchera polka, 16 sixteenth-steps per bar) --
- 443  const TE
- 444  func _lead(kind: String, m: int, dur: float, dl: float, v: Array) -> void
- 453  func _tstep(st: int, dl: float) -> void
- 504  -- victory fanfare (instrumental: the tune is carried by the lead instruments) --
- 505  const VE
- 506  const VOX_GAIN
- 510  const DUCK_SUNG
- 512  const LOOK_AHEAD
- 513  func _vox_key(sec: String, bar: int) -> String
- 520  const VFILL
- 525  const VGRUNT
- 530  const VGRUNT_V
- 531  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
- 534  func _vstep(st: int, dl: float) -> void
+ 181  func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
+ 197  func play(name: String, o := {}) -> void
+ 231  func play_stream(stream: AudioStream, o := {}) -> void
+ 253  func stop_vox() -> void
+ 259  func _keep_after_stop(e) -> bool
+ 269  func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> voi...
+ 270  func hit(name: String, dl: float, v: float, ref: float) -> void
+ 273  -- sfx --
+ 274  func sfx(n: String, vol := 1.0) -> void
+ 291  -- cutscene audio --
+ 294  func play_cutscene_audio(audio_path: String) -> void
+ 313  func stop_cutscene_audio() -> void
+ 317  -- music --
+ 323  const BEAT_SECS
+ 324  const BEATS_BAR
+ 325  func start_music(track := "game") -> void
+ 337  func victory_row_of(sec: String, bar: int) -> int
+ 343  func victory_row_step(row: int) -> int
+ 349  func start_victory_at(row: int, step_off: int = 0) -> void
+ 355  func stop_music() -> void
+ 364  func beat_pos() -> float
+ 371  func bar_pos() -> float
+ 375  func beat_secs() -> float
+ 378  func beats_per_bar() -> int
+ 381  func is_playing() -> bool
+ 384  func _process(dt: float) -> void
+ 415  func _harmony(m: int, v: Array, r: int) -> int
+ 423  func _strum(v: Array, dl: float, down: bool, vol: float) -> void
+ 429  const ARP
+ 430  const STRUMV
+ 431  func _step(st: int, dl: float) -> void
+ 502  -- title song (ranchera polka, 16 sixteenth-steps per bar) --
+ 503  const TE
+ 504  func _lead(kind: String, m: int, dur: float, dl: float, v: Array) -> void
+ 513  func _tstep(st: int, dl: float) -> void
+ 564  -- victory fanfare (instrumental: the tune is carried by the lead instruments) --
+ 565  const VE
+ 566  const VOX_GAIN
+ 570  const DUCK_SUNG
+ 572  const LOOK_AHEAD
+ 573  func _vox_key(sec: String, bar: int) -> String
+ 580  const VFILL
+ 585  const VGRUNT
+ 590  const VGRUNT_V
+ 591  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
+ 594  func _vstep(st: int, dl: float) -> void
 ```
 
 ## `scripts/updater.gd`

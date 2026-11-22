@@ -57,12 +57,22 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
         }
     }
 
+    /**
+     * Piper's id layout is `^ _ p1 _ p2 _ ... pn _ $`: a pad after every phoneme, which is how the
+     * voice was trained. Without the pads the model babbles at about half the length.
+     * Stress (ˈ ˌ) and length (ː) marks are real ids and stay; symbols the voice does not know are
+     * skipped, as Piper itself does; a space is the word-break token.
+     */
     private fun idsFor(ipa: String): LongArray {
-        val ids = ArrayList<Long>(ipa.length + 4)
+        val pad = idMap["_"] ?: 0L
+        val ids = ArrayList<Long>(ipa.length * 2 + 4)
         idMap["^"]?.let { ids.add(it) }
+        ids.add(pad)
         for (ch in ipa) {
-            if (ch == 'ˈ' || ch == 'ˌ' || ch == 'ː' || ch == 'ˑ' || ch == '/' || ch == ' ') continue
-            (idMap[ch.toString()] ?: idMap["ə"])?.let { ids.add(it) }
+            if (ch == '/' || ch == '.') continue
+            val id = idMap[ch.toString()] ?: continue
+            ids.add(id)
+            ids.add(pad)
         }
         idMap["$"]?.let { ids.add(it) }
         return ids.toLongArray()
@@ -79,7 +89,7 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
     fun singIpa(ipa: String, noiseScale: Float, lengthScale: Float, noiseW: Float): ByteArray {
         if (!loadModel()) return ByteArray(0)
         val ids = idsFor(ipa)
-        if (ids.size < 3) return ByteArray(0)
+        if (ids.size < 5) return ByteArray(0)
         val e = env ?: return ByteArray(0)
         val s = session ?: return ByteArray(0)
         return try {

@@ -68,7 +68,8 @@ def main() -> int:
     phones = list(json.loads((DATA / "data_phon_bank.json").read_text(encoding="utf-8"))["phones"].keys())
     voice = PiperVoice.load(str(MODELS / f"{a.voice}.onnx"))
     pmap = voice.config.phoneme_id_map
-    voice_ids = {(p, b): [pmap["^"][0], pmap[p][0], pmap[b][0], pmap["$"][0]]
+    pad = pmap["_"][0]   # Piper trained with a pad id after every phoneme; without it the output is gibberish
+    voice_ids = {(p, b): [pmap["^"][0], pad, pmap[p][0], pad, pmap[b][0], pad, pmap["$"][0]]
                  for p in phones for b in phones}
     pieces, bank = [], {}
     t = 0.0

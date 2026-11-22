@@ -46,16 +46,38 @@ graph. The line picker is three columns.
 - `tools/build_stems.py <mix_base>` rebuilds `stems/` from a `shotter mix` capture; the stems
   now cover the full 70 s track, so the late lines (C4, C6, tag, F0, B6) locate.
 
+## Why it was gibberish (fixed 2026-11-22)
+
+Piper's voices are trained on `^ _ p1 _ p2 _ ... pn _ $`: a pad id (`_`, id 0) after **every**
+phoneme. Our custom-IPA paths (`word_audio`, `diphone_bank.py`, `PiperPlugin.kt`) sent
+`^ p1 p2 ... $` with no pads. The model then babbles at about half the length. Measured with
+a speech recogniser on the same phonemes: "Welcome to the victory dance" came back as
+"Wanda, the paper you'd ask." without pads and correctly with them. Two smaller causes:
+
+- The editor dropped stress marks (`ˈ`) when splitting IPA and rebuilt the string without them.
+  Dropped stress alone turned "I am Jeff and I'm so gay" into "I am Jiff and on, so gay".
+  Phones now carry `m` (stress mark before) and `x` (length mark after); both reach Piper.
+- `data_phon_bank.json` durations came from the no-pad renders (a vowel could be 0.43 s), so default
+  phone lengths and the slicing of a word were wrong. `tools/phone_durations.py` rebuilds them
+  as medians of real in-context alignments (vowels ~0.07-0.12 s, stops ~0.04-0.06 s).
+
+`piper_sing.py` now renders the **whole edited line in one pass** (`line_audio`: pads, stress,
+space tokens between words, model alignments patched in via the `onnx` package) and cuts each
+phone out at its real boundary before warping it to the edited length and onset. Test it
+with a recogniser, not by eye: `render_phones` on A0 with default phones transcribes as
+"I am Jeff and I'm so gay" (was empty), C0 as "Shake the street, Jeff wants to bait" (was "I... I... I...").
+Do not judge Piper by a single 0.1-0.4 s word through a recogniser: even the official render fails there.
+
 ## Limits — read before trusting it
 
 - The diphone preview is a sketch: pairs are cut to the phone length and overlap, so joins
   can be audible and the pitch is flat. It is for judging IPA and timing, not the final
-  voice.
-- `piper_sing.py` sings an edited line as **whole words**: the word's phone sequence is
-  synthesized in one pass (context kept), then its frames are divided between the edited
-  phone lengths. `retime.py` writes `ipa` / `phones` for a changed line and triggers this.
-  Unedited lines keep the original text-based render.
-- Word renders are synthesized in isolation, so a re-sung edited word can sound slightly
-  detached from its neighbours; that is the cost of arbitrary IPA without an alignment model.
+  voice. `di_bank.ogg` was rebuilt with pads (1.98 MB); not yet heard on a phone.
+- `retime.py` writes `ipa` / `phones` for a changed line; `piper_sing.py` re-sings it as one
+  line pass. Unedited lines keep the original text-based render.
+- The on-phone Piper plugin still synthesizes **one word at a time** (`PiperVoice.sing_stream(ipa)`),
+  so an edited word has no line context. It is intelligible now (pads), but a whole-line
+  call with the edited words substituted is the next improvement.
+- Phones espeak en-us never emits (`r`, `ɾ`, `ʔ`) have no measured length; typical values are used.
 - IPA is per word, and a palette edit replaces one phone. There is no free-text field
   on the phone yet; the palette is the whole supported set.

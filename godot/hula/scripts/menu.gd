@@ -376,21 +376,32 @@ func _timing_word_ipa(w: String) -> String:
 	var ipa := String(e.get("ipa", ""))
 	return ipa if ipa != "" else key
 
-# Split IPA into editable phones. Stress marks are dropped; length marks stretch the phone before.
+# Split IPA into editable phones. Stress marks ride on the phone after them ("m") and length marks on
+# the phone before them ("x"), so the IPA string and the Piper input keep them: dropping stress makes
+# the singer mumble. A length mark also stretches the phone's default length.
 func _timing_split_ipa(ipa: String) -> Array:
 	var out: Array = []
+	var mark := ""
 	for ch in ipa:
-		if ch in ["ˈ", "ˌ", ".", "/", " "]:
+		if ch in [".", "/", " "]:
+			continue
+		if ch == "ˈ" or ch == "ˌ":
+			mark += ch
 			continue
 		if ch == "ː" or ch == "ˑ":
 			if out.size() > 0:
 				var last: Dictionary = out[out.size() - 1]
 				last["d"] = minf(1.5, float(last.get("d", 0.12)) * 1.6)
+				last["x"] = String(last.get("x", "")) + ch
 			continue
 		var natural := 0.12
 		if phon_bank.has(ch):
 			natural = float((phon_bank[ch] as Dictionary).get("dur", 0.12))
-		out.append({"p": ch, "d": clampf(natural, 0.05, 0.45)})
+		var ph := {"p": ch, "d": clampf(natural, 0.03, 0.45)}
+		if mark != "":
+			ph["m"] = mark
+			mark = ""
+		out.append(ph)
 	if out.is_empty():
 		out.append({"p": "ə", "d": 0.12})
 	return out
@@ -477,7 +488,7 @@ func _timing_sync_ipa() -> void:
 	if timing_word >= ipa.size() or timing_word >= phones_all.size(): return
 	var s := ""
 	for ph in phones_all[timing_word]:
-		s += String(ph.get("p", ""))
+		s += String(ph.get("m", "")) + String(ph.get("p", "")) + String(ph.get("x", ""))
 	ipa[timing_word] = s
 
 func _timing_word_reset() -> void:
