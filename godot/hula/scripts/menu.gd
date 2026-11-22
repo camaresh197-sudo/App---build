@@ -730,11 +730,27 @@ var timing_play_t0 := -1.0
 var timing_play_len := 0.0
 
 func timing_grab(pos: Vector2, idx: int) -> bool:
-	if timing_menu_open or timing_word >= 0: return false
-	for m in timing_markers:
-		if (m[0] as Rect2).has_point(pos):
-			timing_drag_index = idx; timing_drag_lid = m[1]; timing_drag_word = m[2]; timing_drag_x = pos.x
+	if timing_menu_open: return false
+	if timing_word >= 0:
+		# the word editor covers the graph: say why a drag does nothing, rather than failing silently
+		if timing_graph_rect.size.x > 0.0 and timing_graph_rect.has_point(pos):
+			timing_msg = "press DONE to drag words on the graph"
 			return true
+		return false
+	# the nearest marker wins: two markers close together must not grab the wrong word
+	var best := -1
+	var best_d := 1e9
+	for k in timing_markers.size():
+		var m: Array = timing_markers[k]
+		var r: Rect2 = m[0]
+		if r.has_point(pos):
+			var d := absf(pos.x - (r.position.x + r.size.x * 0.5))
+			if d < best_d:
+				best_d = d; best = k
+	if best >= 0:
+		var mb: Array = timing_markers[best]
+		timing_drag_index = idx; timing_drag_lid = mb[1]; timing_drag_word = mb[2]; timing_drag_x = pos.x
+		return true
 	if timing_graph_rect.size.x > 0.0 and timing_graph_rect.has_point(pos):
 		var frac := (pos.x - timing_graph_rect.position.x) / timing_graph_rect.size.x
 		timing_playhead = clampf(frac, 0.0, 1.0) * timing_graph_dur
@@ -750,7 +766,12 @@ func timing_move(x: float) -> void:
 	var b := _timing_onset_bounds(timing_drag_lid, i)
 	on[i] = clampf(float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur, b.x, b.y)
 	timing_drag_x = x
-	timing_msg = "at the end of the line" if float(on[i]) >= b.y - 0.001 and i + 1 >= on.size() else ""
+	if i + 1 >= on.size() and float(on[i]) >= b.y - 0.001:
+		timing_msg = "end of the line"
+	elif i + 1 < on.size() and float(on[i]) >= b.y - 0.001:
+		timing_msg = "next word is in the way: move it first"
+	else:
+		timing_msg = ""
 
 func timing_release() -> void:
 	if timing_drag_index >= 0 and timing.has(timing_drag_lid):
