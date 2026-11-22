@@ -552,12 +552,14 @@ func _timing_phone_set(p: String) -> void:
 	var phones_all: Array = line.get("phones", [])
 	if timing_word >= phones_all.size(): return
 	var phones: Array = phones_all[timing_word]
+	var sts := _timing_pitches(phones)
 	if phones.is_empty() or timing_phone < 0 or timing_phone >= phones.size():
 		phones.append({"p": p, "d": 0.12})
 		timing_phone = phones.size() - 1
 	else:
 		(phones[timing_phone] as Dictionary)["p"] = p
 	_timing_mark_diphthongs(phones)
+	_timing_set_pitches(phones, sts)
 	_timing_sync_ipa()
 	timing_msg = ""
 
@@ -582,10 +584,12 @@ func _timing_phone_del() -> void:
 	var phones_all: Array = line.get("phones", [])
 	if timing_word >= phones_all.size(): return
 	var phones: Array = phones_all[timing_word]
+	var sts := _timing_pitches(phones)
 	if timing_phone >= 0 and timing_phone < phones.size():
 		phones.remove_at(timing_phone)
 	timing_phone = clampi(timing_phone, 0, maxi(0, phones.size() - 1))
 	_timing_mark_diphthongs(phones)   # deleting a glide must clear the vowel's mark
+	_timing_set_pitches(phones, sts)
 	_timing_sync_ipa()
 	timing_msg = ""
 
@@ -595,8 +599,10 @@ func _timing_phone_add() -> void:
 	var phones_all: Array = line.get("phones", [])
 	if timing_word >= phones_all.size(): return
 	var phones: Array = phones_all[timing_word]
+	var sts := _timing_pitches(phones)
 	phones.append({"p": "ə", "d": 0.1})
 	_timing_mark_diphthongs(phones)
+	_timing_set_pitches(phones, sts)
 	timing_phone = phones.size() - 1
 	_timing_sync_ipa()
 	timing_msg = "tap a symbol to replace it"
@@ -657,7 +663,7 @@ func _timing_play(lid: String) -> void:
 		var at := float(onsets[i])
 		if at < head - 0.001: continue
 		if use_bank and _timing_word_edited(lid, i) and i < w_ph.size():
-			_timing_play_bank_word(w_ph[i], at - head, to_downbeat)
+			_timing_play_bank_word(w_ph[i], at - head, to_downbeat, _timing_syl_segs(lid, i))
 		elif i < shipped.size():
 			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
 				"from": VOX_LEAD + maxf(float(shipped[i]), head),
@@ -674,18 +680,26 @@ func _timing_word_edited(lid: String, i: int) -> bool:
 	if i >= w_ph.size(): return false
 	return i >= bipa.size() or String(ipa[i]) != String(bipa[i]) or i >= bph.size() or JSON.stringify(w_ph[i]) != JSON.stringify(bph[i])
 
-# sound one edited word from the diphone bank; t is seconds from the playhead (negative = already past)
-func _timing_play_bank_word(phs: Array, t: float, to_downbeat: float) -> void:
+# sound one edited word from the diphone bank; t is seconds from the playhead (negative = already past).
+# segs is the word's syllable pitch (_timing_syl_segs, word-relative): each phone is played at its
+# syllable's rate, so a changed pitch is heard here too, not only on the Piper path.
+func _timing_play_bank_word(phs: Array, t: float, to_downbeat: float, segs: Array) -> void:
 	var t_pos := t
+	var tw := 0.0   # time from the start of the word
 	for j in phs.size():
 		var p := String((phs[j] as Dictionary).get("p", "ə"))
 		var nx := String((phs[j + 1] as Dictionary).get("p", p)) if j + 1 < phs.size() else p
 		var d := float((phs[j] as Dictionary).get("d", 0.12))
+		var mult := 1.0
+		for s in segs:
+			var sv: Vector3 = s
+			if tw >= sv.x - 0.001 and tw < sv.y - 0.001: mult = sv.z
 		if t_pos >= -0.001 and di_bank.has(p + "|" + nx):
 			var e: Dictionary = di_bank[p + "|" + nx]
 			c.snd.play("di_bank", {"v": 1.8, "dl": to_downbeat + maxf(0.0, t_pos),
-				"from": float(e.get("start", 0.0)), "dur": maxf(0.04, d) + 0.02, "bus": "Vox"})
+				"from": float(e.get("start", 0.0)), "dur": maxf(0.04, d) + 0.02, "rate": mult, "bus": "Vox"})
 		t_pos += d
+		tw += d
 
 # On: the bank is the no-Piper preview. Its last recogniser check (before the pad-id fix in
 # diphone_bank.py) heard nothing in it, and the rebuilt bank has not been heard on a phone yet.
@@ -1186,6 +1200,23 @@ func _timing_syllable_at(starts: Array, k: int) -> int:
 	for j in starts.size():
 		if int(starts[j]) <= k: si = j
 	return si
+
+# each syllable's pitch in order, read before a sound is changed (so it can be carried over)
+func _timing_pitches(phs: Array) -> Array:
+	var out: Array = []
+	for s in _timing_syllable_starts(phs):
+		out.append(int((phs[s] as Dictionary).get("st", 0)) if s < phs.size() else 0)
+	return out
+
+# put the pitches back on the syllables of the edited word, by syllable order: a sound change can
+# move the syllable starts, and the pitch must follow the syllable, not the phone it was stored on
+func _timing_set_pitches(phs: Array, sts: Array) -> void:
+	for ph in phs:
+		(ph as Dictionary).erase("st")
+	var starts := _timing_syllable_starts(phs)
+	for j in mini(starts.size(), sts.size()):
+		if int(sts[j]) != 0:
+			(phs[starts[j]] as Dictionary)["st"] = int(sts[j])
 
 # change the pitch of the syllable holding the selected phone, in semitones (-12..12), kept on that
 # syllable's first phone
