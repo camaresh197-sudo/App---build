@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (syllable pitch, phone preview), 2026-11-22:** User chose the phone option: pitch per syllable. WORLD is not in the game and GitHub blocks its repository here, so the phone uses PSOLA written in GDScript (`scripts/psola.gd`).
+  Pitch: the clip's pitch is estimated by autocorrelation; pitch marks sit on each period's peak; grains are overlap-added at each period, so only the pitch moves. The first version was wrong (identity correlation -0.16); the fix was to step by the spacing to the next mark.
+  Editor: ST -1 / ST +1 apply to the syllable of the selected phone, stored as `st` on that syllable's first phone (range -12..12). The header shows the syllable's pitch. Consonants before the first vowel are not pitched.
+  Checks: GDScript and Python agree on a Piper clip: identity corr 0.983; +4 gives 1.254x (1.26 expected); unshifted part 1.000; length kept. Harness: +2 then -5 gives 1.12x then 0.84x. Smoke clean. Not checked: on a phone (the Piper plugin is needed for the preview), and the PC re-sing does not use `st` yet.
+  **Complaints:** (1) Wren's first PSOLA was wrong on the identity test; test identity before shifts. (2) Syllable pitch is not in the PC re-sing, so the clip and the phone will differ. (3) Grain quality on a phone is unheard; judge it by ear before more DSP.
 - **Wren v3 (TIMING layout, taller graph, word length handles), 2026-11-22:** User asked for: a rebuilt layout (left column of full-height buttons, words and graph on the right); a taller sound graph with a seconds ruler and visible note names on both the VOX and INST strips; and control over a word's length and hold.
   Layout: `TL_*` / `TR_*` constants in `menu.gd`. Graph: 496x150, notes drawn on both strips. Length: a handle on each word block's right edge; dragging it changes the word's last sound (the hold), so the bar length changes. Minimum sound 0.03 s, capped at the line's end. Start (onset) drags are unchanged.
   Checks: smoke clean; harness on B0 word 1: +0.3 s hold -> 0.24 to 0.54 s; -0.5 s -> 0.14 s; +9 s capped at 3.36 s. Renders reviewed in a virtual display. Not checked: by finger.

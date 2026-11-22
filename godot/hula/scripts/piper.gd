@@ -33,7 +33,8 @@ static func _wav_len(raw: PackedByteArray, rate: float) -> float:
 # longer natural word lost its last phones (an edit there was never heard) and length edits did
 # nothing. The word is rendered once to measure it, then again with length_scale = target / natural.
 # null when the plugin or the model is missing. `info` gets the natural and final lengths.
-static func sing_stream(ipa: String, target := 0.0, info := {}) -> AudioStreamWAV:
+# segs: [Vector3(start_s, end_s, pitch multiplier)] per syllable (see Psola); pitch changes only.
+static func sing_stream(ipa: String, target := 0.0, info := {}, segs: Array = []) -> AudioStreamWAV:
 	if not available():
 		return null
 	var p = Engine.get_singleton("Piper")
@@ -55,4 +56,6 @@ static func sing_stream(ipa: String, target := 0.0, info := {}) -> AudioStreamWA
 	wav.mix_rate = int(rate)
 	wav.stereo = false
 	wav.data = raw.slice(44)
+	if not segs.is_empty():
+		wav = Psola.apply(wav, segs)
 	return wav

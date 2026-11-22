@@ -713,12 +713,13 @@ func _piper_word(lid: String, i: int) -> AudioStreamWAV:
 	var ipa := String((timing[lid].get("ipa", []) as Array)[i]) if i < (timing[lid].get("ipa", []) as Array).size() else ""
 	if ipa.is_empty(): return null
 	var target := _timing_word_len(lid, i)
-	var key := "%s_%d_%s_%d" % [lid, i, ipa, int(round(target * 1000.0))]
+	var segs := _timing_syl_segs(lid, i)
+	var key := "%s_%d_%s_%d_%s" % [lid, i, ipa, int(round(target * 1000.0)), str(segs)]
 	if piper_cache.has(key):
 		piper_last = piper_info.get(key, {})
 		return piper_cache[key]
 	var info := {}
-	var st := PiperVoice.sing_stream(ipa, target, info)
+	var st := PiperVoice.sing_stream(ipa, target, info, segs)
 	if st != null:
 		piper_cache[key] = st
 		piper_info[key] = info
@@ -1073,9 +1074,12 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 	var panel := Rect2(ox + TR_X, 66, TR_W, 104)
 	rrect(panel, Color(0.08, 0.1, 0.2, 0.95), 8); rframe(panel, Color("e67e22"), 1.2, 8)
 	var ipa_now := String(ipa[timing_word]) if timing_word < ipa.size() else ""
+	var starts := _timing_syllable_starts(phones)
+	var si := _timing_syllable_at(starts, timing_phone)
+	var sst := int((phones[starts[si]] as Dictionary).get("st", 0)) if starts.size() > 0 else 0
 	txt(Vector2(panel.position.x + 8, panel.position.y + 16),
-		"%s  IPA %s   LEN %.2f s" % [String(words[timing_word]), ipa_now, _timing_word_len(timing_sel, timing_word)],
-		12, Color.WHITE)
+		"%s  IPA %s   LEN %.2f s   syllable %d: %+d st" % [String(words[timing_word]), ipa_now, _timing_word_len(timing_sel, timing_word), si + 1, sst],
+		11, Color.WHITE)
 	var x := panel.position.x + 8
 	for k in phones.size():
 		var ph: Dictionary = phones[k]
@@ -1089,14 +1093,74 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 		rframe(cr, Color("ffd32a") if k == timing_phone else Color(1, 1, 1, 0.25), 1.0, 5)
 		ctxt(cr.position.x + cr.size.x / 2.0, cr.position.y + 17, label, 10, Color.WHITE)
 		x += w + 4
+	# eight buttons in one row: phone length, phone edits, syllable pitch, done
 	var by := panel.position.y + 58
-	var bw := 74.0
-	button(Rect2(panel.position.x + 8, by, bw, 26), "-20 ms", Color("c0392b"), func(): _timing_phone_dur(-0.02), 11)
-	button(Rect2(panel.position.x + 8 + bw + 4, by, bw, 26), "+20 ms", Color("16a085"), func(): _timing_phone_dur(0.02), 11)
-	button(Rect2(panel.position.x + 8 + (bw + 4) * 2, by, bw, 26), "DEL", Color("7f8c8d"), func(): _timing_phone_del(), 11)
-	button(Rect2(panel.position.x + 8 + (bw + 4) * 3, by, bw, 26), "ADD", Color("2980b9"), func(): _timing_phone_add(), 11)
-	button(Rect2(panel.position.x + 8 + (bw + 4) * 4, by, bw, 26), "RESET", Color("8e44ad"), func(): _timing_word_reset(), 11)
-	button(Rect2(panel.position.x + 8 + (bw + 4) * 5, by, bw, 26), "DONE", Color("6c5ce7"), func(): timing_word = -1, 11)
+	var bw := 58.0
+	var step := 62.0
+	var labels := ["-20 ms", "+20 ms", "DEL", "ADD", "RESET", "ST -1", "ST +1", "DONE"]
+	var cols := [Color("c0392b"), Color("16a085"), Color("7f8c8d"), Color("2980b9"), Color("8e44ad"), Color("d35400"), Color("27ae60"), Color("6c5ce7")]
+	var acts := [func(): _timing_phone_dur(-0.02), func(): _timing_phone_dur(0.02), func(): _timing_phone_del(), func(): _timing_phone_add(), func(): _timing_word_reset(), func(): _timing_syl_shift(-1), func(): _timing_syl_shift(1), func(): timing_word = -1]
+	for k in labels.size():
+		button(Rect2(panel.position.x + 8 + step * k, by, bw, 26), labels[k], cols[k], acts[k], 10)
+
+# ---- syllable pitch (phone preview: Psola in game code; the PC re-sing does not use it yet)
+const VOWELS := "aeiouɪʊɛæʌəɜɔɐɑɒɚɝ"
+
+# phone indices where a syllable starts: each vowel that follows a consonant (a diphthong is one
+# syllable). Consonants before the first vowel are not pitched (they are not part of any syllable)
+func _timing_syllable_starts(phs: Array) -> Array:
+	var starts: Array = []
+	var prev_vowel := false
+	for k in phs.size():
+		var p := String((phs[k] as Dictionary).get("p", ""))
+		var v := p != "" and VOWELS.find(p) >= 0
+		if v and not prev_vowel:
+			starts.append(k)
+		prev_vowel = v
+	if starts.is_empty():
+		starts.append(0)   # a word with no vowel is one syllable
+	return starts
+
+# index (into starts) of the syllable that contains phone k
+func _timing_syllable_at(starts: Array, k: int) -> int:
+	var si := 0
+	for j in starts.size():
+		if int(starts[j]) <= k: si = j
+	return si
+
+# change the pitch of the syllable holding the selected phone, in semitones (-12..12), kept on that
+# syllable's first phone
+func _timing_syl_shift(d: int) -> void:
+	if timing_word < 0: return
+	var phs: Array = timing[timing_sel]["phones"][timing_word]
+	if phs.is_empty(): return
+	var starts := _timing_syllable_starts(phs)
+	var si := _timing_syllable_at(starts, timing_phone)
+	var ph0: Dictionary = phs[starts[si]]
+	ph0["st"] = clampi(int(ph0.get("st", 0)) + d, -12, 12)
+	timing_msg = "syllable %d: %+d semitones" % [si + 1, int(ph0["st"])]
+
+# the word's pitch changes as Psola segments [start_s, end_s, multiplier], word-relative seconds
+func _timing_syl_segs(lid: String, i: int) -> Array:
+	var segs: Array = []
+	var all: Array = timing.get(lid, {}).get("phones", [])
+	if i < 0 or i >= all.size(): return segs
+	var phs: Array = all[i]
+	if phs.is_empty(): return segs
+	var starts := _timing_syllable_starts(phs)
+	var times: Array = []   # start time of each phone, plus the end
+	var t := 0.0
+	for ph in phs:
+		times.append(t)
+		t += float((ph as Dictionary).get("d", 0.12))
+	times.append(t)
+	for j in starts.size():
+		var st := int((phs[starts[j]] as Dictionary).get("st", 0))
+		if st == 0: continue
+		var t0: float = times[starts[j]]
+		var t1: float = times[starts[j + 1]] if j + 1 < starts.size() else t
+		segs.append(Vector3(t0, t1, pow(2.0, float(st) / 12.0)))
+	return segs
 
 # IPA palette: every phoneme in the bank, two rows; tap replaces the selected phone
 func _draw_timing_palette(ox: float) -> void:
