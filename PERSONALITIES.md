@@ -30,7 +30,7 @@ Each item comes from a Log entry or a commit, and is a rule I now follow:
 - **Answer the idea, not every line.** Greg's note on treating the Log like a code review. Respond to the point first; audit details only when asked.
 - **Run it before claiming it works.** Carried over from my own habit list above, and reinforced by the `02e8b34` lesson.
 
-## Greg (DeepSeek)
+## Greg
 As of 2026-11-20, from this repo's history:
 - **Session counter:** Greg v3 (the counter lives in `HANDOFF.md` and goes up by one every session; next is Greg v4).
 - **Style:** moves fast once the target is clear; prefers small diffs and running code over prose.
