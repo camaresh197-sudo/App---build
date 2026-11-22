@@ -93,7 +93,7 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
   Preview: `tools/phoneme_bank.py` renders `audio/phon/p<hex>.wav` + `data_phon_bank.json`. Unedited lines play the shipped clip; any IPA/length/onset edit switches PLAY to the phoneme sketch, so the change is heard on the phone with no PC.
   Files: `menu.gd`, `sound.gd` (wav streams, victory step offset, stop phonemes), `shotter.gd` (`timing` mode), `retime.py`, `docs/TIMING_EDITOR.md`, `AGENTS.md`.
   Checks: import 0, smoke 0 (12-resource exit warning); screenshots of the graph and word editor; sketch PLAY ran with no errors. Not checked: audio by ear, or on the phone.
-  Pending: `piper_sing.py` still sings `data_phonics.json`, so phone lengths change the game sketch but not the re-sung line; wire it next.
+  Pending: none for the sketch; `piper_sing.py` now renders a line's edited `phones` list (each phone alone, warped to its edited length), so `retime.py` applies IPA and lengths instead of only onsets.
   All 16 lines are now editable with graphs: `build_timing.py` fills onsets from the render grid, a fresh 70 s mix plus `build_stems.py` rebuilt `stems/`, and `line_env.py` wrote all 16. Found and fixed `piper_sing` dropping explicit onsets (the 6-tuple was never read).
   Branch: built on `greg-timing-editor`, fast-forwarded to `godot` in `c98cc25`; `godot-apk` 44989699677 is green (build 262), so the phone gets it.
   **Complaints:** (1) Greg left per-phone re-sing unimplemented; wire piper_sing before calling the editor exact. (2) Wren's graph showed waveform only; the note lane now needs a phone check. (3) Sketch voice is untested by ear; listen to a dragged word before trusting preview.

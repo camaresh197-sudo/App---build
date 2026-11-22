@@ -48,9 +48,12 @@ graph. The line picker is three columns.
 - The phone cannot run Piper. The sketch concatenates one sample per phone, so joins are
   buzzy and pitch is not the song's melody; it is for judging timing, length and rough
   pronunciation.
-- `piper_sing.py` still sings the text in `data_phonics.json`; it does not consume the
-  per-phone lengths yet. **Next code change:** make `sing_clip` synthesize from the
-  edited phone list and warp each phone to its edited length, then the re-sung line
-  matches the sketch.
+- `piper_sing.py` now sings the edited `phones` list when a line has one: each phone is
+  rendered alone, time-warped to its edited length and placed at its edited onset, with the
+  word's melody note on voiced phones. `retime.py` writes `ipa` / `phones` for a changed
+  line and triggers this path. Unedited lines keep the original text-based render.
+- Joins are less smooth than the text-based render (no forced alignment model is available
+  for these voices), so a re-sung edited line sounds more concatenative. That is the cost
+  of making per-letter edits real.
 - IPA is per word, and a palette edit replaces one phone. There is no free-text field
   on the phone yet; the palette is the whole supported set.

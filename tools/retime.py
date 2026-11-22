@@ -62,10 +62,7 @@ def main():
         current["lines"].setdefault(lid, {}).update(incoming[lid])
     DATA.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print("updated", DATA.relative_to(ROOT))
-    ipa_changed = [lid for lid in changed if incoming[lid].get("ipa") or incoming[lid].get("phones")]
-    if ipa_changed:
-        print("note: IPA/phone-length edits are stored for the game; piper_sing still sings")
-        print("      the text in data_phonics.json, so it does not apply them yet: %s" % ", ".join(ipa_changed))
+    print("re-singing with the edited IPA and phone lengths: %s" % ", ".join(changed))
 
     subprocess.run([sys.executable, str(ROOT / "tools" / "piper_sing.py"), "--only", ",".join(changed), "--force"],
                    cwd=str(ROOT / "tools"), check=True)

@@ -120,8 +120,10 @@ CHORUS_GRID.update({"C0": ("v-C", 0, 2), "C2": ("v-C", 2, 2),
 # Word timing edited in the game (secret menu, TIMING tab) and copied to tools/retime.py.
 # A line with "onsets" in data_word_timing.json gets explicit word times; others keep the grid above.
 WORD_TIMING = ROOT / "godot" / "hula" / "data" / "data_word_timing.json"
+WORD_LINES = {}
 if WORD_TIMING.exists():
-    for _id, _line in json.loads(WORD_TIMING.read_text(encoding="utf-8")).get("lines", {}).items():
+    WORD_LINES = json.loads(WORD_TIMING.read_text(encoding="utf-8")).get("lines", {})
+    for _id, _line in WORD_LINES.items():
         if _line.get("onsets"):
             _old = CHORUS_GRID.get(_id, (_line["section"], int(_line["bar"]), int(_line["bars"])))
             _hold = _old[3] if len(_old) > 3 else 0.0
@@ -526,6 +528,98 @@ def nuclei_spans(phonemes: list) -> list:
     return out
 
 
+PHON_CACHE = CACHE / "phon"
+SONORANT = set("aeiouɪʊɛæʌəɜɔɐɑɒɘɚɞɨʉɯɵɶʏmnŋlrɹɾɻɽjw")
+VOICED_OBSTRUENT = set("bdɡvðzʒ")
+
+
+def synth_phone(voice: str, phone: str, use_cache: bool = True) -> np.ndarray:
+    """One phone rendered alone and trimmed; cached because the editor re-renders often."""
+    PHON_CACHE.mkdir(parents=True, exist_ok=True)
+    wav = PHON_CACHE / f"{voice}_{_key('phone|' + phone, voice)}.wav"
+    if use_cache and wav.exists():
+        x, sr = sf.read(str(wav), dtype="float64")
+        return _fit(x, sr)
+    model = aligned_voice(voice)
+    ids = model.phonemes_to_ids([phone])
+    x = np.asarray(model.phoneme_ids_to_audio(ids), dtype=np.float64)
+    x = _fit(x, model.config.sample_rate)
+    if x.size:
+        loud = np.abs(x) > 0.002
+        if loud.any():
+            a = int(np.argmax(loud))
+            b = int(len(loud) - np.argmax(loud[::-1]))
+            pad = int(0.005 * FS)
+            x = x[max(0, a - pad):min(len(x), b + pad)]
+        if use_cache:
+            sf.write(str(wav), x, FS)
+    return x
+
+
+def _add_at(out: np.ndarray, y: np.ndarray, s: int, fade: int) -> None:
+    n = len(out)
+    if s >= n or y.size == 0:
+        return
+    if s < 0:
+        y = y[-s:]
+        s = 0
+    y = y[:min(len(y), n - s)]
+    k = min(fade, len(y), s)
+    if k > 0:
+        w = np.linspace(0.0, 1.0, k)
+        out[s:s + k] = out[s:s + k] * (1.0 - w) + y[:k] * w
+        s += k
+        y = y[k:]
+    out[s:s + len(y)] += y
+
+
+def render_phones(line: dict, grid, voice: str, use_cache: bool = True) -> np.ndarray:
+    """Assemble the edited IPA and phone lengths into one take (concatenative preview-quality singer).
+
+    Each phone is rendered alone and time-warped to its edited length, then placed at the
+    edited onset. Voiced phones carry the word's melody note. This is what makes the phone
+    lengths and IPA edits reach a re-sung line; no alignment output is needed from Piper.
+    """
+    bars = int(grid[2])
+    lead = 30
+    _mel, spans = grid_melody(grid[0], grid[1], bars, syllables=len(line.get("words", [])),
+                              hold_to=grid[3] if len(grid) > 3 else 0.0,
+                              word_secs=grid[4] if len(grid) > 4 else 0.0,
+                              onsets=line.get("onsets"))
+    nc = int(round(bars * 16 * (VE * 1000.0 / FRAME_MS)))
+    nsamp = int(round(nc * FS * FRAME_MS / 1000.0))
+    out = np.zeros(nsamp, dtype=np.float64)
+    onsets = line.get("onsets", [])
+    words = line.get("phones", [])
+    for wi, phs in enumerate(words):
+        hz = float(spans[wi][2]) if wi < len(spans) else 220.0
+        t = lead + (float(onsets[wi]) * 1000.0 / FRAME_MS if wi < len(onsets) else 0.0)
+        for ph in phs:
+            p = str(ph.get("p", "ə"))
+            dur_f = max(2, int(round(float(ph.get("d", 0.1)) * 1000.0 / FRAME_MS)))
+            x = synth_phone(voice, p, use_cache)
+            if x.size < 32:
+                t += dur_f
+                continue
+            f0, tt = pyworld.harvest(x, FS, frame_period=FRAME_MS)
+            if len(f0) < 2:
+                t += dur_f
+                continue
+            sp = pyworld.cheaptrick(x, f0, tt, FS)
+            ap = pyworld.d4c(x, f0, tt, FS)
+            src_idx = np.linspace(0.0, float(len(f0) - 1), dur_f)
+            sp2 = warp_along(sp, src_idx)
+            ap2 = warp_along(ap, src_idx)
+            f0_src = warp_along(f0.reshape(-1, 1), src_idx).ravel()
+            carry = p in SONORANT or p in VOICED_OBSTRUENT
+            f0_new = np.where((f0_src > 0.0) & carry, hz, 0.0)
+            y = pyworld.synthesize(f0_new, sp2, ap2, FS, frame_period=FRAME_MS)
+            _add_at(out, y, int(round(t * FS * FRAME_MS / 1000.0)), int(0.006 * FS))
+            t += dur_f
+    peak = float(np.max(np.abs(out))) or 1.0
+    return out / peak * 0.89
+
+
 def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: float = 0.65,
               flow: str = "notes", grid=None, use_cache: bool = True) -> dict:
     spans = []
@@ -549,8 +643,14 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
         melody = shape_melody(fill_gaps(f0_c), vib=vib)
     takes = []
     base_hz = 0.0
+    line_ph = WORD_LINES.get(clip_id, {}).get("phones") if grid else None
     with tempfile.TemporaryDirectory() as td:
         for i, voice in enumerate(voices):
+            if line_ph:
+                takes.append(render_phones(WORD_LINES[clip_id], grid, voice, use_cache))
+                if base_hz == 0.0:
+                    base_hz = 220.0
+                continue
             if grid:
                 # Grid mode: Piper's phoneme alignments say exactly when each
                 # vowel starts. Put every vowel on its beat, keep the consonants
