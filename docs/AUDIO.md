@@ -114,11 +114,29 @@ octave errors on rendered audio — see its docstring); `vox_ab_check.py` compar
 
 ## Word timing from the phone
 
-Status: merged to `godot`; the TIMING tab has not been checked on screen yet.
+Status: the TIMING tab is on `godot`. Its PLAY, graph and drag are not yet checked on a phone.
 
-Secret menu (tap RUNS three times on the title), **TIMING** tab: nudge each word's onset by 0.01 s,
-then **SAVE** (kept on the phone) or **COPY** (puts the JSON on the clipboard; paste it into the chat
-or a file). Data lives in `godot/hula/data/data_word_timing.json`.
+Secret menu (tap RUNS three times on the title), **TIMING** tab:
+
+- **Line box** (left of the words): shows the current line. Tap it for a picker with each line's
+  words (B0, B1, B2). The picker draws over everything else on the tab.
+- **NEXT LINE >**: moves to the next line, wrapping after the last.
+- **Words**: five per row, each with `-` and `+` (0.01 s). Or drag a green onset tick on the
+  graph: it stays between its neighbours and rounds to 0.01 s on release.
+- **PLAY**: starts the victory instruments at the line's chorus bar (B0 bar 0, B1 bar 2, B2 bar 4),
+  with the sequencer's own vocals off, and sings the line with the edited onsets. The track stops
+  after the line's bars (`bars` x 16 steps x 0.105 s).
+- **STOP**: stops the track and restores vocals. Leaving the tab or BACK does the same.
+- **SAVE** (kept on the phone) or **COPY** (JSON to the clipboard; paste it into the chat or a file).
+  Data lives in `godot/hula/data/data_word_timing.json`.
+
+Shipped clips are not re-sung by PLAY. It shifts each word's audio to its edited onset (no stretch),
+so timing and pitch are unchanged. Edits reach the rendered clip only after a PC re-sing.
+
+**Sound graph** (under the word rows): the sung clip (yellow) over the instrument stem (blue), for the
+line's stretch of the track, from `godot/hula/data/data_line_env.json`. White ticks: shipped onsets;
+green ticks: edited onsets. Made by `tools/line_env.py`. It needs a stem and clip positions that match
+the current clips (see "Known problems" below). It is shown only when the picker is closed.
 
 On the PC, from the repo root:
 
@@ -130,6 +148,25 @@ python3 tools/retime.py timing_from_phone.json              # writes the data, r
 `piper_sing.py` reads the onsets from the data file, so a re-sing needs `piper-tts[alignment]`,
 `pyworld`, `soundfile` and the Ryan voice model in `tools/models/`. The phone shows edits
 immediately but plays the old clip until the PC re-sing is merged and the app is updated.
+
+**Coverage:** word onsets exist only for B0, B1 and B2. The song has 16 sung lines (the `SUNG` list in
+`tools/snip_from_stem.py`); the others have lyrics in `data_lyrics.json` but no onsets, so they cannot be
+timed in the tab yet.
+
+## Known problems (2026-11-22)
+
+- **B2 is not sung in the mix.** `_vox_key` maps chorus bar 4 to `B2`, and that bar is not held, so
+  the sequencer should play it. In two `mix victory 30` runs the vocal bus has B0 and B1 (at 20.2 s and
+  23.3 s) but no B2 at about 26.4 s, and no vocal clip after B1 inside the window. The cause is not
+  found yet. Until it is, B2 has no graph data and its stem position is unknown.
+- **The instrument stem is wrong where vocals sit.** `stems/instruments.flac`-style subtraction
+  (master minus `k` x vocal bus) removes much of the instrument energy in sung windows: about 13 dB
+  below the master at 6–12 s, and quiet at 27–30 s. The least-squares `k` check gives zero correlation
+  by construction, so it does not catch this. Graph data built from that stem is unreliable.
+- **Instrument playback on the TIMING tab** was missing until PLAY started the track; that is now fixed
+  (see above). Whether instruments are heard on a phone is not checked.
+- **Vocal bus clips** in the mix at +2.3 dBFS pre-limiter (1220 samples), so the chorus vocals are
+  overdriven before the limiter.
 
 ## Snips without re-rendering the song
 
