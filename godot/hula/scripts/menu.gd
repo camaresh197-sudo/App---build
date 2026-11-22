@@ -443,15 +443,7 @@ func _draw_timing(ox: float) -> void:
 	rrect(box, Color("2d3a6b"), 8); rframe(box, Color("ffd32a"), 1.5, 8)
 	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 20, "LINE", 10, Color(1, 1, 1, 0.6))
 	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 42, "%s  v" % timing_sel, 16, Color.WHITE)
-	if timing_menu_open:
-		for k in timing_order.size():
-			var lid: String = timing_order[k]
-			var r := Rect2(ox + 14, 168 + k * 28, 110, 24)
-			var on := lid == timing_sel
-			c.buttons.append([r, func(): _timing_pick(lid)])
-			rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.0, 6)
-			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 16, lid, 12, Color.WHITE)
-	else:
+	if not timing_menu_open:
 		# next-line arrow, under the box
 		var nx := Rect2(ox + 14, 172, 110, 28)
 		c.buttons.append([nx, func(): _timing_next()])
@@ -477,6 +469,18 @@ func _draw_timing(ox: float) -> void:
 	button(Rect2(ox + 314, 300, 140, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
 	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
 
+	# line picker: drawn last so it sits over the words, graph and buttons
+	if timing_menu_open:
+		var panel := Rect2(ox + 14, 166, 520, 30 * timing_order.size() + 6)
+		rrect(panel, Color(0.05, 0.05, 0.12, 0.97), 8); rframe(panel, Color("ffd32a"), 1.5, 8)
+		for k in timing_order.size():
+			var lid: String = timing_order[k]
+			var lw: Array = timing.get(lid, {}).get("words", [])
+			var r := Rect2(ox + 20, 170 + k * 30, 508, 26)
+			var on := lid == timing_sel
+			c.buttons.append([r, func(): _timing_pick(lid)])
+			rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.0, 6)
+			txt(Vector2(r.position.x + 10, r.position.y + 18), "%s   %s" % [lid, " ".join(PackedStringArray(lw))], 13, Color.WHITE)
 
 func secret(R: float, t: float) -> void:
 	var ox := (R - 640.0) / 2.0
