@@ -77,6 +77,9 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Claude (unnumbered), TIMING tab, 2026-11-22 (later):** Pushed to `godot` through `afd28bf`: word drag on the graph; each word runs to the next edited onset (`328f8fe`); playhead across the graph (`afd28bf`). The "last word plays early" report traced to word length (shipped length kept the old tail), fixed in `328f8fe`. A temporary PLAY status line confirmed word-timing path, then removed.
+  Checks: import and `--smoke` clean on each commit; PC log showed correct chunk scheduling. Not checked on a phone: the `328f8fe` fix, the playhead, drag by finger.
+  **Next:** check the `godot-apk` runs for `328f8fe` and `afd28bf`; confirm "so" then "gay" sound in order when "so" is dragged back; then find why B2 is not sung.
 - **Claude (unnumbered), TIMING tab, 2026-11-22:** Work on `godot` (pushed to `cfc2a1f`, doc commits local): PLAY starts the victory track at the line's chorus bar with sequencer vocals off, stops after the line's bars; STOP and BACK restore vocals; graph under the words; line picker with words (drawn last); NEXT LINE; BACK top left; word drag on the graph.
   Files: `scripts/menu.gd`, `scripts/main.gd` (touch routing), `scripts/sound.gd` (`start_victory_at`, `stop_vox`, `victory_row_of`), `data/data_line_env.json` (B0, B1), `tools/line_env.py`, `docs/AUDIO.md`, `AGENTS.md`.
   Checks: import and `--smoke` clean on each code commit; screenshots of TIMING tab and picker. Instrument playback confirmed on a phone (user). Not checked: PLAY timing against the beat, drag by finger, graph on a phone.

@@ -124,8 +124,10 @@ Secret menu (tap RUNS three times on the title), **TIMING** tab:
 - **Words**: five per row, each with `-` and `+` (0.01 s). Or drag a green onset tick on the
   graph: it stays between its neighbours and rounds to 0.01 s on release.
 - **PLAY**: starts the victory instruments at the line's chorus bar (B0 bar 0, B1 bar 2, B2 bar 4),
-  with the sequencer's own vocals off, and sings the line with the edited onsets. The track stops
-  after the line's bars (`bars` x 16 steps x 0.105 s).
+  with the sequencer's own vocals off, and sings the line with the edited onsets. Each word runs to the
+  next word's edited onset, so dragging a word also moves where it ends; the last word runs to the end
+  of the clip. The track stops after the line's bars (`bars` x 16 steps x 0.105 s).
+- **Playhead:** a white vertical line moves left to right across the graph while the line plays.
 - **STOP**: stops the track and restores vocals. Leaving the tab or BACK does the same.
 - **SAVE** (kept on the phone) or **COPY** (JSON to the clipboard; paste it into the chat or a file).
   Data lives in `godot/hula/data/data_word_timing.json`.
@@ -163,6 +165,10 @@ timed in the tab yet.
   (master minus `k` x vocal bus) removes much of the instrument energy in sung windows: about 13 dB
   below the master at 6–12 s, and quiet at 27–30 s. The least-squares `k` check gives zero correlation
   by construction, so it does not catch this. Graph data built from that stem is unreliable.
+- **"Last word plays early" (2026-11-22):** the cause was word length: each word used its shipped length, so
+  a dragged word left its old tail running into the gap. Fixed in `328f8fe` (each word runs to the next
+  edited onset). Not yet checked on a phone. A PLAY status line confirmed the word-timing path, not the
+  whole-clip fallback.
 - **Instrument playback on the TIMING tab:** PLAY now starts the track, and the instruments were checked
   on a phone (2026-11-22). The stem problem below is about the analysis data, not playback.
 - **Vocal bus clips** in the mix at +2.3 dBFS pre-limiter (1220 samples), so the chorus vocals are
