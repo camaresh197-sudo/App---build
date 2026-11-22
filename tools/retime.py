@@ -22,7 +22,8 @@ def check(lines):
         if len(words) != len(onsets):
             sys.exit("%s: %d words but %d onsets" % (lid, len(words), len(onsets)))
         if any(b <= a for a, b in zip(onsets, onsets[1:])):
-            sys.exit("%s: onsets must increase" % lid)
+            sys.exit("%s: onsets must increase: the TIMING tab lets words go in any order for a preview, "
+                     "but the singer sings words in order. Put them back in order before COPY." % lid)
         if onsets and onsets[0] < 0:
             sys.exit("%s: first onset is negative" % lid)
         ipa = line.get("ipa")

@@ -456,7 +456,7 @@ func _timing_nudge(lid: String, i: int, d: float) -> void:
 	_timing_set_onset(lid, i, snappedf(float(on[i]) + d, 0.01))
 	timing_msg = ""
 
-# word locks: a locked word's onset never moves, and words being moved stop short of it
+# word locks: a locked word's onset never moves (every other word stays free)
 func _timing_locked(lid: String, i: int) -> bool:
 	var lk: Array = (timing.get(lid, {}) as Dictionary).get("locks", [])
 	return i < lk.size() and bool(lk[i])
@@ -475,33 +475,17 @@ func _timing_toggle_lock(lid: String, i: int) -> void:
 func _timing_line_len(lid: String) -> float:
 	return float((timing.get(lid, {}) as Dictionary).get("bars", 2)) * 16.0 * c.snd.VE
 
-# Move word i's onset to t. Words keep their order and a TIMING_GAP: a word that runs into a
-# neighbour pushes it along (later words forward, earlier words back), so a word is never stuck
-# behind the next one's old position. Locked words never move: a locked word cannot be moved,
-# and the word being moved stops short of the nearest locked word on either side (leaving room
-# for the words between). The last word must still start inside the line.
-# Returns true when a neighbour was pushed.
+# Move word i's onset to t. Words are independent: any word can go anywhere in the line, in any
+# order, overlapping or not; nothing is pushed. Only the line itself limits it (0 to the end, the
+# word must still start inside the line), and a locked word does not move at all.
+# Returns false (kept for callers that used to learn about pushed neighbours).
 func _timing_set_onset(lid: String, i: int, t: float) -> bool:
 	var on: Array = timing[lid]["onsets"]
-	var n := on.size()
 	if _timing_locked(lid, i): return false
-	var hi := _timing_line_len(lid) - 0.1 - float(n - 1 - i) * TIMING_GAP
-	var lo := float(i) * TIMING_GAP
-	for j in range(i + 1, n):
-		if _timing_locked(lid, j): hi = minf(hi, float(on[j]) - float(j - i) * TIMING_GAP)
-	for k in range(i - 1, -1, -1):
-		if _timing_locked(lid, k): lo = maxf(lo, float(on[k]) + float(i - k) * TIMING_GAP)
-	on[i] = clampf(t, lo, maxf(lo, hi))
-	var pushed := false
-	for j in range(i + 1, n):
-		if not _timing_locked(lid, j) and float(on[j]) < float(on[j - 1]) + TIMING_GAP:
-			on[j] = float(on[j - 1]) + TIMING_GAP; pushed = true
-	for j in range(i - 1, -1, -1):
-		if not _timing_locked(lid, j) and float(on[j]) > float(on[j + 1]) - TIMING_GAP:
-			on[j] = float(on[j + 1]) - TIMING_GAP; pushed = true
-	return pushed
+	on[i] = clampf(t, 0.0, maxf(0.0, _timing_line_len(lid) - 0.1))
+	return false
 
-# keep every onset ordered and inside the line (saved timing from before these limits)
+# keep every onset inside the line (saved timing from before these limits)
 func _timing_clamp_onsets(lid: String) -> void:
 	var on: Array = timing[lid].get("onsets", [])
 	for i in on.size():
@@ -783,13 +767,8 @@ var timing_play_t0 := -1.0
 var timing_play_len := 0.0
 
 func timing_grab(pos: Vector2, idx: int) -> bool:
-	if timing_menu_open: return false
-	if timing_word >= 0:
-		# the word editor covers the graph: say why a drag does nothing, rather than failing silently
-		if timing_graph_rect.size.x > 0.0 and timing_graph_rect.has_point(pos):
-			timing_msg = "press DONE to drag words on the graph"
-			return true
-		return false
+	# the word editor and its palette are drawn where the graph is: those taps are theirs, never the graph's
+	if timing_menu_open or timing_word >= 0: return false
 	# the nearest marker wins: two markers close together must not grab the wrong word
 	var best := -1
 	var best_d := 1e9
@@ -821,12 +800,9 @@ func timing_move(x: float) -> void:
 		timing_drag_x = x
 		return
 	var want := float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur
-	var pushed := _timing_set_onset(timing_drag_lid, i, want)
+	_timing_set_onset(timing_drag_lid, i, want)
 	timing_drag_x = x
-	if absf(float(on[i]) - want) > 0.001:
-		timing_msg = "stopped by a locked word or the line's end"
-	else:
-		timing_msg = "pushing the neighbouring words" if pushed else ""
+	timing_msg = "edge of the line" if absf(float(on[i]) - want) > 0.001 else ""
 
 func timing_release() -> void:
 	if timing_drag_index >= 0 and timing.has(timing_drag_lid):
@@ -953,6 +929,7 @@ func _draw_timing(ox: float) -> void:
 	var onsets: Array = line.get("onsets", [])
 	var ipa: Array = line.get("ipa", [])
 	if timing_word >= 0 and timing_word < words.size():
+		timing_graph_rect = Rect2(); timing_markers.clear()   # the graph is not drawn now: do not keep its old hit area
 		_draw_timing_word(ox, line)
 		_draw_timing_palette(ox)
 	else:

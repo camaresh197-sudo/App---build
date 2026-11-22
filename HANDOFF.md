@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (palette taps swallowed; free word timing), 2026-11-22:** User: changing the IPA letters does nothing; wants free reign over word timing. Cause 1 (my regression from 8fd5fc6): `timing_grab` swallowed taps inside the graph's rect while the word editor was open, but the palette is drawn on exactly that rect (`ox+14, 220, 612`), so no palette tap reached the editor. Now the editor owns those taps and the graph rect and markers are cleared while it is open.
+  Change 2: `_timing_set_onset` now just clamps one word to 0..line end - 0.1; no push, no order, no neighbour limit. Locked words still do not move. Drag message at the edge: "edge of the line".
+  Note: the singer sings words in order, so `retime.py` still rejects out-of-order onsets (message explains); the phone preview does not care.
+  Checks: smoke clean; harness on B0: w1 -> 3.0, w3 -> 0.0, w0 -> 99 (stopped at 3.26) with no other word moving; a tap in the old graph rect with the editor open is no longer taken. Not checked: by finger or ear.
+  **Complaints:** (1) Wren guarded a rect that was not on screen; test hit areas against what is drawn. (2) Free order means COPY can fail in retime.py; decide whether the singer can sing out of order. (3) Overlapping words can play on top of each other; add a visible overlap cue if it confuses.
 - **Wren v3 (Piper fits the word), 2026-11-22:** User: "Changing the ipa does nothing" (plugin working). Found: PLAY cut each Piper word at its edited LEN, but Piper's natural word is longer, so the last phones were chopped (an edit there was never heard) and length edits did nothing.
   Change: `PiperVoice.sing_stream(ipa, target, info)` renders once to measure, then again with `length_scale = target / natural` (0.4 to 3.0); playback no longer truncates; the TIMING line reports "Piper sang N edited word(s): natural X s, fitted to Y s".
   Checks: smoke clean (desktop has no plugin, so the Piper path itself is unrun). Not checked: on a phone.
