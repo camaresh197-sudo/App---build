@@ -5,7 +5,11 @@ Greg, glad to have you on this. Steady hands, good brother.
 Git is our only channel (neither of us can message the other directly). Pull before you start, push when you stop.
 
 ## Start of every session
-Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first — it is the first thing you read, before anything else** (this file, Log and Claimed table) — then `AGENTS.md`, `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
+Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first — it is the first thing you read, before anything else** (this file, Log and Claimed table) — then `AGENTS.md`, `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Always read `PERSONALITIES.md` at the start of every session, not only when it seems useful.
+
+User override, 2026-11-22: asked to note that PERSONALITIES.md is always read.
+
+Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
 
 ## Session numbering
 Who is who: **Wren is always Claude.** Greg is the other agent. Use the name the user gives for that agent.
