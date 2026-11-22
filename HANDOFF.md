@@ -38,6 +38,10 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (diphthongs recognised), 2026-11-22:** User asked the game to recognise diphthongs and add a glide where needed. `_timing_mark_diphthongs` (menu.gd) marks a vowel (e a o ɔ ɑ æ ə ɛ) followed by ɪ or ʊ as one sound: both parts get `dip`, and minimum lengths (0.10 s vowel, 0.08 s glide). It runs when a word's phones are built and after palette edits and ADD.
+  Checked: "gay" is marked on load; a palette edit that breaks the pair clears the marks. Smoke clean.
+  Limit: Piper's phone preview ignores per-sound lengths (it sets the sound from the whole word), so the glide there is protected by the 0.8x-1.3x fit limit, not by these marks. The marks matter for the PC re-sing and the editor's defaults. The "add a glide" step is not automatic: a word whose vowel was replaced by a monophthong is left as the user set it.
+  **Complaints:** (1) Wren's "geh" fix assumed short phones; the real cause was the fit, which the test showed. (2) The glide is not added automatically; decide whether it should be. (3) Phone-level lengths do nothing in the phone preview; say so in the editor.
 - **Wren v3 (gay sounds like "geh"), 2026-11-22:** User: "It doesn't always speak out the words correctly. When I spell gay it sounds more like geh." Test with the Piper voice in a carrier phrase: at 1.0x "gay" came out "gain"; at 0.7x still "gain"; at 0.5x "I'll see you now". So the fit that squeezes an edited word to its length is the damage.
   Change: `PiperVoice.sing_stream` now limits the fit to 0.8x-1.3x. Words edited shorter than that run slightly past their length.
   Not done: diphthong phones (`e` then `ɪ`) default to short lengths, so a diphthong has little room; that needs its own default.

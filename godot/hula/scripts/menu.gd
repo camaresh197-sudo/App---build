@@ -436,6 +436,7 @@ func _timing_defaults(lid: String, line: Dictionary) -> void:
 			if total > 0.0:
 				for p in ph:
 					p["d"] = maxf(0.03, float(p.get("d", 0.12)) / total * target)
+			_timing_mark_diphthongs(ph)
 			phones.append(ph)
 		line["phones"] = phones
 
@@ -553,6 +554,7 @@ func _timing_phone_set(p: String) -> void:
 		timing_phone = phones.size() - 1
 	else:
 		(phones[timing_phone] as Dictionary)["p"] = p
+	_timing_mark_diphthongs(phones)
 	_timing_sync_ipa()
 	timing_msg = ""
 
@@ -586,6 +588,7 @@ func _timing_phone_add() -> void:
 	if timing_word >= phones_all.size(): return
 	var phones: Array = phones_all[timing_word]
 	phones.append({"p": "ə", "d": 0.1})
+	_timing_mark_diphthongs(phones)
 	timing_phone = phones.size() - 1
 	_timing_sync_ipa()
 	timing_msg = "tap a symbol to replace it"
@@ -1102,6 +1105,31 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 	var acts := [func(): _timing_phone_dur(-0.02), func(): _timing_phone_dur(0.02), func(): _timing_phone_del(), func(): _timing_phone_add(), func(): _timing_word_reset(), func(): _timing_syl_shift(-1), func(): _timing_syl_shift(1), func(): timing_word = -1]
 	for k in labels.size():
 		button(Rect2(panel.position.x + 8 + step * k, by, bw, 26), labels[k], cols[k], acts[k], 10)
+
+# ---- diphthongs: a vowel followed by a glide (ɪ or ʊ) is one sound that needs room to glide.
+# Each one is recognised here, marked "dip" on both parts, and given a minimum length, so the
+# glide is not squeezed to a short "geh". (The phone preview is protected by the word-fit limit in
+# piper.gd, because Piper sets the sound from the whole word; the PC re-sing uses these lengths.)
+const DIP_FIRST := "eaoɔɑæəɛ"
+const DIP_GLIDE := "ɪʊ"
+const DIP_FIRST_MIN := 0.10
+const DIP_GLIDE_MIN := 0.08
+
+func _timing_mark_diphthongs(phs: Array) -> void:
+	for k in phs.size():
+		var ph: Dictionary = phs[k]
+		ph.erase("dip")
+	for k in range(phs.size() - 1):
+		var a: Dictionary = phs[k]
+		var b: Dictionary = phs[k + 1]
+		var pa := String(a.get("p", ""))
+		var pb := String(b.get("p", ""))
+		if pa == "" or pb == "" or DIP_FIRST.find(pa) < 0 or DIP_GLIDE.find(pb) < 0:
+			continue
+		a["dip"] = true
+		b["dip"] = true
+		if float(a.get("d", 0.0)) < DIP_FIRST_MIN: a["d"] = DIP_FIRST_MIN
+		if float(b.get("d", 0.0)) < DIP_GLIDE_MIN: b["d"] = DIP_GLIDE_MIN
 
 # ---- syllable pitch (phone preview: Psola in game code; the PC re-sing does not use it yet)
 const VOWELS := "aeiouɪʊɛæʌəɜɔɐɑɒɚɝ"
