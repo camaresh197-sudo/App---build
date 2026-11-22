@@ -25,6 +25,17 @@ def check(lines):
             sys.exit("%s: onsets must increase" % lid)
         if onsets and onsets[0] < 0:
             sys.exit("%s: first onset is negative" % lid)
+        ipa = line.get("ipa")
+        if ipa is not None and len(ipa) != len(words):
+            sys.exit("%s: %d words but %d IPA entries" % (lid, len(words), len(ipa)))
+        phones = line.get("phones")
+        if phones is not None:
+            if len(phones) != len(words):
+                sys.exit("%s: %d words but %d phone lists" % (lid, len(words), len(phones)))
+            for i, ph in enumerate(phones):
+                for p in ph:
+                    if not p.get("p") or float(p.get("d", 0)) <= 0:
+                        sys.exit("%s: word %d has an empty phone" % (lid, i))
 
 
 def main():
@@ -33,11 +44,12 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
-    incoming = json.loads(Path(a.json_file).read_text(encoding="utf-8")).get("lines", {})
+    incoming = json.loads(Path(a.json_file).read_text(encoding="utf-8-sig")).get("lines", {})
     check(incoming)
     current = json.loads(DATA.read_text(encoding="utf-8"))
     changed = [lid for lid in incoming
-               if lid not in current["lines"] or current["lines"][lid].get("onsets") != incoming[lid].get("onsets")]
+               if lid not in current["lines"]
+               or any(current["lines"][lid].get(k) != incoming[lid].get(k) for k in ("onsets", "ipa", "phones"))]
     if not changed:
         print("nothing changed; no re-sing needed")
         return
@@ -48,8 +60,12 @@ def main():
 
     for lid in changed:
         current["lines"].setdefault(lid, {}).update(incoming[lid])
-    DATA.write_text(json.dumps(current, indent=2) + "\n", encoding="utf-8")
+    DATA.write_text(json.dumps(current, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print("updated", DATA.relative_to(ROOT))
+    ipa_changed = [lid for lid in changed if incoming[lid].get("ipa") or incoming[lid].get("phones")]
+    if ipa_changed:
+        print("note: IPA/phone-length edits are stored for the game; piper_sing still sings")
+        print("      the text in data_phonics.json, so it does not apply them yet: %s" % ", ".join(ipa_changed))
 
     subprocess.run([sys.executable, str(ROOT / "tools" / "piper_sing.py"), "--only", ",".join(changed), "--force"],
                    cwd=str(ROOT / "tools"), check=True)

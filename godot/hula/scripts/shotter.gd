@@ -20,6 +20,18 @@ func _ready() -> void:
 		m.state = m.S.SECRET
 		if a.size() > 3:
 			m.menu.song_test = a[3]; m.snd.vox_only = a.size() > 4 and a[4] == "voxonly"; m.snd.start_music(a[3])
+	if a.size() > 2 and a[2] == "timing":
+		# TIMING tab: a[3]=line id, a[4]=word index (optional, opens the IPA/length editor)
+		m.state = m.S.SECRET
+		m.menu.song_test_tab = 3
+		if a.size() > 3: m.menu.timing_sel = a[3]
+		if a.size() > 4: m.menu.timing_word = int(a[4])
+		if a.size() > 5 and a[5] == "play":
+			# force the sketch path (one phone length edit), then start PLAY
+			m.menu._timing_load()
+			m.menu.timing_word = maxi(0, m.menu.timing_word)
+			m.menu._timing_phone_dur(0.02)
+			m.menu._timing_play(m.menu.timing_sel)
 	if a.size() > 3 and a[2] == "hub": m.menu.open_hub(int(a[3]))
 	if a.size() > 2 and a[2] == "map":
 		m.open_map()   # a[3]=act, a[4]=node (both optional) so a locked node can be reviewed too

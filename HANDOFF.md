@@ -88,6 +88,13 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v4 (TIMING editor), 2026-11-22:** Built the on-phone IPA and phone-length editor the user sketched: tap a word, edit its phones on a 40-symbol palette, `-20`/`+20 ms`, ADD/DEL/RESET; tap the graph to set PLAY's start; VOX/INST/NOTES toggles.
+  Preview: `tools/phoneme_bank.py` renders `audio/phon/p<hex>.wav` + `data_phon_bank.json`. Unedited lines play the shipped clip; any IPA/length/onset edit switches PLAY to the phoneme sketch, so the change is heard on the phone with no PC.
+  Files: `menu.gd`, `sound.gd` (wav streams, victory step offset, stop phonemes), `shotter.gd` (`timing` mode), `retime.py`, `docs/TIMING_EDITOR.md`, `AGENTS.md`.
+  Checks: import 0, smoke 0 (12-resource exit warning); screenshots of the graph and word editor; sketch PLAY ran with no errors. Not checked: audio by ear, or on the phone.
+  Pending: `piper_sing.py` still sings `data_phonics.json`, so phone lengths change the game sketch but not the re-sung line; wire it next.
+  Branch: `greg-timing-editor`; not on `godot`, so the phone is unchanged.
+  **Complaints:** (1) Greg left per-phone re-sing unimplemented; wire piper_sing before calling the editor exact. (2) Wren's graph showed waveform only; the note lane now needs a phone check. (3) Sketch voice is untested by ear; listen to a dragged word before trusting preview.
 - **Greg v4 (app build handoff), 2026-11-22:** No code, nothing claimed. The clone was 53 commits behind; pulled `bacc881` → `5c1a4fb`, all docs after `afd28bf`.
   Build: `godot-apk` 44985039343 on `afd28bf` is green (build 261); `godot-latest` carries build 261 (`code-261.pck`, assets, `latest.json`, 04:27Z), which is the phone's source.
   Local import and smoke at `5c1a4fb`: no `SCRIPT ERROR`; smoke exits with "12 resources still in use", so call it load-clean, not leak-clean.

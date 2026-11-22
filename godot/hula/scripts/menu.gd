@@ -295,12 +295,23 @@ var cutscene_data: Dictionary = {}
 var song_test_tab := 0  # 0=THEATER, 1=SONGS, 2=MUSICAL, 3=TIMING
 # ---- word timing editor (TIMING tab). Onsets are seconds into each sung line; edits are saved
 # on the phone and copied to the PC with tools/retime.py, which re-sings the changed lines.
-const TIMING_GAP := 0.05
-var timing: Dictionary = {}       # line id -> {words, onsets, ...}: defaults with saved onsets applied
+# IPA and per-phone lengths are edited here too; until a re-sing, PLAY sketches them with the
+# phoneme bank (audio/phon + data_phon_bank.json) instead of the shipped line clip.
+const TIMING_GAP := 0.02
+var timing: Dictionary = {}       # line id -> {words, onsets, ipa, phones, ...}
 var timing_base: Dictionary = {}  # the shipped defaults, for RESET
 var timing_order: Array = []
 var timing_sel := "B0"
 var timing_msg := ""
+var phonics: Dictionary = {}      # data_phonics.json "words"
+var phon_bank: Dictionary = {}    # data_phon_bank.json "phones"
+var phon_base_hz := 240.0
+var timing_word := -1             # selected word for the detail editor, -1 = graph
+var timing_phone := 0             # selected phone inside that word
+var timing_playhead := 0.0        # seconds into the selected line (graph click)
+var timing_show_vox := true
+var timing_show_inst := true
+var timing_show_notes := true
 
 func _secret_tap() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
@@ -341,14 +352,89 @@ func _play_cutscene_id(cs_id: String) -> void:
 	_play_list(items, 0)
 
 func _timing_load() -> void:
+	phonics = _read_json("res://data/data_phonics.json").get("words", {})
+	var bank: Dictionary = _read_json("res://data/data_phon_bank.json")
+	phon_bank = bank.get("phones", {})
+	phon_base_hz = float(bank.get("base_hz", 240.0))
 	var base: Dictionary = _read_json("res://data/data_word_timing.json")
 	timing_order = base.get("order", [])
 	timing_base = base.get("lines", {}).duplicate(true)
+	for lid in timing_base:
+		_timing_defaults(lid, timing_base[lid])
 	timing = timing_base.duplicate(true)
 	var saved: Dictionary = _read_json("user://word_timing.json").get("lines", {})
 	for lid in saved:
-		if timing.has(lid) and saved[lid].get("onsets") is Array:
-			timing[lid]["onsets"] = saved[lid]["onsets"]
+		if timing.has(lid):
+			for k in ["onsets", "ipa", "phones"]:
+				if saved[lid].get(k) is Array:
+					timing[lid][k] = (saved[lid][k] as Array).duplicate(true)
+
+# IPA for one word: data_phonics.json when it has the word, else the written word.
+func _timing_word_ipa(w: String) -> String:
+	var key := w.strip_edges().to_lower().replace(",", "").replace(".", "").replace("'", "'")
+	var e: Dictionary = phonics.get(key, {})
+	var ipa := String(e.get("ipa", ""))
+	return ipa if ipa != "" else key
+
+# Split IPA into editable phones. Stress marks are dropped; length marks stretch the phone before.
+func _timing_split_ipa(ipa: String) -> Array:
+	var out: Array = []
+	for ch in ipa:
+		if ch in ["ˈ", "ˌ", ".", "/", " "]:
+			continue
+		if ch == "ː" or ch == "ˑ":
+			if out.size() > 0:
+				var last: Dictionary = out[out.size() - 1]
+				last["d"] = minf(1.5, float(last.get("d", 0.12)) * 1.6)
+			continue
+		var natural := 0.12
+		if phon_bank.has(ch):
+			natural = float((phon_bank[ch] as Dictionary).get("dur", 0.12))
+		out.append({"p": ch, "d": clampf(natural, 0.05, 0.45)})
+	if out.is_empty():
+		out.append({"p": "ə", "d": 0.12})
+	return out
+
+func _timing_defaults(lid: String, line: Dictionary) -> void:
+	var words: Array = line.get("words", [])
+	var ipa: Array = line.get("ipa", [])
+	if ipa.size() != words.size():
+		ipa = []
+		for w in words:
+			ipa.append(_timing_word_ipa(String(w)))
+		line["ipa"] = ipa
+	var phones: Array = line.get("phones", [])
+	if phones.size() != words.size():
+		phones = []
+		var onsets: Array = line.get("onsets", [])
+		var vein := 0.105
+		var line_len := float(line.get("bars", 2)) * 16.0 * vein
+		for i in ipa.size():
+			var ph := _timing_split_ipa(String(ipa[i]))
+			# default word length: the gap to the next word, capped; the last word is short
+			var target := 0.5
+			if i + 1 < onsets.size():
+				target = clampf(float(onsets[i + 1]) - float(onsets[i]), 0.12, 0.7)
+			elif i < onsets.size():
+				target = clampf(line_len - float(onsets[i]), 0.2, 0.5)
+			var total := 0.0
+			for p in ph:
+				total += float(p.get("d", 0.12))
+			if total > 0.0:
+				for p in ph:
+					p["d"] = maxf(0.03, float(p.get("d", 0.12)) / total * target)
+			phones.append(ph)
+		line["phones"] = phones
+
+func _timing_word_len(lid: String, i: int) -> float:
+	var line: Dictionary = timing.get(lid, {})
+	var phones_all: Array = line.get("phones", [])
+	if i < 0 or i >= phones_all.size():
+		return 0.0
+	var total := 0.0
+	for ph in phones_all[i]:
+		total += float(ph.get("d", 0.0))
+	return total
 
 func _timing_nudge(lid: String, i: int, d: float) -> void:
 	var on: Array = timing[lid]["onsets"]
@@ -376,39 +462,122 @@ func _timing_copy() -> void:
 
 func _timing_reset(lid: String) -> void:
 	if timing_base.has(lid):
-		timing[lid] = timing_base[lid].duplicate(true)
+		timing[lid] = (timing_base[lid] as Dictionary).duplicate(true)
+		timing_word = -1
 		timing_msg = "reset %s to the default" % lid
 
-# Preview with the edited timing, no re-sing. The shipped clip is cut at the shipped onsets and each
-# word is started at its edited onset (shift only: pitch and word length are unchanged). The clip
-# starts 0.15 s before its first word (data_vox.json lead-in), so both positions carry that offset.
-# A word runs to the next shipped onset; the last word runs to the end of the clip.
+# ---- per-word IPA and phone-length editing
+func _timing_word_reset() -> void:
+	if timing_word < 0: return
+	var line: Dictionary = timing[timing_sel]
+	var base: Dictionary = timing_base.get(timing_sel, {})
+	var ipa: Array = line.get("ipa", [])
+	var phones: Array = line.get("phones", [])
+	var bipa: Array = base.get("ipa", [])
+	var bphones: Array = base.get("phones", [])
+	if timing_word < bipa.size():
+		ipa[timing_word] = String(bipa[timing_word])
+	if timing_word < bphones.size():
+		phones[timing_word] = (bphones[timing_word] as Array).duplicate(true)
+	timing_msg = "word reset"
+
+func _timing_phone_set(p: String) -> void:
+	if timing_word < 0: return
+	var line: Dictionary = timing[timing_sel]
+	var phones_all: Array = line.get("phones", [])
+	if timing_word >= phones_all.size(): return
+	var phones: Array = phones_all[timing_word]
+	if phones.is_empty() or timing_phone < 0 or timing_phone >= phones.size():
+		phones.append({"p": p, "d": 0.12})
+		timing_phone = phones.size() - 1
+	else:
+		(phones[timing_phone] as Dictionary)["p"] = p
+	timing_msg = ""
+
+func _timing_phone_dur(d: float) -> void:
+	if timing_word < 0: return
+	var line: Dictionary = timing[timing_sel]
+	var phones_all: Array = line.get("phones", [])
+	if timing_word >= phones_all.size(): return
+	var phones: Array = phones_all[timing_word]
+	if timing_phone < 0 or timing_phone >= phones.size(): return
+	var ph: Dictionary = phones[timing_phone]
+	ph["d"] = snappedf(clampf(float(ph.get("d", 0.12)) + d, 0.03, 1.5), 0.01)
+	timing_msg = ""
+
+func _timing_phone_del() -> void:
+	if timing_word < 0: return
+	var line: Dictionary = timing[timing_sel]
+	var phones_all: Array = line.get("phones", [])
+	if timing_word >= phones_all.size(): return
+	var phones: Array = phones_all[timing_word]
+	if timing_phone >= 0 and timing_phone < phones.size():
+		phones.remove_at(timing_phone)
+	timing_phone = clampi(timing_phone, 0, maxi(0, phones.size() - 1))
+	timing_msg = ""
+
+func _timing_phone_add() -> void:
+	if timing_word < 0: return
+	var line: Dictionary = timing[timing_sel]
+	var phones_all: Array = line.get("phones", [])
+	if timing_word >= phones_all.size(): return
+	var phones: Array = phones_all[timing_word]
+	phones.append({"p": "ə", "d": 0.1})
+	timing_phone = phones.size() - 1
+	timing_msg = "tap a symbol to replace it"
+
+func _timing_is_sketch(lid: String) -> bool:
+	var b: Dictionary = timing_base.get(lid, {})
+	var t: Dictionary = timing.get(lid, {})
+	return (JSON.stringify(t.get("ipa", [])) != JSON.stringify(b.get("ipa", []))
+		or JSON.stringify(t.get("phones", [])) != JSON.stringify(b.get("phones", []))
+		or JSON.stringify(t.get("onsets", [])) != JSON.stringify(b.get("onsets", [])))
+
+# Preview with the edited timing. Unedited lines play the shipped clip; once the IPA, phone
+# lengths or onsets differ, PLAY uses the phoneme bank so the edit is heard immediately (sketch
+# voice). Retiming is relative to timing_playhead, set by tapping the graph. The clip starts
+# 0.15 s before its first word (data_vox.json lead-in).
 const VOX_LEAD := 0.15
+func _timing_phone(p: String, dl: float, d: float) -> void:
+	if not phon_bank.has(p): return
+	var e: Dictionary = phon_bank[p]
+	var path := String(e.get("file", ""))
+	if path == "": return
+	c.snd.play(path.get_basename(), {"v": 2.4, "dl": dl, "dur": d, "bus": "Vox"})
+
 func _timing_play(lid: String) -> void:
-	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
-	var edited: Array = timing.get(lid, {}).get("onsets", [])
-	var sec := String(timing.get(lid, {}).get("section", "v-B"))
-	var bar := int(timing.get(lid, {}).get("bar", 0))
+	var line: Dictionary = timing.get(lid, {})
+	var onsets: Array = line.get("onsets", [])
+	var sec := String(line.get("section", "v-B"))
+	var bar := int(line.get("bar", 0))
 	var row: int = c.snd.victory_row_of(sec, bar)
 	if row < 0:
 		timing_msg = "no chorus bar for %s" % lid; return
-	# the track starts at this line's bar; the sequencer's own vocals are off so only this line sings
+	var vein: float = c.snd.VE
+	var line_len: float = float(line.get("bars", 2)) * 16.0 * vein
+	var head := clampf(timing_playhead, 0.0, maxf(0.0, line_len - 0.05))
+	# the track starts at this line's bar (and the playhead's step); the sequencer's own vocals are off
 	c.snd.have_vox = false
-	c.snd.start_victory_at(row)
+	c.snd.start_victory_at(row, int(head / vein))
 	var to_downbeat: float = c.snd.next_t - c.snd.now
-	timing_play_t0 = c.snd.now + to_downbeat - VOX_LEAD
-	timing_play_len = float(line_env.get(lid, {}).get("dur", float(timing.get(lid, {}).get("bars", 2)) * 16.0 * c.snd.VE + VOX_LEAD))
-	# stop the track when the line's bars end; a newer PLAY or STOP cancels this stop
+	timing_play_t0 = c.snd.now + to_downbeat - head
+	timing_play_len = line_len
 	timing_play_id += 1
 	var my_id := timing_play_id
-	var span: float = float(timing.get(lid, {}).get("bars", 2)) * 16.0 * c.snd.VE
-	c.snd.later.append([c.snd.now + to_downbeat + span, func(): if timing_play_id == my_id: _timing_stop()])
-	if shipped.is_empty() or edited.size() != shipped.size():
-		c.snd.play("vox/" + lid, {"v": 2.4, "dl": maxf(0.0, to_downbeat - VOX_LEAD)}); return
-	for i in shipped.size():
-		# a word runs until the next word's edited onset, so dragging a word moves its end too
-		var dur := float(edited[i + 1]) - float(edited[i]) if i + 1 < edited.size() else 0.0
-		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + float(edited[i]), "from": VOX_LEAD + float(shipped[i]), "dur": dur})
+	c.snd.later.append([c.snd.now + to_downbeat + (line_len - head), func(): if timing_play_id == my_id: _timing_stop()])
+	if not _timing_is_sketch(lid):
+		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat, "from": VOX_LEAD + head,
+			"dur": maxf(0.05, line_len - head + VOX_LEAD)})
+		return
+	var w_ph: Array = line.get("phones", [])
+	for i in onsets.size():
+		if i >= w_ph.size(): continue
+		var t := float(onsets[i]) - head
+		for ph in w_ph[i]:
+			var d := float(ph.get("d", 0.12))
+			if t >= 0.0 and t < line_len - head:
+				_timing_phone(String(ph.get("p", "ə")), to_downbeat + t, d)
+			t += d
 
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 func _timing_stop() -> void:
@@ -433,10 +602,16 @@ var timing_play_t0 := -1.0
 var timing_play_len := 0.0
 
 func timing_grab(pos: Vector2, idx: int) -> bool:
+	if timing_menu_open or timing_word >= 0: return false
 	for m in timing_markers:
 		if (m[0] as Rect2).has_point(pos):
 			timing_drag_index = idx; timing_drag_lid = m[1]; timing_drag_word = m[2]; timing_drag_x = pos.x
 			return true
+	if timing_graph_rect.size.x > 0.0 and timing_graph_rect.has_point(pos):
+		var frac := (pos.x - timing_graph_rect.position.x) / timing_graph_rect.size.x
+		timing_playhead = clampf(frac, 0.0, 1.0) * timing_graph_dur
+		timing_msg = "start %.2f s" % timing_playhead
+		return true
 	return false
 
 # move the grabbed onset by the finger's travel, kept between its neighbours (no rounding while dragging)
@@ -455,85 +630,147 @@ func timing_release() -> void:
 		var on: Array = timing[timing_drag_lid]["onsets"]
 		on[timing_drag_word] = snappedf(float(on[timing_drag_word]), 0.01)
 	timing_drag_index = -1
+func _timing_notes(lid: String) -> Array:
+	var line: Dictionary = timing.get(lid, {})
+	var sec := String(line.get("section", "v-B"))
+	var bar := int(line.get("bar", 0))
+	var row: int = c.snd.victory_row_of(sec, bar)
+	if row < 0 or row >= c.snd.vic.size():
+		return []
+	var notes = c.snd.vic[row][3]
+	return notes if notes is Array else []
+
 func _draw_timing_graph(ox: float, lid: String) -> void:
 	if line_env.is_empty(): line_env = _read_json("res://data/data_line_env.json").get("lines", {})
-	var r := Rect2(ox + 14, 228, 626, 62)
+	var r := Rect2(ox + 14, 220, 612, 76)
 	rrect(r, Color(0, 0, 0, 0.3), 6)
 	var e: Dictionary = line_env.get(lid, {})
-	if e.is_empty():
-		txt(Vector2(r.position.x + 10, r.position.y + 36), "no sound graph for %s yet (tools/line_env.py)" % lid, 11, Color(1, 1, 1, 0.5))
-		return
-	var dur := maxf(0.01, float(e.get("dur", 1.0)))
-	var strips := [["vox", Color("ffd32a"), Rect2(r.position.x, r.position.y + 1, r.size.x, 29)],
-		["inst", Color("3498db"), Rect2(r.position.x, r.position.y + 32, r.size.x, 29)]]
-	for s in strips:
-		var vals: Array = e.get(s[0], [])
-		var rr: Rect2 = s[2]
-		var bw := rr.size.x / maxf(1.0, float(vals.size()))
-		for k in vals.size():
-			var h := float(vals[k]) * rr.size.y
-			c.draw_rect(Rect2(rr.position.x + k * bw, rr.position.y + rr.size.y - h, maxf(1.0, bw), h), s[1])
-	if timing_play_t0 >= 0.0 and c.snd.now >= timing_play_t0 and c.snd.now <= timing_play_t0 + timing_play_len:
-		var px: float = r.position.x + (c.snd.now - timing_play_t0) / timing_play_len * r.size.x
-		c.draw_line(Vector2(px, r.position.y), Vector2(px, r.position.y + r.size.y), Color.WHITE, 2.0)
-	var shipped: Array = e.get("word", [])
+	var line: Dictionary = timing.get(lid, {})
+	var dur := maxf(0.5, float(line.get("bars", 2)) * 16.0 * c.snd.VE)
+	var vy := r.position.y + 20
+	if timing_show_notes:
+		var lane := Rect2(r.position.x, r.position.y + 1, r.size.x, 17)
+		c.draw_rect(lane, Color(0.06, 0.06, 0.12, 0.6))
+		var notes: Array = _timing_notes(lid)
+		if not notes.is_empty():
+			var lo := 127
+			var hi := 0
+			for n in notes:
+				if int(n) >= 0:
+					lo = mini(lo, int(n)); hi = maxi(hi, int(n))
+			if hi <= lo: hi = lo + 1
+			var bw := lane.size.x / float(notes.size())
+			for k in notes.size():
+				if int(notes[k]) < 0: continue
+				var ny := lane.position.y + lane.size.y - 2.0 - (int(notes[k]) - lo) / float(hi - lo) * (lane.size.y - 5.0)
+				c.draw_rect(Rect2(lane.position.x + k * bw + 1, ny, maxf(1.0, bw - 2), 3), Color("f5f5f5"))
+		ctxt(lane.position.x + 30, lane.position.y + 12, "NOTES", 9, Color(1, 1, 1, 0.35))
+	if timing_show_vox:
+		_draw_env_strip(e, "vox", Color("ffd32a"), Rect2(r.position.x, vy, r.size.x, 26), dur)
+	if timing_show_inst:
+		_draw_env_strip(e, "inst", Color("3498db"), Rect2(r.position.x, vy + 28, r.size.x, 26), dur)
+	# word blocks over the vocal strip, using the edited onsets and phone lengths
+	var onsets: Array = line.get("onsets", [])
+	var ipa: Array = line.get("ipa", [])
+	for i in onsets.size():
+		var x0 := r.position.x + float(onsets[i]) / dur * r.size.x
+		var x1 := r.position.x + (float(onsets[i]) + _timing_word_len(lid, i)) / dur * r.size.x
+		var wbox := Rect2(x0, vy + 1, maxf(2.0, x1 - x0), 24)
+		c.draw_rect(wbox, Color(1, 1, 1, 0.10))
+		c.draw_rect(Rect2(wbox.position, Vector2(2, wbox.size.y)), Color("ffd32a"))
+		if i < ipa.size() and wbox.size.x > 26:
+			txt(Vector2(wbox.position.x + 3, wbox.position.y + 16), String(ipa[i]), 10, Color(1, 1, 1, 0.8))
+	# playhead from the graph click, and the moving one while PLAY runs
+	var hx := r.position.x + timing_playhead / dur * r.size.x
+	c.draw_line(Vector2(hx, r.position.y), Vector2(hx, r.position.y + r.size.y), Color(1, 1, 1, 0.85), 1.5)
+	if timing_play_t0 >= 0.0 and c.snd.now >= timing_play_t0 and c.snd.now <= timing_play_t0 + dur:
+		var px := r.position.x + clampf((c.snd.now - timing_play_t0) / dur, 0.0, 1.0) * r.size.x
+		c.draw_line(Vector2(px, r.position.y), Vector2(px, r.position.y + r.size.y), Color("e74c3c"), 2.0)
 	var base: Array = timing_base.get(lid, {}).get("onsets", [])
-	var edited: Array = timing.get(lid, {}).get("onsets", [])
-	for i in shipped.size():
-		var x := r.position.x + float(shipped[i]) / dur * r.size.x
-		c.draw_line(Vector2(x, r.position.y), Vector2(x, r.position.y + r.size.y), Color(1, 1, 1, 0.9), 1.0)
-		if i < base.size() and i < edited.size():
-			var xe := r.position.x + (float(shipped[i]) + float(edited[i]) - float(base[i])) / dur * r.size.x
-			c.draw_line(Vector2(xe, r.position.y), Vector2(xe, r.position.y + r.size.y), Color("2ecc71"), 2.0)
-			timing_markers.append([Rect2(xe - 14, r.position.y, 28, r.size.y), lid, i])
-			timing_graph_rect = r; timing_graph_dur = dur
+	var edited: Array = line.get("onsets", [])
+	for i in base.size():
+		if i >= edited.size(): break
+		var x := r.position.x + float(edited[i]) / dur * r.size.x
+		c.draw_line(Vector2(x, r.position.y), Vector2(x, r.position.y + r.size.y), Color("2ecc71"), 2.0)
+		timing_markers.append([Rect2(x - 14, r.position.y, 28, r.size.y), lid, i])
+	timing_graph_rect = r; timing_graph_dur = dur
+
+func _draw_env_strip(e: Dictionary, key: String, col: Color, rr: Rect2, dur: float) -> void:
+	c.draw_rect(rr, Color(0, 0, 0, 0.25))
+	if e.is_empty(): return
+	var vals: Array = e.get(key, [])
+	if vals.is_empty(): return
+	var bw := rr.size.x / maxf(1.0, float(vals.size()))
+	for k in vals.size():
+		var h := float(vals[k]) * rr.size.y
+		c.draw_rect(Rect2(rr.position.x + k * bw, rr.position.y + rr.size.y - h, maxf(1.0, bw), h), col)
+	var env_dur := maxf(0.01, float(e.get("dur", 1.0)))
+	var x := rr.position.x + clampf(dur / env_dur, 0.0, 1.0) * rr.size.x
+	if dur < env_dur:
+		c.draw_rect(Rect2(x, rr.position.y, rr.size.x - (x - rr.position.x), rr.size.y), Color(0, 0, 0, 0.55))
 
 var timing_menu_open := false   # line picker (drop-down) is showing
 func _timing_pick(lid: String) -> void:
 	timing_sel = lid; timing_msg = ""; timing_menu_open = false
+	timing_word = -1; timing_phone = 0; timing_playhead = 0.0
 
 func _timing_next() -> void:
 	var n := timing_order.size()
 	if n == 0: return
 	_timing_pick(timing_order[(timing_order.find(timing_sel) + 1) % n])
 
+func _draw_toggle(r: Rect2, label: String, on: bool, fn: Callable) -> void:
+	c.buttons.append([r, fn])
+	rrect(r, Color("16a085") if on else Color("2d3a6b"), 5)
+	ctxt(r.position.x + r.size.x / 2.0, r.position.y + 12, label, 9, Color.WHITE)
+
 func _draw_timing(ox: float) -> void:
 	if timing.is_empty(): _timing_load()
 	timing_markers.clear()
 	if timing_msg != "": txt(Vector2(ox + 14, 50), timing_msg, 11, Color("ffd32a"))   # status (saved, copied, reset) only
 	# line box, left of the first word: tap to open the line picker
-	var box := Rect2(ox + 14, 110, 110, 54)
+	var box := Rect2(ox + 14, 96, 110, 54)
 	c.buttons.append([box, func(): timing_menu_open = not timing_menu_open])
 	rrect(box, Color("2d3a6b"), 8); rframe(box, Color("ffd32a"), 1.5, 8)
 	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 20, "LINE", 10, Color(1, 1, 1, 0.6))
 	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 42, "%s  v" % timing_sel, 16, Color.WHITE)
 	if not timing_menu_open:
-		# next-line arrow, under the box
-		var nx := Rect2(ox + 14, 172, 110, 28)
+		var nx := Rect2(ox + 14, 156, 110, 26)
 		c.buttons.append([nx, func(): _timing_next()])
 		rrect(nx, Color("16a085"), 8); rframe(nx, Color(1, 1, 1, 0.3), 1.0, 8)
-		ctxt(nx.position.x + nx.size.x / 2.0, nx.position.y + 19, "NEXT LINE >", 12, Color.WHITE)
-	# words, to the right of the box: five per row
+		ctxt(nx.position.x + nx.size.x / 2.0, nx.position.y + 18, "NEXT LINE >", 12, Color.WHITE)
 	var line: Dictionary = timing.get(timing_sel, {})
 	var words: Array = line.get("words", [])
 	var onsets: Array = line.get("onsets", [])
-	for i in mini(words.size(), onsets.size()):
-		var x := ox + 134 + (i % 5) * 100
-		var y := 110 + (i / 5) * 62
-		var idx := i
-		var lid2 := timing_sel
-		txt(Vector2(x, y + 14), "%s  %.2f s" % [words[i], float(onsets[i])], 13, Color.WHITE)
-		if timing_menu_open: continue
-		button(Rect2(x, y + 22, 40, 28), "-", Color("c0392b"), func(): _timing_nudge(lid2, idx, -0.01), 16)
-		button(Rect2(x + 46, y + 22, 40, 28), "+", Color("16a085"), func(): _timing_nudge(lid2, idx, 0.01), 16)
-	if not timing_menu_open: _draw_timing_graph(ox, timing_sel)   # the line picker covers the graph
+	var ipa: Array = line.get("ipa", [])
+	if timing_word >= 0 and timing_word < words.size():
+		_draw_timing_word(ox, line)
+		_draw_timing_palette(ox)
+	else:
+		timing_word = -1
+		# words, to the right of the box: five per row; tap one to edit its IPA and lengths
+		for i in mini(words.size(), onsets.size()):
+			var x := ox + 134 + (i % 5) * 100
+			var y := 96 + (i / 5) * 50
+			var idx := i
+			var wbox := Rect2(x, y, 96, 46)
+			c.buttons.append([wbox, func(): timing_word = idx; timing_phone = 0; timing_playhead = float(onsets[idx])])
+			rrect(wbox, Color(0.12, 0.16, 0.3, 0.85), 6)
+			rframe(wbox, Color("ffd32a"), 1.0, 6)
+			txt(Vector2(x + 4, y + 15), "%s  %.2f" % [words[i], float(onsets[i])], 12, Color.WHITE)
+			if i < ipa.size():
+				txt(Vector2(x + 4, y + 33), String(ipa[i]), 11, Color(1, 1, 1, 0.7))
+		_draw_toggle(Rect2(ox + 14, 200, 54, 16), "VOX", timing_show_vox, func(): timing_show_vox = not timing_show_vox)
+		_draw_toggle(Rect2(ox + 72, 200, 54, 16), "INST", timing_show_inst, func(): timing_show_inst = not timing_show_inst)
+		_draw_toggle(Rect2(ox + 130, 200, 60, 16), "NOTES", timing_show_notes, func(): timing_show_notes = not timing_show_notes)
+		_draw_timing_graph(ox, timing_sel)
 	var play_lid := timing_sel
 	button(Rect2(ox + 14, 300, 140, 36), "PLAY", Color("e67e22"), func(): _timing_play(play_lid), 14)
 	button(Rect2(ox + 164, 300, 140, 36), "STOP", Color("c0392b"), func(): _timing_stop(), 14)
 	button(Rect2(ox + 314, 300, 140, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
 	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
 
-	# line picker: drawn last so it sits over the words, graph and buttons
+	# line picker: drawn last so it sits over everything
 	if timing_menu_open:
 		var panel := Rect2(ox + 14, 166, 520, 30 * timing_order.size() + 6)
 		rrect(panel, Color(0.05, 0.05, 0.12, 0.97), 8); rframe(panel, Color("ffd32a"), 1.5, 8)
@@ -545,6 +782,58 @@ func _draw_timing(ox: float) -> void:
 			c.buttons.append([r, func(): _timing_pick(lid)])
 			rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.0, 6)
 			txt(Vector2(r.position.x + 10, r.position.y + 18), "%s   %s" % [lid, " ".join(PackedStringArray(lw))], 13, Color.WHITE)
+
+# word detail: IPA phones as tappable chips; length buttons under them
+func _draw_timing_word(ox: float, line: Dictionary) -> void:
+	var words: Array = line.get("words", [])
+	var ipa: Array = line.get("ipa", [])
+	var phones_all: Array = line.get("phones", [])
+	if timing_word < 0 or timing_word >= phones_all.size(): return
+	var phones: Array = phones_all[timing_word]
+	timing_phone = clampi(timing_phone, 0, maxi(0, phones.size() - 1))
+	var panel := Rect2(ox + 134, 96, 492, 100)
+	rrect(panel, Color(0.08, 0.1, 0.2, 0.95), 8); rframe(panel, Color("e67e22"), 1.2, 8)
+	var ipa_now := String(ipa[timing_word]) if timing_word < ipa.size() else ""
+	txt(Vector2(panel.position.x + 8, panel.position.y + 16),
+		"%s  IPA %s   LEN %.2f s" % [String(words[timing_word]), ipa_now, _timing_word_len(timing_sel, timing_word)],
+		12, Color.WHITE)
+	var x := panel.position.x + 8
+	for k in phones.size():
+		var ph: Dictionary = phones[k]
+		var label := "%s %d" % [String(ph.get("p", "ə")), int(round(float(ph.get("d", 0.12)) * 1000.0))]
+		var w := maxf(40, 12.0 + label.length() * 7.0)
+		if x + w > panel.position.x + panel.size.x - 8: break
+		var idx := k
+		var cr := Rect2(x, panel.position.y + 24, w, 26)
+		c.buttons.append([cr, func(): timing_phone = idx])
+		rrect(cr, Color("16a085") if k == timing_phone else Color("2d3a6b"), 5)
+		rframe(cr, Color("ffd32a") if k == timing_phone else Color(1, 1, 1, 0.25), 1.0, 5)
+		ctxt(cr.position.x + cr.size.x / 2.0, cr.position.y + 17, label, 10, Color.WHITE)
+		x += w + 4
+	var by := panel.position.y + 58
+	var bw := 74.0
+	button(Rect2(panel.position.x + 8, by, bw, 26), "-20 ms", Color("c0392b"), func(): _timing_phone_dur(-0.02), 11)
+	button(Rect2(panel.position.x + 8 + bw + 4, by, bw, 26), "+20 ms", Color("16a085"), func(): _timing_phone_dur(0.02), 11)
+	button(Rect2(panel.position.x + 8 + (bw + 4) * 2, by, bw, 26), "DEL", Color("7f8c8d"), func(): _timing_phone_del(), 11)
+	button(Rect2(panel.position.x + 8 + (bw + 4) * 3, by, bw, 26), "ADD", Color("2980b9"), func(): _timing_phone_add(), 11)
+	button(Rect2(panel.position.x + 8 + (bw + 4) * 4, by, bw, 26), "RESET", Color("8e44ad"), func(): _timing_word_reset(), 11)
+	button(Rect2(panel.position.x + 8 + (bw + 4) * 5, by, bw, 26), "DONE", Color("6c5ce7"), func(): timing_word = -1, 11)
+
+# IPA palette: every phoneme in the bank, two rows; tap replaces the selected phone
+func _draw_timing_palette(ox: float) -> void:
+	var keys: Array = phon_bank.keys()
+	var panel := Rect2(ox + 14, 220, 612, 74)
+	rrect(panel, Color(0.05, 0.05, 0.12, 0.9), 6)
+	txt(Vector2(panel.position.x + 6, panel.position.y + 12), "TAP A SYMBOL TO REPLACE THE SELECTED PHONE", 9, Color(1, 1, 1, 0.5))
+	for k in keys.size():
+		var col := k % 20
+		var rowi := k / 20
+		var r := Rect2(panel.position.x + 6 + col * 30, panel.position.y + 18 + rowi * 27, 28, 24)
+		var key := String(keys[k])
+		c.buttons.append([r, func(): _timing_phone_set(key)])
+		rrect(r, Color("2d3a6b"), 4)
+		rframe(r, Color(1, 1, 1, 0.2), 1.0, 4)
+		ctxt(r.position.x + r.size.x / 2.0, r.position.y + 17, key, 13, Color.WHITE)
 
 func secret(R: float, t: float) -> void:
 	var ox := (R - 640.0) / 2.0

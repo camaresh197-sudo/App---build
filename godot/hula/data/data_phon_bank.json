@@ -1,0 +1,207 @@
+{
+ "voice": "en_US-ryan-high",
+ "rate": 22050,
+ "base_hz": 240.0,
+ "phones": {
+  "a": {
+   "file": "phon/p0061.wav",
+   "dur": 0.43,
+   "voiced": true
+  },
+  "b": {
+   "file": "phon/p0062.wav",
+   "dur": 0.209,
+   "voiced": false
+  },
+  "d": {
+   "file": "phon/p0064.wav",
+   "dur": 0.29,
+   "voiced": false
+  },
+  "e": {
+   "file": "phon/p0065.wav",
+   "dur": 0.36,
+   "voiced": true
+  },
+  "f": {
+   "file": "phon/p0066.wav",
+   "dur": 0.337,
+   "voiced": false
+  },
+  "h": {
+   "file": "phon/p0068.wav",
+   "dur": 0.546,
+   "voiced": false
+  },
+  "i": {
+   "file": "phon/p0069.wav",
+   "dur": 0.313,
+   "voiced": true
+  },
+  "j": {
+   "file": "phon/p006a.wav",
+   "dur": 0.302,
+   "voiced": true
+  },
+  "k": {
+   "file": "phon/p006b.wav",
+   "dur": 0.209,
+   "voiced": false
+  },
+  "l": {
+   "file": "phon/p006c.wav",
+   "dur": 0.731,
+   "voiced": true
+  },
+  "m": {
+   "file": "phon/p006d.wav",
+   "dur": 0.197,
+   "voiced": true
+  },
+  "n": {
+   "file": "phon/p006e.wav",
+   "dur": 0.372,
+   "voiced": true
+  },
+  "o": {
+   "file": "phon/p006f.wav",
+   "dur": 0.372,
+   "voiced": true
+  },
+  "p": {
+   "file": "phon/p0070.wav",
+   "dur": 0.267,
+   "voiced": false
+  },
+  "r": {
+   "file": "phon/p0072.wav",
+   "dur": 0.232,
+   "voiced": true
+  },
+  "s": {
+   "file": "phon/p0073.wav",
+   "dur": 0.313,
+   "voiced": false
+  },
+  "t": {
+   "file": "phon/p0074.wav",
+   "dur": 0.151,
+   "voiced": false
+  },
+  "u": {
+   "file": "phon/p0075.wav",
+   "dur": 0.29,
+   "voiced": true
+  },
+  "v": {
+   "file": "phon/p0076.wav",
+   "dur": 0.511,
+   "voiced": false
+  },
+  "w": {
+   "file": "phon/p0077.wav",
+   "dur": 0.151,
+   "voiced": true
+  },
+  "z": {
+   "file": "phon/p007a.wav",
+   "dur": 0.221,
+   "voiced": false
+  },
+  "æ": {
+   "file": "phon/p00e6.wav",
+   "dur": 0.592,
+   "voiced": true
+  },
+  "ð": {
+   "file": "phon/p00f0.wav",
+   "dur": 0.244,
+   "voiced": false
+  },
+  "ŋ": {
+   "file": "phon/p014b.wav",
+   "dur": 0.337,
+   "voiced": true
+  },
+  "ɑ": {
+   "file": "phon/p0251.wav",
+   "dur": 0.43,
+   "voiced": true
+  },
+  "ɔ": {
+   "file": "phon/p0254.wav",
+   "dur": 0.29,
+   "voiced": true
+  },
+  "ə": {
+   "file": "phon/p0259.wav",
+   "dur": 0.464,
+   "voiced": true
+  },
+  "ɛ": {
+   "file": "phon/p025b.wav",
+   "dur": 0.313,
+   "voiced": true
+  },
+  "ɜ": {
+   "file": "phon/p025c.wav",
+   "dur": 0.313,
+   "voiced": true
+  },
+  "ɡ": {
+   "file": "phon/p0261.wav",
+   "dur": 0.592,
+   "voiced": false
+  },
+  "ɪ": {
+   "file": "phon/p026a.wav",
+   "dur": 0.406,
+   "voiced": true
+  },
+  "ɹ": {
+   "file": "phon/p0279.wav",
+   "dur": 0.186,
+   "voiced": true
+  },
+  "ɾ": {
+   "file": "phon/p027e.wav",
+   "dur": 0.325,
+   "voiced": true
+  },
+  "ʃ": {
+   "file": "phon/p0283.wav",
+   "dur": 0.29,
+   "voiced": false
+  },
+  "ʊ": {
+   "file": "phon/p028a.wav",
+   "dur": 0.313,
+   "voiced": true
+  },
+  "ʌ": {
+   "file": "phon/p028c.wav",
+   "dur": 0.348,
+   "voiced": true
+  },
+  "ʒ": {
+   "file": "phon/p0292.wav",
+   "dur": 0.151,
+   "voiced": false
+  },
+  "ʔ": {
+   "file": "phon/p0294.wav",
+   "dur": 0.476,
+   "voiced": false
+  },
+  "ː": {
+   "file": "phon/p02d0.wav",
+   "dur": 0.232,
+   "voiced": false
+  },
+  "θ": {
+   "file": "phon/p03b8.wav",
+   "dur": 0.418,
+   "voiced": false
+  }
+ }
+}

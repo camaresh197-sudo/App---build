@@ -13,6 +13,7 @@ Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session, 
 | Scoring, input, 2D game loop | `scripts/main.gd` | docs/CODEMAP.md |
 | Menus, options | `scripts/menu.gd`, `data/data_menu.json`, `scripts/save.gd` | — |
 | World map | `scripts/map.gd`, `data/data_map.json` | — |
+| TIMING editor (IPA, phone lengths, preview) | `scripts/menu.gd`, `data/data_word_timing.json` | docs/TIMING_EDITOR.md |
 | Cutscenes | `scripts/cutscene.gd`, `data/data_cutscenes.json` | — |
 | Word timing (phone TIMING tab, PC re-sing) | `scripts/menu.gd` (`_draw_timing`), `data/data_word_timing.json`, `tools/retime.py` | docs/AUDIO.md |
 | TIMING tab: line picker, PLAY, graph, drag | `scripts/menu.gd` (`_draw_timing`, `_timing_play`, `timing_move`), `scripts/main.gd` (touch routing), `scripts/sound.gd` (`start_victory_at`, `stop_vox`) | docs/AUDIO.md |

@@ -173,6 +173,9 @@ func _stream(key: String) -> AudioStream:
 	if cache.has(key): return cache[key]
 	var path := "res://audio/%s.ogg" % key
 	var s: AudioStream = load(path) if ResourceLoader.exists(path) else null
+	if s == null:
+		var wav := "res://audio/%s.wav" % key
+		s = load(wav) if ResourceLoader.exists(wav) else null
 	cache[key] = s; return s
 
 func _pick(name: String, midi: int) -> Array:   # -> [stream, root] or []
@@ -226,7 +229,7 @@ func play(name: String, o := {}) -> void:
 
 # stop word-timing previews: drop queued Vox chunks and silence the Vox voices
 func stop_vox() -> void:
-	later = later.filter(func(e): return e[1].get_bound_arguments_count() == 0 or not str(e[1].get_bound_arguments()[0]).begins_with("vox/"))
+	later = later.filter(func(e): return e[1].get_bound_arguments_count() == 0 or not (str(e[1].get_bound_arguments()[0]).begins_with("vox/") or str(e[1].get_bound_arguments()[0]).begins_with("phon/")))
 	for i in voices.size():
 		if voices[i].bus == "Vox":
 			voices[i].stop(); vstop[i] = 0.0
@@ -312,10 +315,10 @@ func victory_row_step(row: int) -> int:
 		st += 8 if int(vic[i][17]) == 1 else 16
 	return st
 
-func start_victory_at(row: int) -> void:
+func start_victory_at(row: int, step_off: int = 0) -> void:
 	stop_music()
 	start_music("victory")
-	step = victory_row_step(row)
+	step = victory_row_step(row) + maxi(0, step_off)
 	next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
 
 func stop_music() -> void:

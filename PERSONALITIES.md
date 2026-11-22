@@ -58,6 +58,7 @@ Read this before the Log. Each one cost me time this session.
 ## Progress log
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
+| 2026-11-22 | Greg | Built the IPA/length editor and a phoneme preview voice instead of stopping at "the phone can't run Piper", and listed the exact re-sing gap rather than calling it done | `phoneme_bank.py`, `menu.gd` |
 | 2026-11-22 | Greg | Pulled a clone that was 53 commits stale, then checked build 261 against the release before saying the phone was current, and reported the smoke exit warning instead of calling it clean | `5c1a4fb`, run 44985039343 |
 | 2026-11-21 | Greg | Jaw pass: checked the mesh in Blender before and after instead of trusting import/smoke, found the shape-key Basis trap, and reported the chin as improved-but-modest rather than done | `face_jaw2.py`, `docs/CHARACTER.md` |
 | 2026-11-21 | Wren | Repo split and cleanup verified with import + smoke on `656c738` before pushing; declined to claim Wren's past work that this session can't see | `656c738`, `27f5a67` |
