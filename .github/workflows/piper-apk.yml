@@ -83,8 +83,12 @@ jobs:
       - name: Add Piper sources and model to the Android build
         run: |
           B=godot/hula/android/build
-          mkdir -p $B/src/main/assets/piper $B/src/main/java/com/camaresh
-          cp piper-model/en_US-ryan-medium.onnx piper-model/en_US-ryan-medium.onnx.json $B/src/main/assets/piper/
+          # Godot's export rewrites src/main/assets and wiped the model (build 7: "assets/piper is empty"),
+          # so the model lives in its own asset folder, registered in build.gradle below.
+          mkdir -p $B/piper-assets/piper $B/src/main/java/com/camaresh
+          cp piper-model/en_US-ryan-medium.onnx piper-model/en_US-ryan-medium.onnx.json $B/piper-assets/piper/
+          grep -q "piper-assets" $B/build.gradle || sed -i "s#main.res.srcDirs += \['res'\]#main.res.srcDirs += ['res']\n        main.assets.srcDirs += ['piper-assets']#" $B/build.gradle
+          grep -n "piper-assets" $B/build.gradle
           cp -r android/piper/src/main/java/com/camaresh/piper $B/src/main/java/com/camaresh/
       - name: Inject Piper into the Android build
         run: |

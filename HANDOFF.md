@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (Piper model missing from APK), 2026-11-22:** User screenshot, build 7: "model failed: assets/piper is empty". The model was copied into `src/main/assets/piper`, which Godot's export rewrites, so it was lost.
+  Fix in `piper-apk.yml`: the model goes in `piper-assets/piper`, and build.gradle adds `main.assets.srcDirs += ['piper-assets']` beside the template's `main.res.srcDirs`.
+  Checks: the sed edit was run on the real template and gives the expected lines. Not checked: the CI build or the model loading on the phone.
+  Next: install the new `HulaVaqueroPiper`; the status line should then read "plugin + model ready".
+  **Complaints:** (1) Wren put the model where the export overwrites it; check file survival after export. (2) The 77 MB APK size was misread as proof the model was in; check the assets list. (3) Nobody has confirmed the model loads on the phone yet; read the status line first.
 - **Wren v3 (Piper model error shown), 2026-11-22:** User screenshot: TIMING says "plugin loaded but model failed" and "Update ready — closing to apply"; the Piper APK is `BUILD 5`. Logcat is not visible on the phone, so the reason was hidden.
   Change: `PiperPlugin.kt` keeps the first load failure (`loadError`, `lastError()`); `piper.gd` shows it on the TIMING line.
   Checks: smoke clean. Not checked: Kotlin compile (CI runs it), the model load itself.
