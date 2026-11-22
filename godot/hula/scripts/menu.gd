@@ -686,7 +686,8 @@ func _timing_word_edited(lid: String, i: int) -> bool:
 func _timing_play_bank_word(phs: Array, t: float, to_downbeat: float, segs: Array) -> void:
 	var t_pos := t
 	var tw := 0.0   # time from the start of the word
-	for j in phs.size():
+	var j := 0
+	while j < phs.size():
 		var p := String((phs[j] as Dictionary).get("p", "ə"))
 		var nx := String((phs[j + 1] as Dictionary).get("p", p)) if j + 1 < phs.size() else p
 		var d := float((phs[j] as Dictionary).get("d", 0.12))
@@ -694,12 +695,21 @@ func _timing_play_bank_word(phs: Array, t: float, to_downbeat: float, segs: Arra
 		for s in segs:
 			var sv: Vector3 = s
 			if tw >= sv.x - 0.001 and tw < sv.y - 0.001: mult = sv.z
+		# a diphthong (vowel then glide) is one bank sample, "e|ɪ", that already holds both parts.
+		# Play it whole and skip the glide: playing the vowel's pair cut the glide off, and the glide
+		# on its own came out as a short "geh".
+		var skip := 0
+		var length := d
+		if (phs[j] as Dictionary).get("dip", false) and j + 1 < phs.size() and (phs[j + 1] as Dictionary).get("dip", false) and DIP_GLIDE.find(nx) >= 0:
+			length = d + float((phs[j + 1] as Dictionary).get("d", 0.08))
+			skip = 1
 		if t_pos >= -0.001 and di_bank.has(p + "|" + nx):
 			var e: Dictionary = di_bank[p + "|" + nx]
 			c.snd.play("di_bank", {"v": 1.8, "dl": to_downbeat + maxf(0.0, t_pos),
-				"from": float(e.get("start", 0.0)), "dur": maxf(0.04, d) + 0.02, "rate": mult, "bus": "Vox"})
-		t_pos += d
-		tw += d
+				"from": float(e.get("start", 0.0)), "dur": maxf(0.04, length) + 0.02, "rate": mult, "bus": "Vox"})
+		t_pos += length
+		tw += length
+		j += 1 + skip
 
 # On: the bank is the no-Piper preview. Its last recogniser check (before the pad-id fix in
 # diphone_bank.py) heard nothing in it, and the rebuilt bank has not been heard on a phone yet.
