@@ -33,13 +33,15 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
 
     private fun loadModel(): Boolean = synchronized(lock) {
         if (session != null) return true
+        // every early exit records its reason: a silent false is what made the last failure unreadable
+        fun fail(why: String): Boolean { loadError = why.take(160); return false }
         try {
-            // Godot 4.6 declares getActivity() nullable; a bare .assets access fails the Kotlin build.
-            val activity = getActivity() ?: return false
+            val activity = getActivity() ?: return fail("no activity yet")
             val assets = activity.assets
-            val names = assets.list("piper") ?: return false
-            val onnx = names.firstOrNull { it.endsWith(".onnx") } ?: return false
-            val cfgName = names.firstOrNull { it.endsWith(".onnx.json") } ?: return false
+            val names = assets.list("piper") ?: return fail("APK has no assets/piper folder")
+            if (names.isEmpty()) return fail("assets/piper is empty")
+            val onnx = names.firstOrNull { it.endsWith(".onnx") } ?: return fail("no .onnx in assets/piper: " + names.joinToString(","))
+            val cfgName = names.firstOrNull { it.endsWith(".onnx.json") } ?: return fail("no .onnx.json in assets/piper")
             val model = assets.open("piper/$onnx").readBytes()
             val cfg = JSONObject(assets.open("piper/$cfgName").bufferedReader().use { it.readText() })
             sampleRate = cfg.optJSONObject("audio")?.optInt("sample_rate", 22050) ?: 22050
@@ -54,11 +56,11 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
             idMap = map
             env = OrtEnvironment.getEnvironment()
             session = env!!.createSession(model)
+            loadError = ""
             return true
         } catch (t: Throwable) {
             Log.e("PiperPlugin", "loadModel failed", t)
-            loadError = "${t.javaClass.simpleName}: ${t.message ?: "no message"}".take(160)
-            return false
+            return fail("${t.javaClass.simpleName}: ${t.message ?: "no message"}")
         }
     }
 
