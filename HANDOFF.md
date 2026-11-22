@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (onsets past the line), 2026-11-22:** User: "Changing word timing doesn't play if it's past the default vocal graph." Cause: the graph and PLAY use the line's 2 bars (3.36 s), but a drag or nudge could move the last word to 9.9 s. Such words were drawn off the graph and PLAY stopped before them.
+  Change: `_timing_line_len`, `_timing_onset_bounds` and `_timing_clamp_onsets` in `menu.gd`. Drags, nudges and saved timing are kept inside the line; the last word may start up to 3.26 s. The shipped onsets already sat inside it, so no shipped timing moves.
+  Checks: smoke clean; a harness check pushed the last word +9 s and it stopped at 3.26 s, the first word -5 s stopped at 0 s. Not checked: by ear, or on a phone.
+  Decision: words cannot move past the line's end. A word that needs to sit later must move into the next line's bars, which would overlap that line's audio. If you want longer lines, change the bar count in `data_word_timing.json` and the victory sequence together.
+  **Complaints:** (1) Wren let the drag range ignore the line the graph draws; check ranges against what is shown. (2) Words near the end get cut by the line end; show a cut warning or extend the line. (3) Nobody has played a moved word on a phone yet; test a word at 3.0 s first.
 - **Wren v3 (Piper status), 2026-11-22:** User: "I applied the piper apk and ipa still don't work." Code trace: the TIMING tab printed "Piper preview (exact)" whenever the plugin singleton existed, even when `singIpa` returned no audio; the edited word then silently played the real clip. So a broken plugin looks like "nothing happens".
   Change: `PiperVoice.status()` (cached) reports plugin missing, model failed, or ready; `_timing_play_piper` shows that status and says when Piper gave no audio for an edited word. Smoke clean. Not checked on a phone.
   Also true: Piper renders IPA only; phone-length edits do not change the Piper audio (the Kotlin `singIpa` ignores `d`).

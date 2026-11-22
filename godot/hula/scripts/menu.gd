@@ -368,6 +368,8 @@ func _timing_load() -> void:
 			for k in ["onsets", "ipa", "phones"]:
 				if saved[lid].get(k) is Array:
 					timing[lid][k] = (saved[lid][k] as Array).duplicate(true)
+	for lid in timing:
+		_timing_clamp_onsets(lid)
 
 # IPA for one word: data_phonics.json when it has the word, else the written word.
 func _timing_word_ipa(w: String) -> String:
@@ -449,10 +451,28 @@ func _timing_word_len(lid: String, i: int) -> float:
 
 func _timing_nudge(lid: String, i: int, d: float) -> void:
 	var on: Array = timing[lid]["onsets"]
-	var lo := 0.0 if i == 0 else float(on[i - 1]) + TIMING_GAP
-	var hi := 9.9 if i + 1 >= on.size() else float(on[i + 1]) - TIMING_GAP
-	on[i] = snappedf(clampf(float(on[i]) + d, lo, hi), 0.01)
+	var b := _timing_onset_bounds(lid, i)
+	on[i] = snappedf(clampf(float(on[i]) + d, b.x, b.y), 0.01)
 	timing_msg = ""
+
+# The line's span on the graph and in PLAY: the shipped line is bars * 16 steps. A word past it
+# is drawn off the graph and PLAY stops before it, so onsets stay inside the line.
+func _timing_line_len(lid: String) -> float:
+	return float((timing.get(lid, {}) as Dictionary).get("bars", 2)) * 16.0 * c.snd.VE
+
+# allowed [min, max] for word i's onset: after the previous word, and early enough that the word
+# still starts inside the line (its last 0.1 s may fall off the end, its start may not)
+func _timing_onset_bounds(lid: String, i: int) -> Vector2:
+	var on: Array = timing[lid]["onsets"]
+	var lo := 0.0 if i == 0 else float(on[i - 1]) + TIMING_GAP
+	var hi := (_timing_line_len(lid) - 0.1) if i + 1 >= on.size() else float(on[i + 1]) - TIMING_GAP
+	return Vector2(lo, maxf(lo, hi))
+
+func _timing_clamp_onsets(lid: String) -> void:
+	var on: Array = timing[lid].get("onsets", [])
+	for i in on.size():
+		var b := _timing_onset_bounds(lid, i)
+		on[i] = clampf(float(on[i]), b.x, b.y)
 
 func _timing_payload() -> Dictionary:
 	var out := {}
@@ -727,11 +747,10 @@ func timing_move(x: float) -> void:
 	if timing_drag_index < 0 or timing_graph_rect.size.x <= 0.0: return
 	var on: Array = timing[timing_drag_lid]["onsets"]
 	var i := timing_drag_word
-	var lo := 0.0 if i == 0 else float(on[i - 1]) + TIMING_GAP
-	var hi := 9.9 if i + 1 >= on.size() else float(on[i + 1]) - TIMING_GAP
-	on[i] = clampf(float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur, lo, hi)
+	var b := _timing_onset_bounds(timing_drag_lid, i)
+	on[i] = clampf(float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur, b.x, b.y)
 	timing_drag_x = x
-	timing_msg = ""
+	timing_msg = "at the end of the line" if float(on[i]) >= b.y - 0.001 and i + 1 >= on.size() else ""
 
 func timing_release() -> void:
 	if timing_drag_index >= 0 and timing.has(timing_drag_lid):
