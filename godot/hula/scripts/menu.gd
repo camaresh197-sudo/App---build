@@ -387,11 +387,23 @@ const VOX_LEAD := 0.15
 func _timing_play(lid: String) -> void:
 	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
 	var edited: Array = timing.get(lid, {}).get("onsets", [])
+	var sec := String(timing.get(lid, {}).get("section", "v-B"))
+	var bar := int(timing.get(lid, {}).get("bar", 0))
+	var row: int = c.snd.victory_row_of(sec, bar)
+	if row < 0:
+		timing_msg = "no chorus bar for %s" % lid; return
+	# the track starts at this line's bar; the sequencer's own vocals are off so only this line sings
+	c.snd.have_vox = false
+	c.snd.start_victory_at(row)
+	var to_downbeat: float = c.snd.next_t - c.snd.now
 	if shipped.is_empty() or edited.size() != shipped.size():
-		c.snd.play("vox/" + lid, {"v": 2.4}); return
+		c.snd.play("vox/" + lid, {"v": 2.4, "dl": maxf(0.0, to_downbeat - VOX_LEAD)}); return
 	for i in shipped.size():
 		var dur := float(shipped[i + 1]) - float(shipped[i]) if i + 1 < shipped.size() else 0.0
-		c.snd.play("vox/" + lid, {"v": 2.4, "dl": VOX_LEAD + float(edited[i]), "from": VOX_LEAD + float(shipped[i]), "dur": dur})
+		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + float(edited[i]), "from": VOX_LEAD + float(shipped[i]), "dur": dur})
+
+func _timing_stop() -> void:
+	c.snd.stop_vox(); c.snd.stop_music(); c.snd.have_vox = true
 
 # Sound graph under the word rows: the sung clip (yellow) over the instruments (blue) for the same
 # stretch of the track, from data/data_line_env.json (tools/line_env.py). White ticks are the shipped
@@ -465,7 +477,7 @@ func _draw_timing(ox: float) -> void:
 	if not timing_menu_open: _draw_timing_graph(ox, timing_sel)   # the line picker covers the graph
 	var play_lid := timing_sel
 	button(Rect2(ox + 14, 300, 140, 36), "PLAY", Color("e67e22"), func(): _timing_play(play_lid), 14)
-	button(Rect2(ox + 164, 300, 140, 36), "STOP", Color("c0392b"), func(): c.snd.stop_vox(), 14)
+	button(Rect2(ox + 164, 300, 140, 36), "STOP", Color("c0392b"), func(): _timing_stop(), 14)
 	button(Rect2(ox + 314, 300, 140, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
 	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
 
@@ -492,7 +504,7 @@ func secret(R: float, t: float) -> void:
 		var tr := Rect2(ox + 262 + tab_idx * 90, 8, 86, 24)
 		var is_on := tab_idx == song_test_tab
 		var idx := tab_idx
-		c.buttons.append([tr, func(): song_test_tab = idx; song_test = ""; sec_msg = ""])
+		c.buttons.append([tr, func(): song_test_tab = idx; song_test = ""; sec_msg = ""; c.snd.have_vox = true])
 		rrect(tr, Color("16a085") if is_on else Color("2d3a6b"), 7)
 		rframe(tr, Color("ffd32a") if is_on else Color(1, 1, 1, 0.4), 2.0 if is_on else 1.0, 7)
 		ctxt(tr.position.x + tr.size.x / 2.0, tr.position.y + 17, ["THEATER", "SONGS", "MUSICAL", "TIMING"][tab_idx], 11, Color.WHITE)
@@ -537,4 +549,4 @@ func secret(R: float, t: float) -> void:
 
 	if song_test_tab != 3:
 		button(Rect2(ox + 14, 314, 164, 38), "STOP", Color("c0392b"), func(): song_test = ""; c.snd.stop_music(), 16)
-	button(Rect2(ox + 14, 8, 56, 22), "BACK", Color("6c5ce7"), func(): song_test = ""; c.snd.stop_music(); c.state = c.S.MENU, 11)
+	button(Rect2(ox + 14, 8, 56, 22), "BACK", Color("6c5ce7"), func(): song_test = ""; c.snd.stop_music(); c.snd.have_vox = true; c.state = c.S.MENU, 11)

@@ -299,6 +299,25 @@ func start_music(track := "game") -> void:
 	duck_gain = 1.0
 	cur = track; boost = 1.8 if track == "menu" else (0.6 if track == "victory" else 1.15); playing = true; step = 0; next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
 
+# word-timing preview: the victory track starts at a row of vic (its bar starts at next_t)
+func victory_row_of(sec: String, bar: int) -> int:
+	for r in vic.size():
+		if String(vic[r][6]) == sec and int(vic[r][7]) == bar: return r
+	return -1
+
+# steps before a row: a half-bar row (index 17 = 1) plays 8 steps, the others 16 (see _process)
+func victory_row_step(row: int) -> int:
+	var st := 0
+	for i in range(mini(row, vic.size())):
+		st += 8 if int(vic[i][17]) == 1 else 16
+	return st
+
+func start_victory_at(row: int) -> void:
+	stop_music()
+	start_music("victory")
+	step = victory_row_step(row)
+	next_t = now + 0.08; beat_t = next_t; bar_t = beat_t
+
 func stop_music() -> void:
 	playing = false
 	for i in voices.size():
