@@ -596,8 +596,11 @@ func _timing_play(lid: String) -> void:
 	if PiperVoice.available():
 		_timing_play_piper(lid, head, to_downbeat, line_len)
 		return
-	timing_msg = "diphone preview; re-sing for the real voice"
-	if di_bank.is_empty():
+	# The diphone bank stitches 2-phone renders and still reads as gibberish (a speech recogniser
+	# hears nothing in it), so it is off. Without the Piper build, an edited line plays the real
+	# clip at the edited onsets; IPA and phone lengths are heard after a re-sing (COPY, retime.py).
+	timing_msg = "real clip at your onsets; IPA/length: COPY + retime.py, or the Piper build"
+	if not DIPHONE_PREVIEW or di_bank.is_empty():
 		var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
 		for i in shipped.size():
 			if i >= onsets.size(): break
@@ -621,6 +624,7 @@ func _timing_play(lid: String) -> void:
 					"from": float(e.get("start", 0.0)), "dur": maxf(0.04, d) + 0.02, "bus": "Vox"})
 			t += d
 
+const DIPHONE_PREVIEW := false   # see _timing_play: the stitched preview is unintelligible
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 
 var piper_cache := {}   # "lid_i_<ipa>" -> AudioStreamWAV from the embedded Piper

@@ -13,7 +13,7 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
 | `scripts/legacy.gd` | 10 | 126 |
 | `scripts/main.gd` | 468 | 4999 |
 | `scripts/map.gd` | 231 | 1841 |
-| `scripts/menu.gd` | 1009 | 12932 |
+| `scripts/menu.gd` | 1013 | 13040 |
 | `scripts/piper.gd` | 23 | 221 |
 | `scripts/save.gd` | 28 | 345 |
 | `scripts/scene_generator.gd` | 135 | 901 |
@@ -350,23 +350,24 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  556  func _timing_is_sketch(lid: String) -> bool
  567  const VOX_LEAD
  569  func _timing_play(lid: String) -> void
- 630  func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void
- 654  func _piper_word(lid: String, i: int) -> AudioStreamWAV
- 666  func _timing_play_before(lid: String) -> void
- 685  func _timing_stop() -> void
- 706  func timing_grab(pos: Vector2, idx: int) -> bool
- 720  func timing_move(x: float) -> void
- 730  func timing_release() -> void
- 735  func _timing_notes(lid: String) -> Array
- 745  func _draw_timing_graph(ox: float, lid: String) -> void
- 804  func _draw_env_strip(e: Dictionary, key: String, col: Color, rr: Rect2, dur: float) -> void
- 819  func _timing_pick(lid: String) -> void
- 823  func _timing_next() -> void
- 828  func _draw_toggle(r: Rect2, label: String, on: bool, fn: Callable) -> void
- 833  func _draw_timing(ox: float) -> void
- 903  func _draw_timing_word(ox: float, line: Dictionary) -> void
- 939  func _draw_timing_palette(ox: float) -> void
- 954  func secret(R: float, t: float) -> void
+ 627  const DIPHONE_PREVIEW
+ 634  func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void
+ 658  func _piper_word(lid: String, i: int) -> AudioStreamWAV
+ 670  func _timing_play_before(lid: String) -> void
+ 689  func _timing_stop() -> void
+ 710  func timing_grab(pos: Vector2, idx: int) -> bool
+ 724  func timing_move(x: float) -> void
+ 734  func timing_release() -> void
+ 739  func _timing_notes(lid: String) -> Array
+ 749  func _draw_timing_graph(ox: float, lid: String) -> void
+ 808  func _draw_env_strip(e: Dictionary, key: String, col: Color, rr: Rect2, dur: float) -> void
+ 823  func _timing_pick(lid: String) -> void
+ 827  func _timing_next() -> void
+ 832  func _draw_toggle(r: Rect2, label: String, on: bool, fn: Callable) -> void
+ 837  func _draw_timing(ox: float) -> void
+ 907  func _draw_timing_word(ox: float, line: Dictionary) -> void
+ 943  func _draw_timing_palette(ox: float) -> void
+ 958  func secret(R: float, t: float) -> void
 ```
 
 ## `scripts/piper.gd`

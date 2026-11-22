@@ -70,7 +70,8 @@ Do not judge Piper by a single 0.1-0.4 s word through a recogniser: even the off
 
 ## Limits — read before trusting it
 
-- The diphone preview is a sketch: pairs are cut to the phone length and overlap, so joins
+- **The diphone preview is OFF** (`DIPHONE_PREVIEW := false` in `menu.gd`): a speech recogniser hears nothing in it even with correct pads. Without the Piper build, an edited line plays the real clip at the edited onsets; hear IPA and length edits via COPY + `retime.py`. The old description follows.
+- The diphone preview was a sketch: pairs are cut to the phone length and overlap, so joins
   can be audible and the pitch is flat. It is for judging IPA and timing, not the final
   voice. `di_bank.ogg` was rebuilt with pads (1.98 MB); not yet heard on a phone.
 - `retime.py` writes `ipa` / `phones` for a changed line; `piper_sing.py` re-sings it as one

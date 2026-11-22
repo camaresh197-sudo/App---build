@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (diphone off), 2026-11-22:** User: "It didn't fix the gibberish problem." My earlier fix repaired the PC re-sing and the plugin ids, not what the phone plays: with no Piper APK the phone uses the diphone bank, and a recogniser still hears nothing in it (A0: empty; C0: "Thanks for watching. Bye!").
+  The Piper APK has never finished building (`piper-apk` runs 1 and 2 still in progress), so the phone has only ever had the diphone fallback.
+  Change: `DIPHONE_PREVIEW := false` in `menu.gd`. Edited lines now play the real clip at the edited onsets; IPA and phone lengths are heard after COPY + `retime.py`, or in the Piper build. Smoke clean. Not heard on a phone.
+  Next: get one `piper-apk` run to finish and install it; then feed the plugin the whole line, not one word.
+  **Complaints:** (1) Wren tested the PC path and called the phone fixed; test what the phone plays. (2) Greg's diphone preview was never recognised-tested before shipping; unintelligible stitching should not ship. (3) piper-apk runs hang unnoticed for an hour; someone must check them.
 - **Wren v3 (gibberish root cause), 2026-11-22:** User: "It still produces gibberish. How do we fix this?" Cause: every custom-IPA path sent Piper `^ p1 p2 $` without the pad id after each phoneme; the voice is trained on `^ _ p1 _ p2 _ $`. Fixed in `piper_sing.py`, `PiperPlugin.kt`, `diphone_bank.py`.
   Also: stress marks were dropped by the editor (now `m`/`x` keys on each phone); default phone lengths came from the broken renders (rebuilt: new `tools/phone_durations.py`); re-sing now renders the whole line in one pass and cuts phones at the model's real alignments.
   Checks: recogniser on real `render_phones` output: A0 "I am Jeff and I'm so gay" (was empty), C0 "Shake the street, Jeff wants to bait" (was "I... I... I..."); B0 partial ("Jeff is here, so..."). Import 0, smoke clean. Not checked: by ear, the Kotlin plugin (no SDK), a phone.
