@@ -38,6 +38,8 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (AUDIO.md), 2026-11-22:** User: "Add to audio. Md". Updated `docs/AUDIO.md`: edited-line singer, free words and locks, the status line, new tools, and gotchas (Piper pad ids, test with a recogniser on the phone's own path, Piper APK vs packs, model asset folder). Docs only; no code or phone change.
+  **Complaints:** (1) Wren left AUDIO.md describing neighbour limits for hours; update the doc with the behaviour change. (2) The doc claims nothing is confirmed by ear; someone must listen. (3) VOCAL.md still lacks the pad-id finding; add it next.
 - **Wren v3 (palette taps swallowed; free word timing), 2026-11-22:** User: changing the IPA letters does nothing; wants free reign over word timing. Cause 1 (my regression from 8fd5fc6): `timing_grab` swallowed taps inside the graph's rect while the word editor was open, but the palette is drawn on exactly that rect (`ox+14, 220, 612`), so no palette tap reached the editor. Now the editor owns those taps and the graph rect and markers are cleared while it is open.
   Change 2: `_timing_set_onset` now just clamps one word to 0..line end - 0.1; no push, no order, no neighbour limit. Locked words still do not move. Drag message at the edge: "edge of the line".
   Note: the singer sings words in order, so `retime.py` still rejects out-of-order onsets (message explains); the phone preview does not care.

@@ -89,6 +89,12 @@ on an already-sung clip would borrow from itself).
    Ogg. The clip is a **single dry lead** — no delayed doubles, so the Vox bus reverb is
    not doubled into an echo.
 
+**Edited lines (TIMING tab).** A line whose `data_word_timing.json` entry carries `ipa` / `phones`
+is not sung from its text. `render_phones` synthesizes the **whole edited line in one pass**
+(`line_audio`: Piper's pad-id layout, stress marks, a space token between words, per-id lengths from
+the model's alignments via the `onnx` package), cuts each phone at its real boundary, warps it to its
+edited length and puts the word at its onset. Details and the history of the bug: `docs/TIMING_EDITOR.md`.
+
 ### Chorus timing (two-bar lines)
 
 See `docs/VICTORY_LYRICS.md` for every line's bars, words, syllables and notes.
@@ -114,26 +120,38 @@ octave errors on rendered audio — see its docstring); `vox_ab_check.py` compar
 
 ## Word timing from the phone
 
-Status: the TIMING tab is on `godot`. Its PLAY, graph and drag are not yet checked on a phone.
+Status (2026-11-22): the TIMING tab is on `godot`; the embedded Piper preview loads on the Piper APK. IPA-edit audibility,
+word-fitting, free word timing and locks are not yet confirmed by ear on a phone.
 
 Secret menu (tap RUNS three times on the title), **TIMING** tab:
 
 - **Line box** (left of the words): shows the current line. Tap it for a picker with each line's
   words (B0, B1, B2). The picker draws over everything else on the tab.
 - **NEXT LINE >**: moves to the next line, wrapping after the last.
-- **Words**: five per row, each with `-` and `+` (0.01 s). Or drag a green onset tick on the
-  graph: it stays between its neighbours and rounds to 0.01 s on release.
+- **Words**: five per row; tap a word to edit its IPA and phone lengths (palette of 40 symbols,
+  `-20 ms` / `+20 ms`, ADD, DEL, RESET, DONE). Each word box has a small **LOCK** toggle (red when
+  locked). Drag a green onset tick on the graph, or nudge it, to move a word.
+- **Words are free.** Each word moves alone to anywhere in the line (0 to its end, minus 0.1 s):
+  early, late, past its neighbours, in any order, overlapping or not. Nothing is pushed. A locked word
+  does not move. Words cannot go past the end of the line, because PLAY and the graph stop there.
+  The singer sings words in order, so `retime.py` rejects out-of-order onsets after COPY.
 - **PLAY**: starts the victory instruments at the line's chorus bar (B0 bar 0, B1 bar 2, B2 bar 4),
-  with the sequencer's own vocals off, and sings the line with the edited onsets. Each word runs to the
-  next word's edited onset, so dragging a word also moves where it ends; the last word runs to the end
-  of the clip. The track stops after the line's bars (`bars` x 16 steps x 0.105 s).
+  with the sequencer's own vocals off, and sings the line with the edited onsets. An unedited word plays
+  its shipped length from the shipped clip at its new onset (a moved word is not cut by the gap to
+  the next word). An edited word plays through the **embedded Piper** when the Piper APK is installed,
+  fitted to its edited length. The track stops after the line's bars (`bars` x 16 steps x 0.105 s).
+- **Status line** (top of the tab, yellow): says whether Piper is really running (`plugin missing`,
+  `model failed: <reason>`, `plugin + model ready`) and, after PLAY, `Piper sang N edited word(s): natural X s,
+  fitted to Y s`. Without the Piper APK an edited line plays the real clip at the edited onsets; IPA and
+  length edits are heard after a PC re-sing (the stitched diphone preview is off: unintelligible).
 - **Playhead:** a white vertical line moves left to right across the graph while the line plays.
 - **STOP**: stops the track and restores vocals. Leaving the tab or BACK does the same.
 - **SAVE** (kept on the phone) or **COPY** (JSON to the clipboard; paste it into the chat or a file).
   Data lives in `godot/hula/data/data_word_timing.json`.
 
-Shipped clips are not re-sung by PLAY. It shifts each word's audio to its edited onset (no stretch),
-so timing and pitch are unchanged. Edits reach the rendered clip only after a PC re-sing.
+Without the Piper APK, shipped clips are not re-sung by PLAY: each word's audio is shifted to its edited
+onset (no stretch), so timing and pitch are unchanged. Edits reach the rendered clip only after a PC
+re-sing. Piper renders IPA edits only; it fits a word's total length, not each phone's.
 
 **Sound graph** (under the word rows): the sung clip (yellow) over the instrument stem (blue), for the
 line's stretch of the track, from `godot/hula/data/data_line_env.json`. White ticks: shipped onsets;
@@ -151,9 +169,8 @@ python3 tools/retime.py timing_from_phone.json              # writes the data, r
 `pyworld`, `soundfile` and the Ryan voice model in `tools/models/`. The phone shows edits
 immediately but plays the old clip until the PC re-sing is merged and the app is updated.
 
-**Coverage:** word onsets exist only for B0, B1 and B2. The song has 16 sung lines (the `SUNG` list in
-`tools/snip_from_stem.py`); the others have lyrics in `data_lyrics.json` but no onsets, so they cannot be
-timed in the tab yet.
+**Coverage:** all 16 sung lines are editable (`tools/build_timing.py` fills the data; `tools/line_env.py`
+rebuilds the graphs). Onsets for the lines other than B0 to B2 come from the render grid, not from audio.
 
 ## Known problems
 
@@ -218,6 +235,8 @@ py tools\piper_sing.py         # the singer: Piper on the melody (--force, --onl
 py tools\vox_singer.py --src <dir>   # older WORLD voice conversion; --style/--lisp/--tipsy/--dopey
 py tools\lyrics_doc.py             # rebuild docs/VICTORY_LYRICS.md (bars, words, syllables, notes, IPA)
 python3 tools/retime.py <file> [--dry-run]     # apply word timing copied from the TIMING tab; re-sings changed lines
+python3 tools/phone_durations.py [--dry-run]   # rebuild data_phon_bank.json phone lengths from in-context Piper alignments
+python3 tools/diphone_bank.py --force          # the stitched diphone preview bank (off in the game; kept for reference)
 python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox --start S --end E --out x.wav
 ```
 
@@ -231,6 +250,19 @@ real time and prints PRE/POST peak/RMS/crest/clip plus music-bus levels, and wri
 - **"There's an echo."** Check the Vox bus before the clips: `AudioEffectReverb` at 15% wet with a 0.5 room reads as a slap behind a single dry lead. The clips themselves carry no delay (verify with an envelope autocorrelation at 50–300 ms); they are one dry take by design.
 - **"It stutters between words."** Measure holes, don't guess: 15–80 ms unvoiced gaps inside a line are the singer's fault (fixed by the legato pass), while 150 ms+ gaps are commas and musical rests and should stay. `vox_note_check.py` reports run counts; the spectrogram of a clip makes the holes obvious.
 - **"Robotic."** A dead-flat plateau is the tell: `vox_note_check.py` wander near 0 cents. The singer adds per-note detune, scoops, vibrato and drift; if it comes back, check that the humanise step still runs after the plateau loop.
+- **Piper needs a pad id after every phoneme.** Piper voices are trained on `^ _ p1 _ p2 _ ... pn _ $`
+  (`_` is id 0). Feeding `^ p1 p2 ... $` (what `diphone_bank.py`, the old `word_audio` and `PiperPlugin.kt`
+  did) gives babble at about half the length. Use `phonemes_to_ids` or `piper_sing.phone_ids`. Keep stress
+  (`ˈ ˌ`) and length (`ː`) marks: dropping stress turned "I am Jeff and I'm so gay" into "I am Jiff and on, so gay".
+- **Test speech with a recogniser, and test the path the phone plays.** Run the audio through a small ASR
+  (faster-whisper `tiny.en` works) and compare with the text. Do not judge Piper on a single 0.1-0.4 s
+  word: even the official render fails there; test whole lines. The PC re-sing and the phone preview are
+  different code paths; a fix to one does not fix the other.
+- **The Piper APK is separate from the packs.** Updates replace GDScript and data only; the plugin and
+  the voice model (`piper-assets/` in the Android build, not `src/main/assets`, which Godot's export
+  rewrites) live in the APK. `piper-apk.yml` runs on `android/**`, `piper.gd`, `export_presets.cfg` and
+  the workflow itself; run it by hand (`workflow_dispatch`) for any other change. `--install-android-build-template`
+  only works together with `--export-*`; alone Godot runs the game forever.
 - Audio and art `.import` files are tracked, and every audio one uses default settings
   (`loop=false`, `bpm=0`). A fresh `godot --headless --import` rewrites many of them with
   no real change; don't commit that churn (`git checkout -- '*.import'`).
