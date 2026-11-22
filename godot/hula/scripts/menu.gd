@@ -632,7 +632,7 @@ var piper_cache := {}   # "lid_i_<ipa>" -> AudioStreamWAV from the embedded Pipe
 # Exact on-device preview: edited words are rendered by the embedded Piper, unchanged words
 # play the shipped clip, so the line keeps the real voice where the user did not edit.
 func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void:
-	timing_msg = "Piper preview (exact)"
+	timing_msg = PiperVoice.status()   # shows whether Piper is really running, not just present
 	var base: Dictionary = timing_base.get(lid, {})
 	var shipped: Array = base.get("onsets", [])
 	var bipa: Array = base.get("ipa", [])
@@ -648,6 +648,8 @@ func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: 
 		var edited: bool = i < w_ph.size() and (i >= bipa.size() or String(ipa[i]) != String(bipa[i])
 			or JSON.stringify(w_ph[i]) != JSON.stringify(bph[i]))
 		var st: AudioStreamWAV = _piper_word(lid, i) if edited else null
+		if edited and st == null:
+			timing_msg = "%s  Piper gave no audio for '%s': real clip used" % [PiperVoice.status(), ipa[i]]
 		if st != null:
 			dur = maxf(0.05, _timing_word_len(lid, i))
 			c.snd.play_stream(st, {"v": 2.4, "dl": to_downbeat + at - head, "dur": dur, "bus": "Vox"})

@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (Piper status), 2026-11-22:** User: "I applied the piper apk and ipa still don't work." Code trace: the TIMING tab printed "Piper preview (exact)" whenever the plugin singleton existed, even when `singIpa` returned no audio; the edited word then silently played the real clip. So a broken plugin looks like "nothing happens".
+  Change: `PiperVoice.status()` (cached) reports plugin missing, model failed, or ready; `_timing_play_piper` shows that status and says when Piper gave no audio for an edited word. Smoke clean. Not checked on a phone.
+  Also true: Piper renders IPA only; phone-length edits do not change the Piper audio (the Kotlin `singIpa` ignores `d`).
+  Next: read the TIMING message after one PLAY on the Piper APK and report it; that line says which of the three cases it is.
+  **Complaints:** (1) Wren shipped a silent fallback; a fallback must say it fell back. (2) Length edits do nothing under Piper; either stretch the output or label the lengths as not applied. (3) Nobody has read the phone's status line yet; ask for it first next time.
 - **Wren v3 (piper-apk run 3), 2026-11-22:** User: "The piper apk failed." Run 3 got past the template step and Gradle setup, then failed in `compileStandardDebugKotlin`: `PiperPlugin.kt:35` used `getActivity().assets`, which Godot 4.6 declares nullable. Fixed with `getActivity() ?: return false`.
   Checks: the log shows the template install, the Gradle run and the Kotlin compile; that compile error was the only one reported. Not checked: the rest of the Kotlin build and the APK (no SDK here).
   Next: watch the `piper-apk` run that follows this push; if it fails, the log is `get_job_logs` with `failed_only`.

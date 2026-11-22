@@ -7,6 +7,22 @@ extends Object
 static func available() -> bool:
 	return OS.get_name() == "Android" and Engine.has_singleton("Piper")
 
+# Why the exact preview is or is not running, in words the TIMING tab can show. Cached: the model
+# load is expensive, so the plugin is asked once per launch.
+static var _status := ""
+static func status() -> String:
+	if _status != "":
+		return _status
+	if OS.get_name() != "Android":
+		_status = "Piper: not Android, no plugin"
+	elif not Engine.has_singleton("Piper"):
+		_status = "Piper: plugin missing from this APK (install HulaVaqueroPiper)"
+	elif Engine.get_singleton("Piper").ready():
+		_status = "Piper: plugin + model ready"
+	else:
+		_status = "Piper: plugin loaded but model failed (logcat tag PiperPlugin)"
+	return _status
+
 # One word: IPA in, an AudioStreamWAV out. null when the plugin or the model is missing.
 static func sing_stream(ipa: String) -> AudioStreamWAV:
 	if not available():
