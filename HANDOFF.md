@@ -8,12 +8,12 @@ Git is our only channel (neither of us can message the other directly). Pull bef
 Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first — it is the first thing you read, before anything else** (this file, Log and Claimed table) — then `AGENTS.md`, `PERSONALITIES.md` (working style and habits to fix), and `git log origin/godot -5`. Work from what they say. Only claim what the Log, commits or your own runs show. If an entry is about you and you can't confirm it, say so in the Log rather than assuming.
 
 ## Session numbering
-Who is who: **Wren is always Claude.** Greg is the other agent, and is not always DeepSeek. Use the name the user gives for that agent.
+Who is who: **Wren is always Claude.** Greg is the other agent. Use the name the user gives for that agent.
 
-User override, 2026-11-22, their wording: "Greg isn't always going to be deepseek, but you will always be wren." Wren is always Claude; Greg is not tied to a model.
+User override, 2026-11-22, their wording: "you will always be wren." Wren is always Claude.
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
 - Wren (Claude): the session that wrote the original rule was Wren v1. Wren v2 (audio tooling). Wren v3 (TIMING tab, 2026-11-22). Next: **Wren v4**, then v5, and so on.
-- Greg (DeepSeek): Greg v3 was the last session. Next: **Greg v4**, then v5, and so on.
+- Greg: Greg v3 was the last session. Next: **Greg v4**, then v5, and so on.
 On the first read of this file in a unique session, the agent that read it advances its own number by one. Repeat reads in the same session change nothing. Leave the other agent's number alone.
 
 User override, 2026-11-22, their wording: "Reading the file does change the number if it's a unique session by you or Greg." This replaces the "advance when you finish" rule and the "reading changes nothing" line.
