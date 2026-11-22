@@ -15,6 +15,7 @@ Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session, 
 | World map | `scripts/map.gd`, `data/data_map.json` | — |
 | Cutscenes | `scripts/cutscene.gd`, `data/data_cutscenes.json` | — |
 | Word timing (phone TIMING tab, PC re-sing) | `scripts/menu.gd` (`_draw_timing`), `data/data_word_timing.json`, `tools/retime.py` | docs/AUDIO.md |
+| TIMING tab: line picker, PLAY, graph, drag | `scripts/menu.gd` (`_draw_timing`, `_timing_play`, `timing_move`), `scripts/main.gd` (touch routing), `scripts/sound.gd` (`start_victory_at`, `stop_vox`) | docs/AUDIO.md |
 | Lyric audio snips without a full render | `tools/snip_from_stem.py`, `stems/` | docs/AUDIO.md |
 | Legacy HTML5 build (reference) | — | docs/legacy.md |
 | Legacy version tasks | `scripts/legacy.gd` (switch) | docs/legacy_checklist.md |
@@ -40,6 +41,7 @@ Run Godot from `godot/hula/`:
 | Smoke test (3 s) | `godot --resolution 800x600 main.tscn --quit-after 180 -- --smoke` |
 | Regenerate codemap | `python tools/codemap.py` |
 | Apply word timing from the phone | `python3 tools/retime.py <file> [--dry-run]` (re-sings changed lines) |
+| Sound graph envelopes (TIMING tab) | `python3 tools/line_env.py` (reads `stems/` and `audio/vox/`; writes `data/data_line_env.json`) |
 | Snip a window from the stem | `python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox --start S --end E --out x.wav` |
 | Build packs/APK | `powershell -File build.ps1` (Windows) |
 
@@ -59,6 +61,19 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 | `map` | `out.png 6 map [act] [node]` | World map |
 
 `glb` (legacy GLB writer) is frozen. Use Blender for mesh edits. Add `seed=NNN` for repeatable output.
+
+### Mix and stem (PC or container)
+
+The mix needs a display, even though its audio is offline. Run it under Xvfb, with the mode name before the track:
+
+```bash
+xvfb-run -a -s "-screen 0 1600x900x24" godot --path godot/hula -- /abs/out/victory.wav 1 mix victory 30
+```
+
+It writes `victory.wav`, `_masterpre.wav`, `_voxpre.wav` and `_voxpost.wav`. Rebuild the stem from the `_masterpre`
+and `_voxpost` files with a fitted `k`, and check each clip with `snip_from_stem.py`'s `locate` (scores
+near 1.0 mean the clip is in that run). Do not trust a stem whose instrument energy drops well below
+the master where vocals sit: that is a subtraction error (see docs/AUDIO.md, Known problems).
 
 ## Rules
 
@@ -82,6 +97,8 @@ Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
 - Finished work goes to `godot`. The app build and the phone update pack both watch that branch.
 - Doc-only commits are safe there (the workflow ignores `**/*.md`).
 - For code or asset changes, run `--import` and a headless smoke test first. A broken `godot` push reaches the phone.
+- Reading these files, or pulling, runs no Godot command. The smoke test is a pre-push gate only.
+- Word onsets exist only for B0–B2 in `data/data_word_timing.json`. The other 13 sung lines (`SUNG` in `tools/snip_from_stem.py`) have lyrics but no onsets.
 
 ## Files
 

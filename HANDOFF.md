@@ -61,14 +61,14 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
 - `shotter` face/sheet/map modes need a real renderer. Run them with the windowed binary; `--headless` never resolves the viewport texture and the process hangs (kill it, don't wait).
 - Narration-only cutscene scenes have no entry in `data_cutscenes.json`; their text lives in `data_theater.json`.
 
-## Open items (as of the 2026-11-21 entries)
-- **Audio:** TIMING tab unchecked on screen; `retime.py` re-sing untested end to end; C2 dropout in `stems/` run; `stems/` is ~6.6 MB of binary.
-- **Face:** colour fix `4604b6a` not yet checked by eye in-game. Jaw: the hanging chin lobe is gone (`face_jaw2.py`, 2026-11-21) but the chin is still modest in profile — next pass if wanted. Still open: brows (flat slabs), mustache slab, stubble, eye-white blue cast. Teeth are off (`TEETH := false` in `hero3d.gd`); flip when the new set lands. Each face push is a phone update, so smoke first.
-- **Map:** milestones 1–3 are live on `godot`. Never played: difficulty and the star write. Still to do: milestone 4 (next-level and act-intro hook) and 5 (review, merge, phone build).
+## Open items (as of 2026-11-22)
+- **TIMING tab:** PLAY timing against the beat, drag by finger, and the graph are not checked on a phone. Onsets exist only for B0–B2; 13 sung lines have none.
+- **Audio:** B2 not sung in `mix victory 30`; the instrument stem subtracts too much where vocals sit; the vocal bus overdrives before the limiter (2026-11-21 mix, 1220 clipped samples).
+- **Face:** colour fix `4604b6a` not checked by eye in-game; brows, mustache, stubble and teeth still open (see `docs/CHARACTER.md`).
+- **Map:** playtest of difficulty and star write; milestones 4–5 still to do.
 - **Act intros:** need a music handoff.
-- **`ccr-74f83a2e-94v7jl` → `godot`:** merge only after import and smoke. Holds the theater (secret menu: tap RUNS 3 times), the Piper script and the map base.
-- **Branch cleanup** (needs someone with repo rights): delete `ccr-1645d98d-2z4pyi`, `ccr-66397653-hltyir`, `ccr-d06671b1-azshga`, `claude/stoic-hopper-gh3gre`, `godot-4.6`, `greg-worldmap`. Confirm `greg-worldmap` is merged first. Keep `greg-docs`, `ccr-74f83a2e-94v7jl`, `ccr-67059109-rrkdbd`, `ccr-c3479097-yw0dml`, `ccr-cb8598a5-gdyhqn`, `claude/peaceful-cannon-v9niij`: each has work not on `godot`.
-- **Local clone drift:** a local `godot` checkout had 57 commits with no shared history with `origin/godot`. They were pushed to `origin/wren-local-godot` and not merged.
+- **Branches:** `menu-no-portrait` is the local name for the TIMING and title work; the commits are pushed up to `cfc2a1f`, with doc commits local.
+- **Branch cleanup** (needs someone with repo rights): see the 2026-11-21 list; not changed here.
 
 ## Map contract (Greg, 2026-11-20)
 - 4 acts × 5 nodes, targets 150 → ~1200 (`data/data_map.json`). `start_run(id, target)`; `score ≥ target` wins.
@@ -77,6 +77,11 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Claude (unnumbered), TIMING tab, 2026-11-22:** Work on `godot` (pushed to `cfc2a1f`, doc commits local): PLAY starts the victory track at the line's chorus bar with sequencer vocals off, stops after the line's bars; STOP and BACK restore vocals; graph under the words; line picker with words (drawn last); NEXT LINE; BACK top left; word drag on the graph.
+  Files: `scripts/menu.gd`, `scripts/main.gd` (touch routing), `scripts/sound.gd` (`start_victory_at`, `stop_vox`, `victory_row_of`), `data/data_line_env.json` (B0, B1), `tools/line_env.py`, `docs/AUDIO.md`, `AGENTS.md`.
+  Checks: import and `--smoke` clean on each code commit; screenshots of TIMING tab and picker. Instrument playback confirmed on a phone (user). Not checked: PLAY timing against the beat, drag by finger, graph on a phone.
+  **Not fixed:** B2 not sung in `mix victory 30` (two runs, no vocal clip after B1); stem subtracts too much instrument energy in sung windows, so graph data is unreliable; 13 sung lines have no onsets.
+  **Next:** push doc commits (`81eecca`, `925a813`) with the user's go-ahead; check the `godot-apk` run for `cfc2a1f`; find why B2 is not sung.
 - **Wren v2 (audio tooling), 2026-11-21:** Docs and tools; no game asset changes this entry.
   Added: `tools/snip_from_stem.py` (cut any window from `stems/`, no Godot run, 0.2 s warm), `tools/retime.py` (apply TIMING-tab JSON, re-sing changed lines).
   Game: TIMING tab in the secret menu (`menu.gd`), `data/data_word_timing.json`; shotter `mix` writes `_masterpre.wav`.
