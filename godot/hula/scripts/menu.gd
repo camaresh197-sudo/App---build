@@ -396,6 +396,8 @@ func _timing_play(lid: String) -> void:
 	c.snd.have_vox = false
 	c.snd.start_victory_at(row)
 	var to_downbeat: float = c.snd.next_t - c.snd.now
+	timing_play_t0 = c.snd.now + to_downbeat - VOX_LEAD
+	timing_play_len = float(line_env.get(lid, {}).get("dur", float(timing.get(lid, {}).get("bars", 2)) * 16.0 * c.snd.VE + VOX_LEAD))
 	# stop the track when the line's bars end; a newer PLAY or STOP cancels this stop
 	timing_play_id += 1
 	var my_id := timing_play_id
@@ -411,6 +413,7 @@ func _timing_play(lid: String) -> void:
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 func _timing_stop() -> void:
 	timing_play_id += 1
+	timing_play_t0 = -1.0
 	c.snd.stop_vox(); c.snd.stop_music(); c.snd.have_vox = true
 
 # Sound graph under the word rows: the sung clip (yellow) over the instruments (blue) for the same
@@ -425,6 +428,9 @@ var timing_drag_index := -1   # touch index of the finger dragging a marker, -1 
 var timing_drag_lid := ""
 var timing_drag_word := -1
 var timing_drag_x := 0.0
+# playhead: sound time at which the clip starts (-1 = not playing), and the clip length in seconds
+var timing_play_t0 := -1.0
+var timing_play_len := 0.0
 
 func timing_grab(pos: Vector2, idx: int) -> bool:
 	for m in timing_markers:
@@ -467,6 +473,9 @@ func _draw_timing_graph(ox: float, lid: String) -> void:
 		for k in vals.size():
 			var h := float(vals[k]) * rr.size.y
 			c.draw_rect(Rect2(rr.position.x + k * bw, rr.position.y + rr.size.y - h, maxf(1.0, bw), h), s[1])
+	if timing_play_t0 >= 0.0 and c.snd.now >= timing_play_t0 and c.snd.now <= timing_play_t0 + timing_play_len:
+		var px: float = r.position.x + (c.snd.now - timing_play_t0) / timing_play_len * r.size.x
+		c.draw_line(Vector2(px, r.position.y), Vector2(px, r.position.y + r.size.y), Color.WHITE, 2.0)
 	var shipped: Array = e.get("word", [])
 	var base: Array = timing_base.get(lid, {}).get("onsets", [])
 	var edited: Array = timing.get(lid, {}).get("onsets", [])
