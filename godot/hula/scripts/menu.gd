@@ -451,8 +451,7 @@ func _timing_word_len(lid: String, i: int) -> float:
 
 func _timing_nudge(lid: String, i: int, d: float) -> void:
 	var on: Array = timing[lid]["onsets"]
-	var b := _timing_onset_bounds(lid, i)
-	on[i] = snappedf(clampf(float(on[i]) + d, b.x, b.y), 0.01)
+	_timing_set_onset(lid, i, snappedf(float(on[i]) + d, 0.01))
 	timing_msg = ""
 
 # The line's span on the graph and in PLAY: the shipped line is bars * 16 steps. A word past it
@@ -460,19 +459,30 @@ func _timing_nudge(lid: String, i: int, d: float) -> void:
 func _timing_line_len(lid: String) -> float:
 	return float((timing.get(lid, {}) as Dictionary).get("bars", 2)) * 16.0 * c.snd.VE
 
-# allowed [min, max] for word i's onset: after the previous word, and early enough that the word
-# still starts inside the line (its last 0.1 s may fall off the end, its start may not)
-func _timing_onset_bounds(lid: String, i: int) -> Vector2:
+# Move word i's onset to t. Words keep their order and a TIMING_GAP: a word that runs into a
+# neighbour pushes it along (later words forward, earlier words back), so a word is never stuck
+# behind the next one's old position. The last word must still start inside the line.
+# Returns true when a neighbour was pushed.
+func _timing_set_onset(lid: String, i: int, t: float) -> bool:
 	var on: Array = timing[lid]["onsets"]
-	var lo := 0.0 if i == 0 else float(on[i - 1]) + TIMING_GAP
-	var hi := (_timing_line_len(lid) - 0.1) if i + 1 >= on.size() else float(on[i + 1]) - TIMING_GAP
-	return Vector2(lo, maxf(lo, hi))
+	var n := on.size()
+	var hi := _timing_line_len(lid) - 0.1 - float(n - 1 - i) * TIMING_GAP
+	var lo := float(i) * TIMING_GAP
+	on[i] = clampf(t, lo, maxf(lo, hi))
+	var pushed := false
+	for j in range(i + 1, n):
+		if float(on[j]) < float(on[j - 1]) + TIMING_GAP:
+			on[j] = float(on[j - 1]) + TIMING_GAP; pushed = true
+	for j in range(i - 1, -1, -1):
+		if float(on[j]) > float(on[j + 1]) - TIMING_GAP:
+			on[j] = float(on[j + 1]) - TIMING_GAP; pushed = true
+	return pushed
 
+# keep every onset ordered and inside the line (saved timing from before these limits)
 func _timing_clamp_onsets(lid: String) -> void:
 	var on: Array = timing[lid].get("onsets", [])
 	for i in on.size():
-		var b := _timing_onset_bounds(lid, i)
-		on[i] = clampf(float(on[i]), b.x, b.y)
+		_timing_set_onset(lid, i, float(on[i]))
 
 func _timing_payload() -> Dictionary:
 	var out := {}
@@ -626,7 +636,7 @@ func _timing_play(lid: String) -> void:
 			if i >= onsets.size(): break
 			var at := float(onsets[i])
 			if at < head - 0.001: continue
-			var dur := float(onsets[i + 1]) - at if i + 1 < onsets.size() else maxf(0.05, line_len - at)
+			var dur := _timing_shipped_len(lid, i, line_len)
 			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
 				"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
 		return
@@ -664,7 +674,7 @@ func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: 
 	for i in onsets.size():
 		var at := float(onsets[i])
 		if at < head - 0.001: continue
-		var dur: float = float(onsets[i + 1]) - at if i + 1 < onsets.size() else maxf(0.05, line_len - at)
+		var dur: float = _timing_shipped_len(lid, i, line_len)
 		var edited: bool = i < w_ph.size() and (i >= bipa.size() or String(ipa[i]) != String(bipa[i])
 			or JSON.stringify(w_ph[i]) != JSON.stringify(bph[i]))
 		var st: AudioStreamWAV = _piper_word(lid, i) if edited else null
@@ -676,6 +686,13 @@ func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: 
 		elif i < shipped.size():
 			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
 				"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
+
+# length of word i in the shipped clip: to the next shipped onset, or the line's end. A moved word
+# keeps this length; the gap to its new neighbour must not cut or lengthen it.
+func _timing_shipped_len(lid: String, i: int, line_len: float) -> float:
+	var sh: Array = timing_base.get(lid, {}).get("onsets", [])
+	if i >= sh.size(): return 0.2
+	return maxf(0.05, (float(sh[i + 1]) if i + 1 < sh.size() else line_len) - float(sh[i]))
 
 func _piper_word(lid: String, i: int) -> AudioStreamWAV:
 	var ipa := String((timing[lid].get("ipa", []) as Array)[i]) if i < (timing[lid].get("ipa", []) as Array).size() else ""
@@ -763,15 +780,9 @@ func timing_move(x: float) -> void:
 	if timing_drag_index < 0 or timing_graph_rect.size.x <= 0.0: return
 	var on: Array = timing[timing_drag_lid]["onsets"]
 	var i := timing_drag_word
-	var b := _timing_onset_bounds(timing_drag_lid, i)
-	on[i] = clampf(float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur, b.x, b.y)
+	var pushed := _timing_set_onset(timing_drag_lid, i, float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur)
 	timing_drag_x = x
-	if i + 1 >= on.size() and float(on[i]) >= b.y - 0.001:
-		timing_msg = "end of the line"
-	elif i + 1 < on.size() and float(on[i]) >= b.y - 0.001:
-		timing_msg = "next word is in the way: move it first"
-	else:
-		timing_msg = ""
+	timing_msg = "pushing the neighbouring words" if pushed else ""
 
 func timing_release() -> void:
 	if timing_drag_index >= 0 and timing.has(timing_drag_lid):

@@ -38,6 +38,10 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (words push their neighbours), 2026-11-22:** User: the plugin works, but timing does not move word starts, or stops a word before the next word's old position. Cause 1: drag and nudge clamped a word to the next word's current onset. Cause 2: an unedited word's slice length came from the gap to the next new onset, so a moved word was cut or ran into its neighbour.
+  Change: `_timing_set_onset` moves a word and pushes neighbours along (order and 0.02 s gap kept, last word still starts inside the line); drag, nudge and load use it. Unedited words play their shipped length (`_timing_shipped_len`). Removed the `piper.gd.uid` I committed by mistake.
+  Checks: smoke clean; harness on B0: word 1 to 1.5 s pushed later words forward, word 3 to 0.1 s pulled earlier words back, last word capped at 3.26 s. Not checked: by ear.
+  **Complaints:** (1) Wren bounded drags by the neighbour's current onset; free movement needs a push rule. (2) Pulling a word far left drags earlier words with it; maybe add a lock. (3) `git add -A` swept up a generated uid file; add only named files.
 - **Wren v3 (Piper model missing from APK), 2026-11-22:** User screenshot, build 7: "model failed: assets/piper is empty". The model was copied into `src/main/assets/piper`, which Godot's export rewrites, so it was lost.
   Fix in `piper-apk.yml`: the model goes in `piper-assets/piper`, and build.gradle adds `main.assets.srcDirs += ['piper-assets']` beside the template's `main.res.srcDirs`.
   Checks: the sed edit was run on the real template and gives the expected lines. Not checked: the CI build or the model loading on the phone.
