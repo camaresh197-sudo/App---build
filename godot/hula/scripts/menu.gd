@@ -1143,13 +1143,41 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 		x += w + 4
 	# action row, grouped: LENGTH (the selected sound), SOUND (add, remove, reset), PITCH (syllable), BACK
 	var by := panel.position.y + 68
-	var bw := 58.0
-	var step := 62.0
-	var labels := ["-20 ms", "+20 ms", "DELETE", "ADD NEW", "RESET", "PITCH -1", "PITCH +1", "BACK"]
-	var cols := [Color("c0392b"), Color("16a085"), Color("7f8c8d"), Color("2980b9"), Color("8e44ad"), Color("d35400"), Color("27ae60"), Color("6c5ce7")]
-	var acts := [func(): _timing_phone_dur(-0.02), func(): _timing_phone_dur(0.02), func(): _timing_phone_del(), func(): _timing_phone_add(), func(): _timing_word_reset(), func(): _timing_syl_shift(-1), func(): _timing_syl_shift(1), func(): timing_word = -1]
+	var bw := 50.0
+	var step := 54.0
+	var wlid := timing_sel
+	var wi := timing_word
+	var labels := ["PLAY WORD", "-20 ms", "+20 ms", "DELETE", "ADD NEW", "RESET", "PITCH -1", "PITCH +1", "BACK"]
+	var cols := [Color("e67e22"), Color("c0392b"), Color("16a085"), Color("7f8c8d"), Color("2980b9"), Color("8e44ad"), Color("d35400"), Color("27ae60"), Color("6c5ce7")]
+	var acts := [func(): _timing_play_word(wlid, wi), func(): _timing_phone_dur(-0.02), func(): _timing_phone_dur(0.02), func(): _timing_phone_del(), func(): _timing_phone_add(), func(): _timing_word_reset(), func(): _timing_syl_shift(-1), func(): _timing_syl_shift(1), func(): timing_word = -1]
 	for k in labels.size():
-		button(Rect2(panel.position.x + 8 + step * k, by, bw, 26), labels[k], cols[k], acts[k], 9)
+		button(Rect2(panel.position.x + 8 + step * k, by, bw, 26), labels[k], cols[k], acts[k], 8)
+
+# Play only this word, from its own audio: Piper or the diphone bank if it was edited (as in PLAY),
+# otherwise its shipped clip. The word starts now and needs no track.
+func _timing_play_word(lid: String, i: int) -> void:
+	var line: Dictionary = timing.get(lid, {})
+	var onsets: Array = line.get("onsets", [])
+	var w_ph: Array = line.get("phones", [])
+	if i < 0 or i >= onsets.size(): return
+	var edited := _timing_word_edited(lid, i)
+	if edited and PiperVoice.available():
+		timing_msg = PiperVoice.status()
+		var st: AudioStreamWAV = _piper_word(lid, i)
+		if st != null:
+			c.snd.play_stream(st, {"v": 2.4, "dur": maxf(0.05, st.get_length()) + 0.03, "bus": "Vox"})
+			timing_msg = "playing word %d (Piper)" % (i + 1)
+			return
+		timing_msg = "%s  Piper gave no audio for this word" % PiperVoice.status()
+	if edited and DIPHONE_PREVIEW and not di_bank.is_empty() and i < w_ph.size():
+		_timing_play_bank_word(w_ph[i], 0.0, 0.0, _timing_syl_segs(lid, i))
+		timing_msg = "playing word %d (diphone preview)" % (i + 1)
+		return
+	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
+	if i < shipped.size():
+		c.snd.play("vox/" + lid, {"v": 2.4, "from": VOX_LEAD + float(shipped[i]),
+			"dur": maxf(0.05, _timing_shipped_len(lid, i, _timing_line_len(lid)))})
+		timing_msg = "playing word %d (shipped clip)" % (i + 1)
 
 # ---- diphthongs: a vowel followed by a glide (ɪ or ʊ) is one sound that needs room to glide.
 # Each one is recognised here, marked "dip" on both parts, and given a minimum length, so the
