@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (piper-apk hang), 2026-11-22:** User: "2" (look at why piper-apk hangs). Both runs (1 and 2) sat on "Install the Android build template" for over an hour. Cause: `godot --install-android-build-template` is only a modifier for `--export-*`; alone it starts the game headless and never exits (reproduced locally, killed at 40 s).
+  Second bug behind it: later steps used `android/build` at the repo root, but the template installs to `godot/hula/android/build`. Fixed in `piper-apk.yml`: install via a throwaway `--export-debug`, assert the template exists, use the right paths, add step and job timeouts.
+  Checks: with real 4.6.3 templates the install step puts `build.gradle` in `godot/hula/android/build` and exits in seconds; the manifest and gradle seds match the real template. Not checked: Gradle, the Kotlin plugin, or the APK itself (no Android SDK here).
+  Next: push, watch the new `piper-apk` run; cancel runs 44995585000 and 45000047988 in the Actions tab (they hold runners until timeout).
+  **Complaints:** (1) Greg never watched piper-apk run once; a green first run beats three more features. (2) Greg's workflow had no timeout; one bad flag hung a runner for hours. (3) Wren caught this only after the phone failed; check CI before reporting it shipped.
 - **Wren v3 (diphone off), 2026-11-22:** User: "It didn't fix the gibberish problem." My earlier fix repaired the PC re-sing and the plugin ids, not what the phone plays: with no Piper APK the phone uses the diphone bank, and a recogniser still hears nothing in it (A0: empty; C0: "Thanks for watching. Bye!").
   The Piper APK has never finished building (`piper-apk` runs 1 and 2 still in progress), so the phone has only ever had the diphone fallback.
   Change: `DIPHONE_PREVIEW := false` in `menu.gd`. Edited lines now play the real clip at the edited onsets; IPA and phone lengths are heard after COPY + `retime.py`, or in the Piper build. Smoke clean. Not heard on a phone.

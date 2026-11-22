@@ -16,6 +16,7 @@ on:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       GODOT_VER: 4.6.3
     steps:
@@ -58,7 +59,16 @@ jobs:
           export/android/java_sdk_path = "$JAVA_HOME"
           EOF
       - name: Install the Android build template
-        run: godot --headless --path godot/hula --install-android-build-template
+        # --install-android-build-template is only a modifier for --export-*: on its own Godot just runs
+        # the game headless and never exits (runs 1 and 2 hung here for over an hour). Pair it with a
+        # throwaway export; the template lands in godot/hula/android/build, next to project.godot.
+        timeout-minutes: 15
+        working-directory: godot/hula
+        run: |
+          mkdir -p build
+          timeout 600 godot --headless --install-android-build-template --export-debug AndroidPiper build/probe.apk || true
+          test -f android/build/build.gradle || { echo "build template was not installed"; ls -la android 2>&1; exit 1; }
+          ls android/build | head -20
       - name: Cache the Piper model
         uses: actions/cache@v4
         with:
@@ -72,15 +82,17 @@ jobs:
           ls -la piper-model
       - name: Add Piper sources and model to the Android build
         run: |
-          mkdir -p android/build/src/main/assets/piper android/build/src/main/java/com/camaresh
-          cp piper-model/en_US-ryan-medium.onnx piper-model/en_US-ryan-medium.onnx.json android/build/src/main/assets/piper/
-          cp -r android/piper/src/main/java/com/camaresh/piper android/build/src/main/java/com/camaresh/
+          B=godot/hula/android/build
+          mkdir -p $B/src/main/assets/piper $B/src/main/java/com/camaresh
+          cp piper-model/en_US-ryan-medium.onnx piper-model/en_US-ryan-medium.onnx.json $B/src/main/assets/piper/
+          cp -r android/piper/src/main/java/com/camaresh/piper $B/src/main/java/com/camaresh/
       - name: Inject Piper into the Android build
         run: |
-          sed -i 's#</application>#<meta-data android:name="org.godotengine.plugin.v2.Piper" android:value="com.camaresh.piper.PiperPlugin" /></application>#' android/build/src/main/AndroidManifest.xml
-          grep -q onnxruntime android/build/build.gradle || sed -i 's#^dependencies {#dependencies {\n    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")#' android/build/build.gradle
-          grep -n "onnxruntime" android/build/build.gradle
-          grep -n "PiperPlugin" android/build/src/main/AndroidManifest.xml
+          B=godot/hula/android/build
+          sed -i 's#</application>#<meta-data android:name="org.godotengine.plugin.v2.Piper" android:value="com.camaresh.piper.PiperPlugin" /></application>#' $B/src/main/AndroidManifest.xml
+          grep -q onnxruntime $B/build.gradle || sed -i 's#^dependencies {#dependencies {\n    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")#' $B/build.gradle
+          grep -n "onnxruntime" $B/build.gradle
+          grep -n "PiperPlugin" $B/src/main/AndroidManifest.xml
       - name: Export Piper APK
         working-directory: godot/hula
         run: |
