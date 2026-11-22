@@ -6,11 +6,12 @@ so the HTML version can be checked when porting or comparing behaviour.
 
 The legacy source is **not in this repo**. Per `AGENTS.md` it was archived to a separate `legacy`
 repo. The copy this doc was written from came from the debug APK
-(`app-debug.apk`, package `com.hulavaquero.skyride`), at `assets/public/index.html`.
+(`app-debug.apk`, package `com.hulavaquero.skyride`), at `assets/public/index.html`. The same APK was
+re-checked on 2026-11-22: the feature names in the table below all match its `index.html`.
 
 ## What it is
 
-- **Form:** one `index.html`, about 1.4 MB, with the game in inline JavaScript. No build step, no
+- **Form:** one `index.html`, about 2.2 MB (measured 2026-11-22 in the debug APK), with the game in inline JavaScript. No build step, no
   external engine. Rendering uses 2D canvas (`getContext("2d")`) and one WebGL context.
 - **Audio:** Web Audio (`AudioContext`).
 - **Saves:** `localStorage`, under `SAVE_KEY`. Settings include `hv_eng2` and `hulaVaquero_nsong`.
