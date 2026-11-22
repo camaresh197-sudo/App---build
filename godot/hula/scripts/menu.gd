@@ -402,11 +402,10 @@ func _timing_play(lid: String) -> void:
 	var span: float = float(timing.get(lid, {}).get("bars", 2)) * 16.0 * c.snd.VE
 	c.snd.later.append([c.snd.now + to_downbeat + span, func(): if timing_play_id == my_id: _timing_stop()])
 	if shipped.is_empty() or edited.size() != shipped.size():
-		timing_msg = "DBG %s: NO WORD TIMING (shipped %d, edited %d): whole clip" % [lid, shipped.size(), edited.size()]
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": maxf(0.0, to_downbeat - VOX_LEAD)}); return
-	timing_msg = "DBG %s word timing, last word edited %.2f shipped %.2f" % [lid, float(edited[edited.size() - 1]), float(shipped[shipped.size() - 1])]
 	for i in shipped.size():
-		var dur := float(shipped[i + 1]) - float(shipped[i]) if i + 1 < shipped.size() else 0.0
+		# a word runs until the next word's edited onset, so dragging a word moves its end too
+		var dur := float(edited[i + 1]) - float(edited[i]) if i + 1 < edited.size() else 0.0
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + float(edited[i]), "from": VOX_LEAD + float(shipped[i]), "dur": dur})
 
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
