@@ -21,3 +21,9 @@ tools/models/
 
 # Piper speech cache (word/line renders reused across calls)
 tools/.cache/
+
+# Embedded Piper build: the Android Gradle output and the voice model are never committed
+android/build/
+android/piper/src/main/assets/*.onnx
+android/piper/src/main/assets/*.onnx.json
+.gradle/

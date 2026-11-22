@@ -21,10 +21,9 @@ graph. The line picker is three columns.
 - **Word editor:** the IPA is a row of phone chips. Tap a chip, then a symbol from the
   40-phone palette to replace it; `-20 ms` / `+20 ms` change that phone's length; `ADD`,
   `DEL`, `RESET` and `DONE` finish. `LEN` is the sum of the phones.
-- **Preview:** unedited lines play the real clip. Edited lines play the **diphone bank**:
-  each phone transition is a pre-rendered Piper clip, scheduled at the edited onsets and
-  lengths, so IPA and timing are heard immediately and stay intelligible. The exact
-  singer still comes from `tools/retime.py` on the PC.
+- **Preview:** unedited lines play the real clip. Edited lines play the **embedded Piper**
+  when present (`PiperVoice.available()`), the **diphone bank** otherwise, and real-clip
+  word slices as the last fallback. The embedded render is the exact singer, offline.
 - **Graph:** notes (from `data_victory.json`), the vocal strip and the instrument strip;
   `VOX` / `INST` / `NOTES` toggle them. Word blocks use the edited onset and phone lengths.
 - **Playhead:** tap the graph to set PLAY's start; the moving line tracks the sequencer.

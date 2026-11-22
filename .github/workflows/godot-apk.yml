@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main, godot, 'ccr-*']
-    paths-ignore: ['*.md', '**/*.md']   # doc-only pushes (HANDOFF.md etc.) don't build
+    paths-ignore: ['*.md', '**/*.md', 'tools/**', 'stems/**', 'android/**', 'godot/hula/addons/**']   # docs/tool/plugin-only pushes don't build
 jobs:
   apk:
     runs-on: ubuntu-latest

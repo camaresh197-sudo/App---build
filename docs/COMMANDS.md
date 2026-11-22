@@ -6,7 +6,7 @@ Moved from AGENTS.md. Read when running Godot or the tools.
 - `hero3d.gd` is ~1750 lines. Find your section with `grep -n '^## ' docs/CODEMAP.md`, then read only that range. Never read it whole.
 - After an import, `git status` lists hundreds of `.import` files. Use `git status -s -- . ':(exclude)*.import' ':(exclude)*.uid'`.
 - Search scoped to `godot/hula/scripts/`, `tools/`, `docs/`, `data/`.
-- Skip binary or generated: `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `build/`, `stems/`, and `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`, `*.flac`. Keep `.ignore` and `.gitattributes`.
+- Skip binary or generated: `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `build/`, `stems/`, `android/`, and `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`, `*.flac`. Keep `.ignore` and `.gitattributes`. The embedded Piper sources are `android/piper/` (docs/PIPER_ANDROID.md).
 - `git log -1 --format=%B <sha>` usually records the measurements and intent behind a change.
 
 ## Commands

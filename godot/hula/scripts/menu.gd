@@ -579,11 +579,13 @@ func _timing_play(lid: String) -> void:
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat, "from": VOX_LEAD + head,
 			"dur": maxf(0.05, line_len - head + VOX_LEAD)})
 		return
-	# Edited line: assemble the edited IPA from the diphone bank (one clip per phone
-	# transition, so it stays intelligible). Fall back to the real clip if the bank is
-	# missing. The bank is a preview; the real singer comes back after retime.py re-sings.
-	timing_msg = "diphone preview; re-sing for the real voice"
+	# Edited line: exact preview with the embedded Piper when present; diphone bank otherwise;
+	# real-clip word slices last. The shipped lines play the shipped clip.
 	var w_ph: Array = line.get("phones", [])
+	if PiperVoice.available():
+		_timing_play_piper(lid, head, to_downbeat, line_len)
+		return
+	timing_msg = "diphone preview; re-sing for the real voice"
 	if di_bank.is_empty():
 		var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
 		for i in shipped.size():
@@ -609,6 +611,45 @@ func _timing_play(lid: String) -> void:
 			t += d
 
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
+
+var piper_cache := {}   # "lid_i_<ipa>" -> AudioStreamWAV from the embedded Piper
+
+# Exact on-device preview: edited words are rendered by the embedded Piper, unchanged words
+# play the shipped clip, so the line keeps the real voice where the user did not edit.
+func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void:
+	timing_msg = "Piper preview (exact)"
+	var base: Dictionary = timing_base.get(lid, {})
+	var shipped: Array = base.get("onsets", [])
+	var bipa: Array = base.get("ipa", [])
+	var bph: Array = base.get("phones", [])
+	var line: Dictionary = timing.get(lid, {})
+	var ipa: Array = line.get("ipa", [])
+	var w_ph: Array = line.get("phones", [])
+	var onsets: Array = line.get("onsets", [])
+	for i in onsets.size():
+		var at := float(onsets[i])
+		if at < head - 0.001: continue
+		var dur: float = float(onsets[i + 1]) - at if i + 1 < onsets.size() else maxf(0.05, line_len - at)
+		var edited: bool = i < w_ph.size() and (i >= bipa.size() or String(ipa[i]) != String(bipa[i])
+			or JSON.stringify(w_ph[i]) != JSON.stringify(bph[i]))
+		var st: AudioStreamWAV = _piper_word(lid, i) if edited else null
+		if st != null:
+			dur = maxf(0.05, _timing_word_len(lid, i))
+			c.snd.play_stream(st, {"v": 2.4, "dl": to_downbeat + at - head, "dur": dur, "bus": "Vox"})
+		elif i < shipped.size():
+			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
+				"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
+
+func _piper_word(lid: String, i: int) -> AudioStreamWAV:
+	var ipa := String((timing[lid].get("ipa", []) as Array)[i]) if i < (timing[lid].get("ipa", []) as Array).size() else ""
+	if ipa.is_empty(): return null
+	var key := "%s_%d_%s" % [lid, i, ipa]
+	if piper_cache.has(key):
+		return piper_cache[key]
+	var st := PiperVoice.sing_stream(ipa)
+	if st != null:
+		piper_cache[key] = st
+	return st
 
 # A/B: play the shipped line exactly as it is today, ignoring every edit.
 func _timing_play_before(lid: String) -> void:

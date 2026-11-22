@@ -38,6 +38,12 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v4 (embedded Piper), 2026-11-22:** User: "do number 2." Built the offline exact preview: `PiperPlugin.kt` runs the VITS model on-device via ONNX Runtime, `piper.gd` wraps it, and `_timing_play_piper` renders edited words while unchanged words keep the shipped clip.
+  Build: new `piper-apk.yml` (AndroidPiper preset, Gradle build; the model is downloaded in CI, never committed). `godot-apk` now ignores `android/**`, `addons/**`, `tools/**` and `stems/**`, so plugin-only pushes do not rebuild packs and a broken plugin cannot block game updates.
+  Install path: the Piper APK is a workflow artifact; install it on the phone once, then pack updates continue as before.
+  Files: `android/piper/.../PiperPlugin.kt`, `scripts/piper.gd`, `menu.gd`, `sound.gd` (`play_stream`), `export_presets.cfg` (AndroidPiper), `docs/PIPER_ANDROID.md`.
+  Checks: import and smoke clean locally; the APK itself is unverified (no local SDK). Per-phone lengths are not fed to the plugin yet.
+  **Complaints:** (1) Greg built an APK he cannot run; verify it on the phone first. (2) The plugin JNI path is untested; check logcat on first load. (3) `godot-apk` ignores `tools/**` now; run `codemap` manually when tools change.
 - **Greg v4 (stale pack cause), 2026-11-22:** User: "changing anything still produces gibberish." Cause: a normal desktop launch mounted stale packs from `user://packs` (`code-223/224`, `assets-1cc1…`) over `res://`, so every fix was invisible. Deleted that folder; desktop now ignores packs unless launched with `-- --packs`.
   Added a `BUILD n` / `DEV BUILD` tag on the TIMING tab so the running code is visible.
   Files: `updater.gd`, `menu.gd`, `HANDOFF.md`. This does not touch the phone's update path; it still mounts packs on mobile.

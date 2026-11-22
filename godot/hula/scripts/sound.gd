@@ -227,15 +227,46 @@ func play(name: String, o := {}) -> void:
 	if vatt[oi] > 0.0: p.volume_db = vbase[oi] - 40.0
 	p.play(float(o.get("from", 0.0)))   # "from": start offset into the clip (word-level playback)
 
+# like play(), but the caller supplies the stream (the embedded Piper's render)
+func play_stream(stream: AudioStream, o := {}) -> void:
+	if not have or stream == null: return
+	var dl: float = o.get("dl", 0.0)
+	if dl > 0.0:
+		later.append([now + dl, play_stream.bind(stream, o.merged({"dl": 0.0}, true))]); return
+	var p: AudioStreamPlayer = null; var oldest := 1e9; var oi := 0
+	for i in voices.size():
+		if not voices[i].playing: p = voices[i]; oi = i; break
+		if vstop[i] < oldest: oldest = vstop[i]; oi = i
+	if p == null: p = voices[oi]
+	p.stream = stream
+	p.pitch_scale = o.get("rate", 1.0)
+	var v: float = o.get("v", 1.0)
+	p.bus = o.get("bus", "Vox")
+	if p.bus == "Music" or p.bus == "Vox" or p.bus == "VoxGrunt": v *= boost
+	vbase[oi] = linear_to_db(maxf(0.0001, v)); p.volume_db = vbase[oi]
+	var dur: float = o.get("dur", 0.0)
+	vstop[oi] = (now + dur) if dur > 0.0 else 0.0
+	vstart[oi] = now; vatt[oi] = 0.0
+	p.play(float(o.get("from", 0.0)))
+
 # stop word-timing previews: drop queued Vox chunks and silence the Vox voices
 func stop_vox() -> void:
-	later = later.filter(func(e): return e[1].get_bound_arguments_count() == 0 or not (str(e[1].get_bound_arguments()[0]).begins_with("vox/") or str(e[1].get_bound_arguments()[0]).begins_with("phon/") or str(e[1].get_bound_arguments()[0]) == "di_bank"))
+	later = later.filter(_keep_after_stop)
 	for i in voices.size():
 		if voices[i].bus == "Vox":
 			voices[i].stop(); vstop[i] = 0.0
 
-func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void:
-	play(name, {"midi": midi, "dur": dur, "v": v / ref * SMP_MUS, "dl": dl, "att": att})
+func _keep_after_stop(e) -> bool:
+	var c = e[1]
+	var m := str(c.get_method())
+	if m == "play_stream": return false   # the embedded Piper's preview
+	if m != "play": return true
+	var n: int = c.get_bound_arguments_count()
+	if n == 0: return true
+	var name := str(c.get_bound_arguments()[0])
+	return not (name.begins_with("vox/") or name.begins_with("phon/") or name == "di_bank")
+
+func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void:	play(name, {"midi": midi, "dur": dur, "v": v / ref * SMP_MUS, "dl": dl, "att": att})
 func hit(name: String, dl: float, v: float, ref: float) -> void:
 	play(name, {"v": v / ref * SMP_MUS, "dl": dl})
 
