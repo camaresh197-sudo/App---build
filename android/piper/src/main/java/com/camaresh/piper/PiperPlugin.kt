@@ -32,7 +32,9 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
     private fun loadModel(): Boolean = synchronized(lock) {
         if (session != null) return true
         try {
-            val assets = getActivity().assets
+            // Godot 4.6 declares getActivity() nullable; a bare .assets access fails the Kotlin build.
+            val activity = getActivity() ?: return false
+            val assets = activity.assets
             val names = assets.list("piper") ?: return false
             val onnx = names.firstOrNull { it.endsWith(".onnx") } ?: return false
             val cfgName = names.firstOrNull { it.endsWith(".onnx.json") } ?: return false

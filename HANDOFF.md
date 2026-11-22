@@ -38,6 +38,10 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (piper-apk run 3), 2026-11-22:** User: "The piper apk failed." Run 3 got past the template step and Gradle setup, then failed in `compileStandardDebugKotlin`: `PiperPlugin.kt:35` used `getActivity().assets`, which Godot 4.6 declares nullable. Fixed with `getActivity() ?: return false`.
+  Checks: the log shows the template install, the Gradle run and the Kotlin compile; that compile error was the only one reported. Not checked: the rest of the Kotlin build and the APK (no SDK here).
+  Next: watch the `piper-apk` run that follows this push; if it fails, the log is `get_job_logs` with `failed_only`.
+  **Complaints:** (1) Wren pushed the Kotlin plugin untested; compile it in CI before saying it works. (2) Greg's plugin calls Godot APIs from memory; check them against the 4.6 headers. (3) Wren should have read the failed log before reporting the hang as fixed.
 - **Wren v3 (piper-apk hang), 2026-11-22:** User: "2" (look at why piper-apk hangs). Both runs (1 and 2) sat on "Install the Android build template" for over an hour. Cause: `godot --install-android-build-template` is only a modifier for `--export-*`; alone it starts the game headless and never exits (reproduced locally, killed at 40 s).
   Second bug behind it: later steps used `android/build` at the repo root, but the template installs to `godot/hula/android/build`. Fixed in `piper-apk.yml`: install via a throwaway `--export-debug`, assert the template exists, use the right paths, add step and job timeouts.
   Checks: with real 4.6.3 templates the install step puts `build.gradle` in `godot/hula/android/build` and exits in seconds; the manifest and gradle seds match the real template. Not checked: Gradle, the Kotlin plugin, or the APK itself (no Android SDK here).
