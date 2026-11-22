@@ -94,6 +94,7 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
   Files: `menu.gd`, `sound.gd` (wav streams, victory step offset, stop phonemes), `shotter.gd` (`timing` mode), `retime.py`, `docs/TIMING_EDITOR.md`, `AGENTS.md`.
   Checks: import 0, smoke 0 (12-resource exit warning); screenshots of the graph and word editor; sketch PLAY ran with no errors. Not checked: audio by ear, or on the phone.
   Pending: `piper_sing.py` still sings `data_phonics.json`, so phone lengths change the game sketch but not the re-sung line; wire it next.
+  All 16 lines are now editable with graphs: `build_timing.py` fills onsets from the render grid, a fresh 70 s mix plus `build_stems.py` rebuilt `stems/`, and `line_env.py` wrote all 16. Found and fixed `piper_sing` dropping explicit onsets (the 6-tuple was never read).
   Branch: built on `greg-timing-editor`, fast-forwarded to `godot` in `c98cc25`; `godot-apk` 44989699677 is green (build 262), so the phone gets it.
   **Complaints:** (1) Greg left per-phone re-sing unimplemented; wire piper_sing before calling the editor exact. (2) Wren's graph showed waveform only; the note lane now needs a phone check. (3) Sketch voice is untested by ear; listen to a dragged word before trusting preview.
 - **Greg v4 (app build handoff), 2026-11-22:** No code, nothing claimed. The clone was 53 commits behind; pulled `bacc881` → `5c1a4fb`, all docs after `afd28bf`.

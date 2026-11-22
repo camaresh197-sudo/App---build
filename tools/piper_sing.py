@@ -123,7 +123,10 @@ WORD_TIMING = ROOT / "godot" / "hula" / "data" / "data_word_timing.json"
 if WORD_TIMING.exists():
     for _id, _line in json.loads(WORD_TIMING.read_text(encoding="utf-8")).get("lines", {}).items():
         if _line.get("onsets"):
-            CHORUS_GRID[_id] = (_line["section"], int(_line["bar"]), int(_line["bars"]), 0.0, 0.0,
+            _old = CHORUS_GRID.get(_id, (_line["section"], int(_line["bar"]), int(_line["bars"])))
+            _hold = _old[3] if len(_old) > 3 else 0.0
+            _word = _old[4] if len(_old) > 4 else 0.0
+            CHORUS_GRID[_id] = (_line["section"], int(_line["bar"]), int(_line["bars"]), _hold, _word,
                                 [float(x) for x in _line["onsets"]])
 
 
@@ -350,7 +353,8 @@ def syllable_count(text: str) -> int:
     return n
 
 
-def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, hold_to: float = 0.0, word_secs: float = 0.0):
+def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, hold_to: float = 0.0, word_secs: float = 0.0,
+                onsets=None):
     """Target notes from the song data, one syllable per beat.
 
     Returns (f0, spans) where spans are (start_frame, end_frame, hz) per
@@ -378,13 +382,18 @@ def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, h
 
     k = max(1, syllables or n_bars * 4)
     lead = 30                                        # 150 ms, matches data_vox lead-in
-    if word_secs > 0.0:
+    if onsets:
+        # explicit word times from the TIMING tab (seconds from the first word)
+        k = len(onsets)
+        ons = [lead + float(o) * 1000.0 / FRAME_MS for o in onsets]
+        steps_at = [min(int(o / step_frames), n_bars * 16 - 1) for o in ons]
+    elif word_secs > 0.0:
         # free spacing (a reference phrasing): one word every word_secs, not tied to the step grid
         wf = word_secs * 1000.0 / FRAME_MS
-        onsets = [lead + i * wf for i in range(k)]
-        steps_at = [min(int(o / step_frames), n_bars * 16 - 1) for o in onsets]
+        ons = [lead + i * wf for i in range(k)]
+        steps_at = [min(int(o / step_frames), n_bars * 16 - 1) for o in ons]
     elif k <= n_bars * 4:
-        onsets = [min(lead + b * 4 * step_frames, n - 1) for b in range(k)]
+        ons = [min(lead + b * 4 * step_frames, n - 1) for b in range(k)]
         steps_at = [b * 4 for b in range(k)]
     else:
         # more words than beats (e.g. five words in a one-bar tag): keep every vowel on the
@@ -392,8 +401,8 @@ def grid_melody(section: str, start_bar: int, n_bars: int, syllables: int = 0, h
         # even spread over the whole clip started word 1 at 0 s (150 ms early against the
         # data_vox lead-in) and put the last word on the next bar's downbeat.
         steps_at = [min(int(round(i * n_bars * 16 / k)), n_bars * 16 - 1) for i in range(k)]
-        onsets = [min(lead + s * step_frames, n - 1) for s in steps_at]
-    onsets = [int(round(o)) for o in onsets]
+        ons = [min(lead + s * step_frames, n - 1) for s in steps_at]
+    onsets = [int(round(o)) for o in ons]
 
     spans = []
     for i, o in enumerate(onsets):
@@ -522,7 +531,8 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
     spans = []
     if grid:
         melody, spans = grid_melody(*grid[:3], syllables=len(words_of(text)), hold_to=grid[3] if len(grid) > 3 else 0.0,
-                                    word_secs=grid[4] if len(grid) > 4 else 0.0)
+                                    word_secs=grid[4] if len(grid) > 4 else 0.0,
+                                    onsets=grid[5] if len(grid) > 5 else None)
         nc = len(melody)
         dur = nc * FRAME_MS / 1000.0
         f0_c = melody.copy()

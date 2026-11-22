@@ -770,18 +770,21 @@ func _draw_timing(ox: float) -> void:
 	button(Rect2(ox + 314, 300, 140, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
 	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
 
-	# line picker: drawn last so it sits over everything
+	# line picker: 3 columns so 16 lines fit above the buttons; drawn last over everything
 	if timing_menu_open:
-		var panel := Rect2(ox + 14, 166, 520, 30 * timing_order.size() + 6)
+		var rows := int(ceil(timing_order.size() / 3.0))
+		var panel := Rect2(ox + 14, 100, 612, 30 * rows + 6)
 		rrect(panel, Color(0.05, 0.05, 0.12, 0.97), 8); rframe(panel, Color("ffd32a"), 1.5, 8)
 		for k in timing_order.size():
 			var lid: String = timing_order[k]
 			var lw: Array = timing.get(lid, {}).get("words", [])
-			var r := Rect2(ox + 20, 170 + k * 30, 508, 26)
+			var col := k / rows
+			var rowi := k % rows
+			var r := Rect2(ox + 20 + col * 202, 104 + rowi * 30, 194, 26)
 			var on := lid == timing_sel
 			c.buttons.append([r, func(): _timing_pick(lid)])
 			rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.0, 6)
-			txt(Vector2(r.position.x + 10, r.position.y + 18), "%s   %s" % [lid, " ".join(PackedStringArray(lw))], 13, Color.WHITE)
+			txt(Vector2(r.position.x + 6, r.position.y + 17), "%s  %s" % [lid, " ".join(PackedStringArray(lw))], 11, Color.WHITE)
 
 # word detail: IPA phones as tappable chips; length buttons under them
 func _draw_timing_word(ox: float, line: Dictionary) -> void:

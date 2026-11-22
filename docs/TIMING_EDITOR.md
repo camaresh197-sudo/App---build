@@ -14,6 +14,9 @@ spreadsheet in the chat.
 
 ## What is in the game now
 
+All 16 sung lines (A0–A6, B0–B3, C0–C6, tag0, tag2, F0, B6) are editable, and every one has a
+graph. The line picker is three columns.
+
 - **Words** show the word, onset and IPA; tap a word to open its editor.
 - **Word editor:** the IPA is a row of phone chips. Tap a chip, then a symbol from the
   40-phone palette to replace it; `-20 ms` / `+20 ms` change that phone's length; `ADD`,
@@ -35,6 +38,10 @@ spreadsheet in the chat.
   `data_phonics.json` and the bank at load; the phone saves its edits in
   `user://word_timing.json`; COPY / SAVE behave as before.
 - `tools/retime.py` accepts `ipa` / `phones` in the copied JSON and stores them.
+- `tools/build_timing.py` fills `data_word_timing.json` for every line from the same grid the
+  renderer uses (kept edits survive). `tools/line_env.py --lines <ids>` rebuilds the graphs.
+- `tools/build_stems.py <mix_base>` rebuilds `stems/` from a `shotter mix` capture; the stems
+  now cover the full 70 s track, so the late lines (C4, C6, tag, F0, B6) locate.
 
 ## Limits — read before trusting it
 
