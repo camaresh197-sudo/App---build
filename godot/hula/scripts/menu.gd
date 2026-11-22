@@ -425,26 +425,58 @@ func _draw_timing_graph(ox: float, lid: String) -> void:
 			var xe := r.position.x + (float(shipped[i]) + float(edited[i]) - float(base[i])) / dur * r.size.x
 			c.draw_line(Vector2(xe, r.position.y), Vector2(xe, r.position.y + r.size.y), Color("2ecc71"), 2.0)
 
+var timing_menu_open := false   # line picker (drop-down) is showing
+func _timing_pick(lid: String) -> void:
+	timing_sel = lid; timing_msg = ""; timing_menu_open = false
+
+func _timing_next() -> void:
+	var n := timing_order.size()
+	if n == 0: return
+	_timing_pick(timing_order[(timing_order.find(timing_sel) + 1) % n])
+
 func _draw_timing(ox: float) -> void:
 	if timing.is_empty(): _timing_load()
 	if timing_msg != "": txt(Vector2(ox + 14, 50), timing_msg, 11, Color("ffd32a"))   # status (saved, copied, reset) only
+	# line box, left of the first word: tap to open the line picker
+	var box := Rect2(ox + 14, 110, 110, 54)
+	c.buttons.append([box, func(): timing_menu_open = not timing_menu_open])
+	rrect(box, Color("2d3a6b"), 8); rframe(box, Color("ffd32a"), 1.5, 8)
+	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 20, "LINE", 10, Color(1, 1, 1, 0.6))
+	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 42, "%s  v" % timing_sel, 16, Color.WHITE)
+	if timing_menu_open:
+		for k in timing_order.size():
+			var lid: String = timing_order[k]
+			var r := Rect2(ox + 14, 168 + k * 28, 110, 24)
+			var on := lid == timing_sel
+			c.buttons.append([r, func(): _timing_pick(lid)])
+			rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.0, 6)
+			ctxt(r.position.x + r.size.x / 2.0, r.position.y + 16, lid, 12, Color.WHITE)
+	else:
+		# next-line arrow, under the box
+		var nx := Rect2(ox + 14, 172, 110, 28)
+		c.buttons.append([nx, func(): _timing_next()])
+		rrect(nx, Color("16a085"), 8); rframe(nx, Color(1, 1, 1, 0.3), 1.0, 8)
+		ctxt(nx.position.x + nx.size.x / 2.0, nx.position.y + 19, "NEXT LINE >", 12, Color.WHITE)
+	# words, to the right of the box: five per row
 	var line: Dictionary = timing.get(timing_sel, {})
 	var words: Array = line.get("words", [])
 	var onsets: Array = line.get("onsets", [])
 	for i in mini(words.size(), onsets.size()):
-		var x := ox + 14 + (i % 5) * 124
+		var x := ox + 134 + (i % 5) * 100
 		var y := 110 + (i / 5) * 62
 		var idx := i
 		var lid2 := timing_sel
 		txt(Vector2(x, y + 14), "%s  %.2f s" % [words[i], float(onsets[i])], 13, Color.WHITE)
-		button(Rect2(x, y + 22, 52, 28), "-", Color("c0392b"), func(): _timing_nudge(lid2, idx, -0.01), 16)
-		button(Rect2(x + 60, y + 22, 52, 28), "+", Color("16a085"), func(): _timing_nudge(lid2, idx, 0.01), 16)
-	_draw_timing_graph(ox, timing_sel)
+		if timing_menu_open: continue
+		button(Rect2(x, y + 22, 40, 28), "-", Color("c0392b"), func(): _timing_nudge(lid2, idx, -0.01), 16)
+		button(Rect2(x + 46, y + 22, 40, 28), "+", Color("16a085"), func(): _timing_nudge(lid2, idx, 0.01), 16)
+	if not timing_menu_open: _draw_timing_graph(ox, timing_sel)   # the line picker covers the graph
 	var play_lid := timing_sel
 	button(Rect2(ox + 14, 300, 140, 36), "PLAY", Color("e67e22"), func(): _timing_play(play_lid), 14)
 	button(Rect2(ox + 164, 300, 140, 36), "STOP", Color("c0392b"), func(): c.snd.stop_vox(), 14)
 	button(Rect2(ox + 314, 300, 140, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
 	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
+
 
 func secret(R: float, t: float) -> void:
 	var ox := (R - 640.0) / 2.0
