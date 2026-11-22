@@ -9,9 +9,9 @@ Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first
 
 ## Session numbering
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
-- Wren (Claude): the session that wrote the original rule was Wren v1. Last session: **Wren v2** (audio tooling). Next: **Wren v3**, then v4, and so on.
-- Greg (DeepSeek): this session was **Greg v3**. Next: **Greg v4**, then v5, and so on.
-When you finish, advance your own number by one here and leave the other agent's alone.
+- Wren (Claude): the session that wrote the original rule was Wren v1. Wren v2 (audio tooling). Wren v3 (TIMING tab, 2026-11-22). Next: **Wren v4**, then v5, and so on.
+- Greg (DeepSeek): Greg v3 was the last session. Next: **Greg v4**, then v5, and so on.
+The number moves only when your session finishes, never on reading this file. When you finish, advance your own number by one here and leave the other agent's alone.
 
 ## User override
 The user can overwrite anything agreed in this file, including rules, claims and plans, by typing the change. A typed instruction from the user wins. Log the change with the user's wording, so the next session sees what was decided and why.
@@ -79,11 +79,11 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
-- **Claude (unnumbered), TIMING tab, 2026-11-22 (later):** Pushed to `godot` through `afd28bf`: word drag on the graph; each word runs to the next edited onset (`328f8fe`); playhead across the graph (`afd28bf`). The "last word plays early" report traced to word length (shipped length kept the old tail), fixed in `328f8fe`. A temporary PLAY status line confirmed word-timing path, then removed.
+- **Wren v3 (TIMING tab, later), 2026-11-22:** Pushed to `godot` through `afd28bf`: word drag on the graph; each word runs to the next edited onset (`328f8fe`); playhead across the graph (`afd28bf`). The "last word plays early" report traced to word length (shipped length kept the old tail), fixed in `328f8fe`. A temporary PLAY status line confirmed word-timing path, then removed.
   Checks: import and `--smoke` clean on each commit; PC log showed correct chunk scheduling. Not checked on a phone: the `328f8fe` fix, the playhead, drag by finger.
   **Next:** check the `godot-apk` runs for `328f8fe` and `afd28bf`; confirm "so" then "gay" sound in order when "so" is dragged back; then find why B2 is not sung.
   **Complaints:** (1) Wren pushed the word-length fix unchecked on a phone; test it before the next push. (2) Wren left B2 unresolved for two mix runs; find the sequencer cause before more mixes. (3) Wren kept the instrument stem subtraction unfixed; decide on a fix before trusting graph data.
-- **Claude (unnumbered), TIMING tab, 2026-11-22:** Work on `godot` (pushed to `cfc2a1f`, doc commits local): PLAY starts the victory track at the line's chorus bar with sequencer vocals off, stops after the line's bars; STOP and BACK restore vocals; graph under the words; line picker with words (drawn last); NEXT LINE; BACK top left; word drag on the graph.
+- **Wren v3 (TIMING tab), 2026-11-22:** Work on `godot` (pushed to `cfc2a1f`, doc commits local): PLAY starts the victory track at the line's chorus bar with sequencer vocals off, stops after the line's bars; STOP and BACK restore vocals; graph under the words; line picker with words (drawn last); NEXT LINE; BACK top left; word drag on the graph.
   Files: `scripts/menu.gd`, `scripts/main.gd` (touch routing), `scripts/sound.gd` (`start_victory_at`, `stop_vox`, `victory_row_of`), `data/data_line_env.json` (B0, B1), `tools/line_env.py`, `docs/AUDIO.md`, `AGENTS.md`.
   Checks: import and `--smoke` clean on each code commit; screenshots of TIMING tab and picker. Instrument playback confirmed on a phone (user). Not checked: PLAY timing against the beat, drag by finger, graph on a phone.
   **Not fixed:** B2 not sung in `mix victory 30` (two runs, no vocal clip after B1); stem subtracts too much instrument energy in sung windows, so graph data is unreliable; 13 sung lines have no onsets.
