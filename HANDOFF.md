@@ -33,6 +33,7 @@ User override, 2026-11-21, their wording: "You don't need to claim md files. Tha
 3. **Log every handoff.** Newest entry on top, 10 lines max and about 200 characters per line: who, what changed, files, what's next, anything broken. Ends with three complaints (see below). Detail goes to `docs/HANDOFF_LOG.md`, never into the entry.
 4. **Small commits, clear messages.** One topic per commit.
 5. **Never commit generated files:** `*.import` / `*.uid` created by running Godot, `.godot/`, `build/`.
+6. **No thinking loops.** Decide once, then act. If you've revisited the same question twice without new evidence, stop, pick the most reasonable option, state it in one line, and proceed. Log it as `Decided:`. If the choice is risky or irreversible, ask the user instead of reasoning about it again.
 
 ## Working style (kind, not soft)
 - Keep replies short when the user asks. If the user says to drop repetition, don't restate what an earlier message already said: give only new facts and the next action.
