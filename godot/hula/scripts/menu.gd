@@ -762,6 +762,8 @@ var timing_drag_index := -1   # touch index of the finger dragging a marker, -1 
 var timing_drag_lid := ""
 var timing_drag_word := -1
 var timing_drag_x := 0.0
+var timing_drag_kind := "onset"   # "onset" moves a word's start; "len" stretches its held last sound
+var timing_handles: Array = []   # [Rect2, lid, word index] for the length handles, rebuilt every draw
 # playhead: sound time at which the clip starts (-1 = not playing), and the clip length in seconds
 var timing_play_t0 := -1.0
 var timing_play_len := 0.0
@@ -769,6 +771,13 @@ var timing_play_len := 0.0
 func timing_grab(pos: Vector2, idx: int) -> bool:
 	# the word editor and its palette are drawn where the graph is: those taps are theirs, never the graph's
 	if timing_menu_open or timing_word >= 0: return false
+	# length handles first: they sit on a word's right edge, so the onset marker of the next word
+	# does not steal the grab
+	for h in timing_handles:
+		var hr: Rect2 = h[0]
+		if hr.has_point(pos):
+			timing_drag_index = idx; timing_drag_kind = "len"; timing_drag_lid = h[1]; timing_drag_word = h[2]; timing_drag_x = pos.x
+			return true
 	# the nearest marker wins: two markers close together must not grab the wrong word
 	var best := -1
 	var best_d := 1e9
@@ -781,7 +790,7 @@ func timing_grab(pos: Vector2, idx: int) -> bool:
 				best_d = d; best = k
 	if best >= 0:
 		var mb: Array = timing_markers[best]
-		timing_drag_index = idx; timing_drag_lid = mb[1]; timing_drag_word = mb[2]; timing_drag_x = pos.x
+		timing_drag_index = idx; timing_drag_kind = "onset"; timing_drag_lid = mb[1]; timing_drag_word = mb[2]; timing_drag_x = pos.x
 		return true
 	if timing_graph_rect.size.x > 0.0 and timing_graph_rect.has_point(pos):
 		var frac := (pos.x - timing_graph_rect.position.x) / timing_graph_rect.size.x
@@ -793,6 +802,10 @@ func timing_grab(pos: Vector2, idx: int) -> bool:
 # move the grabbed onset by the finger's travel, kept between its neighbours (no rounding while dragging)
 func timing_move(x: float) -> void:
 	if timing_drag_index < 0 or timing_graph_rect.size.x <= 0.0: return
+	if timing_drag_kind == "len":
+		_timing_hold_move((x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur)
+		timing_drag_x = x
+		return
 	var on: Array = timing[timing_drag_lid]["onsets"]
 	var i := timing_drag_word
 	if _timing_locked(timing_drag_lid, i):
@@ -804,10 +817,31 @@ func timing_move(x: float) -> void:
 	timing_drag_x = x
 	timing_msg = "edge of the line" if absf(float(on[i]) - want) > 0.001 else ""
 
+# Stretch or shorten word i by changing its last sound's length (the held part). The word cannot
+# run past the end of the line, and a sound never gets shorter than 0.03 s.
+func _timing_hold_move(dt: float) -> void:
+	var lid := timing_drag_lid
+	var i := timing_drag_word
+	var phones_all: Array = timing[lid].get("phones", [])
+	if i < 0 or i >= phones_all.size(): return
+	var phs: Array = phones_all[i]
+	if phs.is_empty(): return
+	var last: Dictionary = phs[phs.size() - 1]
+	var others := _timing_word_len(lid, i) - float(last.get("d", 0.12))
+	var room := _timing_line_len(lid) - float((timing[lid]["onsets"] as Array)[i]) - others
+	last["d"] = clampf(float(last.get("d", 0.12)) + dt, 0.03, maxf(0.03, room))
+	timing_msg = "word %.2f s (held sound %.2f s)" % [_timing_word_len(lid, i), float(last["d"])]
+
 func timing_release() -> void:
 	if timing_drag_index >= 0 and timing.has(timing_drag_lid):
-		var on: Array = timing[timing_drag_lid]["onsets"]
-		on[timing_drag_word] = snappedf(float(on[timing_drag_word]), 0.01)
+		if timing_drag_kind == "len":
+			var phs: Array = timing[timing_drag_lid]["phones"][timing_drag_word]
+			if not phs.is_empty():
+				var last: Dictionary = phs[phs.size() - 1]
+				last["d"] = snappedf(float(last["d"]), 0.01)
+		else:
+			var on: Array = timing[timing_drag_lid]["onsets"]
+			on[timing_drag_word] = snappedf(float(on[timing_drag_word]), 0.01)
 	timing_drag_index = -1
 func _timing_notes(lid: String) -> Array:
 	var line: Dictionary = timing.get(lid, {})
@@ -819,46 +853,81 @@ func _timing_notes(lid: String) -> Array:
 	var notes = c.snd.vic[row][3]
 	return notes if notes is Array else []
 
+const NOTE_NAMES := ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+
+func _note_name(m: int) -> String:
+	return "%s%d" % [NOTE_NAMES[m % 12], m / 12 - 1]
+
+# The sound graph: a seconds ruler, the sung clip (VOX, yellow) and the instruments (INST, blue),
+# both with the line's notes drawn over them (NOTES toggles that overlay), the sung word blocks
+# and the onset markers. Taller than before so words and notes can be read.
 func _draw_timing_graph(ox: float, lid: String) -> void:
 	if line_env.is_empty(): line_env = _read_json("res://data/data_line_env.json").get("lines", {})
-	var r := Rect2(ox + 14, 220, 612, 76)
+	var r := Rect2(ox + TR_X, 186, TR_W, 150)
 	rrect(r, Color(0, 0, 0, 0.3), 6)
 	var e: Dictionary = line_env.get(lid, {})
 	var line: Dictionary = timing.get(lid, {})
 	var dur := maxf(0.5, float(line.get("bars", 2)) * 16.0 * c.snd.VE)
-	var vy := r.position.y + 20
-	if timing_show_notes:
-		var lane := Rect2(r.position.x, r.position.y + 1, r.size.x, 17)
-		c.draw_rect(lane, Color(0.06, 0.06, 0.12, 0.6))
-		var notes: Array = _timing_notes(lid)
-		if not notes.is_empty():
-			var lo := 127
-			var hi := 0
-			for n in notes:
-				if int(n) >= 0:
-					lo = mini(lo, int(n)); hi = maxi(hi, int(n))
-			if hi <= lo: hi = lo + 1
-			var bw := lane.size.x / float(notes.size())
-			for k in notes.size():
-				if int(notes[k]) < 0: continue
-				var ny := lane.position.y + lane.size.y - 2.0 - (int(notes[k]) - lo) / float(hi - lo) * (lane.size.y - 5.0)
-				c.draw_rect(Rect2(lane.position.x + k * bw + 1, ny, maxf(1.0, bw - 2), 3), Color("f5f5f5"))
-		ctxt(lane.position.x + 30, lane.position.y + 12, "NOTES", 9, Color(1, 1, 1, 0.35))
+	var notes: Array = _timing_notes(lid)
+	var lo := 127
+	var hi := 0
+	for n in notes:
+		if int(n) >= 0:
+			lo = mini(lo, int(n)); hi = maxi(hi, int(n))
+	if hi <= lo: hi = lo + 1
+
+	# seconds ruler along the top
+	var ruler := Rect2(r.position.x, r.position.y, r.size.x, 14)
+	c.draw_rect(ruler, Color(1, 1, 1, 0.06))
+	var t := 0.0
+	while t <= dur + 0.001:
+		var tx := r.position.x + t / dur * r.size.x
+		c.draw_line(Vector2(tx, ruler.position.y + 9), Vector2(tx, ruler.position.y + 14), Color(1, 1, 1, 0.5), 1.0)
+		ctxt(tx + 2, ruler.position.y + 9, "%.1f" % t, 7, Color(1, 1, 1, 0.55))
+		t += 0.5
+
+	var vrect := Rect2(r.position.x, r.position.y + 18, r.size.x, 58)
+	var irect := Rect2(r.position.x, r.position.y + 80, r.size.x, 48)
 	if timing_show_vox:
-		_draw_env_strip(e, "vox", Color("ffd32a"), Rect2(r.position.x, vy, r.size.x, 26), dur)
+		_draw_env_strip(e, "vox", Color("ffd32a"), vrect, dur)
 	if timing_show_inst:
-		_draw_env_strip(e, "inst", Color("3498db"), Rect2(r.position.x, vy + 28, r.size.x, 26), dur)
+		_draw_env_strip(e, "inst", Color("3498db"), irect, dur)
+	# the notes, over both strips: a bar per note, labelled with its name where there is room
+	if timing_show_notes and not notes.is_empty():
+		var strips: Array[Rect2] = []
+		if timing_show_vox: strips.append(vrect)
+		if timing_show_inst: strips.append(irect)
+		for rr: Rect2 in strips:
+			var last_m := -2
+			for k in notes.size():
+				var m := int(notes[k])
+				if m < 0: continue
+				var nx: float = rr.position.x + float(k) / float(notes.size()) * rr.size.x
+				var nw: float = maxf(2.0, rr.size.x / float(notes.size()) - 1.0)
+				var ny: float = rr.position.y + rr.size.y - 6.0 - float(m - lo) / float(hi - lo) * (rr.size.y - 14.0)
+				c.draw_rect(Rect2(nx, ny, nw, 5), Color(1, 1, 1, 0.9))
+				if m != last_m:
+					ctxt(nx + 2, ny - 1, _note_name(m), 7, Color(1, 1, 1, 0.9))
+				last_m = m
+		ctxt(r.position.x + 4, vrect.position.y + 1, "NOTES", 7, Color(1, 1, 1, 0.5))
+	ctxt(r.position.x + r.size.x - 26, vrect.position.y + 10, "VOX", 7, Color("ffd32a"))
+	ctxt(r.position.x + r.size.x - 26, irect.position.y + 10, "INST", 7, Color("3498db"))
+
 	# word blocks over the vocal strip, using the edited onsets and phone lengths
 	var onsets: Array = line.get("onsets", [])
 	var ipa: Array = line.get("ipa", [])
 	for i in onsets.size():
 		var x0 := r.position.x + float(onsets[i]) / dur * r.size.x
 		var x1 := r.position.x + (float(onsets[i]) + _timing_word_len(lid, i)) / dur * r.size.x
-		var wbox := Rect2(x0, vy + 1, maxf(2.0, x1 - x0), 24)
+		var wbox := Rect2(x0, vrect.position.y + 1, maxf(2.0, x1 - x0), 22)
 		c.draw_rect(wbox, Color(1, 1, 1, 0.10))
 		c.draw_rect(Rect2(wbox.position, Vector2(2, wbox.size.y)), Color("ffd32a"))
 		if i < ipa.size() and wbox.size.x > 26:
-			txt(Vector2(wbox.position.x + 3, wbox.position.y + 16), String(ipa[i]), 10, Color(1, 1, 1, 0.8))
+			txt(Vector2(wbox.position.x + 3, wbox.position.y + 15), String(ipa[i]), 10, Color(1, 1, 1, 0.85))
+		# length handle on the block's right edge: drag to lengthen or shorten the word's hold
+		var hr := Rect2(x1 - 7, vrect.position.y, 14, vrect.size.y)
+		c.draw_rect(Rect2(x1 - 1, vrect.position.y + 3, 3, vrect.size.y - 6), Color("ffd32a"))
+		timing_handles.append([hr, lid, i])
 	# playhead from the graph click, and the moving one while PLAY runs
 	var hx := r.position.x + timing_playhead / dur * r.size.x
 	c.draw_line(Vector2(hx, r.position.y), Vector2(hx, r.position.y + r.size.y), Color(1, 1, 1, 0.85), 1.5)
@@ -880,6 +949,7 @@ func _draw_timing_graph(ox: float, lid: String) -> void:
 
 func _draw_env_strip(e: Dictionary, key: String, col: Color, rr: Rect2, dur: float) -> void:
 	c.draw_rect(rr, Color(0, 0, 0, 0.25))
+	c.draw_rect(rr, Color(1, 1, 1, 0.08), false, 1.0)
 	if e.is_empty(): return
 	var vals: Array = e.get(key, [])
 	if vals.is_empty(): return
@@ -907,40 +977,60 @@ func _draw_toggle(r: Rect2, label: String, on: bool, fn: Callable) -> void:
 	rrect(r, Color("16a085") if on else Color("2d3a6b"), 5)
 	ctxt(r.position.x + r.size.x / 2.0, r.position.y + 12, label, 9, Color.WHITE)
 
+# TIMING tab layout (640 x 360 design space, centred by ox):
+#   left column  x 10..126: LINE, NEXT LINE, PLAY, STOP, BEFORE, CURRENT, RESET LINE, COPY, SAVE
+#   right area   x 134..630: word grid (or the word editor + IPA palette when a word is open),
+#                 then the line's sound graph with its VOX / INST / NOTES toggles
+const TL_X := 10.0     # left column
+const TL_W := 116.0
+const TR_X := 134.0    # right area
+const TR_W := 496.0
+
 func _draw_timing(ox: float) -> void:
 	if timing.is_empty(): _timing_load()
-	timing_markers.clear()
-	if timing_msg != "": txt(Vector2(ox + 14, 50), timing_msg, 11, Color("ffd32a"))   # status (saved, copied, reset) only
+	timing_markers.clear(); timing_handles.clear()
+	if timing_msg != "": txt(Vector2(ox + TR_X, 50), timing_msg, 11, Color("ffd32a"))   # status line, top right
 	var bld := int(Updater.build)
 	txt(Vector2(ox + 552, 50), ("BUILD %d" % bld) if bld > 0 else "DEV BUILD", 10, Color(1, 1, 1, 0.45))
-	# line box, left of the first word: tap to open the line picker
-	var box := Rect2(ox + 14, 96, 110, 54)
+
+	# left column, top to bottom
+	var lx := ox + TL_X
+	var box := Rect2(lx, 66, TL_W, 40)
 	c.buttons.append([box, func(): timing_menu_open = not timing_menu_open])
 	rrect(box, Color("2d3a6b"), 8); rframe(box, Color("ffd32a"), 1.5, 8)
-	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 20, "LINE", 10, Color(1, 1, 1, 0.6))
-	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 42, "%s  v" % timing_sel, 16, Color.WHITE)
+	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 15, "LINE", 9, Color(1, 1, 1, 0.6))
+	ctxt(box.position.x + box.size.x / 2.0, box.position.y + 33, "%s  v" % timing_sel, 15, Color.WHITE)
+	var play_lid := timing_sel
+	var ab_lid := timing_sel
 	if not timing_menu_open:
-		var nx := Rect2(ox + 14, 156, 110, 26)
-		c.buttons.append([nx, func(): _timing_next()])
-		rrect(nx, Color("16a085"), 8); rframe(nx, Color(1, 1, 1, 0.3), 1.0, 8)
-		ctxt(nx.position.x + nx.size.x / 2.0, nx.position.y + 18, "NEXT LINE >", 12, Color.WHITE)
+		button(Rect2(lx, 110, TL_W, 24), "NEXT LINE >", Color("16a085"), func(): _timing_next(), 10)
+	button(Rect2(lx, 138, TL_W, 30), "PLAY", Color("e67e22"), func(): _timing_play(play_lid), 14)
+	button(Rect2(lx, 172, TL_W, 24), "STOP", Color("c0392b"), func(): _timing_stop(), 11)
+	button(Rect2(lx, 200, TL_W, 24), "BEFORE", Color("7f8c8d"), func(): _timing_play_before(ab_lid), 10)
+	button(Rect2(lx, 228, TL_W, 24), "CURRENT", Color("e67e22"), func(): _timing_play(ab_lid), 10)
+	button(Rect2(lx, 256, TL_W, 24), "RESET LINE", Color("c0392b"), func(): _timing_reset(ab_lid), 9)
+	button(Rect2(lx, 284, TL_W, 24), "COPY", Color("16a085"), func(): _timing_copy(), 11)
+	button(Rect2(lx, 312, TL_W, 24), "SAVE", Color("6c5ce7"), func(): _timing_save(), 11)
+
+	# right area
 	var line: Dictionary = timing.get(timing_sel, {})
 	var words: Array = line.get("words", [])
 	var onsets: Array = line.get("onsets", [])
 	var ipa: Array = line.get("ipa", [])
+	var rx := ox + TR_X
 	if timing_word >= 0 and timing_word < words.size():
 		timing_graph_rect = Rect2(); timing_markers.clear()   # the graph is not drawn now: do not keep its old hit area
 		_draw_timing_word(ox, line)
 		_draw_timing_palette(ox)
 	else:
 		timing_word = -1
-		# words, to the right of the box: five per row; tap one to edit its IPA and lengths
+		# word grid: five per row, each box shows word, onset, IPA and a LOCK toggle
 		for i in mini(words.size(), onsets.size()):
-			var x := ox + 134 + (i % 5) * 100
-			var y := 96 + (i / 5) * 50
+			var x := rx + (i % 5) * 98
+			var y := 66 + (i / 5) * 48
 			var idx := i
-			var wbox := Rect2(x, y, 96, 46)
-			var lock_r := Rect2(x + 60, y + 24, 34, 20)
+			var wbox := Rect2(x, y, 94, 44)
+			var lock_r := Rect2(x + 56, y + 22, 34, 18)
 			var is_locked := _timing_locked(timing_sel, i)
 			var lid_now := timing_sel
 			c.buttons.append([lock_r, func(): _timing_toggle_lock(lid_now, idx)])
@@ -948,43 +1038,31 @@ func _draw_timing(ox: float) -> void:
 			rrect(wbox, Color(0.34, 0.12, 0.12, 0.9) if is_locked else Color(0.12, 0.16, 0.3, 0.85), 6)
 			rframe(wbox, Color("e74c3c") if is_locked else Color("ffd32a"), 1.0, 6)
 			rrect(lock_r, Color("c0392b") if is_locked else Color(1, 1, 1, 0.12), 4)
-			ctxt(lock_r.position.x + lock_r.size.x / 2.0, lock_r.position.y + 14, "LOCK" if not is_locked else "LOCKED", 8, Color.WHITE)
-			txt(Vector2(x + 4, y + 15), "%s  %.2f" % [words[i], float(onsets[i])], 12, Color.WHITE)
+			ctxt(lock_r.position.x + lock_r.size.x / 2.0, lock_r.position.y + 13, "LOCK" if not is_locked else "LOCKED", 7, Color.WHITE)
+			txt(Vector2(x + 4, y + 14), "%s  %.2f" % [words[i], float(onsets[i])], 11, Color.WHITE)
 			if i < ipa.size():
-				txt(Vector2(x + 4, y + 33), String(ipa[i]), 11, Color(1, 1, 1, 0.7))
-		_draw_toggle(Rect2(ox + 14, 200, 54, 16), "VOX", timing_show_vox, func(): timing_show_vox = not timing_show_vox)
-		_draw_toggle(Rect2(ox + 72, 200, 54, 16), "INST", timing_show_inst, func(): timing_show_inst = not timing_show_inst)
-		_draw_toggle(Rect2(ox + 130, 200, 60, 16), "NOTES", timing_show_notes, func(): timing_show_notes = not timing_show_notes)
+				txt(Vector2(x + 4, y + 33), String(ipa[i]), 10, Color(1, 1, 1, 0.7))
+		_draw_toggle(Rect2(rx, 166, 54, 16), "VOX", timing_show_vox, func(): timing_show_vox = not timing_show_vox)
+		_draw_toggle(Rect2(rx + 60, 166, 54, 16), "INST", timing_show_inst, func(): timing_show_inst = not timing_show_inst)
+		_draw_toggle(Rect2(rx + 120, 166, 60, 16), "NOTES", timing_show_notes, func(): timing_show_notes = not timing_show_notes)
 		_draw_timing_graph(ox, timing_sel)
-	var play_lid := timing_sel
-	button(Rect2(ox + 14, 300, 140, 36), "PLAY", Color("e67e22"), func(): _timing_play(play_lid), 14)
-	button(Rect2(ox + 164, 300, 140, 36), "STOP", Color("c0392b"), func(): _timing_stop(), 14)
-	button(Rect2(ox + 314, 300, 140, 36), "COPY", Color("16a085"), func(): _timing_copy(), 14)
-	button(Rect2(ox + 464, 300, 140, 36), "SAVE", Color("6c5ce7"), func(): _timing_save(), 14)
-	# A/B and reset line
-	var ab_lid := timing_sel
-	# BEFORE and CURRENT sit at the left end of this row (under PLAY), so A/B is always in reach
-	button(Rect2(ox + 14, 340, 66, 16), "BEFORE", Color("7f8c8d"), func(): _timing_play_before(ab_lid), 10)
-	button(Rect2(ox + 84, 340, 66, 16), "CURRENT", Color("e67e22"), func(): _timing_play(ab_lid), 10)
-	button(Rect2(ox + 164, 340, 140, 16), "RESET LINE", Color("c0392b"), func(): _timing_reset(ab_lid), 10)
 
-	# line picker: 3 columns so 16 lines fit above the buttons; drawn last over everything
+	# line picker: drops down over the right area, three columns
 	if timing_menu_open:
 		var rows := int(ceil(timing_order.size() / 3.0))
-		var panel := Rect2(ox + 14, 100, 612, 30 * rows + 6)
+		var panel := Rect2(rx, 66, TR_W, 30 * rows + 6)
 		rrect(panel, Color(0.05, 0.05, 0.12, 0.97), 8); rframe(panel, Color("ffd32a"), 1.5, 8)
 		for k in timing_order.size():
 			var lid: String = timing_order[k]
 			var lw: Array = timing.get(lid, {}).get("words", [])
 			var col := k / rows
 			var rowi := k % rows
-			var r := Rect2(ox + 20 + col * 202, 104 + rowi * 30, 194, 26)
+			var r := Rect2(rx + 6 + col * 164, 72 + rowi * 30, 158, 26)
 			var on := lid == timing_sel
 			c.buttons.append([r, func(): _timing_pick(lid)])
 			rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color(1, 1, 1, 0.3), 1.0, 6)
-			txt(Vector2(r.position.x + 6, r.position.y + 17), "%s  %s" % [lid, " ".join(PackedStringArray(lw))], 11, Color.WHITE)
+			txt(Vector2(r.position.x + 6, r.position.y + 17), "%s  %s" % [lid, " ".join(PackedStringArray(lw))], 10, Color.WHITE)
 
-# word detail: IPA phones as tappable chips; length buttons under them
 func _draw_timing_word(ox: float, line: Dictionary) -> void:
 	var words: Array = line.get("words", [])
 	var ipa: Array = line.get("ipa", [])
@@ -992,7 +1070,7 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 	if timing_word < 0 or timing_word >= phones_all.size(): return
 	var phones: Array = phones_all[timing_word]
 	timing_phone = clampi(timing_phone, 0, maxi(0, phones.size() - 1))
-	var panel := Rect2(ox + 134, 96, 492, 100)
+	var panel := Rect2(ox + TR_X, 66, TR_W, 104)
 	rrect(panel, Color(0.08, 0.1, 0.2, 0.95), 8); rframe(panel, Color("e67e22"), 1.2, 8)
 	var ipa_now := String(ipa[timing_word]) if timing_word < ipa.size() else ""
 	txt(Vector2(panel.position.x + 8, panel.position.y + 16),
@@ -1023,12 +1101,12 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 # IPA palette: every phoneme in the bank, two rows; tap replaces the selected phone
 func _draw_timing_palette(ox: float) -> void:
 	var keys: Array = phon_bank.keys()
-	var panel := Rect2(ox + 14, 220, 612, 74)
+	var panel := Rect2(ox + TR_X, 178, TR_W, 100)
 	rrect(panel, Color(0.05, 0.05, 0.12, 0.9), 6)
 	txt(Vector2(panel.position.x + 6, panel.position.y + 12), "TAP A SYMBOL TO REPLACE THE SELECTED PHONE", 9, Color(1, 1, 1, 0.5))
 	for k in keys.size():
-		var col := k % 20
-		var rowi := k / 20
+		var col := k % 16
+		var rowi := k / 16
 		var r := Rect2(panel.position.x + 6 + col * 30, panel.position.y + 18 + rowi * 27, 28, 24)
 		var key := String(keys[k])
 		c.buttons.append([r, func(): _timing_phone_set(key)])
