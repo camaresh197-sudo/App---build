@@ -416,6 +416,38 @@ func _timing_stop() -> void:
 # stretch of the track, from data/data_line_env.json (tools/line_env.py). White ticks are the shipped
 # word onsets; green ticks are the edited ones, so a move shows against the instruments before PLAY.
 var line_env: Dictionary = {}
+# graph markers (drag the green onset ticks): [Rect2, lid, word index], rebuilt every draw
+var timing_markers: Array = []
+var timing_graph_rect := Rect2()
+var timing_graph_dur := 1.0
+var timing_drag_index := -1   # touch index of the finger dragging a marker, -1 = none
+var timing_drag_lid := ""
+var timing_drag_word := -1
+var timing_drag_x := 0.0
+
+func timing_grab(pos: Vector2, idx: int) -> bool:
+	for m in timing_markers:
+		if (m[0] as Rect2).has_point(pos):
+			timing_drag_index = idx; timing_drag_lid = m[1]; timing_drag_word = m[2]; timing_drag_x = pos.x
+			return true
+	return false
+
+# move the grabbed onset by the finger's travel, kept between its neighbours (no rounding while dragging)
+func timing_move(x: float) -> void:
+	if timing_drag_index < 0 or timing_graph_rect.size.x <= 0.0: return
+	var on: Array = timing[timing_drag_lid]["onsets"]
+	var i := timing_drag_word
+	var lo := 0.0 if i == 0 else float(on[i - 1]) + TIMING_GAP
+	var hi := 9.9 if i + 1 >= on.size() else float(on[i + 1]) - TIMING_GAP
+	on[i] = clampf(float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur, lo, hi)
+	timing_drag_x = x
+	timing_msg = ""
+
+func timing_release() -> void:
+	if timing_drag_index >= 0 and timing.has(timing_drag_lid):
+		var on: Array = timing[timing_drag_lid]["onsets"]
+		on[timing_drag_word] = snappedf(float(on[timing_drag_word]), 0.01)
+	timing_drag_index = -1
 func _draw_timing_graph(ox: float, lid: String) -> void:
 	if line_env.is_empty(): line_env = _read_json("res://data/data_line_env.json").get("lines", {})
 	var r := Rect2(ox + 14, 228, 626, 62)
@@ -443,6 +475,8 @@ func _draw_timing_graph(ox: float, lid: String) -> void:
 		if i < base.size() and i < edited.size():
 			var xe := r.position.x + (float(shipped[i]) + float(edited[i]) - float(base[i])) / dur * r.size.x
 			c.draw_line(Vector2(xe, r.position.y), Vector2(xe, r.position.y + r.size.y), Color("2ecc71"), 2.0)
+			timing_markers.append([Rect2(xe - 14, r.position.y, 28, r.size.y), lid, i])
+			timing_graph_rect = r; timing_graph_dur = dur
 
 var timing_menu_open := false   # line picker (drop-down) is showing
 func _timing_pick(lid: String) -> void:
@@ -455,6 +489,7 @@ func _timing_next() -> void:
 
 func _draw_timing(ox: float) -> void:
 	if timing.is_empty(): _timing_load()
+	timing_markers.clear()
 	if timing_msg != "": txt(Vector2(ox + 14, 50), timing_msg, 11, Color("ffd32a"))   # status (saved, copied, reset) only
 	# line box, left of the first word: tap to open the line picker
 	var box := Rect2(ox + 14, 110, 110, 54)

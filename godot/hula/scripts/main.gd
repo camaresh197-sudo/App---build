@@ -68,13 +68,18 @@ func _input(e: InputEvent) -> void:
 				cutscene.handle_tap(pos)
 				get_tree().root.set_input_as_handled()
 				return
+			if state == S.SECRET and menu.song_test_tab == 3 and menu.timing_grab(pos, e.index): return   # drag a word on the graph
 			for b in buttons:
 				if (b[0] as Rect2).has_point(pos):
 					snd.sfx("click"); (b[1] as Callable).call(); return
 			if state == S.PLAY and touch_id == -1:
 				touch_id = e.index; touch_start = pos; player_start = player; target = player
+		elif e.index == menu.timing_drag_index and menu.timing_drag_index >= 0:
+			menu.timing_release()
 		elif e.index == touch_id:
 			touch_id = -1; target = player
+	elif e is InputEventScreenDrag and menu.timing_drag_index >= 0 and e.index == menu.timing_drag_index:
+		menu.timing_move(_to_field(e.position).x)
 	elif e is InputEventScreenDrag and state == S.PLAY and e.index == touch_id:
 		target = player_start + (_to_field(e.position) - touch_start)
 
