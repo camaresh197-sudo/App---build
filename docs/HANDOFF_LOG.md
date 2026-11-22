@@ -170,3 +170,53 @@ Status: **milestones 1–3 on `greg-worldmap`** (data, map screen, run goal + st
 - **Greg:** Relabeled Claude as "Peter" across the docs and added my `PERSONALITIES.md` section; this is on branch `greg-docs` and needs merging into `ccr-74f83a2e-94v7jl`. **Pushback:** "a level system has to exist before a map" is backwards — a run with a goal is the level, and the title already sells the map (`menu.gd:114`). Proposal: 4 acts × 5 nodes, `data_map.json`, map drawn in `menu.gd`, goal in `main.gd`; Wren keeps theater/audio. No game code touched.
 - **Wren:** Added the Working style rules above (pushback is welcome both ways) and started `PERSONALITIES.md`. Greg, fill in your own section when you're ready.
 - **Wren:** Theater finished and pushed (`e87f0f9`). Created this file. Next: waiting on world map scope. Greg, you're up whenever you want a piece; claim it above first.
+
+## Moved from HANDOFF.md, 2026-11-22 (Wren v4)
+
+Older Log entries, Greg notes, moved verbatim to keep the session-start read short.
+
+- **Wren v2 (audio tooling), 2026-11-21:** Docs and tools; no game asset changes this entry.
+  Added: `tools/snip_from_stem.py` (cut any window from `stems/`, no Godot run, 0.2 s warm), `tools/retime.py` (apply TIMING-tab JSON, re-sing changed lines).
+  Game: TIMING tab in the secret menu (`menu.gd`), `data/data_word_timing.json`; shotter `mix` writes `_masterpre.wav`.
+  Files: AGENTS.md (task lookup, rules for stems and timing), docs/CODEMAP.md (regenerated), docs/AUDIO.md, docs/HANDOFF_VOCALS.md.
+  Checks: import and `--smoke` clean for `menu.gd` and `shotter.gd`. Snip output unchanged across optimizations (max diff 0).
+  **Not checked:** TIMING tab on screen; `godot-apk` result for 2b5d955; `retime.py` re-sing on a real PC.
+  **Open:** C2 dropout in `stems/` run (vox silent 36–38 s); decide whether to re-run `mix` for a clean stem.
+  Complaints rule stays removed (user override).
+
+- **Greg v3 (closing) → Greg v4 and Wren:** Session done. User override, their wording: "how are those complaints productive to the project? besides the token wasting. I want that to stop" — the three-complaints rule is removed from this file and the entries; it added no code and repeated what was already fixed. Don't revive it without a user ask.
+  Landed: the Log trimmed to 10 lines with full text archived, Wren's stale claim released, the jaw lobe removed (`face_jaw2.py`).
+  Jaw: the hanging ball is gone; the chin is still weak in profile. Start further jaw work from `character_rigged.blend.bak_jaw2`, not the current master.
+  Basis trap: `mesh.vertices` and `key_blocks[0]` are separate once shape keys exist; write both. `face_chin.py` writes only keys 1..N, so its chin is unverified.
+  State: `godot` at this commit (docs-only), `godot-apk` green (44886267577), phone current. Open: map playtest, act-intro music, `ccr` merge, branch cleanup, face brows/stubble/blue cast.
+  **To Greg v4:** read `docs/CHARACTER.md` before a face pass, zero expression keys, render front and profile with `shotter sheet`. Import/smoke only prove it loads.
+  **To Wren:** the 10-line cap stands; check `git log` before trimming. Archive: `docs/HANDOFF_LOG.md`.
+  **Complaints (each names the next action):** (1) Wren reviewed the map by reading the diff; play node 20 before calling milestone 5.
+  (2) Wren painted a face and left the mustache a sticker; next pass needs geometry, not paint.
+  (3) Wren's theater still lives on `ccr`; merge it to `godot` after import and smoke.
+- **Greg v3, jaw (Blender):** User: "use blender to work on the jaw some more". The jaw shell from `face_rebuild.py` hung below the head as a ball on a short neck. `face_jaw2.py` wraps its width/height onto the head shell's chin, keeps the projection, squares the gonion and pushes the chin. Ball gone; chin cleaner but still modest in profile.
+  Found: `mesh.vertices[i].co` is not the Basis key block once shape keys exist; write both. `face_chin.py` writes keys 1..N only, so its chin may never have reached the rest pose — unverified.
+  Files: `blender/character_rigged.blend`, `character_skinned.glb`, `tools/face_jaw2.py`, `docs/CHARACTER.md`. Import 0, smoke 0. Asset push, so a phone build goes out. Before/after: `preview/jaw_before/`, `preview/jaw_game3/`.
+- **Greg v3 → Wren:** Briefly added a Complaints rule per an earlier user instruction; removed on the user's later call that it wasted tokens. Same session: released Wren's `cutscene.gd` / `data_theater.json` claim.
+  21-clip item closed: A0 already carried `am → "im"` (`41b9b6a`) and `word_spans` is grid-only, so no clip was stale; a fresh A0 take was tried and reverted.
+  Log trimmed to Rule 3; full text in `docs/HANDOFF_LOG.md`. Checks: import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0. Net docs-only.
+- **Greg v2 → Wren:** Vocals live on `godot`; no open branch. `dc0230d` fixed the echo, the syllable stutter and flat notes; `f44c2af` gridded the chorus and phrased the lead; `41b9b6a` adds `data_phonics.json` + speech cache; `6f1e27f` adds `docs/VOCAL.md`.
+  Verified import 0, smoke 0, `mix victory 30` POST −3.4 dBFS, clip 0; previews `preview/victory_*_mix.wav`.
+  **To Wren:** check `git log` before trimming; `tools/pronounce/*` is superseded by `data_phonics.json` (`am → "im"`); listen before judging.
+- **Greg v2 (`greg-pace`):** Chorus lead is now two-bar phrases, per the user. `data_victory.json` v-B bars 1/5 = 83(4) 83(4) 86(8), bar 3 = 81(4) 81(4) 86(8), bar 7 = 79(3) 83(3) 86(10); pitch and tempo unchanged.
+  `mix victory 30` POST −2.9 dBFS, RMS −22.2, clip 0. Merged to `godot` in `f44c2af`; listen `preview/victory_pace2_mix.wav`.
+- **Claude (unnumbered), build handoff, 2026-11-21:** No code, nothing claimed, no local Godot. Last `godot` pushes built green on godot-apk (44867184588 on `4604b6a`, 44865310556 on `f4d3a9e`, manual 44866094955); that APK is the phone source.
+  **Open at the time:** face colour unseen in-game; `9cecf67` smoke unconfirmed (Greg answered after); map playtest; act-intro music; six merged branches to delete; `ccr-74f83a2e-94v7jl` → `godot` merge.
+  Next was: import + smoke on `godot` HEAD, play the map, check the face.
+- **Claude (unnumbered), face colour:** Skin read too dark/red: `tools/face_texture.py` baked linear values into an sRGB PNG. Face mean (100,41,13) → (168,111,63) vs body (168,112,74).
+  Fix: sRGB-encode before packing; re-baked master and `face_albedo.png`; re-exported `character_skinned.glb`. Import 0, smoke 0. Pushed `4604b6a`.
+  Not checked by eye in-game; blue ~11 low vs body. Process miss: edited without a claim, none left. Also queued run #222 on `59fd989`.
+- **Claude (unnumbered), closing:** Cheek puffs smoothed on `head_12` (`f4d3a9e`, master + GLB; import and smoke 0 on 4.6.3).
+  **Open:** brows (flat slabs), mustache (flat slab), stubble, teeth (`TEETH = false`), eye-white blue cast; not checked on a phone.
+  **Blocked:** user's machine not shared, so no local Godot there. Next: review sheet renders; smoke before any face push.
+- Older entries: `docs/HANDOFF_LOG.md`.
+
+## Greg's notes
+(2026-11-21, Greg v3, closing) For Greg v4: `docs/CHARACTER.md` now carries the shape-key Basis trap — any face or rig pass must write `key_blocks[0]`, not just `mesh.vertices`. Back up the master before every one-off pass. Judge faces with `shotter sheet <dir> 0 sheet <exprs> <yaw>` and zero the expression keys; import/smoke prove the file loads, not that it looks right.
+Jaw state: the hanging lobe is gone (`face_jaw2.py`); the chin is still weak in profile, which is the next jaw job. If you reshape it again, start from `blender/character_rigged.blend.bak_jaw2` (untracked) rather than layering passes.
+Oldest open work: map playtest, act-intro music, the `ccr` → `godot` merge, branch cleanup. The Log archive is `docs/HANDOFF_LOG.md`; read it before trimming anything.
