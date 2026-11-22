@@ -21,18 +21,21 @@ graph. The line picker is three columns.
 - **Word editor:** the IPA is a row of phone chips. Tap a chip, then a symbol from the
   40-phone palette to replace it; `-20 ms` / `+20 ms` change that phone's length; `ADD`,
   `DEL`, `RESET` and `DONE` finish. `LEN` is the sum of the phones.
-- **Preview:** unchanged lines play the shipped clip. As soon as IPA, phone lengths or
-  onsets differ, PLAY switches to the **phoneme sketch** so the edit is audible on the
-  phone with no PC.
+- **Preview:** PLAY uses the real sung clip. Edited onsets are applied word by word, so
+  timing is heard immediately. IPA and phone-length edits are saved and copied, but they
+  are heard only after `tools/retime.py` re-sings the line — the phone cannot run Piper.
+  (A per-phoneme preview was tried and removed: splicing isolated phone samples was
+  unintelligible.)
 - **Graph:** notes (from `data_victory.json`), the vocal strip and the instrument strip;
   `VOX` / `INST` / `NOTES` toggle them. Word blocks use the edited onset and phone lengths.
 - **Playhead:** tap the graph to set PLAY's start; the moving line tracks the sequencer.
 
 ## Data and tools
 
-- `tools/phoneme_bank.py` renders the bank once from Piper:
-  `godot/hula/audio/phon/p<hex>.wav` and `godot/hula/data/data_phon_bank.json`
-  (IPA, natural length, voiced flag, base pitch). It is a sketch voice, not the singer.
+- `tools/phoneme_bank.py` writes `godot/hula/data/data_phon_bank.json` (IPA, natural
+  length, voiced flag). The editor uses it for the palette and default phone lengths;
+  `piper_sing` uses the lengths to divide a word render between its phones. The WAV
+  version (`--wavs`) is no longer used by the game.
 - A line in `data_word_timing.json` may now carry `ipa` (one string per word) and
   `phones` (one list of `{"p", "d"}` per word). Missing fields are derived from
   `data_phonics.json` and the bank at load; the phone saves its edits in
@@ -45,15 +48,14 @@ graph. The line picker is three columns.
 
 ## Limits — read before trusting it
 
-- The phone cannot run Piper. The sketch concatenates one sample per phone, so joins are
-  buzzy and pitch is not the song's melody; it is for judging timing, length and rough
-  pronunciation.
-- `piper_sing.py` now sings the edited `phones` list when a line has one: each phone is
-  rendered alone, time-warped to its edited length and placed at its edited onset, with the
-  word's melody note on voiced phones. `retime.py` writes `ipa` / `phones` for a changed
-  line and triggers this path. Unedited lines keep the original text-based render.
-- Joins are less smooth than the text-based render (no forced alignment model is available
-  for these voices), so a re-sung edited line sounds more concatenative. That is the cost
-  of making per-letter edits real.
+- The phone cannot run Piper. PLAY is the real clip plus edited onsets; IPA and phone
+  lengths are silent until `retime.py` re-sings. Splicing isolated phones was tried and
+  removed — it was the gibberish.
+- `piper_sing.py` sings an edited line as **whole words**: the word's phone sequence is
+  synthesized in one pass (context kept), then its frames are divided between the edited
+  phone lengths. `retime.py` writes `ipa` / `phones` for a changed line and triggers this.
+  Unedited lines keep the original text-based render.
+- Word renders are synthesized in isolation, so a re-sung edited word can sound slightly
+  detached from its neighbours; that is the cost of arbitrary IPA without an alignment model.
 - IPA is per word, and a palette edit replaces one phone. There is no free-text field
   on the phone yet; the palette is the whole supported set.

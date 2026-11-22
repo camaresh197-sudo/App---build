@@ -531,17 +531,29 @@ def nuclei_spans(phonemes: list) -> list:
 PHON_CACHE = CACHE / "phon"
 SONORANT = set("aeiouɪʊɛæʌəɜɔɐɑɒɘɚɞɨʉɯɵɶʏmnŋlrɹɾɻɽjw")
 VOICED_OBSTRUENT = set("bdɡvðzʒ")
+PHON_BANK = {}
+_bank_file = HULA / "data" / "data_phon_bank.json"
+if _bank_file.exists():
+    PHON_BANK = json.loads(_bank_file.read_text(encoding="utf-8")).get("phones", {})
 
 
-def synth_phone(voice: str, phone: str, use_cache: bool = True) -> np.ndarray:
-    """One phone rendered alone and trimmed; cached because the editor re-renders often."""
+def word_audio(voice: str, phones: list, use_cache: bool = True) -> np.ndarray:
+    """The whole word's phone sequence synthesized in one pass, so formants stay continuous."""
     PHON_CACHE.mkdir(parents=True, exist_ok=True)
-    wav = PHON_CACHE / f"{voice}_{_key('phone|' + phone, voice)}.wav"
+    wav = PHON_CACHE / f"{voice}_{_key('word|' + '|'.join(phones), voice)}.wav"
     if use_cache and wav.exists():
         x, sr = sf.read(str(wav), dtype="float64")
         return _fit(x, sr)
     model = aligned_voice(voice)
-    ids = model.phonemes_to_ids([phone])
+    pmap = model.config.phoneme_id_map
+    ids = [pmap["^"][0]] if "^" in pmap else []
+    for p in phones:
+        if p in pmap:
+            ids.append(pmap[p][0])
+    if "$" in pmap:
+        ids.append(pmap["$"][0])
+    if len(ids) < 3:
+        return np.zeros(0)
     x = np.asarray(model.phoneme_ids_to_audio(ids), dtype=np.float64)
     x = _fit(x, model.config.sample_rate)
     if x.size:
@@ -574,11 +586,12 @@ def _add_at(out: np.ndarray, y: np.ndarray, s: int, fade: int) -> None:
 
 
 def render_phones(line: dict, grid, voice: str, use_cache: bool = True) -> np.ndarray:
-    """Assemble the edited IPA and phone lengths into one take (concatenative preview-quality singer).
+    """Sing the edited IPA as words: one render per word (context kept), then warp its phones.
 
-    Each phone is rendered alone and time-warped to its edited length, then placed at the
-    edited onset. Voiced phones carry the word's melody note. This is what makes the phone
-    lengths and IPA edits reach a re-sung line; no alignment output is needed from Piper.
+    The word is synthesized as a whole phone sequence, so the model supplies the coarticulation
+    that isolated-phone samples lack. Source frames are divided between phones using the bank's
+    natural lengths, then each slice is warped to the edited phone length. That keeps the IPA
+    exact and makes per-letter length edits real without the gibberish of spliced single phones.
     """
     bars = int(grid[2])
     lead = 30
@@ -593,29 +606,43 @@ def render_phones(line: dict, grid, voice: str, use_cache: bool = True) -> np.nd
     words = line.get("phones", [])
     for wi, phs in enumerate(words):
         hz = float(spans[wi][2]) if wi < len(spans) else 220.0
-        t = lead + (float(onsets[wi]) * 1000.0 / FRAME_MS if wi < len(onsets) else 0.0)
-        for ph in phs:
-            p = str(ph.get("p", "ə"))
-            dur_f = max(2, int(round(float(ph.get("d", 0.1)) * 1000.0 / FRAME_MS)))
-            x = synth_phone(voice, p, use_cache)
-            if x.size < 32:
-                t += dur_f
-                continue
-            f0, tt = pyworld.harvest(x, FS, frame_period=FRAME_MS)
-            if len(f0) < 2:
-                t += dur_f
-                continue
-            sp = pyworld.cheaptrick(x, f0, tt, FS)
-            ap = pyworld.d4c(x, f0, tt, FS)
-            src_idx = np.linspace(0.0, float(len(f0) - 1), dur_f)
-            sp2 = warp_along(sp, src_idx)
-            ap2 = warp_along(ap, src_idx)
-            f0_src = warp_along(f0.reshape(-1, 1), src_idx).ravel()
+        seq = [str(ph.get("p", "ə")) for ph in phs]
+        x = word_audio(voice, seq, use_cache)
+        if x.size < 32:
+            continue
+        f0, tt = pyworld.harvest(x, FS, frame_period=FRAME_MS)
+        if len(f0) < 3:
+            continue
+        sp = pyworld.cheaptrick(x, f0, tt, FS)
+        ap = pyworld.d4c(x, f0, tt, FS)
+        nr = len(f0)
+        nat = [max(0.03, float(PHON_BANK.get(p, {}).get("dur", 0.12))) for p in seq]
+        src_total = sum(nat)
+        targets = [max(2, int(round(float(ph.get("d", 0.12)) * 1000.0 / FRAME_MS))) for ph in phs]
+        s_cum, t_cum = 0.0, 0
+        pieces_sp, pieces_ap, pieces_f0 = [], [], []
+        for j, p in enumerate(seq):
+            s0 = int(round(s_cum / src_total * (nr - 1)))
+            s_cum += nat[j]
+            s1 = int(round(s_cum / src_total * (nr - 1)))
+            s1 = max(s0 + 1, min(s1, nr - 1))
+            d = targets[j]
+            idx = np.linspace(float(s0), float(s1), d)
+            pieces_sp.append(warp_along(sp[s0:s1 + 1], idx - s0))
+            pieces_ap.append(warp_along(ap[s0:s1 + 1], idx - s0))
+            fsrc = warp_along(f0[s0:s1 + 1].reshape(-1, 1), idx - s0).ravel()
             carry = p in SONORANT or p in VOICED_OBSTRUENT
-            f0_new = np.where((f0_src > 0.0) & carry, hz, 0.0)
-            y = pyworld.synthesize(f0_new, sp2, ap2, FS, frame_period=FRAME_MS)
-            _add_at(out, y, int(round(t * FS * FRAME_MS / 1000.0)), int(0.006 * FS))
-            t += dur_f
+            pieces_f0.append(np.where((fsrc > 0.0) & carry, hz, 0.0))
+            t_cum += d
+        if not pieces_sp:
+            continue
+        sp2 = np.concatenate(pieces_sp, axis=0)
+        ap2 = np.concatenate(pieces_ap, axis=0)
+        f0_new = np.concatenate(pieces_f0)
+        m = min(len(sp2), len(ap2), len(f0_new), t_cum)
+        y = pyworld.synthesize(f0_new[:m], sp2[:m], ap2[:m], FS, frame_period=FRAME_MS)
+        t = lead + (float(onsets[wi]) * 1000.0 / FRAME_MS if wi < len(onsets) else 0.0)
+        _add_at(out, y, int(round(t * FS * FRAME_MS / 1000.0)), int(0.008 * FS))
     peak = float(np.max(np.abs(out))) or 1.0
     return out / peak * 0.89
 

@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Render the in-game phoneme preview bank for the TIMING tab.
+"""Build the phoneme duration table used by the TIMING editor and by piper_sing.
 
-The phone cannot run Piper, so the editor previews edits with one short sample per
-phoneme. `menu.gd` concatenates these at the edited onsets and lengths. It is a sketch
-voice: the shipped lines still come from `piper_sing.py` via `retime.py`.
+The phone cannot run Piper. An early attempt to preview edits with one WAV per phoneme
+spliced together sounded like gibberish and was removed; PLAY now uses the real clip.
+`data_phon_bank.json` is still useful: the editor lists its phones in the palette and
+uses their natural lengths as defaults, and piper_sing divides a word render between its
+phones with those lengths.
 
 Outputs:
-  godot/hula/audio/phon/p<hex>.wav   one mono 22.05 kHz sample per phoneme
-  godot/hula/data/data_phon_bank.json  ipa -> file, natural length, voiced flag
+  godot/hula/data/data_phon_bank.json  ipa -> natural length, voiced flag
+  godot/hula/audio/phon/p<hex>.wav     only with --wavs (not used by the game anymore)
 
 Usage (from the repo root):
-  python tools/phoneme_bank.py [--voice en_US-ryan-high] [--force]
+  python tools/phoneme_bank.py [--voice en_US-ryan-high] [--force] [--wavs]
 """
 import argparse
 import json
@@ -79,6 +81,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--voice", default="en_US-ryan-high")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--wavs", action="store_true", help="also write audio/phon/*.wav (unused by the game)")
     a = ap.parse_args()
 
     model = MODELS / f"{a.voice}.onnx"
@@ -110,7 +113,7 @@ def main() -> int:
             continue
         peak = float(np.max(np.abs(x))) or 1.0
         x = x / peak * 0.9
-        if a.force or not out.exists():
+        if a.wavs and (a.force or not out.exists()):
             save_wav(out, x)
             made += 1
         bank["phones"][ph] = {"file": f"phon/{name}.wav", "dur": round(x.size / FS, 3), "voiced": ph in VOICED}

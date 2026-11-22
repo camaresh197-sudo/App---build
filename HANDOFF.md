@@ -38,8 +38,14 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v4 (IPA preview fix), 2026-11-22:** User: "all changes cause gibberish." Removed the phoneme preview: splicing Piper's isolated phones was the gibberish. PLAY now plays the real clip with the edited onsets; IPA and phone lengths are silent until a re-sing.
+  Fixed the editor so a palette change rewrites the word's IPA string (it only changed the hidden phone list before, hence "does nothing").
+  Re-sing: `piper_sing` now synthesizes each word's whole phone sequence in one pass and divides its frames between the edited phone lengths, instead of splicing single phones.
+  Files: `menu.gd`, `piper_sing.py`, `phoneme_bank.py`, `docs/TIMING_EDITOR.md`; deleted `audio/phon/*`. `sound.gd` untouched.
+  Checks: import 0, smoke 0 (12-resource exit warning); the screenshot shows a palette change rewriting the header IPA; the retime B0 test re-sang cleanly, then was reverted. Not checked: by ear, or on the phone.
+  **Complaints:** (1) Greg shipped the sketch without an ear test; hear a word before the next preview. (2) The IPA display was never synced; test the visible string on every edit. (3) Re-sing quality is still unheard; listen to a retimed line before pushing.
 - **Greg v4 (TIMING editor), 2026-11-22:** Built the on-phone IPA and phone-length editor the user sketched: tap a word, edit its phones on a 40-symbol palette, `-20`/`+20 ms`, ADD/DEL/RESET; tap the graph to set PLAY's start; VOX/INST/NOTES toggles.
-  Preview: `tools/phoneme_bank.py` renders `audio/phon/p<hex>.wav` + `data_phon_bank.json`. Unedited lines play the shipped clip; any IPA/length/onset edit switches PLAY to the phoneme sketch, so the change is heard on the phone with no PC.
+  Preview (removed later this session; see the top entry): `tools/phoneme_bank.py` rendered `audio/phon/p<hex>.wav` + `data_phon_bank.json`.
   Files: `menu.gd`, `sound.gd` (wav streams, victory step offset, stop phonemes), `shotter.gd` (`timing` mode), `retime.py`, `docs/TIMING_EDITOR.md`, `AGENTS.md`.
   Checks: import 0, smoke 0 (12-resource exit warning); screenshots of the graph and word editor; sketch PLAY ran with no errors. Not checked: audio by ear, or on the phone.
   Pending: none for the sketch; `piper_sing.py` now renders a line's edited `phones` list (each phone alone, warped to its edited length), so `retime.py` applies IPA and lengths instead of only onsets.

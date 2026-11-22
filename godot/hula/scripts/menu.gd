@@ -304,8 +304,7 @@ var timing_order: Array = []
 var timing_sel := "B0"
 var timing_msg := ""
 var phonics: Dictionary = {}      # data_phonics.json "words"
-var phon_bank: Dictionary = {}    # data_phon_bank.json "phones"
-var phon_base_hz := 240.0
+var phon_bank: Dictionary = {}    # data_phon_bank.json "phones" (palette + natural lengths)
 var timing_word := -1             # selected word for the detail editor, -1 = graph
 var timing_phone := 0             # selected phone inside that word
 var timing_playhead := 0.0        # seconds into the selected line (graph click)
@@ -355,7 +354,6 @@ func _timing_load() -> void:
 	phonics = _read_json("res://data/data_phonics.json").get("words", {})
 	var bank: Dictionary = _read_json("res://data/data_phon_bank.json")
 	phon_bank = bank.get("phones", {})
-	phon_base_hz = float(bank.get("base_hz", 240.0))
 	var base: Dictionary = _read_json("res://data/data_word_timing.json")
 	timing_order = base.get("order", [])
 	timing_base = base.get("lines", {}).duplicate(true)
@@ -467,6 +465,17 @@ func _timing_reset(lid: String) -> void:
 		timing_msg = "reset %s to the default" % lid
 
 # ---- per-word IPA and phone-length editing
+func _timing_sync_ipa() -> void:
+	if timing_word < 0: return
+	var line: Dictionary = timing.get(timing_sel, {})
+	var ipa: Array = line.get("ipa", [])
+	var phones_all: Array = line.get("phones", [])
+	if timing_word >= ipa.size() or timing_word >= phones_all.size(): return
+	var s := ""
+	for ph in phones_all[timing_word]:
+		s += String(ph.get("p", ""))
+	ipa[timing_word] = s
+
 func _timing_word_reset() -> void:
 	if timing_word < 0: return
 	var line: Dictionary = timing[timing_sel]
@@ -492,6 +501,7 @@ func _timing_phone_set(p: String) -> void:
 		timing_phone = phones.size() - 1
 	else:
 		(phones[timing_phone] as Dictionary)["p"] = p
+	_timing_sync_ipa()
 	timing_msg = ""
 
 func _timing_phone_dur(d: float) -> void:
@@ -514,6 +524,7 @@ func _timing_phone_del() -> void:
 	if timing_phone >= 0 and timing_phone < phones.size():
 		phones.remove_at(timing_phone)
 	timing_phone = clampi(timing_phone, 0, maxi(0, phones.size() - 1))
+	_timing_sync_ipa()
 	timing_msg = ""
 
 func _timing_phone_add() -> void:
@@ -524,6 +535,7 @@ func _timing_phone_add() -> void:
 	var phones: Array = phones_all[timing_word]
 	phones.append({"p": "ə", "d": 0.1})
 	timing_phone = phones.size() - 1
+	_timing_sync_ipa()
 	timing_msg = "tap a symbol to replace it"
 
 func _timing_is_sketch(lid: String) -> bool:
@@ -538,12 +550,6 @@ func _timing_is_sketch(lid: String) -> bool:
 # voice). Retiming is relative to timing_playhead, set by tapping the graph. The clip starts
 # 0.15 s before its first word (data_vox.json lead-in).
 const VOX_LEAD := 0.15
-func _timing_phone(p: String, dl: float, d: float) -> void:
-	if not phon_bank.has(p): return
-	var e: Dictionary = phon_bank[p]
-	var path := String(e.get("file", ""))
-	if path == "": return
-	c.snd.play(path.get_basename(), {"v": 2.4, "dl": dl, "dur": d, "bus": "Vox"})
 
 func _timing_play(lid: String) -> void:
 	var line: Dictionary = timing.get(lid, {})
@@ -569,15 +575,18 @@ func _timing_play(lid: String) -> void:
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat, "from": VOX_LEAD + head,
 			"dur": maxf(0.05, line_len - head + VOX_LEAD)})
 		return
-	var w_ph: Array = line.get("phones", [])
-	for i in onsets.size():
-		if i >= w_ph.size(): continue
-		var t := float(onsets[i]) - head
-		for ph in w_ph[i]:
-			var d := float(ph.get("d", 0.12))
-			if t >= 0.0 and t < line_len - head:
-				_timing_phone(String(ph.get("p", "ə")), to_downbeat + t, d)
-			t += d
+	# Edited line: play the real clip, word by word, at the edited onsets. This is the
+	# shipped singer, so it stays intelligible. IPA and phone lengths are not audible
+	# until tools/retime.py re-sings the line; the sketch voice was removed for that reason.
+	timing_msg = "timing only; IPA/lengths apply after re-sing"
+	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
+	for i in shipped.size():
+		if i >= onsets.size(): break
+		var at := float(onsets[i])
+		if at < head - 0.001: continue
+		var dur := float(onsets[i + 1]) - at if i + 1 < onsets.size() else maxf(0.05, line_len - at)
+		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
+			"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
 
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 func _timing_stop() -> void:
