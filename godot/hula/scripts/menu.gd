@@ -373,7 +373,7 @@ func _timing_load() -> void:
 
 # IPA for one word: data_phonics.json when it has the word, else the written word.
 func _timing_word_ipa(w: String) -> String:
-	var key := w.strip_edges().to_lower().replace(",", "").replace(".", "").replace("'", "'")
+	var key := w.strip_edges().to_lower().replace(",", "").replace(".", "").replace("’", "'")
 	var e: Dictionary = phonics.get(key, {})
 	var ipa := String(e.get("ipa", ""))
 	return ipa if ipa != "" else key
@@ -511,7 +511,10 @@ func _timing_copy() -> void:
 
 func _timing_reset(lid: String) -> void:
 	if timing_base.has(lid):
+		# locks are the user's own choice, not part of the shipped line: a reset keeps them
+		var locks: Array = (timing.get(lid, {}) as Dictionary).get("locks", []).duplicate()
 		timing[lid] = (timing_base[lid] as Dictionary).duplicate(true)
+		if not locks.is_empty(): timing[lid]["locks"] = locks
 		timing_word = -1
 		timing_phone = 0
 		timing_playhead = 0.0
@@ -566,7 +569,11 @@ func _timing_phone_dur(d: float) -> void:
 	var phones: Array = phones_all[timing_word]
 	if timing_phone < 0 or timing_phone >= phones.size(): return
 	var ph: Dictionary = phones[timing_phone]
-	ph["d"] = snappedf(clampf(float(ph.get("d", 0.12)) + d, 0.03, 1.5), 0.01)
+	# a diphthong part keeps its minimum length, so a glide cannot be squeezed to a "geh"
+	var lo := 0.03
+	if ph.get("dip", false):
+		lo = DIP_GLIDE_MIN if DIP_GLIDE.find(String(ph.get("p", ""))) >= 0 else DIP_FIRST_MIN
+	ph["d"] = snappedf(clampf(float(ph.get("d", 0.12)) + d, lo, 1.5), 0.01)
 	timing_msg = ""
 
 func _timing_phone_del() -> void:
@@ -578,6 +585,7 @@ func _timing_phone_del() -> void:
 	if timing_phone >= 0 and timing_phone < phones.size():
 		phones.remove_at(timing_phone)
 	timing_phone = clampi(timing_phone, 0, maxi(0, phones.size() - 1))
+	_timing_mark_diphthongs(phones)   # deleting a glide must clear the vowel's mark
 	_timing_sync_ipa()
 	timing_msg = ""
 
@@ -616,10 +624,13 @@ func _timing_play(lid: String) -> void:
 		timing_msg = "no chorus bar for %s" % lid; return
 	var vein: float = c.snd.VE
 	var line_len: float = float(line.get("bars", 2)) * 16.0 * vein
-	var head := clampf(timing_playhead, 0.0, maxf(0.0, line_len - 0.05))
+	# the track starts on a whole step, so the playhead snaps to that step: otherwise the vocals run
+	# up to one step (0.105 s) ahead of the instruments
+	var step_i := int(clampf(timing_playhead, 0.0, maxf(0.0, line_len - 0.05)) / vein)
+	var head := float(step_i) * vein
 	# the track starts at this line's bar (and the playhead's step); the sequencer's own vocals are off
 	c.snd.have_vox = false
-	c.snd.start_victory_at(row, int(head / vein))
+	c.snd.start_victory_at(row, step_i)
 	var to_downbeat: float = c.snd.next_t - c.snd.now
 	timing_play_t0 = c.snd.now + to_downbeat - head
 	timing_play_len = line_len
@@ -636,35 +647,49 @@ func _timing_play(lid: String) -> void:
 	if PiperVoice.available():
 		_timing_play_piper(lid, head, to_downbeat, line_len)
 		return
-	# The diphone bank stitches 2-phone renders and still reads as gibberish (a speech recogniser
-	# hears nothing in it), so it is off. Without the Piper build, an edited line plays the real
-	# clip at the edited onsets; IPA and phone lengths are heard after a re-sing (COPY, retime.py).
-	timing_msg = "real clip at your onsets; IPA/length: COPY + retime.py, or the Piper build"
-	if not DIPHONE_PREVIEW or di_bank.is_empty():
-		var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
-		for i in shipped.size():
-			if i >= onsets.size(): break
-			var at := float(onsets[i])
-			if at < head - 0.001: continue
-			var dur := _timing_shipped_len(lid, i, line_len)
-			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
-				"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
-		return
+	# Without the Piper build, edited words are sounded from the diphone bank at their edited onsets
+	# and phone lengths; unedited words keep the shipped clip. The bank is a rough preview (flat
+	# pitch, possibly audible joins); IPA and phone lengths are exact only after COPY + retime.py.
+	var use_bank := DIPHONE_PREVIEW and not di_bank.is_empty()
+	timing_msg = "diphone preview: IPA/length approximate; exact after COPY + retime.py, or the Piper build" if use_bank else "real clip at your onsets; IPA/length: COPY + retime.py, or the Piper build"
+	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
 	for i in onsets.size():
-		if i >= w_ph.size(): break
-		var t := float(onsets[i]) - head
-		var phs: Array = w_ph[i]
-		for j in phs.size():
-			var p := String((phs[j] as Dictionary).get("p", "ə"))
-			var nx := String((phs[j + 1] as Dictionary).get("p", p)) if j + 1 < phs.size() else p
-			var d := float((phs[j] as Dictionary).get("d", 0.12))
-			if t >= -0.001 and di_bank.has(p + "|" + nx):
-				var e: Dictionary = di_bank[p + "|" + nx]
-				c.snd.play("di_bank", {"v": 1.8, "dl": to_downbeat + maxf(0.0, t),
-					"from": float(e.get("start", 0.0)), "dur": maxf(0.04, d) + 0.02, "bus": "Vox"})
-			t += d
+		var at := float(onsets[i])
+		if at < head - 0.001: continue
+		if use_bank and _timing_word_edited(lid, i) and i < w_ph.size():
+			_timing_play_bank_word(w_ph[i], at - head, to_downbeat)
+		elif i < shipped.size():
+			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
+				"from": VOX_LEAD + maxf(float(shipped[i]), head),
+				"dur": maxf(0.05, _timing_shipped_len(lid, i, line_len))})
 
-const DIPHONE_PREVIEW := false   # see _timing_play: the stitched preview is unintelligible
+# true when word i differs from the shipped line (IPA, phone lengths or syllable pitch)
+func _timing_word_edited(lid: String, i: int) -> bool:
+	var base: Dictionary = timing_base.get(lid, {})
+	var bipa: Array = base.get("ipa", [])
+	var bph: Array = base.get("phones", [])
+	var line: Dictionary = timing.get(lid, {})
+	var ipa: Array = line.get("ipa", [])
+	var w_ph: Array = line.get("phones", [])
+	if i >= w_ph.size(): return false
+	return i >= bipa.size() or String(ipa[i]) != String(bipa[i]) or i >= bph.size() or JSON.stringify(w_ph[i]) != JSON.stringify(bph[i])
+
+# sound one edited word from the diphone bank; t is seconds from the playhead (negative = already past)
+func _timing_play_bank_word(phs: Array, t: float, to_downbeat: float) -> void:
+	var t_pos := t
+	for j in phs.size():
+		var p := String((phs[j] as Dictionary).get("p", "ə"))
+		var nx := String((phs[j + 1] as Dictionary).get("p", p)) if j + 1 < phs.size() else p
+		var d := float((phs[j] as Dictionary).get("d", 0.12))
+		if t_pos >= -0.001 and di_bank.has(p + "|" + nx):
+			var e: Dictionary = di_bank[p + "|" + nx]
+			c.snd.play("di_bank", {"v": 1.8, "dl": to_downbeat + maxf(0.0, t_pos),
+				"from": float(e.get("start", 0.0)), "dur": maxf(0.04, d) + 0.02, "bus": "Vox"})
+		t_pos += d
+
+# On: the bank is the no-Piper preview. Its last recogniser check (before the pad-id fix in
+# diphone_bank.py) heard nothing in it, and the rebuilt bank has not been heard on a phone yet.
+const DIPHONE_PREVIEW := true
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 
 var piper_cache := {}   # "lid_i_<ipa>" -> AudioStreamWAV from the embedded Piper
@@ -766,6 +791,7 @@ var timing_drag_index := -1   # touch index of the finger dragging a marker, -1 
 var timing_drag_lid := ""
 var timing_drag_word := -1
 var timing_drag_x := 0.0
+var timing_drag_t := 0.0   # unclamped onset under the finger (seconds), for onset drags
 var timing_drag_kind := "onset"   # "onset" moves a word's start; "len" stretches its held last sound
 var timing_handles: Array = []   # [Rect2, lid, word index] for the length handles, rebuilt every draw
 # playhead: sound time at which the clip starts (-1 = not playing), and the clip length in seconds
@@ -795,6 +821,7 @@ func timing_grab(pos: Vector2, idx: int) -> bool:
 	if best >= 0:
 		var mb: Array = timing_markers[best]
 		timing_drag_index = idx; timing_drag_kind = "onset"; timing_drag_lid = mb[1]; timing_drag_word = mb[2]; timing_drag_x = pos.x
+		timing_drag_t = float(timing[mb[1]]["onsets"][mb[2]])
 		return true
 	if timing_graph_rect.size.x > 0.0 and timing_graph_rect.has_point(pos):
 		var frac := (pos.x - timing_graph_rect.position.x) / timing_graph_rect.size.x
@@ -816,10 +843,12 @@ func timing_move(x: float) -> void:
 		timing_msg = "%s is locked: tap its lock to move it" % String((timing[timing_drag_lid].get("words", []) as Array)[i])
 		timing_drag_x = x
 		return
-	var want := float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur
-	_timing_set_onset(timing_drag_lid, i, want)
+	# the finger's own position is tracked, not the clamped word: at the edge the word stops, and
+	# coming back the word follows at once instead of lagging by the travel spent past the edge
+	timing_drag_t += (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur
+	_timing_set_onset(timing_drag_lid, i, timing_drag_t)
 	timing_drag_x = x
-	timing_msg = "edge of the line" if absf(float(on[i]) - want) > 0.001 else ""
+	timing_msg = "edge of the line" if absf(float(on[i]) - timing_drag_t) > 0.001 else ""
 
 # Stretch or shorten word i by changing its last sound's length (the held part). The word cannot
 # run past the end of the line, and a sound never gets shorter than 0.03 s.
