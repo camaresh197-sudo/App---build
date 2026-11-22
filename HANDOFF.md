@@ -11,7 +11,9 @@ Agents have no memory between sessions. Before acting, read **`HANDOFF.md` first
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
 - Wren (Claude): the session that wrote the original rule was Wren v1. Wren v2 (audio tooling). Wren v3 (TIMING tab, 2026-11-22). Next: **Wren v4**, then v5, and so on.
 - Greg (DeepSeek): Greg v3 was the last session. Next: **Greg v4**, then v5, and so on.
-The number moves only when your session finishes, never on reading this file. When you finish, advance your own number by one here and leave the other agent's alone.
+A new session gets the next number. Reading this file does not change it. Leave the other agent's number alone.
+
+User override, 2026-11-22, their wording: "If it's a new session you get a new version." Each new session takes the next version of that agent's number, and that replaces the "advance when you finish" rule.
 
 ## User override
 The user can overwrite anything agreed in this file, including rules, claims and plans, by typing the change. A typed instruction from the user wins. Log the change with the user's wording, so the next session sees what was decided and why.
