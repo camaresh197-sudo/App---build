@@ -34,6 +34,8 @@ User override, 2026-11-21, their wording: "You don't need to claim md files. Tha
 - Feedback earns its space: a `Pushback:` with a reason and an alternative, a failing check, or a concrete open item.
 
 ## Complaints (three per handoff, at the end)
+Both agents, Wren (Claude) and Greg, write these at the end of every Log entry. This is not optional.
+User override, 2026-11-22, their wording: "It should be written in the hand off that you both need to do that."
 User instruction, 2026-11-21, their wording: "There should be 3 complaints before the end of each section and the person person writing the handoff doesnt have to filter and can make jabs at the other, or praise them"
 - Every Log entry ends with exactly three, **10–15 words each**, counted once (`import/smoke` and hyphenated words are one).
 - Each names a decision and the next action. "Be more careful" is not a complaint; "X left Y unrun; run it before Z" is.
@@ -80,11 +82,13 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
 - **Claude (unnumbered), TIMING tab, 2026-11-22 (later):** Pushed to `godot` through `afd28bf`: word drag on the graph; each word runs to the next edited onset (`328f8fe`); playhead across the graph (`afd28bf`). The "last word plays early" report traced to word length (shipped length kept the old tail), fixed in `328f8fe`. A temporary PLAY status line confirmed word-timing path, then removed.
   Checks: import and `--smoke` clean on each commit; PC log showed correct chunk scheduling. Not checked on a phone: the `328f8fe` fix, the playhead, drag by finger.
   **Next:** check the `godot-apk` runs for `328f8fe` and `afd28bf`; confirm "so" then "gay" sound in order when "so" is dragged back; then find why B2 is not sung.
+  **Complaints:** (1) Wren pushed the word-length fix unchecked on a phone; test it before the next push. (2) Wren left B2 unresolved for two mix runs; find the sequencer cause before more mixes. (3) Wren kept the instrument stem subtraction unfixed; decide on a fix before trusting graph data.
 - **Claude (unnumbered), TIMING tab, 2026-11-22:** Work on `godot` (pushed to `cfc2a1f`, doc commits local): PLAY starts the victory track at the line's chorus bar with sequencer vocals off, stops after the line's bars; STOP and BACK restore vocals; graph under the words; line picker with words (drawn last); NEXT LINE; BACK top left; word drag on the graph.
   Files: `scripts/menu.gd`, `scripts/main.gd` (touch routing), `scripts/sound.gd` (`start_victory_at`, `stop_vox`, `victory_row_of`), `data/data_line_env.json` (B0, B1), `tools/line_env.py`, `docs/AUDIO.md`, `AGENTS.md`.
   Checks: import and `--smoke` clean on each code commit; screenshots of TIMING tab and picker. Instrument playback confirmed on a phone (user). Not checked: PLAY timing against the beat, drag by finger, graph on a phone.
   **Not fixed:** B2 not sung in `mix victory 30` (two runs, no vocal clip after B1); stem subtracts too much instrument energy in sung windows, so graph data is unreliable; 13 sung lines have no onsets.
   **Next:** push doc commits (`81eecca`, `925a813`) with the user's go-ahead; check the `godot-apk` run for `cfc2a1f`; find why B2 is not sung.
+  **Complaints:** (1) Wren's entry breaks the 10-line limit; move the file list to docs/HANDOFF_LOG.md. (2) Wren wrote PLAY timing unchecked but kept pushing; stop pushing until phone results return. (3) Greg isn't in this log yet; Greg v4 must write a Log entry next session.
 - **Wren v2 (audio tooling), 2026-11-21:** Docs and tools; no game asset changes this entry.
   Added: `tools/snip_from_stem.py` (cut any window from `stems/`, no Godot run, 0.2 s warm), `tools/retime.py` (apply TIMING-tab JSON, re-sing changed lines).
   Game: TIMING tab in the secret menu (`menu.gd`), `data/data_word_timing.json`; shotter `mix` writes `_masterpre.wav`.
