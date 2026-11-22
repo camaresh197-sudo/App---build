@@ -163,8 +163,8 @@ timed in the tab yet.
   (master minus `k` x vocal bus) removes much of the instrument energy in sung windows: about 13 dB
   below the master at 6–12 s, and quiet at 27–30 s. The least-squares `k` check gives zero correlation
   by construction, so it does not catch this. Graph data built from that stem is unreliable.
-- **Instrument playback on the TIMING tab** was missing until PLAY started the track; that is now fixed
-  (see above). Whether instruments are heard on a phone is not checked.
+- **Instrument playback on the TIMING tab:** PLAY now starts the track, and the instruments were checked
+  on a phone (2026-11-22). The stem problem below is about the analysis data, not playback.
 - **Vocal bus clips** in the mix at +2.3 dBFS pre-limiter (1220 samples), so the chorus vocals are
   overdriven before the limiter.
 
