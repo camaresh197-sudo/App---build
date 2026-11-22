@@ -396,13 +396,20 @@ func _timing_play(lid: String) -> void:
 	c.snd.have_vox = false
 	c.snd.start_victory_at(row)
 	var to_downbeat: float = c.snd.next_t - c.snd.now
+	# stop the track when the line's bars end; a newer PLAY or STOP cancels this stop
+	timing_play_id += 1
+	var my_id := timing_play_id
+	var span: float = float(timing.get(lid, {}).get("bars", 2)) * 16.0 * c.snd.VE
+	c.snd.later.append([c.snd.now + to_downbeat + span, func(): if timing_play_id == my_id: _timing_stop()])
 	if shipped.is_empty() or edited.size() != shipped.size():
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": maxf(0.0, to_downbeat - VOX_LEAD)}); return
 	for i in shipped.size():
 		var dur := float(shipped[i + 1]) - float(shipped[i]) if i + 1 < shipped.size() else 0.0
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + float(edited[i]), "from": VOX_LEAD + float(shipped[i]), "dur": dur})
 
+var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 func _timing_stop() -> void:
+	timing_play_id += 1
 	c.snd.stop_vox(); c.snd.stop_music(); c.snd.have_vox = true
 
 # Sound graph under the word rows: the sung clip (yellow) over the instruments (blue) for the same
