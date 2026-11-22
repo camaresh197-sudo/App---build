@@ -229,7 +229,7 @@ func play(name: String, o := {}) -> void:
 
 # stop word-timing previews: drop queued Vox chunks and silence the Vox voices
 func stop_vox() -> void:
-	later = later.filter(func(e): return e[1].get_bound_arguments_count() == 0 or not (str(e[1].get_bound_arguments()[0]).begins_with("vox/") or str(e[1].get_bound_arguments()[0]).begins_with("phon/")))
+	later = later.filter(func(e): return e[1].get_bound_arguments_count() == 0 or not (str(e[1].get_bound_arguments()[0]).begins_with("vox/") or str(e[1].get_bound_arguments()[0]).begins_with("phon/") or str(e[1].get_bound_arguments()[0]) == "di_bank"))
 	for i in voices.size():
 		if voices[i].bus == "Vox":
 			voices[i].stop(); vstop[i] = 0.0

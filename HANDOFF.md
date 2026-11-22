@@ -38,6 +38,12 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v4 (diphone preview), 2026-11-22:** User: "do 1 first." Built the offline diphone bank: `tools/diphone_bank.py` renders all 1600 phone pairs with Piper into one 1.2 MB `audio/di_bank.ogg` + `data_diphone_bank.json`.
+  Edited lines now play that bank at the edited onsets and phone lengths; unedited lines keep the real clip. IPA edits are audible on the phone immediately, with the transition that isolated phones lost.
+  Files: `menu.gd`, `sound.gd` (stop queued bank chunks), `docs/TIMING_EDITOR.md`, `tools/diphone_bank.py`, `audio/di_bank.ogg`, `data/data_diphone_bank.json`.
+  Checks: bank 1600 pairs / 142.6 s; import 0, smoke 0 (16-resource exit warning); PLAY-on-edit ran with no errors. Not checked: by ear, or on a phone.
+  Exact re-sing still runs `retime.py`; the bank is a preview with flat pitch and possibly audible joins.
+  **Complaints:** (1) Greg shipped the bank unheard; listen to B0 before trusting it. (2) The pairs are cut to one phone length; check whether the overlap smears words. (3) No phone test yet; try the TIMING tab on build 266.
 - **Greg v4 (IPA preview fix), 2026-11-22:** User: "all changes cause gibberish." Removed the phoneme preview: splicing Piper's isolated phones was the gibberish. PLAY now plays the real clip with the edited onsets; IPA and phone lengths are silent until a re-sing.
   Fixed the editor so a palette change rewrites the word's IPA string (it only changed the hidden phone list before, hence "does nothing").
   Re-sing: `piper_sing` now synthesizes each word's whole phone sequence in one pass and divides its frames between the edited phone lengths, instead of splicing single phones.

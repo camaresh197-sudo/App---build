@@ -305,6 +305,7 @@ var timing_sel := "B0"
 var timing_msg := ""
 var phonics: Dictionary = {}      # data_phonics.json "words"
 var phon_bank: Dictionary = {}    # data_phon_bank.json "phones" (palette + natural lengths)
+var di_bank: Dictionary = {}      # data_diphone_bank.json "pairs": p1|p2 -> start/dur
 var timing_word := -1             # selected word for the detail editor, -1 = graph
 var timing_phone := 0             # selected phone inside that word
 var timing_playhead := 0.0        # seconds into the selected line (graph click)
@@ -354,6 +355,7 @@ func _timing_load() -> void:
 	phonics = _read_json("res://data/data_phonics.json").get("words", {})
 	var bank: Dictionary = _read_json("res://data/data_phon_bank.json")
 	phon_bank = bank.get("phones", {})
+	di_bank = _read_json("res://data/data_diphone_bank.json").get("pairs", {})
 	var base: Dictionary = _read_json("res://data/data_word_timing.json")
 	timing_order = base.get("order", [])
 	timing_base = base.get("lines", {}).duplicate(true)
@@ -575,18 +577,34 @@ func _timing_play(lid: String) -> void:
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat, "from": VOX_LEAD + head,
 			"dur": maxf(0.05, line_len - head + VOX_LEAD)})
 		return
-	# Edited line: play the real clip, word by word, at the edited onsets. This is the
-	# shipped singer, so it stays intelligible. IPA and phone lengths are not audible
-	# until tools/retime.py re-sings the line; the sketch voice was removed for that reason.
-	timing_msg = "timing only; IPA/lengths apply after re-sing"
-	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
-	for i in shipped.size():
-		if i >= onsets.size(): break
-		var at := float(onsets[i])
-		if at < head - 0.001: continue
-		var dur := float(onsets[i + 1]) - at if i + 1 < onsets.size() else maxf(0.05, line_len - at)
-		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
-			"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
+	# Edited line: assemble the edited IPA from the diphone bank (one clip per phone
+	# transition, so it stays intelligible). Fall back to the real clip if the bank is
+	# missing. The bank is a preview; the real singer comes back after retime.py re-sings.
+	timing_msg = "diphone preview; re-sing for the real voice"
+	var w_ph: Array = line.get("phones", [])
+	if di_bank.is_empty():
+		var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
+		for i in shipped.size():
+			if i >= onsets.size(): break
+			var at := float(onsets[i])
+			if at < head - 0.001: continue
+			var dur := float(onsets[i + 1]) - at if i + 1 < onsets.size() else maxf(0.05, line_len - at)
+			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
+				"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
+		return
+	for i in onsets.size():
+		if i >= w_ph.size(): break
+		var t := float(onsets[i]) - head
+		var phs: Array = w_ph[i]
+		for j in phs.size():
+			var p := String((phs[j] as Dictionary).get("p", "ə"))
+			var nx := String((phs[j + 1] as Dictionary).get("p", p)) if j + 1 < phs.size() else p
+			var d := float((phs[j] as Dictionary).get("d", 0.12))
+			if t >= -0.001 and di_bank.has(p + "|" + nx):
+				var e: Dictionary = di_bank[p + "|" + nx]
+				c.snd.play("di_bank", {"v": 1.8, "dl": to_downbeat + maxf(0.0, t),
+					"from": float(e.get("start", 0.0)), "dur": maxf(0.04, d) + 0.02, "bus": "Vox"})
+			t += d
 
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 func _timing_stop() -> void:

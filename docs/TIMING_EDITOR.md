@@ -21,21 +21,20 @@ graph. The line picker is three columns.
 - **Word editor:** the IPA is a row of phone chips. Tap a chip, then a symbol from the
   40-phone palette to replace it; `-20 ms` / `+20 ms` change that phone's length; `ADD`,
   `DEL`, `RESET` and `DONE` finish. `LEN` is the sum of the phones.
-- **Preview:** PLAY uses the real sung clip. Edited onsets are applied word by word, so
-  timing is heard immediately. IPA and phone-length edits are saved and copied, but they
-  are heard only after `tools/retime.py` re-sings the line — the phone cannot run Piper.
-  (A per-phoneme preview was tried and removed: splicing isolated phone samples was
-  unintelligible.)
+- **Preview:** unedited lines play the real clip. Edited lines play the **diphone bank**:
+  each phone transition is a pre-rendered Piper clip, scheduled at the edited onsets and
+  lengths, so IPA and timing are heard immediately and stay intelligible. The exact
+  singer still comes from `tools/retime.py` on the PC.
 - **Graph:** notes (from `data_victory.json`), the vocal strip and the instrument strip;
   `VOX` / `INST` / `NOTES` toggle them. Word blocks use the edited onset and phone lengths.
 - **Playhead:** tap the graph to set PLAY's start; the moving line tracks the sequencer.
 
 ## Data and tools
 
-- `tools/phoneme_bank.py` writes `godot/hula/data/data_phon_bank.json` (IPA, natural
-  length, voiced flag). The editor uses it for the palette and default phone lengths;
-  `piper_sing` uses the lengths to divide a word render between its phones. The WAV
-  version (`--wavs`) is no longer used by the game.
+- `tools/diphone_bank.py` renders every phone pair with Piper into one
+  `godot/hula/audio/di_bank.ogg` plus `data_diphone_bank.json` (start/duration per pair).
+  That is the offline preview: a pair keeps the transition, which is what isolated phones
+  lost.
 - A line in `data_word_timing.json` may now carry `ipa` (one string per word) and
   `phones` (one list of `{"p", "d"}` per word). Missing fields are derived from
   `data_phonics.json` and the bank at load; the phone saves its edits in
@@ -48,9 +47,9 @@ graph. The line picker is three columns.
 
 ## Limits — read before trusting it
 
-- The phone cannot run Piper. PLAY is the real clip plus edited onsets; IPA and phone
-  lengths are silent until `retime.py` re-sings. Splicing isolated phones was tried and
-  removed — it was the gibberish.
+- The diphone preview is a sketch: pairs are cut to the phone length and overlap, so joins
+  can be audible and the pitch is flat. It is for judging IPA and timing, not the final
+  voice.
 - `piper_sing.py` sings an edited line as **whole words**: the word's phone sequence is
   synthesized in one pass (context kept), then its frames are divided between the edited
   phone lengths. `retime.py` writes `ipa` / `phones` for a changed line and triggers this.
