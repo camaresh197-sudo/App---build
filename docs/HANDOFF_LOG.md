@@ -220,3 +220,201 @@ Older Log entries, Greg notes, moved verbatim to keep the session-start read sho
 (2026-11-21, Greg v3, closing) For Greg v4: `docs/CHARACTER.md` now carries the shape-key Basis trap — any face or rig pass must write `key_blocks[0]`, not just `mesh.vertices`. Back up the master before every one-off pass. Judge faces with `shotter sheet <dir> 0 sheet <exprs> <yaw>` and zero the expression keys; import/smoke prove the file loads, not that it looks right.
 Jaw state: the hanging lobe is gone (`face_jaw2.py`); the chin is still weak in profile, which is the next jaw job. If you reshape it again, start from `blender/character_rigged.blend.bak_jaw2` (untracked) rather than layering passes.
 Oldest open work: map playtest, act-intro music, the `ccr` → `godot` merge, branch cleanup. The Log archive is `docs/HANDOFF_LOG.md`; read it before trimming anything.
+
+
+## Moved from HANDOFF.md and PERSONALITIES.md, 2026-11-22 (Wren v4)
+
+- **Greg v4 (app build handoff), 2026-11-22:** No code, nothing claimed. Pulled `bacc881` → `5c1a4fb`. `godot-apk` 44985039343 on `afd28bf` green (build 261); `godot-latest` carries it. Local import and smoke: no `SCRIPT ERROR`; "12 resources still in use" on exit, so load-clean, not leak-clean.
+  Next: phone-check TIMING drag and playhead, find why B2 is unsung, then map playtest and act-intro music.
+  **Complaints:** (1) Wren left drag and playhead unchecked on a phone; test before more pushes. (2) B2 stayed unsung across two mix runs; find the sequencer cause before another mix. (3) The phone runs build 261; test timing there before touching the graph.
+
+- **Wren v3 (TIMING tab, later), 2026-11-22:** Pushed to `godot` through `afd28bf`: word drag on the graph; each word runs to the next edited onset (`328f8fe`); playhead across the graph (`afd28bf`). "Last word plays early" traced to word length, fixed in `328f8fe`.
+  Checks: import and `--smoke` clean per commit; PC log showed correct chunk scheduling. Not checked on a phone: `328f8fe`, playhead, finger drag.
+  Next: check `godot-apk` runs for `328f8fe` and `afd28bf`; confirm "so" then "gay" plays in order; find why B2 is unsung.
+  **Complaints:** (1) Wren pushed the word-length fix unchecked on a phone; test before the next push. (2) B2 unresolved for two mix runs; find the sequencer cause before more mixes. (3) Instrument stem subtraction unfixed; decide a fix before trusting graph data.
+
+- **Wren v3 (TIMING tab), 2026-11-22:** On `godot` through `cfc2a1f`: PLAY starts the victory track at the line's chorus bar with sequencer vocals off; STOP and BACK restore vocals; graph under the words; line picker; NEXT LINE; word drag.
+  Files: `scripts/menu.gd`, `scripts/main.gd`, `scripts/sound.gd`, `data/data_line_env.json` (B0, B1), `tools/line_env.py`, `docs/AUDIO.md`, `AGENTS.md`.
+  Checks: import and `--smoke` clean; instrument playback confirmed on a phone (user). Not checked: PLAY timing against the beat, finger drag, graph on a phone.
+  **Complaints:** (1) Entry breaks the 10-line limit; move file lists to `docs/HANDOFF_LOG.md`. (2) PLAY timing pushed unchecked; stop pushing until phone results return. (3) Greg must write a Log entry next session.
+
+### Learned from Greg (applies from the next session)
+- **Check the math before the numbers.** `spawn` and `speed` ramping together compound to ~2.6x, not 1.6x. Confirm how knobs combine before tuning (Log: slice pushback).
+- **Look at the branch before planning.** Theater code lives on `ccr-74f83a2e-94v7jl`, not `godot` (Log: map base correction).
+- **One path, not several.** Propose one path with a reason; ask one precise question (Log: map plan pushback).
+- **Answer the idea, not every line.** Audit details only when asked.
+- **Run it before claiming it works.**
+
+
+### Notes for Greg (from Greg v2, 2026-11-21)
+- **Measure the complaint before touching code.** "Echo" was the Vox bus reverb, not the clips; "stutter" was 15–80 ms energy holes at syllable joins (`dc0230d`).
+- **Order commit times before declaring code missing.** Use `git log --format='%h %cI %ad %s'` and read both clocks.
+- **Search for a capability before adding a store.** `tools/pronounce/engine.py` already existed; `git grep` for imports, not names.
+- **The audio check is `mix`, not the meter.** Stale Godot processes hold the audio device and exit silently; kill hung ones first.
+- **Confirm the file before deleting lines.** If a line number doesn't match what the user describes, stop and ask.
+- **"push" and "ship" mean merge to `godot` and publish.** Doc-only is safe; code and audio reach the phone, so import and smoke first, then watch `godot-apk`. The speech cache is `tools/.cache/speech` (gitignored); alignment JSON uses plain `int`.
+
+
+
+Progress rows beyond the newest three were dropped from PERSONALITIES.md; see git history for them.
+
+
+## Moved from docs/AUDIO.md, 2026-11-22 (Wren v4)
+
+## Known problems (2026-11-22)
+
+- **B2 is not sung in the mix.** `_vox_key` maps chorus bar 4 to `B2`, and that bar is not held, so
+  the sequencer should play it. In two `mix victory 30` runs the vocal bus has B0 and B1 (at 20.2 s and
+  23.3 s) but no B2 at about 26.4 s, and no vocal clip after B1 inside the window. The cause is not
+  found yet. Until it is, B2 has no graph data and its stem position is unknown.
+- **The instrument stem is wrong where vocals sit.** `stems/instruments.flac`-style subtraction
+  (master minus `k` x vocal bus) removes much of the instrument energy in sung windows: about 13 dB
+  below the master at 6–12 s, and quiet at 27–30 s. The least-squares `k` check gives zero correlation
+  by construction, so it does not catch this. Graph data built from that stem is unreliable.
+- **"Last word plays early" (2026-11-22):** the cause was word length: each word used its shipped length, so
+  a dragged word left its old tail running into the gap. Fixed in `328f8fe` (each word runs to the next
+  edited onset). Not yet checked on a phone. A PLAY status line confirmed the word-timing path, not the
+  whole-clip fallback.
+- **Instrument playback on the TIMING tab:** PLAY now starts the track, and the instruments were checked
+  on a phone (2026-11-22). The stem problem below is about the analysis data, not playback.
+- **Vocal bus clips** in the mix at +2.3 dBFS pre-limiter (1220 samples), so the chorus vocals are
+  overdriven before the limiter.
+
+
+
+## Moved from docs/HANDOFF_VOCALS.md, 2026-11-22 (Wren v4)
+
+# Hand-off: victory vocals, timing and arrangement (Hula / Godot)
+
+Final state, written at the end of the session that pushed `eae2e1e`. Read this before
+touching `tools/piper_sing.py`, `godot/hula/data/data_vox.json`, `data_lyrics.json` or the
+victory code in `godot/hula/scripts/sound.gd`.
+
+## Update (2026-11-21, later sessions)
+
+Everything above is still true for the vocal pipeline. These are newer:
+- **Snips without a full render:** `tools/snip_from_stem.py` cuts any window from `stems/` and
+  re-places the sung clips. A warm snip takes about 0.2 s. See docs/AUDIO.md, "Snips without
+  re-rendering the song".
+- **Dropouts:** the run in `stems/` lost C2 (vox bus silent 36–38 s). The tool warns and estimates
+  the line. Find out why before trusting a mix from a run with warnings.
+- **Word timing:** the secret menu TIMING tab saves and copies B0–B2 onsets. `tools/retime.py`
+  re-sings only the changed lines on the PC. The TIMING tab is not checked on screen yet.
+- **Still open:** listen to the chorus (the item list below is still the list to check).
+
+## State
+
+- `origin/godot` is at `eae2e1e` (pushed). Work by fast-forward only; if the push is refused,
+  rebase onto `origin/godot`. Someone else pushed to `godot` between our pushes; that happened.
+- Local worktree `/tmp/claude-0/desync` on branch `desync-fix` may be gone. Everything is on
+  `origin/godot`.
+- Smoke on `eae2e1e`: `godot --headless --path godot/hula --import` exit 0, then
+  `--quit-after 120 -- --smoke` exit 0, no `SCRIPT ERROR` or `Parse Error`. Godot 4.6.3 binary
+  came from the official Linux release zip.
+- **Not verified:** nothing has been heard. `mix victory` needs a display, so it was not run.
+  The `godot-apk` run for these pushes was not checked.
+
+## What changed (in push order)
+
+1. `c620f04`, `44fda46`: lines with more words than beats in their bar (F0, tag0, tag1, tag2,
+   B6) were spread from 0 s. They now start after the 0.15 s lead-in and sit on the step grid.
+2. `1ca779c`, `8826bcd`: F0, B6, tag0, tag2 and B0–B3 hold their last word to beat 7 (later
+   superseded for five lines, see step 7). B3 text is "Gay gay gay Jeff's so gay".
+3. `b089864`, `ef220ae`: a gap of 15–150 ms inside one sustained note is filled. Pitch changes
+   keep the old 80 ms cap. Short gaps across the 16 song clips went 27 → 20; the rest are
+   consonant closures.
+4. `ae92b99`, `d4d99dc`: while a sung line is on (its two bars), bass, guitar strums, bell and
+   chord stabs play at `DUCK_SUNG = 0.4` (`sound.gd`). Drums and the melody lead are unchanged.
+   `_vox_key(sec, bar)` maps a bar to its clip key.
+5. `0e2fcf3`: this file (earlier draft).
+6. `f9caff9`: the step scheduler fired a step only after its time had passed, so every audio
+   delay was zero. Sung clips started on the beat, and their vowels landed about 0.15 s late
+   against the instruments. Steps are now scheduled `LOOK_AHEAD = 0.2 s` early and queued to
+   the exact beat. This is the most likely cause of the "falls behind" report. Not heard yet.
+7. `eae2e1e`: from the reference recording (`Voice_Recorder_14`, transcribed with a speech
+   model): "Jeff is gay so gay" words start about 0.27 s apart, and the last word is short with
+   no hold. B0, B1, B2, F0, B6, tag0 and tag2 now use that spacing (`GAY_WORD`, `GAY_LAST`,
+   `grid_melody(word_secs=...)`). Onsets measured within 0.06 s of the spacing. B3 keeps its
+   hold to beat 7.
+
+## Timing contract
+
+- Each sung clip is 3.36 s (two bars) or 1.68 s (one bar). The first sung vowel sits at
+  **0.15 s**. `data_vox.json` stores 0.15 for every clip, and `sound.gd` starts each clip at
+  `beat − 0.15 + 0.01`. The renderer puts the first vowel at `lead = 30` frames (FRAME_MS 5).
+  Keep these two in step.
+- A beat is 0.42 s (`VE = 0.105` × 4 steps). A two-bar clip is 32 steps.
+- The reference-spacing lines do not sit on the step grid; they use free spacing.
+- Energy-based onset detection was unreliable (consonants, noise floors). The measurements in
+  this session used `pyworld.harvest` voicing and a 20 ms level-rise check, both approximate.
+
+## Sequence and clips
+
+- Sung clips are the keys of `data_vox.json`: A0 A2 A4 A6 B0 B1 B2 B3 B6 C0 C2 C4 C6 F0 tag0
+  tag2. B6 is aliased as F2.
+- Removed from the sequence (clips kept on disk, restore by adding the key back): F1 "Fun for
+  all hey", F3, tag1, tag3. B4, B5 and B7 keys still exist but are unused.
+- Lyrics are in `godot/hula/data/data_lyrics.json` (clip id → text).
+
+## Renderer how-to
+
+- Run from `tools/`: `python3 piper_sing.py --force` re-renders all 19 keys, including
+  B4, B5, B7. Use `--only <ids>` to limit it, or restore unused clips with
+  `git checkout -- godot/hula/audio/vox/B4.ogg B5.ogg B7.ogg` afterwards.
+- Dependencies: `pip install "piper-tts[alignment]" pyworld soundfile`. The voice model goes
+  in `tools/models/` (gitignored): `en_US-ryan-high.onnx` and `.onnx.json` from
+  `https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/high/`.
+- The alignment check showed Piper's word count matches the sheet for every grid clip.
+- Clear `tools/.cache/` (or use `--force`) after changing pronunciations.
+- Godot's `--import` rewrites `character*.glb.import`. Revert those before committing.
+
+## Fast chorus render (offline, seconds)
+
+Use this for chorus tweaks instead of a full Godot mix and a Piper re-sing.
+
+- Script: `tools/snip_fast.py`. Usage (any snip, any sung clips):
+  `python3 tools/snip_fast.py --master M.wav --voxpost M_voxpost.wav --voxpre M_voxpre.wav --clips-dir godot/hula/audio/vox --start 19.45 --end 33.55 [--clips B0,B1] --out snip.mp3`
+  Clips are located by search in the dry bus, so no timing is assumed. Chorus = 19.45–33.55 s.
+- Inputs come from one Godot run: `mix victory 45` writes the master, `_voxpost` and `_voxpre` WAVs.
+  The run needs a display (`xvfb-run`) and the project imported (`--import`). Those files are
+  not in the repo; regenerate them when you need them.
+- Instruments = master minus vox bus, so the game's ducking and mix are reused. Only the clips change.
+- Clip positions come from cross-correlating each clip with the dry vox bus (`voxpre`). Found at
+  A0 6.503, A2 9.568, A4 12.633, A6 15.698, B0 19.506, B1 22.571, B2 25.543, B3 28.608, C0 32.417,
+  C2 35.482 s. Lines are about 3.0 s apart, not 3.36 s. Clips with score below `--min-score` (0.5) are skipped.
+- Vocal gain is calibrated against the game's vox bus over the snip (about 1.6). Chorus residual
+  0.11. Listen before trusting the level.
+- The cached instrument stem is only valid while instruments and the sung-bar pattern stay the
+  same. After any change to those, do one new Godot run first.
+- Status: B0–B2 are re-sung on the reference spacing (`REF_GAY_ONSETS` in `tools/piper_sing.py`
+  in the scratch copy only, not committed). Not heard yet. Not pushed to `godot`.
+
+## Open items
+
+1. **Listen before trusting anything.** Check: the vowel timing after `f9caff9`, the reference
+   spacing on "Jeff is gay so gay", the chorus hold on B3, the ducking level, and the stutter
+   fill.
+2. **Ducking level** `DUCK_SUNG = 0.4` is a guess.
+3. **Check `godot-apk`** for `eae2e1e` and `f9caff9`. These pushes publish to the phone.
+4. **Chord conflict:** v-B bar 2, beat 3 sings B over an A-minor chord (A, C, E). Change the
+   chord in `data_victory.json`, or keep the passing tone.
+5. **"I'm" schwa:** Piper renders "I'm" as `aɪɐm`. Fix with a sheet entry in
+   `data_phonics.json`.
+6. **Instrument bank:** `270b2a0` trimmed silence, so attacks are about 10 ms earlier. Small;
+   not compared by ear.
+7. **Recording tempo:** Voice_Recorder_14 has no steady beat (best periodicity about 67 BPM or
+   77 BPM, weak). Voice_Recorder_4 was dropped. The game beat is 0.42 s.
+8. **Process:** I edited files without a Claimed entry, and I pushed code before running
+   import and smoke. Claim first, then edit; run import and smoke before every code push.
+   The `godot` Claimed table is empty.
+
+## Lessons
+
+- The lead-in contract was right. The vocal problems were in the renderer's line layout,
+  and the scheduler's lost lead-in made every vowel late.
+- Measure the renderer's own output before blaming the sequencer. Then check the scheduler.
+- Don't drop or change lines without the user's sign-off.
+- A push can be refused because someone else pushed. Rebase; don't force.
+- Greg's handoff rules: the Log is 10 lines max, newest first. Complaints were removed by user
+  override, so do not add them back.
+

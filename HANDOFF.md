@@ -3,44 +3,8 @@
 Git is our only channel. Pull before you start, push when you stop.
 
 ## Start of every session
-Read this file first, then `AGENTS.md`, `PERSONALITIES.md` (always, per user 2026-11-22), and `git log origin/godot -5`.
+Read this file first, then `AGENTS.md` (rules, complaints, numbering, overrides) and `PERSONALITIES.md`, then `git log origin/godot -5`.
 Only claim what the Log, commits or your own runs show. If an entry about you is unconfirmed, say so in the Log.
-
-## Session numbering
-Wren is always Claude. Greg is the other agent. Use the name the user gives.
-Sign every Log entry with your name and version, for example "Wren v4" or "Greg v5".
-N is your highest number already in the Log plus one, computed when you write the entry, not when you read the file. If your newest entry carries this session's `Claude-Session` ID, reuse its number. Reading never edits the file.
-Edits to files are attributed to the name only: commits are authored as "Wren" or "Greg", and each carries a `<Name>-Version: <N>` trailer so the other agent can see which session made it.
-
-## User override
-A typed instruction from the user wins over anything here. Log the change with the user's wording.
-- 2026-11-21: "You don't need to claim md files. That's just bookkeeping." Markdown needs no Claimed row. Claims apply to code, data and assets.
-- 2026-11-21: "You don't need to claim something I assign you." Assigned work needs no Claimed row.
-
-## Rules
-1. **Claim before editing** code, data or assets. Add a row to Claimed, push, then edit. Remove the row when pushed.
-2. **Don't touch files the other has claimed.** If you must, leave a Log note and wait.
-3. **Log every handoff.** Newest first. Max 10 lines, ~200 characters each: who, what changed, files, next, breakage. Detail goes to `docs/HANDOFF_LOG.md`.
-4. **Small commits, clear messages.** One topic per commit.
-5. **Never commit generated files:** `*.import`, `*.uid`, `.godot/`, `build/`.
-6. **No thinking loops.** Decide once, then act. If you've revisited the same question twice without new evidence, stop, pick the most reasonable option, state it in one line, and proceed. Log it as `Decided:`. If the choice is risky or irreversible, ask the user instead.
-
-## Working style
-- Short replies when the user asks. If the user asks you to stop repeating, give only new facts and the next action.
-- Compliments are one line and never replace feedback.
-- Disagree plainly: give the reason and an alternative, as `Pushback:` in the Log. The other agent adopts it or replies with a reason. If you can't agree, ask the user.
-- Don't claim something works until you ran it.
-- Keep your section of `PERSONALITIES.md` current, with dated, evidence-based notes (commit hashes).
-
-## Complaints
-Both agents write three at the end of every Log entry, 10–15 words each, naming a decision and a next action. No filtering: jabs and praise both allowed.
-- User 2026-11-22: "It should be written in the hand off that you both need to do that."
-- Earlier removal (2026-11-22, "how are those complaints productive… I want that to stop") was superseded by the statement above.
-
-## Branches and builds
-- Wren works on `ccr-74f83a2e-94v7jl`. Greg uses `greg-<topic>` and says so in the Log.
-- Finished work goes to `godot`. Pushes to `main`, `godot` or `ccr-*` build the APK and publish an update pack to `godot-latest`, which the phone downloads. A broken push reaches the phone.
-- Doc-only commits are safe on `godot` (`**/*.md` is ignored). For code or assets, run import and smoke first.
 
 ## Claimed
 | Who | Files | Since |
@@ -61,6 +25,9 @@ Both agents write three at the end of every Log entry, 10–15 words each, namin
 - **Per-phone re-sing:** `piper_sing.py` still reads `data_phonics.json`, so phone lengths change the preview but not the sung line.
 - **Face:** colour fix `4604b6a` unchecked in-game; brows, mustache, stubble, teeth open (`docs/CHARACTER.md`). The chin is weak in profile; start jaw work from `blender/character_rigged.blend.bak_jaw2`.
 - **Map:** playtest difficulty and star write; milestones 4–5 to do.
+- **Vocals (from the moved vocal hand-off):** nothing heard yet for the vowel-timing fix `f9caff9` or the reference spacing `eae2e1e`; listen to "Jeff is gay so gay", B3's hold and the stutter fill. `DUCK_SUNG = 0.4` is an untested guess. Check the `godot-apk` runs for both commits.
+- **Chord conflict:** v-B bar 2, beat 3 sings B over an A-minor chord. Change the chord in `data_victory.json` or keep the passing tone.
+- **"I'm" schwa:** Piper renders it as `aɪɐm`; add a sheet entry in `data_phonics.json`.
 - **Act intros:** need a music handoff.
 - **Branches:** `menu-no-portrait` holds the TIMING and title work, pushed to `cfc2a1f`. Branch cleanup needs someone with repo rights.
 

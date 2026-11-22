@@ -23,51 +23,6 @@ Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session.*
 
 `godot/hula/FILES.md` maps roles to files. `docs/CODEMAP.md` gives line anchors per script.
 
-## Read efficiently
-- `hero3d.gd` is ~1750 lines. Find your section with `grep -n '^## ' docs/CODEMAP.md`, then read only that range. Never read it whole.
-- After an import, `git status` lists hundreds of `.import` files. Use `git status -s -- . ':(exclude)*.import' ':(exclude)*.uid'`.
-- Search scoped to `godot/hula/scripts/`, `tools/`, `docs/`, `data/`.
-- Skip binary or generated: `godot/hula/audio/`, `godot/hula/art/`, `godot/hula/.godot/`, `blender/`, `build/`, `stems/`, and `*.import`, `*.uid`, `*.glb`, `*.blend`, `*.png`, `*.webp`, `*.ogg`, `*.wav`, `*.flac`. Keep `.ignore` and `.gitattributes`.
-- `git log -1 --format=%B <sha>` usually records the measurements and intent behind a change.
-
-## Commands
-Run Godot from `godot/hula/`:
-
-| Task | Command |
-|---|---|
-| Regenerate `.import` (after pulling) | `godot --headless --import` |
-| Smoke test (3 s) | `godot --resolution 800x600 main.tscn --quit-after 180 -- --smoke` |
-| Regenerate codemap | `python tools/codemap.py` |
-| Apply word timing from phone | `python3 tools/retime.py <file> [--dry-run]` (re-sings changed lines) |
-| Sound graph envelopes | `python3 tools/line_env.py` (writes `data/data_line_env.json`) |
-| Snip a window from stem | `python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox --start S --end E --out x.wav` |
-| Build packs/APK | `powershell -File build.ps1` (Windows) |
-
-### Harness (`scripts/shotter.gd`)
-Format: `godot --path godot/hula -- <out> <frames> [mode] [args]`
-
-| Mode | Example | Output |
-|---|---|---|
-| (default) | `out.png 1` | Screenshot |
-| `play` | `out.png 30 play` | Screenshot after the game runs |
-| `sheet` | `dir 0 sheet neutral,roar,sad` | One face close-up per expression |
-| `face` | `face.png 1 face 3.2` | Face pose |
-| `rigref` | `/tmp/x 0 rigref [expr]` | Rewrites `data/character_rig.json` |
-| `mix` | `wav 1 victory 30` | Audio mix; also `_masterpre.wav`, `_voxpre.wav`, `_voxpost.wav` |
-| `secret` | `- 1 victory [voxonly]` | Jump to a song, optional vocals only |
-| `map` | `out.png 6 map [act] [node]` | World map |
-
-`glb` (legacy GLB writer) is frozen; use Blender for mesh edits. Add `seed=NNN` for repeatable output.
-
-### Mix and stem
-The mix needs a display even though audio is offline. Run under Xvfb:
-
-```bash
-xvfb-run -a -s "-screen 0 1600x900x24" godot --path godot/hula -- /abs/out/victory.wav 1 mix victory 30
-```
-
-Rebuild the stem from `_masterpre` and `_voxpost` with a fitted `k`. Check each clip with `snip_from_stem.py`'s `locate` (scores near 1.0 mean the clip is in that run). An instrument stem that drops well below the master where vocals sit is a subtraction error (docs/AUDIO.md, Known problems).
-
 ## Rules
 
 **Paths and assets**
@@ -93,30 +48,49 @@ Rebuild the stem from `_masterpre` and `_voxpost` with a fitted `k`. Check each 
 - Code or asset changes: run `--import` and a headless smoke test first. A broken `godot` push reaches the phone.
 - Reading files or pulling runs no Godot command. The smoke test is a pre-push gate only.
 
-## Files
-
-| Path | Role | Edit |
-|---|---|---|
-| `scripts/main.gd` | Game loop, scoring, input (2D 772×360) | ✓ |
-| `scripts/hero3d.gd` | 3D rig, poses, face, teeth, sprite | ✓ (slice) |
-| `scripts/sound.gd` | Sequencer, SFX, mixer | ✓ |
-| `scripts/menu.gd`, `scripts/save.gd` | Menus, persistence | ✓ |
-| `scripts/map.gd`, `scripts/cutscene*.gd`, `scripts/voice_manager.gd` | Map, cutscenes, voice | ✓ |
-| `scripts/updater.gd` | Autoload: pack mount, self-update | — |
-| `scripts/shotter.gd` | Test harness | — |
-| `data/data_word_timing.json` | Word onsets B0–B2 (TIMING tab; applied by `tools/retime.py`) | ✓ |
-| `tools/snip_from_stem.py` | Snip from `stems/`, re-place sung clips (no Godot run) | ✓ |
-| `tools/retime.py` | Apply copied word timing; re-sing changed lines only | ✓ |
-| `tools/snip_fast.py` | Older snip tool needing a full mix; superseded | — |
-| `stems/` | Instrument stem, vocal buses, meta | — |
-| `data/*.json` | Songs, vox, menu, expressions, map, cutscenes | ✓ |
-| `data/character_rig.json` | Rig baseline (regenerate with `rigref`) | via `rigref` |
-| `art/character_skinned.glb` | Exported mesh (from Blender master) | via export |
-| `blender/character_rigged.blend` | Master mesh and rig (Blender only) | ✓ (Blender) |
-| `tools/` | Python: Blender passes, audio synthesis, codemap | ✓ |
-| `docs/` | CODEMAP, AUDIO, VOCAL, CHARACTER, AUDIO_BUS_ARCHITECTURE | ✓ |
-| `build/`, `dist/`, `www/`, `node_modules/` | Generated | ✗ |
+## Where things are
+- Commands, harness modes, mix and stem: `docs/COMMANDS.md`.
+- File roles and edit permissions: `docs/COMMANDS.md` (Files) and `godot/hula/FILES.md`.
+- Search and skip hints: `docs/COMMANDS.md` (Read efficiently).
 
 ## Reply style
 - Brief by default. Solve quickly; don't loop. Detail only when asked.
 - If the user asks you to stop repeating, give new facts and the next action only.
+
+## Coordination (Wren and Greg)
+
+Git is the only channel between the two agents. Pull before you start; push when you stop. Full state lives in `HANDOFF.md`.
+
+### Rules
+1. **Claim before editing** code, data or assets: add a row to Claimed in `HANDOFF.md`, push, then edit. Remove the row when pushed. Markdown needs no claim, and neither does work the user assigns.
+2. **Don't touch files the other has claimed.** If you must, leave a Log note and wait.
+3. **Log every handoff.** Newest first. Max 10 lines, ~200 characters each: who, what changed, files, next, breakage. Detail goes to `docs/HANDOFF_LOG.md`.
+4. **Small commits, clear messages.** One topic per commit.
+5. **Never commit generated files:** `*.import`, `*.uid`, `.godot/`, `build/`.
+6. **No thinking loops.** Decide once, then act. If you've revisited the same question twice without new evidence, stop, pick the most reasonable option, state it in one line, and proceed. Log it as `Decided:`. If the choice is risky or irreversible, ask the user.
+
+### Working style
+- Short replies when the user asks. If the user asks you to stop repeating, give only new facts and the next action.
+- Compliments are one line and never replace feedback.
+- Disagree plainly: give the reason and an alternative, logged as `Pushback:`. The other agent adopts it or replies with a reason. If you can't agree, ask the user.
+- Don't claim something works until you ran it.
+- Keep your section of `PERSONALITIES.md` current, with dated, evidence-based notes (commit hashes).
+
+### Complaints
+Every Log entry ends with exactly three complaints, 10–15 words each. Each names a decision and the next action. No filtering: jabs and praise are both allowed. Both agents write them.
+
+### Session numbering
+Wren is always Claude. Greg is the other agent. Use the name the user gives.
+Sign every Log entry with name and version, for example "Wren v4" or "Greg v5". N is your highest number already in the Log plus one, computed when you write the entry, not when you read. If your newest entry carries this session's `Claude-Session` ID, reuse its number. Reading never edits a file.
+Commits are authored by the name only, and each carries a `<Name>-Version: <N>` trailer.
+
+### User overrides
+The user can overwrite any rule here by typing the change. A typed instruction from the user wins. Log the change with the user's wording.
+- 2026-11-21: "You don't need to claim md files. That's just bookkeeping."
+- 2026-11-21: "You don't need to claim something I assign you."
+- 2026-11-22: "It should be written in the hand off that you both need to do that." (complaints)
+
+### Branches and builds
+- Wren works on `ccr-74f83a2e-94v7jl`. Greg uses `greg-<topic>` and says so in the Log.
+- Finished work goes to `godot`. Pushes to `main`, `godot` or `ccr-*` build the APK and publish an update pack to `godot-latest`, which the phone downloads. A broken push reaches the phone.
+- Doc-only commits are safe on `godot` (`**/*.md` is ignored). For code or assets, run import and smoke first.

@@ -155,24 +155,9 @@ immediately but plays the old clip until the PC re-sing is merged and the app is
 `tools/snip_from_stem.py`); the others have lyrics in `data_lyrics.json` but no onsets, so they cannot be
 timed in the tab yet.
 
-## Known problems (2026-11-22)
+## Known problems
 
-- **B2 is not sung in the mix.** `_vox_key` maps chorus bar 4 to `B2`, and that bar is not held, so
-  the sequencer should play it. In two `mix victory 30` runs the vocal bus has B0 and B1 (at 20.2 s and
-  23.3 s) but no B2 at about 26.4 s, and no vocal clip after B1 inside the window. The cause is not
-  found yet. Until it is, B2 has no graph data and its stem position is unknown.
-- **The instrument stem is wrong where vocals sit.** `stems/instruments.flac`-style subtraction
-  (master minus `k` x vocal bus) removes much of the instrument energy in sung windows: about 13 dB
-  below the master at 6–12 s, and quiet at 27–30 s. The least-squares `k` check gives zero correlation
-  by construction, so it does not catch this. Graph data built from that stem is unreliable.
-- **"Last word plays early" (2026-11-22):** the cause was word length: each word used its shipped length, so
-  a dragged word left its old tail running into the gap. Fixed in `328f8fe` (each word runs to the next
-  edited onset). Not yet checked on a phone. A PLAY status line confirmed the word-timing path, not the
-  whole-clip fallback.
-- **Instrument playback on the TIMING tab:** PLAY now starts the track, and the instruments were checked
-  on a phone (2026-11-22). The stem problem below is about the analysis data, not playback.
-- **Vocal bus clips** in the mix at +2.3 dBFS pre-limiter (1220 samples), so the chorus vocals are
-  overdriven before the limiter.
+See `HANDOFF.md` (Open items). Full text was moved to `docs/HANDOFF_LOG.md`.
 
 ## Snips without re-rendering the song
 
