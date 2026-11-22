@@ -38,6 +38,10 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (word locks), 2026-11-22:** User: "Lock the words I don't want to move." Each word box has a LOCK / LOCKED toggle (red box and red graph line when locked). A locked word's onset never moves (drag and nudge say it is locked); moving other words stops short of the nearest locked word, leaving room for the words between.
+  Files: `menu.gd` (`_timing_locked`, `_timing_toggle_lock`, `_timing_set_onset`, word grid, graph colour). Locks are saved with the timing as `locks` (a bool per word), so COPY / SAVE carry them; `retime.py` ignores the key.
+  Checks: smoke clean; harness on B0 with word 2 locked: neighbours stopped at 0.41 and 0.45, the locked word stayed at 0.43, and after unlocking it moved. Not checked: by finger on a phone.
+  **Complaints:** (1) Wren's lock toggle sits in the word box corner; check it is easy to hit with a finger. (2) A lock holds the start only; locking word length is a separate feature. (3) RESET LINE may clear locks; check it before trusting them.
 - **Wren v3 (words push their neighbours), 2026-11-22:** User: the plugin works, but timing does not move word starts, or stops a word before the next word's old position. Cause 1: drag and nudge clamped a word to the next word's current onset. Cause 2: an unedited word's slice length came from the gap to the next new onset, so a moved word was cut or ran into its neighbour.
   Change: `_timing_set_onset` moves a word and pushes neighbours along (order and 0.02 s gap kept, last word still starts inside the line); drag, nudge and load use it. Unedited words play their shipped length (`_timing_shipped_len`). Removed the `piper.gd.uid` I committed by mistake.
   Checks: smoke clean; harness on B0: word 1 to 1.5 s pushed later words forward, word 3 to 0.1 s pulled earlier words back, last word capped at 3.26 s. Not checked: by ear.

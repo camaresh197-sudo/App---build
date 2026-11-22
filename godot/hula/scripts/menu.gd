@@ -365,7 +365,7 @@ func _timing_load() -> void:
 	var saved: Dictionary = _read_json("user://word_timing.json").get("lines", {})
 	for lid in saved:
 		if timing.has(lid):
-			for k in ["onsets", "ipa", "phones"]:
+			for k in ["onsets", "ipa", "phones", "locks"]:
 				if saved[lid].get(k) is Array:
 					timing[lid][k] = (saved[lid][k] as Array).duplicate(true)
 	for lid in timing:
@@ -451,8 +451,24 @@ func _timing_word_len(lid: String, i: int) -> float:
 
 func _timing_nudge(lid: String, i: int, d: float) -> void:
 	var on: Array = timing[lid]["onsets"]
+	if _timing_locked(lid, i):
+		timing_msg = "%s is locked" % String((timing[lid].get("words", []) as Array)[i]); return
 	_timing_set_onset(lid, i, snappedf(float(on[i]) + d, 0.01))
 	timing_msg = ""
+
+# word locks: a locked word's onset never moves, and words being moved stop short of it
+func _timing_locked(lid: String, i: int) -> bool:
+	var lk: Array = (timing.get(lid, {}) as Dictionary).get("locks", [])
+	return i < lk.size() and bool(lk[i])
+
+func _timing_toggle_lock(lid: String, i: int) -> void:
+	var line: Dictionary = timing[lid]
+	var n := (line.get("onsets", []) as Array).size()
+	var lk: Array = line.get("locks", [])
+	while lk.size() < n: lk.append(false)
+	lk[i] = not bool(lk[i])
+	line["locks"] = lk
+	timing_msg = "%s %s" % [String((line.get("words", []) as Array)[i]), "locked" if lk[i] else "unlocked"]
 
 # The line's span on the graph and in PLAY: the shipped line is bars * 16 steps. A word past it
 # is drawn off the graph and PLAY stops before it, so onsets stay inside the line.
@@ -461,20 +477,27 @@ func _timing_line_len(lid: String) -> float:
 
 # Move word i's onset to t. Words keep their order and a TIMING_GAP: a word that runs into a
 # neighbour pushes it along (later words forward, earlier words back), so a word is never stuck
-# behind the next one's old position. The last word must still start inside the line.
+# behind the next one's old position. Locked words never move: a locked word cannot be moved,
+# and the word being moved stops short of the nearest locked word on either side (leaving room
+# for the words between). The last word must still start inside the line.
 # Returns true when a neighbour was pushed.
 func _timing_set_onset(lid: String, i: int, t: float) -> bool:
 	var on: Array = timing[lid]["onsets"]
 	var n := on.size()
+	if _timing_locked(lid, i): return false
 	var hi := _timing_line_len(lid) - 0.1 - float(n - 1 - i) * TIMING_GAP
 	var lo := float(i) * TIMING_GAP
+	for j in range(i + 1, n):
+		if _timing_locked(lid, j): hi = minf(hi, float(on[j]) - float(j - i) * TIMING_GAP)
+	for k in range(i - 1, -1, -1):
+		if _timing_locked(lid, k): lo = maxf(lo, float(on[k]) + float(i - k) * TIMING_GAP)
 	on[i] = clampf(t, lo, maxf(lo, hi))
 	var pushed := false
 	for j in range(i + 1, n):
-		if float(on[j]) < float(on[j - 1]) + TIMING_GAP:
+		if not _timing_locked(lid, j) and float(on[j]) < float(on[j - 1]) + TIMING_GAP:
 			on[j] = float(on[j - 1]) + TIMING_GAP; pushed = true
 	for j in range(i - 1, -1, -1):
-		if float(on[j]) > float(on[j + 1]) - TIMING_GAP:
+		if not _timing_locked(lid, j) and float(on[j]) > float(on[j + 1]) - TIMING_GAP:
 			on[j] = float(on[j + 1]) - TIMING_GAP; pushed = true
 	return pushed
 
@@ -780,9 +803,17 @@ func timing_move(x: float) -> void:
 	if timing_drag_index < 0 or timing_graph_rect.size.x <= 0.0: return
 	var on: Array = timing[timing_drag_lid]["onsets"]
 	var i := timing_drag_word
-	var pushed := _timing_set_onset(timing_drag_lid, i, float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur)
+	if _timing_locked(timing_drag_lid, i):
+		timing_msg = "%s is locked: tap its lock to move it" % String((timing[timing_drag_lid].get("words", []) as Array)[i])
+		timing_drag_x = x
+		return
+	var want := float(on[i]) + (x - timing_drag_x) / timing_graph_rect.size.x * timing_graph_dur
+	var pushed := _timing_set_onset(timing_drag_lid, i, want)
 	timing_drag_x = x
-	timing_msg = "pushing the neighbouring words" if pushed else ""
+	if absf(float(on[i]) - want) > 0.001:
+		timing_msg = "stopped by a locked word or the line's end"
+	else:
+		timing_msg = "pushing the neighbouring words" if pushed else ""
 
 func timing_release() -> void:
 	if timing_drag_index >= 0 and timing.has(timing_drag_lid):
@@ -854,7 +885,7 @@ func _draw_timing_graph(ox: float, lid: String) -> void:
 	for i in base.size():
 		if i >= edited.size(): break
 		var x := r.position.x + float(edited[i]) / dur * r.size.x
-		c.draw_line(Vector2(x, r.position.y), Vector2(x, r.position.y + r.size.y), Color("2ecc71"), 2.0)
+		c.draw_line(Vector2(x, r.position.y), Vector2(x, r.position.y + r.size.y), Color("e74c3c") if _timing_locked(lid, i) else Color("2ecc71"), 2.0)
 		timing_markers.append([Rect2(x - 14, r.position.y, 28, r.size.y), lid, i])
 	timing_graph_rect = r; timing_graph_dur = dur
 
@@ -919,9 +950,15 @@ func _draw_timing(ox: float) -> void:
 			var y := 96 + (i / 5) * 50
 			var idx := i
 			var wbox := Rect2(x, y, 96, 46)
+			var lock_r := Rect2(x + 60, y + 24, 34, 20)
+			var is_locked := _timing_locked(timing_sel, i)
+			var lid_now := timing_sel
+			c.buttons.append([lock_r, func(): _timing_toggle_lock(lid_now, idx)])
 			c.buttons.append([wbox, func(): timing_word = idx; timing_phone = 0; timing_playhead = float(onsets[idx])])
-			rrect(wbox, Color(0.12, 0.16, 0.3, 0.85), 6)
-			rframe(wbox, Color("ffd32a"), 1.0, 6)
+			rrect(wbox, Color(0.34, 0.12, 0.12, 0.9) if is_locked else Color(0.12, 0.16, 0.3, 0.85), 6)
+			rframe(wbox, Color("e74c3c") if is_locked else Color("ffd32a"), 1.0, 6)
+			rrect(lock_r, Color("c0392b") if is_locked else Color(1, 1, 1, 0.12), 4)
+			ctxt(lock_r.position.x + lock_r.size.x / 2.0, lock_r.position.y + 14, "LOCK" if not is_locked else "LOCKED", 8, Color.WHITE)
 			txt(Vector2(x + 4, y + 15), "%s  %.2f" % [words[i], float(onsets[i])], 12, Color.WHITE)
 			if i < ipa.size():
 				txt(Vector2(x + 4, y + 33), String(ipa[i]), 11, Color(1, 1, 1, 0.7))
