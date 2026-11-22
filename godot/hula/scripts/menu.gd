@@ -1109,31 +1109,33 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 	var starts := _timing_syllable_starts(phones)
 	var si := _timing_syllable_at(starts, timing_phone)
 	var sst := int((phones[starts[si]] as Dictionary).get("st", 0)) if starts.size() > 0 else 0
-	txt(Vector2(panel.position.x + 8, panel.position.y + 16),
-		"%s  IPA %s   LEN %.2f s   syllable %d: %+d st" % [String(words[timing_word]), ipa_now, _timing_word_len(timing_sel, timing_word), si + 1, sst],
-		11, Color.WHITE)
+	# line 1: what this word is, and its total length and pitch
+	txt(Vector2(panel.position.x + 8, panel.position.y + 14),
+		"Word: %s   sounds IPA: %s   length %.2f s   pitch of syllable %d: %+d" % [String(words[timing_word]), ipa_now, _timing_word_len(timing_sel, timing_word), si + 1, sst],
+		10, Color.WHITE)
+	# sound chips: the selected one is highlighted and its length is in ms
 	var x := panel.position.x + 8
 	for k in phones.size():
 		var ph: Dictionary = phones[k]
 		var label := "%s %d" % [String(ph.get("p", "ə")), int(round(float(ph.get("d", 0.12)) * 1000.0))]
-		var w := maxf(40, 12.0 + label.length() * 7.0)
+		var w := maxf(40, 12.0 + label.length() * 6.5)
 		if x + w > panel.position.x + panel.size.x - 8: break
 		var idx := k
-		var cr := Rect2(x, panel.position.y + 24, w, 26)
+		var cr := Rect2(x, panel.position.y + 36, w, 24)
 		c.buttons.append([cr, func(): timing_phone = idx])
 		rrect(cr, Color("16a085") if k == timing_phone else Color("2d3a6b"), 5)
 		rframe(cr, Color("ffd32a") if k == timing_phone else Color(1, 1, 1, 0.25), 1.0, 5)
-		ctxt(cr.position.x + cr.size.x / 2.0, cr.position.y + 17, label, 10, Color.WHITE)
+		ctxt(cr.position.x + cr.size.x / 2.0, cr.position.y + 16, label, 10, Color.WHITE)
 		x += w + 4
-	# eight buttons in one row: phone length, phone edits, syllable pitch, done
-	var by := panel.position.y + 58
+	# action row, grouped: LENGTH (the selected sound), SOUND (add, remove, reset), PITCH (syllable), BACK
+	var by := panel.position.y + 68
 	var bw := 58.0
 	var step := 62.0
-	var labels := ["-20 ms", "+20 ms", "DEL", "ADD", "RESET", "ST -1", "ST +1", "DONE"]
+	var labels := ["-20 ms", "+20 ms", "DELETE", "ADD NEW", "RESET", "PITCH -1", "PITCH +1", "BACK"]
 	var cols := [Color("c0392b"), Color("16a085"), Color("7f8c8d"), Color("2980b9"), Color("8e44ad"), Color("d35400"), Color("27ae60"), Color("6c5ce7")]
 	var acts := [func(): _timing_phone_dur(-0.02), func(): _timing_phone_dur(0.02), func(): _timing_phone_del(), func(): _timing_phone_add(), func(): _timing_word_reset(), func(): _timing_syl_shift(-1), func(): _timing_syl_shift(1), func(): timing_word = -1]
 	for k in labels.size():
-		button(Rect2(panel.position.x + 8 + step * k, by, bw, 26), labels[k], cols[k], acts[k], 10)
+		button(Rect2(panel.position.x + 8 + step * k, by, bw, 26), labels[k], cols[k], acts[k], 9)
 
 # ---- diphthongs: a vowel followed by a glide (ɪ or ʊ) is one sound that needs room to glide.
 # Each one is recognised here, marked "dip" on both parts, and given a minimum length, so the
@@ -1219,17 +1221,46 @@ func _timing_syl_segs(lid: String, i: int) -> Array:
 		segs.append(Vector3(t0, t1, pow(2.0, float(st) / 12.0)))
 	return segs
 
-# IPA palette: every phoneme in the bank, two rows; tap replaces the selected phone
+# Symbol grid for the selected sound, in two labelled groups (vowels and glides, then consonants and
+# other). Tapping a symbol replaces the selected sound.
 func _draw_timing_palette(ox: float) -> void:
-	var keys: Array = phon_bank.keys()
-	var panel := Rect2(ox + TR_X, 178, TR_W, 100)
+	var vowels: Array = []
+	var others: Array = []
+	for key in phon_bank.keys():
+		var s := String(key)
+		var is_v := s.length() == 1 and (VOWELS.find(s) >= 0 or DIP_GLIDE.find(s) >= 0)
+		if is_v: vowels.append(s)
+		else: others.append(s)
+	var y0 := 178.0
+	var cur := _timing_current_sound()
+	var vrows := ceili(vowels.size() / 16.0)
+	var orows := ceili(others.size() / 16.0)
+	var grid1 := y0 + 34.0
+	var label2 := grid1 + vrows * 27.0 + 2.0
+	var grid2 := label2 + 12.0
+	var panel := Rect2(ox + TR_X, y0, TR_W, grid2 + orows * 27.0 + 4.0 - y0)
 	rrect(panel, Color(0.05, 0.05, 0.12, 0.9), 6)
-	txt(Vector2(panel.position.x + 6, panel.position.y + 12), "TAP A SYMBOL TO REPLACE THE SELECTED PHONE", 9, Color(1, 1, 1, 0.5))
-	for k in keys.size():
+	txt(Vector2(panel.position.x + 6, y0 + 12), "Replace sound %d (%s) with:" % [timing_phone + 1, cur], 10, Color.WHITE)
+	txt(Vector2(panel.position.x + 6, y0 + 26), "VOWELS AND GLIDES", 8, Color(1, 1, 1, 0.5))
+	_timing_palette_grid(vowels, panel.position.x, grid1)
+	txt(Vector2(panel.position.x + 6, label2), "CONSONANTS AND OTHER", 8, Color(1, 1, 1, 0.5))
+	_timing_palette_grid(others, panel.position.x, grid2)
+
+# current sound of the selected phone, for the palette header
+func _timing_current_sound() -> String:
+	var all: Array = timing.get(timing_sel, {}).get("phones", [])
+	if timing_word < 0 or timing_word >= all.size(): return "-"
+	var phs: Array = all[timing_word]
+	if timing_phone < 0 or timing_phone >= phs.size(): return "-"
+	return String((phs[timing_phone] as Dictionary).get("p", "-"))
+
+# one grid of symbol buttons, 16 per row
+func _timing_palette_grid(syms: Array, x0: float, y0: float) -> void:
+	for k in syms.size():
 		var col := k % 16
 		var rowi := k / 16
-		var r := Rect2(panel.position.x + 6 + col * 30, panel.position.y + 18 + rowi * 27, 28, 24)
-		var key := String(keys[k])
+		var r := Rect2(x0 + 6 + col * 30, y0 + rowi * 27, 28, 24)
+		var key := String(syms[k])
 		c.buttons.append([r, func(): _timing_phone_set(key)])
 		rrect(r, Color("2d3a6b"), 4)
 		rframe(r, Color(1, 1, 1, 0.2), 1.0, 4)
