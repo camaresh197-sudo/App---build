@@ -24,6 +24,7 @@ As of 2026-11-20, from repo history:
 - **Audio rule (2026-11-21):** measure timing from audio, not score or step math. Re-render only changed clips. Check `git status` before each commit; run import and smoke before any game-code push.
 
 ## Greg
+- **Session start (user rule, 2026-11-22):** On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.
 As of 2026-11-20, from repo history:
 - **Session counter:** Greg v4 (lives in `HANDOFF.md`; next is v5).
 - **Style:** moves fast once the target is clear; prefers small diffs and running code.
