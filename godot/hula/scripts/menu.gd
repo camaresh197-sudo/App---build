@@ -393,17 +393,41 @@ func _timing_play(lid: String) -> void:
 		var dur := float(shipped[i + 1]) - float(shipped[i]) if i + 1 < shipped.size() else 0.0
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": VOX_LEAD + float(edited[i]), "from": VOX_LEAD + float(shipped[i]), "dur": dur})
 
+# Sound graph under the word rows: the sung clip (yellow) over the instruments (blue) for the same
+# stretch of the track, from data/data_line_env.json (tools/line_env.py). White ticks are the shipped
+# word onsets; green ticks are the edited ones, so a move shows against the instruments before PLAY.
+var line_env: Dictionary = {}
+func _draw_timing_graph(ox: float, lid: String) -> void:
+	if line_env.is_empty(): line_env = _read_json("res://data/data_line_env.json").get("lines", {})
+	var r := Rect2(ox + 14, 228, 626, 62)
+	rrect(r, Color(0, 0, 0, 0.3), 6)
+	var e: Dictionary = line_env.get(lid, {})
+	if e.is_empty():
+		txt(Vector2(r.position.x + 10, r.position.y + 36), "no sound graph for %s yet (tools/line_env.py)" % lid, 11, Color(1, 1, 1, 0.5))
+		return
+	var dur := maxf(0.01, float(e.get("dur", 1.0)))
+	var strips := [["vox", Color("ffd32a"), Rect2(r.position.x, r.position.y + 1, r.size.x, 29)],
+		["inst", Color("3498db"), Rect2(r.position.x, r.position.y + 32, r.size.x, 29)]]
+	for s in strips:
+		var vals: Array = e.get(s[0], [])
+		var rr: Rect2 = s[2]
+		var bw := rr.size.x / maxf(1.0, float(vals.size()))
+		for k in vals.size():
+			var h := float(vals[k]) * rr.size.y
+			c.draw_rect(Rect2(rr.position.x + k * bw, rr.position.y + rr.size.y - h, maxf(1.0, bw), h), s[1])
+	var shipped: Array = e.get("word", [])
+	var base: Array = timing_base.get(lid, {}).get("onsets", [])
+	var edited: Array = timing.get(lid, {}).get("onsets", [])
+	for i in shipped.size():
+		var x := r.position.x + float(shipped[i]) / dur * r.size.x
+		c.draw_line(Vector2(x, r.position.y), Vector2(x, r.position.y + r.size.y), Color(1, 1, 1, 0.9), 1.0)
+		if i < base.size() and i < edited.size():
+			var xe := r.position.x + (float(shipped[i]) + float(edited[i]) - float(base[i])) / dur * r.size.x
+			c.draw_line(Vector2(xe, r.position.y), Vector2(xe, r.position.y + r.size.y), Color("2ecc71"), 2.0)
+
 func _draw_timing(ox: float) -> void:
 	if timing.is_empty(): _timing_load()
-	var hint := "tap - or + to move a word by 0.01 s. Edits reach the audio after a PC re-sing."
-	txt(Vector2(ox + 14, 50), timing_msg if timing_msg != "" else hint, 11, Color("ffd32a"))
-	for k in timing_order.size():
-		var lid: String = timing_order[k]
-		var r := Rect2(ox + 14 + k * 74, 70, 68, 26)
-		var on := lid == timing_sel
-		c.buttons.append([r, func(): timing_sel = lid; timing_msg = ""])
-		rrect(r, Color("16a085") if on else Color("2d3a6b"), 6); rframe(r, Color("ffd32a") if on else Color(1, 1, 1, 0.3), 1.5, 6)
-		ctxt(r.position.x + r.size.x / 2.0, r.position.y + 17, lid, 11, Color.WHITE)
+	if timing_msg != "": txt(Vector2(ox + 14, 50), timing_msg, 11, Color("ffd32a"))   # status (saved, copied, reset) only
 	var line: Dictionary = timing.get(timing_sel, {})
 	var words: Array = line.get("words", [])
 	var onsets: Array = line.get("onsets", [])
@@ -415,6 +439,7 @@ func _draw_timing(ox: float) -> void:
 		txt(Vector2(x, y + 14), "%s  %.2f s" % [words[i], float(onsets[i])], 13, Color.WHITE)
 		button(Rect2(x, y + 22, 52, 28), "-", Color("c0392b"), func(): _timing_nudge(lid2, idx, -0.01), 16)
 		button(Rect2(x + 60, y + 22, 52, 28), "+", Color("16a085"), func(): _timing_nudge(lid2, idx, 0.01), 16)
+	_draw_timing_graph(ox, timing_sel)
 	var play_lid := timing_sel
 	button(Rect2(ox + 14, 300, 140, 36), "PLAY", Color("e67e22"), func(): _timing_play(play_lid), 14)
 	button(Rect2(ox + 164, 300, 140, 36), "STOP", Color("c0392b"), func(): c.snd.stop_vox(), 14)
