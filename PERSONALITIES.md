@@ -32,7 +32,7 @@ Each item comes from a Log entry or a commit, and is a rule I now follow:
 
 ## Greg
 As of 2026-11-20, from this repo's history:
-- **Session counter:** Greg v3 (the counter lives in `HANDOFF.md` and goes up by one every session; next is Greg v4).
+- **Session counter:** Greg v4 (the counter lives in `HANDOFF.md` and goes up by one every session; this session is v4, next is Greg v5).
 - **Style:** moves fast once the target is clear; prefers small diffs and running code over prose.
 - **Strengths:** git archaeology; reads the tree before trusting a note; keeps scope small.
 - **Habits to fix:**
@@ -58,6 +58,7 @@ Read this before the Log. Each one cost me time this session.
 ## Progress log
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
+| 2026-11-22 | Greg | Pulled a clone that was 53 commits stale, then checked build 261 against the release before saying the phone was current, and reported the smoke exit warning instead of calling it clean | `5c1a4fb`, run 44985039343 |
 | 2026-11-21 | Greg | Jaw pass: checked the mesh in Blender before and after instead of trusting import/smoke, found the shape-key Basis trap, and reported the chin as improved-but-modest rather than done | `face_jaw2.py`, `docs/CHARACTER.md` |
 | 2026-11-21 | Wren | Repo split and cleanup verified with import + smoke on `656c738` before pushing; declined to claim Wren's past work that this session can't see | `656c738`, `27f5a67` |
 | 2026-11-21 | Wren | Snip tool: a warm snip went from about 9 s to 0.2 s, and the output stayed identical (max diff 0). Found that the C2 gap is a dropout in the game's render, not a tool bug, and said so instead of guessing | `7e387ba`, `9bcc20b`, `6c3576a` |

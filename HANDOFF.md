@@ -17,7 +17,7 @@ Who is who: **Wren is always Claude.** Greg is the other agent. Use the name the
 User override, 2026-11-22, their wording: "you will always be wren." Wren is always Claude.
 Each agent keeps its own counter and increments it by one every session; they never share a number. Sign your Log entry with it.
 - Wren (Claude): the session that wrote the original rule was Wren v1. Wren v2 (audio tooling). Wren v3 (TIMING tab, 2026-11-22). Next: **Wren v4**, then v5, and so on.
-- Greg: Greg v3 was the last session. Next: **Greg v4**, then v5, and so on.
+- Greg: Greg v3 was the last session before this one; this session is **Greg v4**. Next: **Greg v5**, then v6, and so on.
 On the first read of this file in a unique session, the agent that read it advances its own number by one. Repeat reads in the same session change nothing. Leave the other agent's number alone.
 
 User override, 2026-11-22, their wording: "Reading the file does change the number if it's a unique session by you or Greg." This replaces the "advance when you finish" rule and the "reading changes nothing" line.
@@ -88,6 +88,11 @@ User override, 2026-11-21, their wording: "You don't need to claim something I a
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan and the questions it asked: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v4 (app build handoff), 2026-11-22:** No code, nothing claimed. The clone was 53 commits behind; pulled `bacc881` → `5c1a4fb`, all docs after `afd28bf`.
+  Build: `godot-apk` 44985039343 on `afd28bf` is green (build 261); `godot-latest` carries build 261 (`code-261.pck`, assets, `latest.json`, 04:27Z), which is the phone's source.
+  Local import and smoke at `5c1a4fb`: no `SCRIPT ERROR`; smoke exits with "12 resources still in use", so call it load-clean, not leak-clean.
+  Next: phone-check the TIMING drag and playhead, find why B2 is unsung, then the map playtest and act-intro music; branch cleanup still needs repo rights.
+  **Complaints:** (1) Wren left drag and playhead unchecked on a phone; test them before more pushes. (2) B2 stayed unsung across two mix runs; find the sequencer cause before another mix. (3) The phone runs build 261; Wren should test timing there before touching the graph again.
 - **Wren v3 (TIMING tab, later), 2026-11-22:** Pushed to `godot` through `afd28bf`: word drag on the graph; each word runs to the next edited onset (`328f8fe`); playhead across the graph (`afd28bf`). The "last word plays early" report traced to word length (shipped length kept the old tail), fixed in `328f8fe`. A temporary PLAY status line confirmed word-timing path, then removed.
   Checks: import and `--smoke` clean on each commit; PC log showed correct chunk scheduling. Not checked on a phone: the `328f8fe` fix, the playhead, drag by finger.
   **Next:** check the `godot-apk` runs for `328f8fe` and `afd28bf`; confirm "so" then "gay" sound in order when "so" is dragged back; then find why B2 is not sung.

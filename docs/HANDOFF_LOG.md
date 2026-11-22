@@ -1,5 +1,13 @@
 # Handoff log archive
 
+## App build handoff, 2026-11-22 (Greg v4)
+
+- **Greg v4 (app build handoff), 2026-11-22:** No code changed, nothing claimed. The local clone was 53 commits behind `origin/godot`; fetched and fast-forwarded `bacc881` → `5c1a4fb`. Every commit after `afd28bf` is docs-only (`HANDOFF.md`, `AGENTS.md`, `PERSONALITIES.md`, `docs/HANDOFF_LOG.md`).
+  Build state: `gh run list` shows the latest `godot-apk` run 44985039343 on `afd28bf` ("TIMING graph: playhead tracks PLAY across the strips") completed success in 1m21s; earlier runs 44968768230 (`328f8fe`), 44968216419, 44967260999 and 44967104221 are also green. `gh release view godot-latest` reports "Godot update packs (build 261)": `assets-c30e2fe386c5.pck` (41.4 MB), `code-261.pck` (359 KB) and `latest.json`, uploaded 2026-11-22 04:27Z. That pack is what the installed Android app downloads.
+  Local checks on `5c1a4fb` with Godot 4.6.3: `--headless --import` produced no `SCRIPT ERROR` or `Parse Error`; `--headless --quit-after 180 -- --smoke` produced no `SCRIPT ERROR`, only `ERROR: 12 resources still in use at exit`. So the tree loads cleanly; the leak is unverified, not disproved.
+  Open items unchanged: TIMING tab drag and playhead not checked on a phone; B2 not sung in `mix victory 30`; instrument stem subtracts too much and the vocal bus overdrives; face colour unseen in-game; map playtest and milestones 4–5; act intros need music; branch cleanup needs repo rights.
+  Next: phone-check the TIMING drag and playhead on build 261, find the sequencer cause for B2, then the map playtest and act-intro music. Nothing claimed; nothing broken.
+
 ## Moved from HANDOFF.md, 2026-11-21 (Greg v3 10-line trim)
 
 Verbatim entries, so the trim loses no facts. The short versions live in `HANDOFF.md`.
