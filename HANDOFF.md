@@ -20,16 +20,16 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - Shape keys: `mesh.vertices` and `key_blocks[0]` are separate. Write both (see `docs/CHARACTER.md`).
 
 ## Open items (as of 2026-11-22)
-- **TIMING tab:** PLAY against the beat, drag by finger, the graph, and the `328f8fe` word-length fix are unchecked on a phone. Onsets exist only for B0–B2; 13 sung lines have none.
+- **TIMING tab (all unheard on a phone):** words move freely (onsets, bar-length handle on each word's right edge, LOCK toggles); the layout is new; the graph is 150 px with notes on both strips; IPA edits play through the Piper APK; per-syllable pitch (ST -1 / +1) is applied by the PSOLA shifter in `scripts/psola.gd`; the word fit is limited to 0.8x-1.3x; diphthongs are marked. Check each on a phone and send the TIMING status line.
+- **Piper APK:** the plugin and model load (status "plugin + model ready" once build 8+ is installed). The model lives in `piper-assets/` in the Android build. Rebuild with `piper-apk.yml` when plugin files change.
+- **Pitch in the PC re-sing:** `st` is kept per syllable in the data but `piper_sing.py` does not read it yet, so the clip and the phone preview will differ.
+- **Diphthongs:** recognised and marked (`dip`), with minimum lengths. The phone preview ignores per-sound lengths; the glide there depends on the 0.8x-1.3x fit. No automatic glide when a diphthong is edited to a monophthong.
 - **Audio:** B2 unsung in `mix victory 30`; the instrument stem over-subtracts where vocals sit; the vocal bus overdrives before the limiter (2026-11-21 mix, 1220 clipped samples).
-- **Per-phone re-sing:** now a whole-line pass with real alignments (Wren v3); unheard by ear. B0's held "gay" transcribes only partly.
-- **Face:** colour fix `4604b6a` unchecked in-game; brows, mustache, stubble, teeth open (`docs/CHARACTER.md`). The chin is weak in profile; start jaw work from `blender/character_rigged.blend.bak_jaw2`.
-- **Map:** playtest difficulty and star write; milestones 4–5 to do.
-- **Vocals (from the moved vocal hand-off):** nothing heard yet for the vowel-timing fix `f9caff9` or the reference spacing `eae2e1e`; listen to "Jeff is gay so gay", B3's hold and the stutter fill. `DUCK_SUNG = 0.4` is an untested guess. Check the `godot-apk` runs for both commits.
+- **Coverage:** word onsets for all 16 sung lines come from the render grid, not from audio. Map: playtest difficulty and star write; milestones 4–5 to do.
 - **Chord conflict:** v-B bar 2, beat 3 sings B over an A-minor chord. Change the chord in `data_victory.json` or keep the passing tone.
 - **"I'm" schwa:** Piper renders it as `aɪɐm`; add a sheet entry in `data_phonics.json`.
 - **Act intros:** need a music handoff.
-- **Branches:** `menu-no-portrait` holds the TIMING and title work, pushed to `cfc2a1f`. Branch cleanup needs someone with repo rights.
+- **Branches:** `menu-no-portrait` holds old TIMING and title work. Branch cleanup needs someone with repo rights.
 
 ## Map contract (Greg, 2026-11-20)
 - 4 acts × 5 nodes, targets 150 → ~1200 (`data/data_map.json`). `start_run(id, target)`; `score ≥ target` wins.
@@ -38,6 +38,8 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (handoff and AUDIO.md), 2026-11-22:** Updated Open items to the state after the TIMING, Piper-model, PSOLA and diphthong work, and updated `docs/AUDIO.md` for per-syllable pitch (PSOLA, `st`), the 0.8x-1.3x fit, diphthong marks and the new word-length and lock controls. Docs only.
+  **Complaints:** (1) Open items were not updated after each push; update them with the commit. (2) Nothing in TIMING is confirmed by ear yet. (3) The PC re-sing still ignores `st`; add it before the phone and the clip disagree for long.
 - **Wren v3 (diphthongs recognised), 2026-11-22:** User asked the game to recognise diphthongs and add a glide where needed. `_timing_mark_diphthongs` (menu.gd) marks a vowel (e a o ɔ ɑ æ ə ɛ) followed by ɪ or ʊ as one sound: both parts get `dip`, and minimum lengths (0.10 s vowel, 0.08 s glide). It runs when a word's phones are built and after palette edits and ADD.
   Checked: "gay" is marked on load; a palette edit that breaks the pair clears the marks. Smoke clean.
   Limit: Piper's phone preview ignores per-sound lengths (it sets the sound from the whole word), so the glide there is protected by the 0.8x-1.3x fit limit, not by these marks. The marks matter for the PC re-sing and the editor's defaults. The "add a glide" step is not automatic: a word whose vowel was replaced by a monophthong is left as the user set it.

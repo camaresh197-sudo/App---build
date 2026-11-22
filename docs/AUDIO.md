@@ -89,6 +89,21 @@ on an already-sung clip would borrow from itself).
    Ogg. The clip is a **single dry lead** — no delayed doubles, so the Vox bus reverb is
    not doubled into an echo.
 
+**Syllable pitch and the phone preview.** Each syllable can be shifted by whole semitones in the
+TIMING word editor (ST -1 / ST +1, kept on the syllable's first phone as `st`). The phone's Piper
+preview applies the shift with TD-PSOLA in `scripts/psola.gd`: pitch is estimated from the clip by
+autocorrelation, pitch marks sit on the peak of each period, and grains are overlap-added at the period
+so only the pitch moves. Checked against a Piper clip with pyworld: identity correlation 0.98, +4
+semitones gives 1.25x (1.26x expected), the rest of the clip is unchanged. The PC re-sing does not
+read `st` yet, so the clip and the phone differ until it does.
+
+**Word fit.** Piper's preview is stretched to the word's edited length, limited to 0.8x-1.3x of its
+natural speed. Squeezing further (down to 0.5x) turned "gay" into "I'll see you now" in a carrier test.
+
+**Diphthongs.** A vowel (e a o ɔ ɑ æ ə ɛ) followed by ɪ or ʊ is one sound. Both parts are marked `dip`,
+with minimum lengths (0.10 s vowel, 0.08 s glide). The phone preview ignores per-sound lengths, so the
+glide there depends on the fit above.
+
 **Edited lines (TIMING tab).** A line whose `data_word_timing.json` entry carries `ipa` / `phones`
 is not sung from its text. `render_phones` synthesizes the **whole edited line in one pass**
 (`line_audio`: Piper's pad-id layout, stress marks, a space token between words, per-id lengths from
