@@ -24,8 +24,8 @@ var _test := false            # launched with "-- ..." (the shotter harness): le
 
 func _init() -> void:
 	DirAccess.make_dir_recursive_absolute(DIR)
-	_test = not OS.has_feature("mobile") and not OS.get_cmdline_user_args().is_empty()
-	if _test: return                                     # a test run measures the code on disk: never mount, download or blacklist packs
+	_test = not OS.has_feature("mobile") and not OS.get_cmdline_user_args().has("--packs")
+	if _test: return                                     # a desktop run uses the code on disk: never mount stale packs
 	_read_build()
 	_load_state()
 	# a newer APK (or a newer engine) carries everything older packs had: forget them, or they would override the newer app's files

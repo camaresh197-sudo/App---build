@@ -782,6 +782,8 @@ func _draw_timing(ox: float) -> void:
 	if timing.is_empty(): _timing_load()
 	timing_markers.clear()
 	if timing_msg != "": txt(Vector2(ox + 14, 50), timing_msg, 11, Color("ffd32a"))   # status (saved, copied, reset) only
+	var bld := int(Updater.build)
+	txt(Vector2(ox + 552, 50), ("BUILD %d" % bld) if bld > 0 else "DEV BUILD", 10, Color(1, 1, 1, 0.45))
 	# line box, left of the first word: tap to open the line picker
 	var box := Rect2(ox + 14, 96, 110, 54)
 	c.buttons.append([box, func(): timing_menu_open = not timing_menu_open])

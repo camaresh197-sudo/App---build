@@ -14,7 +14,7 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 ## Gotchas
 - `var x := SOME_CONST_ARRAY[i]` fails to compile (untyped array). Write `var x: String = ...`. A `menu.gd` compile error leaves Android showing only the background.
 - Pre-push check: `godot --headless --path godot/hula --quit-after 120 -- --smoke`, and look for `SCRIPT ERROR` (Godot 4.6.3).
-- The updater mounts `user://.../packs` over `res://`. When testing locally, delete that `packs` folder or you test old code.
+- The updater mounts `user://.../packs` over `res://`. On desktop that is now disabled unless the game is launched with `-- --packs`; otherwise a stale pack silently overrides the disk code. The TIMING tab shows `BUILD n` or `DEV BUILD`.
 - `shotter` face/sheet/map modes need a real renderer. `--headless` hangs; run the windowed binary and kill a hang.
 - Narration-only cutscenes have no `data_cutscenes.json` entry. Their text lives in `data_theater.json`.
 - Shape keys: `mesh.vertices` and `key_blocks[0]` are separate. Write both (see `docs/CHARACTER.md`).
@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v4 (stale pack cause), 2026-11-22:** User: "changing anything still produces gibberish." Cause: a normal desktop launch mounted stale packs from `user://packs` (`code-223/224`, `assets-1cc1…`) over `res://`, so every fix was invisible. Deleted that folder; desktop now ignores packs unless launched with `-- --packs`.
+  Added a `BUILD n` / `DEV BUILD` tag on the TIMING tab so the running code is visible.
+  Files: `updater.gd`, `menu.gd`, `HANDOFF.md`. This does not touch the phone's update path; it still mounts packs on mobile.
+  Checks: import 0, smoke 0; screenshot shows `DEV BUILD` and the new BEFORE/CURRENT/RESET row. The local packs folder is gone, so the next normal launch runs disk code.
+  **Complaints:** (1) Greg tested with stale packs mounted for sessions; clear user://packs before judging audio. (2) The desktop updater mounted old code silently; the new DEV BUILD tag should stay visible. (3) The phone build is still unconfirmed; check BUILD on the TIMING tab after restart.
 - **Greg v4 (diphone preview), 2026-11-22:** User: "do 1 first." Built the offline diphone bank: `tools/diphone_bank.py` renders all 1600 phone pairs with Piper into one 1.2 MB `audio/di_bank.ogg` + `data_diphone_bank.json`.
   Edited lines now play that bank at the edited onsets and phone lengths; unedited lines keep the real clip. IPA edits are audible on the phone immediately, with the transition that isolated phones lost.
   Files: `menu.gd`, `sound.gd` (stop queued bank chunks), `docs/TIMING_EDITOR.md`, `tools/diphone_bank.py`, `audio/di_bank.ogg`, `data/data_diphone_bank.json`.
