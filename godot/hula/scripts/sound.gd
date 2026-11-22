@@ -224,6 +224,13 @@ func play(name: String, o := {}) -> void:
 	if vatt[oi] > 0.0: p.volume_db = vbase[oi] - 40.0
 	p.play(float(o.get("from", 0.0)))   # "from": start offset into the clip (word-level playback)
 
+# stop word-timing previews: drop queued Vox chunks and silence the Vox voices
+func stop_vox() -> void:
+	later = later.filter(func(e): return e[1].get_bound_arguments_count() == 0 or not str(e[1].get_bound_arguments()[0]).begins_with("vox/"))
+	for i in voices.size():
+		if voices[i].bus == "Vox":
+			voices[i].stop(); vstop[i] = 0.0
+
 func note(name: String, midi: int, dur: float, v: float, ref: float, dl := 0.0, att := 0.0) -> void:
 	play(name, {"midi": midi, "dur": dur, "v": v / ref * SMP_MUS, "dl": dl, "att": att})
 func hit(name: String, dl: float, v: float, ref: float) -> void:
