@@ -26,6 +26,8 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
     private var session: OrtSession? = null
     private var idMap: Map<String, Long> = emptyMap()
     private var sampleRate = 22050
+    // why the model did not load, so the game can show it on the TIMING tab (logcat is not visible on a phone)
+    @Volatile private var loadError = ""
 
     override fun getPluginName(): String = "Piper"
 
@@ -55,6 +57,7 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
             return true
         } catch (t: Throwable) {
             Log.e("PiperPlugin", "loadModel failed", t)
+            loadError = "${t.javaClass.simpleName}: ${t.message ?: "no message"}".take(160)
             return false
         }
     }
@@ -82,6 +85,10 @@ class PiperPlugin(godot: Godot) : GodotPlugin(godot) {
 
     @UsedByGodot
     fun ready(): Boolean = loadModel()
+
+    /** Empty when the model loaded; otherwise the first failure, short enough for the TIMING line. */
+    @UsedByGodot
+    fun lastError(): String = loadError
 
     @UsedByGodot
     fun sampleRateHz(): Int { loadModel(); return sampleRate }

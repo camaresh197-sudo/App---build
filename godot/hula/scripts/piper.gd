@@ -20,7 +20,8 @@ static func status() -> String:
 	elif Engine.get_singleton("Piper").ready():
 		_status = "Piper: plugin + model ready"
 	else:
-		_status = "Piper: plugin loaded but model failed (logcat tag PiperPlugin)"
+		var err := String(Engine.get_singleton("Piper").lastError())
+		_status = "Piper: model failed: " + (err if err != "" else "unknown (no error recorded)")
 	return _status
 
 # One word: IPA in, an AudioStreamWAV out. null when the plugin or the model is missing.

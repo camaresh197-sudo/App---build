@@ -38,6 +38,11 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v3 (Piper model error shown), 2026-11-22:** User screenshot: TIMING says "plugin loaded but model failed" and "Update ready — closing to apply"; the Piper APK is `BUILD 5`. Logcat is not visible on the phone, so the reason was hidden.
+  Change: `PiperPlugin.kt` keeps the first load failure (`loadError`, `lastError()`); `piper.gd` shows it on the TIMING line.
+  Checks: smoke clean. Not checked: Kotlin compile (CI runs it), the model load itself.
+  Next: install the new `HulaVaqueroPiper` artifact and read the TIMING line; it names the failure.
+  **Complaints:** (1) Wren hid the cause in logcat; show failures where the user looks. (2) The model may not fit on this phone; check memory before blaming the file. (3) Nobody has read the new error line yet; read it before the next fix.
 - **Wren v3 (onsets past the line), 2026-11-22:** User: "Changing word timing doesn't play if it's past the default vocal graph." Cause: the graph and PLAY use the line's 2 bars (3.36 s), but a drag or nudge could move the last word to 9.9 s. Such words were drawn off the graph and PLAY stopped before them.
   Change: `_timing_line_len`, `_timing_onset_bounds` and `_timing_clamp_onsets` in `menu.gd`. Drags, nudges and saved timing are kept inside the line; the last word may start up to 3.26 s. The shipped onsets already sat inside it, so no shipped timing moves.
   Checks: smoke clean; a harness check pushed the last word +9 s and it stopped at 3.26 s, the first word -5 s stopped at 0 s. Not checked: by ear, or on a phone.
