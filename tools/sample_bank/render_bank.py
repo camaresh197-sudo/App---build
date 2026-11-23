@@ -24,7 +24,7 @@ import soundfile as sf
 
 ROOT = Path(__file__).resolve().parents[2]
 AUDIO = ROOT / "godot" / "hula" / "audio"
-SR = 44100
+SR = 48000           # matches the game mix rate, so playback resamples nothing
 HOLD_S = 3.2          # sustain before note-off (matches the existing bank length)
 TAIL_S = 3.0          # release captured after note-off, so the cut lands on silence
 # Per-instrument RMS targets: the levels the mix was already balanced to
@@ -66,11 +66,15 @@ def write_midi(path: Path, note: int, vel: int, prog: int, hold_s: float, tail_s
                      + b"MTrk" + struct.pack(">I", len(trk)) + trk)
 
 
-def render_note(sf2: Path, note: int, vel: int, prog: int, tmp: Path) -> np.ndarray:
+def render_note(sf2: Path, note: int, vel: int, prog: int, tmp: Path, sr: int, dry: bool) -> np.ndarray:
     mid, wav = tmp / "n.mid", tmp / "n.wav"
     write_midi(mid, note, vel, prog, HOLD_S, TAIL_S)
-    subprocess.run(["fluidsynth", "-ni", "-T", "wav", "-F", str(wav), "-r", str(SR),
-                    str(sf2), str(mid)], check=True, capture_output=True, timeout=120)
+    cmd = ["fluidsynth", "-ni", "-T", "wav", "-F", str(wav), "-r", str(sr)]
+    if dry:
+        # the Music bus carries the room, so the samples stay bone-dry: no baked reverb or chorus
+        cmd += ["-o", "synth.reverb.active=no", "-o", "synth.chorus.active=no"]
+    cmd += [str(sf2), str(mid)]
+    subprocess.run(cmd, check=True, capture_output=True, timeout=120)
     x, _ = sf.read(wav, dtype="float32", always_2d=True)
     return x
 
@@ -83,7 +87,8 @@ def process(x: np.ndarray, rms_db: float) -> np.ndarray:
         return x[:0]
     a, b = loud[0], loud[-1] + 1
     x = x[a:b]
-    fi, fo = int(0.003 * SR), int(0.1 * SR)
+    fi = min(int(0.003 * SR), len(x) // 2)
+    fo = min(int(0.1 * SR), len(x) // 2)
     x[:fi] *= np.linspace(0, 1, fi)[:, None]
     x[-fo:] *= np.linspace(1, 0, fo)[:, None]
     rms = np.sqrt(np.mean(x ** 2)) + 1e-12
@@ -98,6 +103,9 @@ def main() -> int:
     ap.add_argument("--sf2", type=Path, required=True)
     ap.add_argument("--only", default="", help="comma list of instruments to render")
     ap.add_argument("--out", type=Path, default=AUDIO)
+    ap.add_argument("--sr", type=int, default=SR, help="render rate; 48000 matches the game mix")
+    ap.add_argument("--wet", action="store_true",
+                    help="keep the soundfont's own reverb/chorus (default: render dry)")
     args = ap.parse_args()
     want = {s for s in args.only.split(",") if s} or set(INSTRUMENTS)
     total = 0
@@ -108,10 +116,10 @@ def main() -> int:
                 continue
             for midi in range(lo, hi + 1, 2):
                 for suffix, vel in TAKES:
-                    x = process(render_note(args.sf2, midi, vel, prog, tmp), rms_db)
+                    x = process(render_note(args.sf2, midi, vel, prog, tmp, args.sr, not args.wet), rms_db)
                     if x.size == 0:
                         raise SystemExit(f"{inst} r{midi}{suffix}: rendered silence")
-                    sf.write(args.out / f"{inst}_r{midi}{suffix}.ogg", x, SR, format="OGG", subtype="VORBIS")
+                    sf.write(args.out / f"{inst}_r{midi}{suffix}.ogg", x, args.sr, format="OGG", subtype="VORBIS")
                     total += 1
             print(f"{inst}: {len(range(lo, hi + 1, 2)) * len(TAKES)} files")
     print(f"done: {total} samples")

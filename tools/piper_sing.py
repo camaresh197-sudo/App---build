@@ -39,6 +39,7 @@ from pathlib import Path
 import numpy as np
 import pyworld
 import soundfile as sf
+from piper.config import SynthesisConfig
 
 TOOLS = Path(__file__).resolve().parent
 ROOT = TOOLS.parent
@@ -62,6 +63,10 @@ VE = 0.105          # victory step length (sound.gd), 16 steps/bar
 # The grid melodies in data_victory.json are written two octaves above the band's key.
 # The original bank clips (B4, B5) are already in the key, so only grid melodies shift.
 OCTAVE_SHIFT = -24
+# Grid clips synthesize Piper SLOW (length_scale) so vowels are natively long: the warp
+# then mostly COMPRESSES onto the grid, which is artifact-free, instead of stretching a
+# short word into a long hold (that is what garbled the held 'gay's).
+GRID_LS = 2.6
 
 # Pronunciation table. data_phonics.json is the source of truth and is read on
 # first render; these dicts are only fallbacks used while building that file.
@@ -103,18 +108,18 @@ def words_of(text: str) -> list:
 # 0.27 s apart, and the last word is short (about 0.35 s), with no hold.
 GAY_WORD = 0.27
 GAY_LAST = 0.35
-CHORUS_GRID = {"B0": ("v-B", 0, 2, 0.0, GAY_WORD), "B1": ("v-B", 2, 2, 0.0, GAY_WORD),
-               "B2": ("v-B", 4, 2, 0.0, GAY_WORD), "B3": ("v-B", 6, 2, 7.0)}
+CHORUS_GRID = {"B0": ("v-B", 0, 2, 7.6, GAY_WORD), "B1": ("v-B", 2, 2, 7.6, GAY_WORD),
+               "B2": ("v-B", 4, 2, 7.6, GAY_WORD), "B3": ("v-B", 6, 2, 7.6)}
 
 # Verse 1 phrases are also two bars each: bars 0-1, 2-3, 4-5, 6-7 of v-A.
-CHORUS_GRID.update({"A0": ("v-A", 0, 2), "A2": ("v-A", 2, 2),
-                    "A4": ("v-A", 4, 2), "A6": ("v-A", 6, 2)})
+CHORUS_GRID.update({"A0": ("v-A", 0, 2, 7.6), "A2": ("v-A", 2, 2, 7.6),
+                    "A4": ("v-A", 4, 2, 7.6), "A6": ("v-A", 6, 2, 7.6)})
 
 # Verse 2 phrases: two bars each (v-C). Tag and finale lines: one bar each.
-CHORUS_GRID.update({"C0": ("v-C", 0, 2), "C2": ("v-C", 2, 2),
-                    "C4": ("v-C", 4, 2), "C6": ("v-C", 6, 2),
+CHORUS_GRID.update({"C0": ("v-C", 0, 2, 7.6), "C2": ("v-C", 2, 2, 7.6),
+                    "C4": ("v-C", 4, 2, 7.6), "C6": ("v-C", 6, 2, 7.6),
                     "tag0": ("v-tag", 0, 2, 0.0, GAY_WORD), "tag2": ("v-tag", 2, 2, 0.0, GAY_WORD),
-                    "F0": ("v-F", 0, 2, 0.0, GAY_WORD), "B6": ("v-F", 2, 2, 0.0, GAY_WORD)})
+                    "F0": ("v-F", 0, 2, 7.6, GAY_WORD), "B6": ("v-F", 2, 2, 7.6, GAY_WORD)})
 
 
 # Word timing edited in the game (secret menu, TIMING tab) and copied to tools/retime.py.
@@ -129,7 +134,9 @@ if WORD_TIMING.exists():
             _hold = _old[3] if len(_old) > 3 else 0.0
             _word = _old[4] if len(_old) > 4 else 0.0
             CHORUS_GRID[_id] = (_line["section"], int(_line["bar"]), int(_line["bars"]), _hold, _word,
-                                [float(x) for x in _line["onsets"]])
+                                [float(x) for x in _line["onsets"]],
+                                [(int(g[0]), int(g[1])) for g in _line.get("glides", [])],
+                                [int(x) for x in _line.get("punches", [])])
 
 
 def find_ffmpeg() -> str:
@@ -468,21 +475,24 @@ def synth_audio(text: str, voice: str, use_cache: bool = True):
     return _fit(x[:, 0], sr), FS
 
 
-def synth_aligned(text: str, voice: str, use_cache: bool = True):
+def synth_aligned(text: str, voice: str, use_cache: bool = True, length_scale: float = 1.0):
     """Synthesize and return (audio, [(phoneme, start_sample, end_sample)]).
 
     The audio and its alignment are cached together; a second call reads them
-    from disk instead of running Piper again.
+    from disk instead of running Piper again. `length_scale` slows Piper down
+    (more frames for the same words): sung clips are warped onto the grid
+    anyway, so a slower source only means smoother warps, never longer clips.
     """
     CACHE.mkdir(parents=True, exist_ok=True)
-    k = _key(text, voice)
+    k = _key(text, f"{voice}#{length_scale:.2f}")
     wav = CACHE / f"al_{voice}_{k}.wav"
     js = CACHE / f"al_{voice}_{k}.json"
     if use_cache and wav.exists() and js.exists():
         x, sr = sf.read(str(wav), dtype="float64", always_2d=True)
         phonemes = [tuple(p) for p in json.loads(js.read_text(encoding="utf-8"))]
         return _fit(x[:, 0], sr), phonemes
-    chunks = list(aligned_voice(voice).synthesize(text, include_alignments=True))
+    cfg = SynthesisConfig(length_scale=length_scale) if length_scale != 1.0 else None
+    chunks = list(aligned_voice(voice).synthesize(text, syn_config=cfg, include_alignments=True))
     audio = np.concatenate([np.asarray(c.audio_float_array, dtype=np.float64) for c in chunks])
     phonemes, off = [], 0
     for c in chunks:
@@ -732,21 +742,36 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                 # Grid mode: Piper's phoneme alignments say exactly when each
                 # vowel starts. Put every vowel on its beat, keep the consonants
                 # in the gaps, and sing one note per syllable.
-                audio, phonemes = synth_aligned(spoken(text), voice, use_cache)
+                audio, phonemes = synth_aligned(spoken(text), voice, use_cache, length_scale=GRID_LS)
                 f0_r, sp_r, ap_r = analyze(audio)
                 nr = len(f0_r)
                 nuc = word_spans(phonemes)
+                fr = int(FS * FRAME_MS / 1000.0)
+                e_src = np.array([np.sqrt((audio[i * fr:(i + 1) * fr] ** 2).mean())
+                                  for i in range(len(audio) // fr)]) if len(audio) >= fr else np.zeros(1)
+                if len(e_src) > 7:
+                    e_src = np.convolve(e_src, np.ones(7) / 7.0, mode="same")
                 if len(nuc) == len(spans):
+                    # per-word anchors: each word's voiced span maps onto its note span.
+                    # (A runs-based flow mapping was tried and garbled words whenever the
+                    # singer's run count disagreed with the note count; with legato ramps,
+                    # GRID_LS slow rendering and the glide/punch toys, the anchors no longer
+                    # stutter, so they are the reliable choice.)
                     vsf0 = nuc[0][0] / FS * 1000.0 / FRAME_MS
                     lead = float(spans[0][0])
                     anchors_src, anchors_out = [0.0, vsf0], [max(0.0, lead - vsf0), lead]
                     for k, (vs, ve) in enumerate(nuc):
                         a, b, _hz = spans[k]
+                        L = b - a
                         if k > 0:
                             anchors_src.append(vs / FS * 1000.0 / FRAME_MS)
                             anchors_out.append(float(a))
-                        anchors_src.append(ve / FS * 1000.0 / FRAME_MS)
-                        anchors_out.append(float(min(a + 0.85 * (b - a), nc - 1)))
+                        if L >= 60:
+                            anchors_src.append(ve / FS * 1000.0 / FRAME_MS)
+                            anchors_out.append(float(min(a + 0.93 * L, nc - 1)))
+                        else:
+                            anchors_src.append(ve / FS * 1000.0 / FRAME_MS)
+                            anchors_out.append(float(min(a + 0.85 * (b - a), nc - 1)))
                     anchors_src.append(float(nr))
                     anchors_out.append(float(nc))
                     src_idx = np.interp(np.arange(nc), anchors_out, anchors_src)
@@ -758,22 +783,66 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                     rng = np.random.default_rng(zlib.crc32(clip_id.encode("utf-8")))
                     phase = float(rng.uniform(0.0, 2.0 * np.pi))
                     prev = 0.0
+                    notes = []
                     new_f0 = np.zeros(nc)
-                    for (a, b, hz) in spans:
+                    # "glides" (from data_word_timing): word i ends early, a breath, then the
+                    # voice slides into word j's note - flamboyant portamento, e.g. am -> Jeff.
+                    glides = grid[6] if len(grid) > 6 else []
+                    punches = grid[7] if len(grid) > 7 else []
+                    sp2 = list(spans)
+                    for (gi, gj) in glides:
+                        if gi < len(sp2) and gj < len(sp2):
+                            a_i, b_i, h_i = sp2[gi]
+                            a_j = sp2[gj][0]
+                            cut = a_j - int(0.02 * (1000.0 / FRAME_MS)) - int(0.12 * (1000.0 / FRAME_MS))
+                            if cut > a_i + 4:
+                                sp2[gi] = (a_i, cut, h_i)
+                    for pi in punches:
+                        # a punch enters through the consonant: the previous word's vowel
+                        # gives up its last 25 ms so the pitch hit lives before the vowel
+                        if 0 < pi < len(sp2) and sp2[pi - 1][1] == sp2[pi][0]:
+                            a_, b_, h_ = sp2[pi - 1]
+                            sp2[pi - 1] = (a_, b_ - 5, h_)
+                    for si, (a, b, hz) in enumerate(sp2):
                         L = b - a
                         t = np.arange(L)
                         note = hz * np.power(2.0, float(rng.normal(0.0, 6.0)) / 1200.0)
+                        notes.append(note)
                         f = np.full(L, note)
-                        if prev > 0.0 and 1200.0 * np.log2(note / prev) > 90.0:
-                            depth = float(rng.uniform(12.0, 28.0))
-                            k = min(int(0.045 * (1000.0 / FRAME_MS)), max(3, L // 3))
-                            f[:k] = note * np.power(2.0, -depth * (1.0 - np.arange(k) / k) / 1200.0)
+                        if prev > 0.0:
+                            # legato: every note change slides from the previous note over
+                            # ~20 ms (40 ms into a punch) so syllables float instead of stepping
+                            k = min(8 if si in punches else 4, L)
+                            cents = 1200.0 * np.log2(note / prev)
+                            f[:k] = prev * np.power(2.0, cents * (np.arange(k) + 1) / k / 1200.0)
                         if L >= 24:
                             rate = float(rng.uniform(4.8, 6.2))
-                            depth = float(rng.uniform(16.0, 26.0)) if L < 60 else float(rng.uniform(28.0, 44.0))
+                            depth = (float(rng.uniform(16.0, 26.0)) if L < 60
+                                     else float(rng.uniform(28.0, 44.0)) if L < 150
+                                     else float(rng.uniform(20.0, 31.0)))
                             ramp = np.clip((t - 0.10 * (1000.0 / FRAME_MS)) / (0.15 * (1000.0 / FRAME_MS)), 0.0, 1.0)
+                            if si + 1 in punches:
+                                # a punch wants a steady note to hit: taper this span's vibrato
+                                # out over its last 60 ms so the F0 is flat entering the hit
+                                ramp = ramp * np.clip((L - 1 - t) / 12.0, 0.0, 1.0)
+                            if si == len(sp2) - 1 and si in punches:
+                                # the melisma is the gesture: steady note into the swoop, no
+                                # wobble riding the rise (that is the 'cough')
+                                ramp = ramp * np.clip((int(0.55 * L) - t) / 12.0, 0.0, 1.0)
                             f = f * np.power(2.0, depth * np.sin(phase + 2.0 * np.pi * rate * t / (1000.0 / FRAME_MS)) * ramp / 1200.0)
                             phase += 2.0 * np.pi * rate * L / (1000.0 / FRAME_MS)
+                        if si == len(sp2) - 1 and si in punches and (grid[3] if len(grid) > 3 else 0.0) > 0.0:
+                            # 7 syllables over 8 notes: the final word is a two-note melisma -
+                            # firm D4, swoop up a minor third, then HOLD the F4 so the gesture
+                            # lands before the release (a rise that never lands reads as a cut)
+                            k0 = int(0.55 * L)
+                            rk = max(4, int(0.25 * L))
+                            f[k0:] = note * np.power(2.0, 300.0 / 1200.0)
+                            f[k0:k0 + rk] = note * np.power(2.0, 300.0 * ((np.arange(rk) + 1.0) / rk) ** 2 / 1200.0)
+                        elif si == 0 and L >= 8:
+                            # goofy entrance: the first word scoops up from a third below
+                            k = min(6, L // 3)
+                            f[:k] = note * np.power(2.0, -250.0 * (1.0 - (np.arange(k) + 1.0) / k) / 1200.0)
                         new_f0[a:b] = f
                         prev = note
                     new_f0[f0_rw <= 0] = 0.0
@@ -789,11 +858,75 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                         if 3 <= b - a <= 16 and a > 0 and b < nc and new_f0[a - 1] > 0 and new_f0[b] > 0:
                             new_f0[a:b] = np.exp(np.linspace(np.log(new_f0[a - 1]),
                                                              np.log(new_f0[b]), b - a))
-                    drift = np.cumsum(rng.normal(0.0, 0.035, nc))
+                    for (gi, gj) in glides:      # the slide itself: last 120 ms before word j
+                        if gi < len(sp2) and gj < len(sp2):
+                            b_i, h_i = sp2[gi][1], sp2[gi][2]
+                            a_j, h_j = sp2[gj][0], sp2[gj][2]
+                            gs = a_j - int(0.12 * (1000.0 / FRAME_MS))
+                            if b_i < gs and h_i > 0 and h_j > 0:
+                                k = np.arange(gs, a_j)
+                                new_f0[k] = h_i * np.power(h_j / h_i, (k - gs) / max(1, a_j - gs))
+                    for pi in punches:           # the hit: rises through the consonant, lands on the vowel
+                        if 0 < pi < len(sp2) and len(notes) > pi:
+                            a_j = sp2[pi][0]
+                            k0 = a_j - 5
+                            if 0 <= k0 < a_j and notes[pi - 1] > 0:
+                                kk = np.arange(k0, a_j)
+                                new_f0[kk] = notes[pi - 1] * np.power(notes[pi] / notes[pi - 1],
+                                                                      (kk - k0 + 1) / len(kk))
+                    drift = np.cumsum(rng.normal(0.0, 0.02, nc))
                     drift -= np.linspace(drift[0], drift[-1], nc)
-                    jit = np.convolve(rng.normal(0.0, 1.8, nc), np.ones(3) / 3.0, mode="same")
+                    jit = np.convolve(rng.normal(0.0, 1.0, nc), np.ones(3) / 3.0, mode="same")
                     new_f0 = new_f0 * np.power(2.0, (np.clip(drift, -7.0, 7.0) + jit) / 1200.0)
-                    takes.append(pyworld.synthesize(new_f0, sp, ap, FS))
+                    y = pyworld.synthesize(new_f0, sp, ap, FS)
+                    for (gi, gj) in glides:
+                        # the pause between the two words: f0 is 0 there, which WORLD renders
+                        # as hiss - pull it down to a faint breath instead
+                        if gi < len(sp2) and gj < len(sp2):
+                            cut = sp2[gi][1]
+                            gs = sp2[gj][0] - int(0.12 * (1000.0 / FRAME_MS))
+                            if gs > cut + 4:
+                                s0 = int(cut * FS * FRAME_MS / 1000.0)
+                                n = min(int((gs - cut) * FS * FRAME_MS / 1000.0), len(y) - s0)
+                                if n > 0:
+                                    g = np.full(n, 0.12)
+                                    e = min(int(0.010 * FS), n // 2)
+                                    g[:e] *= np.linspace(0.0, 1.0, e)
+                                    g[-e:] *= np.linspace(1.0, 0.0, e)
+                                    y[s0:s0 + n] *= g
+                    for pi in punches:           # punched word: the accent swells through the consonant
+                        if pi < len(sp2):
+                            s0 = int(max(0.0, sp2[pi][0] * FS * FRAME_MS / 1000.0 - 0.05 * FS))
+                            n = min(int(0.28 * FS), len(y) - s0)
+                            if n > 0:
+                                tt = np.arange(n) / FS - 0.05
+                                rise = np.clip((tt + 0.05) / 0.05, 0.0, 1.0)
+                                fall = np.exp(-np.clip(tt, 0.0, None) / 0.12)
+                                y[s0:s0 + n] *= 1.0 + 0.12 * rise * fall
+                    hold_to = grid[3] if len(grid) > 3 else 0.0
+                    if hold_to > 0.0 and len(sp2) and sp2[-1][1] - sp2[-1][0] >= 60:
+                        # musical release for a held last word: keep the vowel alive and fade it
+                        # out by the span's end instead of letting the source die mid-note.
+                        # The fade stays shallow so the tag stays audible.
+                        la, lb, _hz = sp2[-1]
+                        s0 = int(la * FS * FRAME_MS / 1000.0)
+                        n = min(len(y) - s0, int((lb - la) * FS * FRAME_MS / 1000.0))
+                        if n > 0:
+                            tt = np.arange(n) / (FS * FRAME_MS / 1000.0)
+                            start = 0.85 * (lb - la)
+                            g = np.ones(n)
+                            mask = tt >= start
+                            xr = (tt[mask] - start) / max(1.0, (lb - la - start))
+                            g[mask] = np.power(10.0, -2.0 * xr ** 2)
+                            e = min(int(0.10 * n), n)
+                            g[-e:] *= np.linspace(1.0, 0.0, e)
+                            y[s0:s0 + n] *= g
+                            k2 = int(0.35 * (lb - la))          # lift the melisma tag so it cuts
+                            s1 = int((lb - k2) * FS * FRAME_MS / 1000.0)
+                            n1 = min(int(k2 * FS * FRAME_MS / 1000.0), len(y) - s1)
+                            if n1 > 0:
+                                y[s1:s1 + n1] *= np.linspace(1.0, 1.25, n1)
+                    takes.append(y)
                     if (f0_r > 0).any() and base_hz == 0.0:
                         base_hz = float(np.median(f0_r[f0_r > 0]))
                     continue
@@ -865,14 +998,16 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                     f[:g] = melody[ss:ss + g] + (f[:g] - melody[ss:ss + g]) * (t[:g] / g)
                     # scoop up into a leap, like a singer reaching for the note
                     if prev > 0.0 and 1200.0 * np.log2(note / prev) > 90.0:
-                        depth = float(rng.uniform(12.0, 28.0))
+                        depth = float(rng.uniform(16.0, 40.0))
                         k = min(int(0.045 * fps), max(3, L // 3))
                         f[:k] = note * np.power(2.0, -depth * (1.0 - np.arange(k) / k) / 1200.0)
                     # vibrato on anything long enough to hold, with a continuous
                     # phase and a rate/depth that varies per note
                     if L >= 24:
                         rate = float(rng.uniform(4.8, 6.2))
-                        depth = float(rng.uniform(16.0, 26.0)) if L < 60 else float(rng.uniform(28.0, 44.0))
+                        depth = (float(rng.uniform(16.0, 26.0)) if L < 60
+                                 else float(rng.uniform(28.0, 44.0)) if L < 150
+                                 else float(rng.uniform(20.0, 31.0)))
                         ramp = np.clip((t - 0.10 * fps) / (0.15 * fps), 0.0, 1.0)
                         f = f * np.power(2.0, depth * np.sin(phase + 2.0 * np.pi * rate * t / fps) * ramp / 1200.0)
                         phase += 2.0 * np.pi * rate * L / fps

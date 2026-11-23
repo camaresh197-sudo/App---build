@@ -128,3 +128,17 @@ serialisable (that bug is fixed here).
   (the user heard them as pops) and `VOX_GAIN` went 2.4 → 1.8 so the Vox input no
   longer clips. `piper_sing.py`'s default voice is now bryce, so a plain re-run keeps
   this singer.
+- **The approved singer engine (2026-11-23).** The user approved the first pair
+  (A0+A2) on the ORIGINAL melodies with these engine features, now the rollout
+  template: `GRID_LS = 2.6` renders Piper slow so the warp *compresses* onto the grid
+  (stretching a short word into a long note garbles it — that bug produced three
+  rounds of "gibberish"); per-word anchors with a hold override; a legato ramp on
+  every note change; vibrato halved on long holds (20–31 cents); and per-line
+  switches in `data_word_timing.json`: `"glides": [[i, j]]` = short breath +
+  portamento into word j, `"punches": [i]` = consonant hit + tapered vibrato +
+  volume swell, and the final word of a line with `hold_to` gets a two-note melisma
+  (up ~300 cents) with a graceful release. Tag lines stay snappy (punch only, no
+  hold). A runs-based flow mapping was tried and abandoned: when the singer's run
+  count disagrees with the note count, equalize_runs merges the wrong things and
+  words land under the wrong notes. The user reviews the rollout in stages (pairs,
+  then chorus, then the other verses).
