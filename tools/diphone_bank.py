@@ -58,7 +58,7 @@ def find_ffmpeg() -> str:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--voice", default="en_US-ryan-high")
+    ap.add_argument("--voice", default="en_US-bryce-medium")
     ap.add_argument("--force", action="store_true")
     a = ap.parse_args()
     if OUT_OGG.exists() and not a.force:

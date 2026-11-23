@@ -73,12 +73,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: piper-model
-          key: piper-ryan-medium-1
+          key: piper-bryce-medium-1
       - name: Download the Piper model
         run: |
           mkdir -p piper-model
-          [ -s piper-model/en_US-ryan-medium.onnx ] || wget -q -O piper-model/en_US-ryan-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/medium/en_US-ryan-medium.onnx
-          [ -s piper-model/en_US-ryan-medium.onnx.json ] || wget -q -O piper-model/en_US-ryan-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/ryan/medium/en_US-ryan-medium.onnx.json
+          [ -s piper-model/en_US-bryce-medium.onnx ] || wget -q -O piper-model/en_US-bryce-medium.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/bryce/medium/en_US-bryce-medium.onnx
+          [ -s piper-model/en_US-bryce-medium.onnx.json ] || wget -q -O piper-model/en_US-bryce-medium.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/en/en_US/bryce/medium/en_US-bryce-medium.onnx.json
           ls -la piper-model
       - name: Add Piper sources and model to the Android build
         run: |
@@ -86,7 +86,7 @@ jobs:
           # Godot's export rewrites src/main/assets and wiped the model (build 7: "assets/piper is empty"),
           # so the model lives in its own asset folder, registered in build.gradle below.
           mkdir -p $B/piper-assets/piper $B/src/main/java/com/camaresh
-          cp piper-model/en_US-ryan-medium.onnx piper-model/en_US-ryan-medium.onnx.json $B/piper-assets/piper/
+          cp piper-model/en_US-bryce-medium.onnx piper-model/en_US-bryce-medium.onnx.json $B/piper-assets/piper/
           grep -q "piper-assets" $B/build.gradle || sed -i "s#main.res.srcDirs += \['res'\]#main.res.srcDirs += ['res']\n        main.assets.srcDirs += ['piper-assets']#" $B/build.gradle
           grep -n "piper-assets" $B/build.gradle
           cp -r android/piper/src/main/java/com/camaresh/piper $B/src/main/java/com/camaresh/

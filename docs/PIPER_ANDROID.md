@@ -19,7 +19,7 @@ clip, so a line keeps its original voice except where edited.
 `.github/workflows/piper-apk.yml` (runs on `android/**`, the preset, `piper.gd` or itself):
 
 1. `--install-android-build-template` (creates `android/build/`).
-2. Downloads `en_US-ryan-medium.onnx` (+ `.onnx.json`) into `android/build/src/main/assets/piper/`.
+2. Downloads `en_US-bryce-medium.onnx` (+ `.onnx.json`) into `android/build/src/main/assets/piper/`.
 3. Copies the Kotlin sources into `android/build/src/main/java/com/camaresh/`.
 4. Injects the plugin meta-data into the manifest and the ONNX Runtime maven dependency
    into `build.gradle`.
@@ -36,4 +36,4 @@ once; after that, pack updates keep working as before.
   Piper → diphone bank → real-clip word slices.
 - Per-phone lengths are not yet fed to the plugin (IPA only); the renderer's
   `render_phones` still owns lengths on re-sing.
-- Voice licence: confirm `ryan`'s terms before shipping outside this project.
+- Voice licence: confirm `bryce`'s terms before shipping outside this project.

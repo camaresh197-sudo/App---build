@@ -948,7 +948,7 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--voice", default="en_US-ryan-high",
+    ap.add_argument("--voice", default="en_US-bryce-medium",
                     help="one voice; comma-separated renders one take per voice and mixes them (chorus-style, can smear)")
     ap.add_argument("--mix", default="1,1,0.6",
                     help="take weights, comma-separated; ryan-low is a 16 kHz model, so it sits under the two 22 kHz takes")
