@@ -13,12 +13,13 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
 | `scripts/legacy.gd` | 10 | 126 |
 | `scripts/main.gd` | 468 | 4999 |
 | `scripts/map.gd` | 231 | 1841 |
-| `scripts/menu.gd` | 1013 | 13040 |
-| `scripts/piper.gd` | 23 | 221 |
+| `scripts/menu.gd` | 1393 | 17630 |
+| `scripts/piper.gd` | 63 | 732 |
+| `scripts/psola.gd` | 149 | 1148 |
 | `scripts/save.gd` | 28 | 345 |
 | `scripts/scene_generator.gd` | 135 | 901 |
 | `scripts/shotter.gd` | 524 | 6153 |
-| `scripts/sound.gd` | 686 | 9010 |
+| `scripts/sound.gd` | 680 | 8936 |
 | `scripts/updater.gd` | 181 | 2091 |
 | `scripts/voice_manager.gd` | 72 | 592 |
 
@@ -332,49 +333,91 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  342  func _play_list(items: Array, from := 0) -> void
  348  func _play_cutscene_id(cs_id: String) -> void
  354  func _timing_load() -> void
- 373  func _timing_word_ipa(w: String) -> String
- 382  func _timing_split_ipa(ipa: String) -> Array
- 409  func _timing_defaults(lid: String, line: Dictionary) -> void
- 440  func _timing_word_len(lid: String, i: int) -> float
- 450  func _timing_nudge(lid: String, i: int, d: float) -> void
- 457  func _timing_payload() -> Dictionary
- 463  func _timing_save() -> void
- 470  func _timing_copy() -> void
- 474  func _timing_reset(lid: String) -> void
- 483  func _timing_sync_ipa() -> void
- 494  func _timing_word_reset() -> void
- 508  func _timing_phone_set(p: String) -> void
- 522  func _timing_phone_dur(d: float) -> void
- 533  func _timing_phone_del() -> void
- 545  func _timing_phone_add() -> void
- 556  func _timing_is_sketch(lid: String) -> bool
- 567  const VOX_LEAD
- 569  func _timing_play(lid: String) -> void
- 627  const DIPHONE_PREVIEW
- 634  func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void
- 658  func _piper_word(lid: String, i: int) -> AudioStreamWAV
- 670  func _timing_play_before(lid: String) -> void
- 689  func _timing_stop() -> void
- 710  func timing_grab(pos: Vector2, idx: int) -> bool
- 724  func timing_move(x: float) -> void
- 734  func timing_release() -> void
- 739  func _timing_notes(lid: String) -> Array
- 749  func _draw_timing_graph(ox: float, lid: String) -> void
- 808  func _draw_env_strip(e: Dictionary, key: String, col: Color, rr: Rect2, dur: float) -> void
- 823  func _timing_pick(lid: String) -> void
- 827  func _timing_next() -> void
- 832  func _draw_toggle(r: Rect2, label: String, on: bool, fn: Callable) -> void
- 837  func _draw_timing(ox: float) -> void
- 907  func _draw_timing_word(ox: float, line: Dictionary) -> void
- 943  func _draw_timing_palette(ox: float) -> void
- 958  func secret(R: float, t: float) -> void
+ 375  func _timing_word_ipa(w: String) -> String
+ 384  func _timing_split_ipa(ipa: String) -> Array
+ 411  func _timing_defaults(lid: String, line: Dictionary) -> void
+ 443  func _timing_word_len(lid: String, i: int) -> float
+ 453  func _timing_nudge(lid: String, i: int, d: float) -> void
+ 461  func _timing_locked(lid: String, i: int) -> bool
+ 465  func _timing_toggle_lock(lid: String, i: int) -> void
+ 476  func _timing_line_len(lid: String) -> float
+ 483  func _timing_set_onset(lid: String, i: int, t: float) -> bool
+ 490  func _timing_clamp_onsets(lid: String) -> void
+ 495  func _timing_payload() -> Dictionary
+ 501  func _timing_save() -> void
+ 508  func _timing_copy() -> void
+ 512  func _timing_reset(lid: String) -> void
+ 524  func _timing_sync_ipa() -> void
+ 535  func _timing_word_reset() -> void
+ 549  func _timing_phone_set(p: String) -> void
+ 566  func _timing_phone_dur(d: float) -> void
+ 581  func _timing_phone_del() -> void
+ 596  func _timing_phone_add() -> void
+ 610  func _timing_is_sketch(lid: String) -> bool
+ 621  const VOX_LEAD
+ 623  func _timing_play(lid: String) -> void
+ 673  func _timing_word_edited(lid: String, i: int) -> bool
+ 686  func _timing_play_bank_word(phs: Array, t: float, to_downbeat: float, segs: Array) -> void
+ 716  const DIPHONE_PREVIEW
+ 723  func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void
+ 756  func _timing_shipped_len(lid: String, i: int, line_len: float) -> float
+ 764  func _piper_word(lid: String, i: int) -> AudioStreamWAV
+ 782  func _timing_play_before(lid: String) -> void
+ 801  func _timing_stop() -> void
+ 825  func timing_grab(pos: Vector2, idx: int) -> bool
+ 858  func timing_move(x: float) -> void
+ 879  func _timing_hold_move(dt: float) -> void
+ 892  func timing_release() -> void
+ 903  func _timing_notes(lid: String) -> Array
+ 913  const NOTE_NAMES
+ 915  func _note_name(m: int) -> String
+ 921  func _draw_timing_graph(ox: float, lid: String) -> void
+1007  func _draw_env_strip(e: Dictionary, key: String, col: Color, rr: Rect2, dur: float) -> void
+1023  func _timing_pick(lid: String) -> void
+1027  func _timing_next() -> void
+1032  func _draw_toggle(r: Rect2, label: String, on: bool, fn: Callable) -> void
+1041  const TL_X
+1042  const TL_W
+1043  const TR_X
+1044  const TR_W
+1046  func _draw_timing(ox: float) -> void
+1123  func _draw_timing_word(ox: float, line: Dictionary) -> void
+1168  func _timing_play_word(lid: String, i: int) -> void
+1196  const DIP_FIRST
+1197  const DIP_GLIDE
+1198  const DIP_FIRST_MIN
+1199  const DIP_GLIDE_MIN
+1201  func _timing_mark_diphthongs(phs: Array) -> void
+1218  const VOWELS
+1222  func _timing_syllable_starts(phs: Array) -> Array
+1236  func _timing_syllable_at(starts: Array, k: int) -> int
+1243  func _timing_pitches(phs: Array) -> Array
+1251  func _timing_set_pitches(phs: Array, sts: Array) -> void
+1261  func _timing_syl_shift(d: int) -> void
+1272  func _timing_syl_segs(lid: String, i: int) -> Array
+1295  func _draw_timing_palette(ox: float) -> void
+1319  func _timing_current_sound() -> String
+1327  func _timing_palette_grid(syms: Array, x0: float, y0: float) -> void
+1338  func secret(R: float, t: float) -> void
 ```
 
 ## `scripts/piper.gd`
 
 ```text
    7  static func available() -> bool
-  11  static func sing_stream(ipa: String) -> AudioStreamWAV
+  13  static func status() -> String
+  28  static func _wav_len(raw: PackedByteArray, rate: float) -> float
+  37  static func sing_stream(ipa: String, target := 0.0, info := {}, segs: Array = []) -> AudioStreamWAV
+```
+
+## `scripts/psola.gd`
+
+```text
+  10  static func f0_track(x: PackedFloat32Array, sr: float, hop_s := 0.01, fmin := 70.0, fmax := 350.0) -> Pac...
+  48  static func pitch_marks(x: PackedFloat32Array, sr: float, f0: PackedFloat32Array, h: int) -> PackedInt32A...
+  70  static func _gain_at(segs: Array, t: float) -> float
+  77  static func psola(x: PackedFloat32Array, sr: float, f0: PackedFloat32Array, h: int, segs: Array) -> Packe...
+ 125  static func apply(wav: AudioStreamWAV, segs: Array) -> AudioStreamWAV
 ```
 
 ## `scripts/save.gd`
@@ -472,10 +515,10 @@ Constants are listed by name only: grep `^const` for values, `^var` for state.
  572  const LOOK_AHEAD
  573  func _vox_key(sec: String, bar: int) -> String
  580  const VFILL
- 585  const VGRUNT
- 590  const VGRUNT_V
- 591  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
- 594  func _vstep(st: int, dl: float) -> void
+ 583  const VGRUNT
+ 584  const VGRUNT_V
+ 585  func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void
+ 588  func _vstep(st: int, dl: float) -> void
 ```
 
 ## `scripts/updater.gd`
