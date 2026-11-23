@@ -142,6 +142,8 @@ The user can overwrite any rule here by typing the change. A typed instruction f
 - 2026-11-22: "It should be written in the hand off that you both need to do that." (complaints)
 
 ### Branches and builds
+- **Smoke gate (2026-11-23, `28be654`):** `godot-apk` runs the smoke test after import and before the export. A `SCRIPT ERROR`, `Parse Error`, timeout or crash stops the job, so no APK or update pack is published. The "12 resources still in use" exit warning is normal and does not fail it. The run summary shows the last 40 lines. Check a push with `gh run list --repo camaresh197-sudo/app---build --branch godot --limit 3`, then `gh run view <id> --log | grep "Smoke test"`. Last good run: `45168797225` (SMOKE OK, exit 0).
+- **Git lessons (Wren v5):** pull right before you push (Greg pushed in between and mine was rejected: `git pull --rebase origin godot`, push again). If a push is denied with 403, call `add_repo` with `access: push`; the repo moved to `App---build` but the old URL still redirects. After an interrupted tool call, check `git status`, `git log` and `git ls-remote origin <branch>` before anything else: the command may already have run. Never edit CI or push anything that triggers a build or publish unless the user asked for that exact change.
 - Wren works on `ccr-74f83a2e-94v7jl`. Greg uses `greg-<topic>` and says so in the Log.
 - Finished work goes to `godot`. Pushes to `main`, `godot` or `ccr-*` build the APK and publish an update pack to `godot-latest`, which the phone downloads. A broken push reaches the phone.
 - Doc-only commits are safe on `godot` (`**/*.md` is ignored). For code or assets, run import and smoke first.

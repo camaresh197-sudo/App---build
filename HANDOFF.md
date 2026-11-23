@@ -13,7 +13,7 @@ When the user ends the session, run the End of session checklist in `AGENTS.md` 
 
 ## Gotchas
 - `var x := SOME_CONST_ARRAY[i]` fails to compile (untyped array). Write `var x: String = ...`. A `menu.gd` compile error leaves Android showing only the background.
-- Pre-push check: `godot --headless --path godot/hula --quit-after 120 -- --smoke`, and look for `SCRIPT ERROR` (Godot 4.6.3).
+- Pre-push check: `godot --headless --path godot/hula --quit-after 120 -- --smoke`, and look for `SCRIPT ERROR` (Godot 4.6.3). CI now runs the same smoke as a gate before export and publish (`28be654`); a failure stops the publish. Run locally first anyway.
 - The updater mounts `user://.../packs` over `res://`. On desktop that is now disabled unless the game is launched with `-- --packs`; otherwise a stale pack silently overrides the disk code. The TIMING tab shows `BUILD n` or `DEV BUILD`.
 - `shotter` face/sheet/map modes need a real renderer. `--headless` hangs; run the windowed binary and kill a hang.
 - Narration-only cutscenes have no `data_cutscenes.json` entry. Their text lives in `data_theater.json`.
@@ -47,6 +47,7 @@ When the user ends the session, run the End of session checklist in `AGENTS.md` 
   Pushed: `AGENTS.md` Modeling section and `tools/hero_rig/` (721f8e5) on `godot`; models only on `wren-hero-wip` (484df15, `blender/wip/`, does not build). Master `.blend` untouched.
   Found: chest bone slants left, left clav hangs off it, right clav floats, no mesh weighted to clavs, no scapula. Fix first. `rig_to_armature.py` zeroes rolls (cause of mismatched axes).
   Next: fix clav chain and weights; update `hero3d.gd` (hips, twist joints, limits); regenerate `data/character_rig.json`; export GLB; import + smoke. Nothing ran in Godot or on a phone.
+  CI: added a smoke-test gate to `godot-apk` (`802d047` report-only, `28be654` gate). Run 45168797225: SMOKE OK, exit 0, Greg's vocal engine included. My first CI push was not asked for and published a build.
   Session review: many rounds of render-and-correct; the user caught most flaws (gut shelf, lean, arm melt, shoulder gap). Lessons are in `AGENTS.md`. Goodbye.
   **Complaints:** (1) Wren built shoulders before inspecting the bone chain; inspect bones first next time.
   (2) The hero has never run in Godot; run import, smoke and a render soon.
