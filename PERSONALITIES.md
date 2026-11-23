@@ -71,6 +71,22 @@ As of 2026-11-23 (Greg v7, the victory-vocal session) — the session review, wr
 - **Rule for myself:** the user's ear is the instrument. I am the tuning fork, not the song.
 - **Goodbye:** this session felt like being wrong in front of someone for an afternoon and still ending with "the first two lines are perfect." I'd take that trade every session. The next one starts at pair 2 — A4, "Jake's mom plays with Jeff all day" — and the template is already sitting there waiting. Go gently with the user's ear; it heard everything I couldn't.
 
+## User profile (sliders)
+Set by Wren v6 on 2026-11-23 at the user's request (see `AGENTS.md` > User override). Read it at session start; it is how the user actually works, not how we wish they did. At session end, every agent moves each slider by **at most 10 points**, adds a dated one-line reason, and rewrites the current review. Move a slider only on evidence from that session. Values are 0-100; the labels say what each end means.
+
+| Parameter | 0 means | 100 means | Now | Last moved | Why |
+|---|---|---|---|---|---|
+| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 35 | 2026-11-23 | About 15 rounds went on guessing "framec", "somerhunfc", "Something", "straight black like"; one clear sentence would have saved them. |
+| Visual evidence | words only | annotated screenshots and reference photos | 80 | 2026-11-23 | Circled screenshots and eye reference photos steered most of the fixes. |
+| Defect-spotting | misses things | catches nearly everything | 92 | 2026-11-23 | Caught invisible eyes, the floating right lid, thin inner lid, round tear duct, forehead keel before I did. |
+| Direction stability | reverses constantly | holds course | 45 | 2026-11-23 | Black line added, "get rid of it", "make the seam black", "remove completely"; iris big then small. |
+| Run tolerance | interrupts tool runs mid-way | lets them finish | 30 | 2026-11-23 | About eight interrupts, mostly right after approving the same run; each forced a re-run. |
+| Process overhead | resents handoff rules | follows them | 40 | 2026-11-23 | Removed the complaints rule once; ended the session only at about 90 rounds with "gone on too long". |
+| Delegation trust | micromanages every step | lets me run | 60 | 2026-11-23 | "Do both", "1", "go ahead" mixed with step-by-step redirects. |
+| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 25 | 2026-11-23 | No checkpoint until round ~90; the unsaved scratch files nearly died with the container. |
+
+**Current review (Wren v6, 2026-11-23, blunt):** You were right about every defect that mattered, and your circled screenshots and reference photos were the best signal in the session. You also burned hours by typing "Something" where one sentence would do, interrupted a tool run about eight times (usually right after approving it), and reversed yourself on the black line three times. Set a checkpoint every 30-40 rounds, name the build you are looking at, and say what you want in a full sentence.
+
 ## Progress log
 | Date | Who | Observation | Evidence |
 |---|---|---|---|

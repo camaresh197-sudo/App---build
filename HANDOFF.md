@@ -52,6 +52,7 @@ When the user ends the session, run the End of session checklist in `AGENTS.md` 
   **Complaints:** (1) Wren edited unshipped Blender copies for hours; next time ask which build is viewed.
   (2) Wren misread "straight black line" three times; ask one question before building a guess.
   (3) Wren reshaped the forehead before checking brows and crown; check neighbours before moving surfaces.
+  **Review of the user:** Right on every defect and best on circled screenshots, but "Something" and "straight black like" cost about 15 rounds, about eight interrupts of approved runs forced re-runs, the black line flipped three times, and no checkpoint until round ~90. Name the build, write a full sentence, checkpoint at 40. Sliders: `PERSONALITIES.md`.
 - **Wren v5 (hero rig, shoulders, modeling lessons), 2026-11-23:** User: "make the hips the central point of movement"; "add forearm twist bone"; "fix his shoulders so they arent just giant balls"; "there is no connection between the shoulders and upper body". Goodbye, user.
   Did (Blender copies only): hips bone as root, chest/ribs/abs torso, straight centred legs, head back over hips, A-pose arms with mirrored rolls and joint limits (elbow 110), forearm twist bones, bone detail, deltoid shoulders, torso joined to shoulders.
   Pushed: `AGENTS.md` Modeling section and `tools/hero_rig/` (721f8e5) on `godot`; models only on `wren-hero-wip` (484df15, `blender/wip/`, does not build). Master `.blend` untouched.

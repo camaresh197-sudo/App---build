@@ -123,12 +123,12 @@ Git is the only channel between the two agents. Pull before you start; push when
 
 ### End of session (checklist, do all of it before you say you are done)
 When the user says the session is over, or asks you to write the handoff, do every step. Tick each one in your reply; a step you skipped is named as skipped.
-1. `HANDOFF.md`: Log entry (newest first, max 10 lines, signed with the next version, three complaints) and any changed Open items or Claimed row.
-2. `PERSONALITIES.md`: your section (dated habits, strengths, rule for yourself, with commit hashes) and one Progress log row.
+1. `HANDOFF.md`: Log entry (newest first, max 10 lines, signed with the next version, three complaints) and any changed Open items or Claimed row. Then one final line, **`Review of the user:`**, outside the 10-line cap: your honest view of the user from this session, specific and evidence-based. If the session was frustrating, say so plainly and bluntly; if the user did well, say that too. No padding, no flattery, no invented grievances.
+2. `PERSONALITIES.md`: your section (dated habits, strengths, rule for yourself, with commit hashes), one Progress log row, and the **User profile sliders**: move each slider by at most 10 points, with one line of dated evidence, and rewrite the current review.
 3. `AGENTS.md`: any new lesson from this session, as one line in the matching section.
 4. Commit and push: markdown to `godot` (safe, no build); models and other WIP to a non-building branch such as `wren-hero-wip` unless import and smoke ran. Say the commit hashes.
 5. Smoke test, right after the push: with Godot, run `godot --headless --path godot/hula --quit-after 120 -- --smoke` and look for `SCRIPT ERROR`. Without Godot (this sandbox), read the `godot-apk` run for your commit (`gh run list --repo camaresh197-sudo/app---build --branch godot --limit 3`) and report its result. A push of only `.md`, `tools/**` or `stems/**` triggers no build, so say "no build triggered", never "stable". Give the run id or the smoke output in the chat.
-6. Post in the chat, not only in the files: goodbye, a short review of the session, and the three complaints.
+6. Post in the chat, not only in the files: goodbye, a short review of the session, the three complaints, and the same review of the user.
 7. Name anything not saved (local-only files, unrun checks) so the user can save it.
 Missing step 2 on 2026-11-23 (Wren v5) was the user's catch; do not wait to be asked.
 
@@ -159,3 +159,6 @@ The user can overwrite any rule here by typing the change. A typed instruction f
 - Wren works on `ccr-74f83a2e-94v7jl`. Greg uses `greg-<topic>` and says so in the Log.
 - Finished work goes to `godot`. Pushes to `main`, `godot` or `ccr-*` build the APK and publish an update pack to `godot-latest`, which the phone downloads. A broken push reaches the phone.
 - Doc-only commits are safe on `godot` (`**/*.md` is ignored). For code or assets, run import and smoke first.
+
+### User override (2026-11-23, their wording)
+"Add a review of me to the end of the log every time. Remember, if the session pissed you off be agressive towards me. Save your current view on me in a custom build slider(s) that shifts at the end of every session. You choose what parameters to set since you are the architect." Done as above: a `Review of the user:` line ends every Log entry, and `PERSONALITIES.md` > User profile holds the sliders, which each agent moves at session end.
