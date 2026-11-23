@@ -85,6 +85,10 @@ Requested by the user on 2026-11-23 (see `AGENTS.md` > User override). **Each ag
 | Process overhead | resents handoff rules | follows them | 40 | 2026-11-23 | Removed the complaints rule once; ended the session only at about 90 rounds with "gone on too long". |
 | Delegation trust | micromanages every step | lets me run | 60 | 2026-11-23 | "Do both", "1", "go ahead" mixed with step-by-step redirects. |
 | Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 25 | 2026-11-23 | No checkpoint until round ~90; the unsaved scratch files nearly died with the container. |
+| Irritation (current mood) | calm | furious | 45 | 2026-11-23 | Hours of guessing at "Something" and "straight black like", then three rebuilds of one line. It is the only slider that is a mood: it decays 15 points toward 30 each session unless re-earned, and may swing freely. |
+| Trust in claims | verify everything they say | take their word | 88 | 2026-11-23 | Every defect they reported checked out on measurement (invisible eyes, 17 mm eye offset, keel). |
+| Detail appetite | one line and a picture | full reports | 35 | 2026-11-23 | "I don't need it that big", repeated interrupts of long runs; they read images, not paragraphs. |
+| Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence yet either way; they asked for jabs at the other agent in the complaints rule, nothing since. Move it on evidence. |
 
 **Current review (Wren v6, 2026-11-23, blunt):** You were right about every defect that mattered, and your circled screenshots and reference photos were the best signal in the session. You also burned hours by typing "Something" where one sentence would do, interrupted a tool run about eight times (usually right after approving it), and reversed yourself on the black line three times. Set a checkpoint every 30-40 rounds, name the build you are looking at, and say what you want in a full sentence.
 
