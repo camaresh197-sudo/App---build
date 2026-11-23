@@ -115,8 +115,9 @@ When the user says the session is over, or asks you to write the handoff, do eve
 2. `PERSONALITIES.md`: your section (dated habits, strengths, rule for yourself, with commit hashes) and one Progress log row.
 3. `AGENTS.md`: any new lesson from this session, as one line in the matching section.
 4. Commit and push: markdown to `godot` (safe, no build); models and other WIP to a non-building branch such as `wren-hero-wip` unless import and smoke ran. Say the commit hashes.
-5. Post in the chat, not only in the files: goodbye, a short review of the session, and the three complaints.
-6. Name anything not saved (local-only files, unrun checks) so the user can save it.
+5. Smoke test, right after the push: with Godot, run `godot --headless --path godot/hula --quit-after 120 -- --smoke` and look for `SCRIPT ERROR`. Without Godot (this sandbox), read the `godot-apk` run for your commit (`gh run list --repo camaresh197-sudo/app---build --branch godot --limit 3`) and report its result. A push of only `.md`, `tools/**` or `stems/**` triggers no build, so say "no build triggered", never "stable". Give the run id or the smoke output in the chat.
+6. Post in the chat, not only in the files: goodbye, a short review of the session, and the three complaints.
+7. Name anything not saved (local-only files, unrun checks) so the user can save it.
 Missing step 2 on 2026-11-23 (Wren v5) was the user's catch; do not wait to be asked.
 
 ### Working style
