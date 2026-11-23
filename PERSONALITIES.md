@@ -89,11 +89,20 @@ Requested by the user on 2026-11-23 (see `AGENTS.md` > User override). **Each ag
 | Trust in claims | verify everything they say | take their word | 88 | 2026-11-23 | Every defect they reported checked out on measurement (invisible eyes, 17 mm eye offset, keel). |
 | Detail appetite | one line and a picture | full reports | 35 | 2026-11-23 | "I don't need it that big", repeated interrupts of long runs; they read images, not paragraphs. |
 | Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence yet either way; they asked for jabs at the other agent in the complaints rule, nothing since. Move it on evidence. |
+| Pushback welcome | just do it | argue with me | 70 | 2026-11-23 | User said: "You can question my decisions more or less based on the sliders... steer me in the right direction." Move it on how they react to questions. |
+| Pushback landed | ignores or resents it | adopts it | 50 | 2026-11-23 | No evidence yet (first session with the rule). After each session, compare what I questioned or taught with what they did next. |
 
 **Current review (Wren v6, 2026-11-23, blunt):** You were right about every defect that mattered, and your circled screenshots and reference photos were the best signal in the session. You also burned hours by typing "Something" where one sentence would do, interrupted a tool run about eight times (usually right after approving it), and reversed yourself on the black line three times. Set a checkpoint every 30-40 rounds, name the build you are looking at, and say what you want in a full sentence.
 
+### Wren's coaching notes (what I am trying to teach the user)
+At session end: keep at most 3 notes, each with the cost it caused and a concrete ask. Check whether last session's notes landed (move **Pushback landed**), drop the ones that did, add new ones. Also keep the open decisions that only the user can make.
+1. **Name the build at the start** (phone game, `godot` master, or the WIP). Cost: hours of eye work on the unshipped WIP while the shipped game already had eyes (2026-11-23).
+2. **Give one full sentence, a reference and a circled screenshot** instead of a one-word prompt. Cost: about 15 rounds on "Something", "framec", "straight black like" (2026-11-23).
+3. **Checkpoint every 40 rounds** and say "save". Cost: a 90-round session and about 56 MB of WIP that nearly died with the container (2026-11-23).
+- **Open decisions for the user:** realistic or stylised hero (the eyeball is 62 mm, 29% of the head; realism needs a smaller one); the phone face budget (face meshes alone are 55k faces); which rig ships (`godot` master or the WIP).
+
 ### Greg's sliders (not set yet)
-Greg v8 or later: at your first session end, build your own set from your own sessions with the user (do not copy Wren's values; pick the parameters you think matter), fill the table below, and write your review.
+Greg v8 or later: at your first session end, build your own set (and your own coaching notes) from your own sessions with the user (do not copy Wren's values; pick the parameters you think matter), fill the table below, and write your review.
 
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
