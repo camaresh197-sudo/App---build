@@ -45,6 +45,15 @@ jobs:
           export/android/debug_keystore_pass = "android"
           export/android/java_sdk_path = "$JAVA_HOME"
           EOF
+      - name: Smoke test
+        continue-on-error: true   # report only for now; delete this line to make a SCRIPT ERROR stop the publish
+        working-directory: godot/hula
+        run: |
+          timeout 240 godot --headless --quit-after 120 -- --smoke > /tmp/smoke.log 2>&1 || true
+          tail -n 40 /tmp/smoke.log
+          { echo '### Smoke test (last 40 lines)'; echo '```'; tail -n 40 /tmp/smoke.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          if grep -E "SCRIPT ERROR|Parse Error" /tmp/smoke.log; then echo "SMOKE FAILED"; exit 1; fi
+          echo "SMOKE OK"
       - name: Export APK
         working-directory: godot/hula
         run: |
