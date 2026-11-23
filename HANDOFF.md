@@ -32,6 +32,7 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - **Chord conflict:** v-B bar 2, beat 3 sings B over an A-minor chord. Change the chord in `data_victory.json` or keep the passing tone.
 - **"I'm" schwa:** Piper renders it as `aɪɐm`; add a sheet entry in `data_phonics.json`.
 - **Act intros:** need a music handoff.
+- **Hero rework (Wren v4, 2026-11-23):** local Blender copies in `hero_wip/` on the user's PC, not in git; open list is in the Wren v4 Log entry. Claim `blender/character_rigged.blend` before editing the real file.
 - **Branches:** `menu-no-portrait` holds old TIMING and title work. Branch cleanup needs someone with repo rights.
 
 ## Map contract (Greg, 2026-11-20)
@@ -41,6 +42,14 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v4 (hero body rework, Blender copies), 2026-11-23:** User: "completely redo the entire shape of his face"; "stylized cartoon"; "give him an a pose"; "get rid of the hula hoop"; "rebuild his hands". Nothing pushed from Blender; files are on the user's PC in `App---build/hero_wip/` (untracked), not in git.
+  Built in copies of `blender/character_rigged.blend`: new procedural head (old kept hidden as `head_12_OLD`), new torso `torso_cartoon`, thinner neck/arms, A-pose, shoulders at equal depth, `hoop_0` deleted, rebuilt hands. Latest: `hero_wip/character_rigged_newhands2.blend`; scripts in `hero_wip/scripts.zip`.
+  Found: the original file has every expression key at 1.0 (zero them to judge the face) and the right shoulder ~5 cm forward of the left; hand-bone rolls differed per side, so hands are now rolled by finger spread.
+  Open: hip gap (torso stops above the pelvis), lip edge stepped + stray red line, mustache/hair still old pieces over the new skull, eyes read sleepy not wired, ears dropped, new-head expression keys unchecked.
+  User brief: ~33, thick manly face, heavy natural mustache, lean build, paranoid wired eyes. Not run in Godot or on a phone; any push of this ships to the phone, so import + smoke first.
+  **Complaints:** (1) Wren judged the face with every expression key at 1.0; zero keys first.
+  (2) Wren's new torso stops above the pelvis; close the hip gap before anyone ships it.
+  (3) The hero was never run in Godot; run import and smoke before any push.
 - **Greg v5 (bryce re-sing, grunts out), 2026-11-23:** User: "get rid of those stupid pops." All 19 victory clips re-sung solo with `en_US-bryce-medium` (ASR picked it over ryan/joe on the short chorus words); C2 lyric fixed to "He has done that most the day"; `VGRUNT := []` because the "unh" ad-libs read as pops; `VOX_GAIN` 2.4 -> 1.8 so the Vox input stops clipping.
   Files: `godot/hula/audio/vox/*.ogg`, `scripts/sound.gd`, `data/data_lyrics.json`, `data/data_word_timing.json`, `stems/` + `data/data_line_env.json`, `tools/piper_sing.py`, `.github/workflows/piper-apk.yml` (bryce model; URL checked). The TIMING diphone bank stays ryan; re-rendering it is still the open item.
   Checks: 70 s mix `Vpre`/`Vpst` clip=0 at -0.2/-0.6 dBFS; grunt-only capture silent; import 0, smoke 0 (12-resource exit warning); Whisper hears the full lyric, C2 alone as "He has done that most the day." Not checked: by ear, or on a phone.
