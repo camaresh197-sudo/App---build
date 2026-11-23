@@ -32,7 +32,7 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - **Chord conflict:** v-B bar 2, beat 3 sings B over an A-minor chord. Change the chord in `data_victory.json` or keep the passing tone.
 - **"I'm" schwa:** Piper renders it as `aɪɐm`; add a sheet entry in `data_phonics.json`.
 - **Act intros:** need a music handoff.
-- **Hero rework (Wren v4, 2026-11-23):** local Blender copies in `hero_wip/` on the user's PC, not in git; open list is in the Wren v4 Log entry. Claim `blender/character_rigged.blend` before editing the real file.
+- **Hero rework (Wren v4-v5, 2026-11-23):** WIP models are on branch `wren-hero-wip` (`blender/wip/`, newest `hero_v5_bridge_latest.blend`); master `blender/character_rigged.blend` untouched; never run in Godot. Bone chain chest > clav > shoulder is wrong (see `AGENTS.md` Modeling). Claim the master before editing it.
 - **Branches:** `menu-no-portrait` holds old TIMING and title work. Branch cleanup needs someone with repo rights.
 
 ## Map contract (Greg, 2026-11-20)
@@ -42,6 +42,15 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v5 (hero rig, shoulders, modeling lessons), 2026-11-23:** User: "make the hips the central point of movement"; "add forearm twist bone"; "fix his shoulders so they arent just giant balls"; "there is no connection between the shoulders and upper body". Goodbye, user.
+  Did (Blender copies only): hips bone as root, chest/ribs/abs torso, straight centred legs, head back over hips, A-pose arms with mirrored rolls and joint limits (elbow 110), forearm twist bones, bone detail, deltoid shoulders, torso joined to shoulders.
+  Pushed: `AGENTS.md` Modeling section and `tools/hero_rig/` (721f8e5) on `godot`; models only on `wren-hero-wip` (484df15, `blender/wip/`, does not build). Master `.blend` untouched.
+  Found: chest bone slants left, left clav hangs off it, right clav floats, no mesh weighted to clavs, no scapula. Fix first. `rig_to_armature.py` zeroes rolls (cause of mismatched axes).
+  Next: fix clav chain and weights; update `hero3d.gd` (hips, twist joints, limits); regenerate `data/character_rig.json`; export GLB; import + smoke. Nothing ran in Godot or on a phone.
+  Session review: many rounds of render-and-correct; the user caught most flaws (gut shelf, lean, arm melt, shoulder gap). Lessons are in `AGENTS.md`. Goodbye.
+  **Complaints:** (1) Wren built shoulders before inspecting the bone chain; inspect bones first next time.
+  (2) The hero has never run in Godot; run import, smoke and a render soon.
+  (3) User found the shoulder gap and arm melt first; always render posed and 3/4 views.
 - **Wren v4 (hero body rework, Blender copies), 2026-11-23:** User: "completely redo the entire shape of his face"; "stylized cartoon"; "give him an a pose"; "get rid of the hula hoop"; "rebuild his hands". Nothing pushed from Blender; files are on the user's PC in `App---build/hero_wip/` (untracked), not in git.
   Built in copies of `blender/character_rigged.blend`: new procedural head (old kept hidden as `head_12_OLD`), new torso `torso_cartoon`, thinner neck/arms, A-pose, shoulders at equal depth, `hoop_0` deleted, rebuilt hands. Latest: `hero_wip/character_rigged_newhands2.blend`; scripts in `hero_wip/scripts.zip`.
   Found: the original file has every expression key at 1.0 (zero them to judge the face) and the right shoulder ~5 cm forward of the left; hand-bone rolls differed per side, so hands are now rolled by finger spread.
