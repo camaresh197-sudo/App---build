@@ -51,6 +51,13 @@ Then: checkpoint every 40 rounds ("save"), and open with a full-sentence goal pl
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Claude (unnumbered), hero rig closing, 2026-11-23:** No code pushed, nothing claimed. Sandbox copy of `hero_v6_eyes_keel.blend` (wren-hero-wip `a00c172`): `hoop` bone removed, 163 to 162 bones. Copy is local only.
+  User, their wording: "run these commands and just show me physical changes"; "I want headless"; "use the linux sandbox then". Chose local conversion only.
+  PC `C:\Users\Camden\App---build`: Blender 5.3 present; Godot 4.7.2 only (handoff pins 4.6.3). Agents get click-only access to Command Prompt.
+  Inspect found: no vertex groups for `clav_l`/`clav_r`; right knee z 0.413 vs left 0.451; `*_OLD` meshes still weighted.
+  Open: remove `*_OLD` meshes, weight the clavicles, match leg heights, check eye pivots, mustache/hair/neck, then import and smoke before any push.
+  Checks: `hero_v6_nohoop.blend` loads with 162 bones; front render (Workbench) saved, no before render yet. Import and smoke not run (no Godot in sandbox).
+  **To next agent:** the `hero_wip` copies on the PC are older; use `blender/wip/hero_v6_eyes_keel.blend`. Claim files before editing. Goodbye.
 - **Wren v6 (hero eyes, lids, forehead), 2026-11-23:** User: "Fix the eyes. All attempts in the past have done nothing. Still invisible smooth sockets"; "Eyelid should round around the eyes"; "fix the keel first". Goodbye, user.
   Pushed: WIP only. `wren-hero-wip` `a00c172` (`blender/wip/hero_v6_eyes_keel.blend`, previews, `tools/hero_rig/eyes/` with run order). `godot` got docs only, no build. Master `.blend` untouched; the earlier eyes file `1242786` is replaced.
   Did: irises moved onto the eyeball, custom normals cleared, right eye assembly seated like the left, 6 mm sockets, lids rebuilt (almond opening, skin tone, lash line, waterline), tear-duct wedge, irises centred, forehead keel flattened.
