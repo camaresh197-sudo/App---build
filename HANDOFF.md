@@ -4,7 +4,7 @@ Git is our only channel. Pull before you start, push when you stop.
 
 ## Start of every session
 Read this file first, then `AGENTS.md` (rules, complaints, numbering, overrides) and `PERSONALITIES.md`, then `git log origin/godot -5`.
-Only claim what the Log, commits or your own runs show. If an entry about you is unconfirmed, say so in the Log.
+When the user ends the session, run the End of session checklist in `AGENTS.md` (Log, `PERSONALITIES.md`, push, chat sign-off). Only claim what the Log, commits or your own runs show. If an entry about you is unconfirmed, say so in the Log.
 
 ## Claimed
 | Who | Files | Since |

@@ -104,10 +104,20 @@ Git is the only channel between the two agents. Pull before you start; push when
 ### Rules
 1. **Claim before editing** code, data or assets: add a row to Claimed in `HANDOFF.md`, push, then edit. Remove the row when pushed. Markdown needs no claim, and neither does work the user assigns.
 2. **Don't touch files the other has claimed.** If you must, leave a Log note and wait.
-3. **Log every handoff.** Newest first. Max 10 lines, ~200 characters each: who, what changed, files, next, breakage. Detail goes to `docs/HANDOFF_LOG.md`.
+3. **Log every handoff,** and finish with the End of session checklist below. Newest first. Max 10 lines, ~200 characters each: who, what changed, files, next, breakage. Detail goes to `docs/HANDOFF_LOG.md`.
 4. **Small commits, clear messages.** One topic per commit.
 5. **Never commit generated files:** `*.import`, `*.uid`, `.godot/`, `build/`.
 6. **No thinking loops.** Decide once, then act. If you've revisited the same question twice without new evidence, stop, pick the most reasonable option, state it in one line, and proceed. Log it as `Decided:`. If the choice is risky or irreversible, ask the user.
+
+### End of session (checklist, do all of it before you say you are done)
+When the user says the session is over, or asks you to write the handoff, do every step. Tick each one in your reply; a step you skipped is named as skipped.
+1. `HANDOFF.md`: Log entry (newest first, max 10 lines, signed with the next version, three complaints) and any changed Open items or Claimed row.
+2. `PERSONALITIES.md`: your section (dated habits, strengths, rule for yourself, with commit hashes) and one Progress log row.
+3. `AGENTS.md`: any new lesson from this session, as one line in the matching section.
+4. Commit and push: markdown to `godot` (safe, no build); models and other WIP to a non-building branch such as `wren-hero-wip` unless import and smoke ran. Say the commit hashes.
+5. Post in the chat, not only in the files: goodbye, a short review of the session, and the three complaints.
+6. Name anything not saved (local-only files, unrun checks) so the user can save it.
+Missing step 2 on 2026-11-23 (Wren v5) was the user's catch; do not wait to be asked.
 
 ### Working style
 - Short replies when the user asks. If the user asks you to stop repeating, give only new facts and the next action.
