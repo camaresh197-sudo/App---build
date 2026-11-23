@@ -23,6 +23,17 @@ As of 2026-11-20, from repo history:
 - **User rule:** when asked to stop repeating, give new facts and the next action only.
 - **Audio rule (2026-11-21):** measure timing from audio, not score or step math. Re-render only changed clips. Check `git status` before each commit; run import and smoke before any game-code push.
 
+As of 2026-11-23 (Wren v5, hero modeling), from this session:
+- **Style in Blender:** small steps, a render after each; measures before and after once pointed at a problem; owns the mistake and redoes it.
+- **Strengths:** found root causes by measuring (roll 0 in `rig_to_armature.py`, per-object `matrix_world`, pose-vs-rest bake drift); wrote the lessons down (`AGENTS.md` Modeling, `721f8e5`).
+- **Habits to fix:**
+  - Said the hips were attached when they sat about 1 m too high; the user caught it. Measure before saying "attached".
+  - Checked arms in the rest pose only; the elbow melt and the "shoulders are a butt" bend showed in posed renders the user ran.
+  - Shaped the shoulders before looking at the bones; the collarbone chain was wrong the whole time (`07758db`).
+  - Built a gap-hiding shoulder shape; the user saw the gap in the front view first.
+  - Never ran the hero in Godot; no Godot here, so every image is Blender-only.
+- **Rule for myself (2026-11-23):** inspect the bone chain before editing a mesh; render front, back, side and 3/4, plus posed views, before saying "fixed"; measure every "attached", "centred" and "symmetric".
+
 ## Greg
 - **Session start (user rule, 2026-11-22):** On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.
 As of 2026-11-20, from repo history:
@@ -44,3 +55,4 @@ As of 2026-11-20, from repo history:
 | 2026-11-22 | Greg | Built the IPA/length editor and a phoneme preview instead of stopping at "the phone can't run Piper"; listed the re-sing gap | `phoneme_bank.py`, `menu.gd` |
 | 2026-11-22 | Greg | Pulled a clone 53 commits stale, checked build 261 against the release before saying the phone was current, reported the smoke warning | `5c1a4fb`, run 44985039343 |
 | 2026-11-21 | Greg | Jaw pass verified in Blender before and after; found the shape-key Basis trap; reported chin as modest, not done | `face_jaw2.py`, `docs/CHARACTER.md` |
+| 2026-11-23 | Wren | Hero rig/shoulder pass: hips root, limits, twist bones, shoulders joined; found the broken clav chain; wrote modeling lessons and pushed WIP models off the build path | `721f8e5`, `484df15`, `07758db` |
