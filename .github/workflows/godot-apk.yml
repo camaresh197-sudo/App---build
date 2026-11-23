@@ -46,14 +46,16 @@ jobs:
           export/android/java_sdk_path = "$JAVA_HOME"
           EOF
       - name: Smoke test
-        continue-on-error: true   # report only for now; delete this line to make a SCRIPT ERROR stop the publish
+        # Gate: a SCRIPT ERROR, parse error, timeout or crash here stops the job before the APK and update packs are built or published.
         working-directory: godot/hula
         run: |
-          timeout 240 godot --headless --quit-after 120 -- --smoke > /tmp/smoke.log 2>&1 || true
+          rc=0
+          timeout 240 godot --headless --quit-after 120 -- --smoke > /tmp/smoke.log 2>&1 || rc=$?
           tail -n 40 /tmp/smoke.log
           { echo '### Smoke test (last 40 lines)'; echo '```'; tail -n 40 /tmp/smoke.log; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
-          if grep -E "SCRIPT ERROR|Parse Error" /tmp/smoke.log; then echo "SMOKE FAILED"; exit 1; fi
-          echo "SMOKE OK"
+          if [ "$rc" -ge 124 ]; then echo "SMOKE FAILED: timeout or crash (exit $rc)"; exit 1; fi
+          if grep -E "SCRIPT ERROR|Parse Error" /tmp/smoke.log; then echo "SMOKE FAILED: script error"; exit 1; fi
+          echo "SMOKE OK (exit $rc)"
       - name: Export APK
         working-directory: godot/hula
         run: |
