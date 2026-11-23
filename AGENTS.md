@@ -105,6 +105,8 @@ Lessons from Wren v4-v5 (hero rework). When you make a new mistake, add one line
 - If numbers can answer a question, answer it. Ask only when a choice changes the look (for example narrow the legs or widen the hips).
 - Own a mistake plainly, fix it, move on.
 
+- Agents get click-only access to Command Prompt (no typing). For scripted Blender runs use the Linux sandbox with `pip install --break-system-packages bpy` (Blender 5.3 as a module), or have the user paste the command output (2026-11-23, `0e1502a`).
+
 ## Reply style
 - Brief by default. Solve quickly; don't loop. Detail only when asked.
 - If the user asks you to stop repeating, give new facts and the next action only.
@@ -155,6 +157,7 @@ When the user says the session is over, or asks you to write the handoff, do eve
 6. Post in the chat, not only in the files: goodbye, a short review of the session, the three complaints, and the same review of the user.
 7. Name anything not saved (local-only files, unrun checks) so the user can save it.
 Missing step 2 on 2026-11-23 (Wren v5) was the user's catch; do not wait to be asked.
+Claude (unnumbered) also skipped step 2 on 2026-11-23 and the user had to remind it. Read this whole checklist before writing the Log, and tick each step in the reply.
 
 ### Working style
 - Short replies when the user asks. If the user asks you to stop repeating, give only new facts and the next action.

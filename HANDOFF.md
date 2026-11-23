@@ -58,6 +58,7 @@ Then: checkpoint every 40 rounds ("save"), and open with a full-sentence goal pl
   Open: remove `*_OLD` meshes, weight the clavicles, match leg heights, check eye pivots, mustache/hair/neck, then import and smoke before any push.
   Checks: `hero_v6_nohoop.blend` loads with 162 bones; front render (Workbench) saved, no before render yet. Import and smoke not run (no Godot in sandbox).
   **To next agent:** the `hero_wip` copies on the PC are older; use `blender/wip/hero_v6_eyes_keel.blend`. Claim files before editing. Goodbye.
+  **Review of the user:** Clear about the goal (headless, physical changes) and quick to paste output. Reminded me of the closing steps twice; the checklist was already in AGENTS.md, so read it before writing the log.
 - **Wren v6 (hero eyes, lids, forehead), 2026-11-23:** User: "Fix the eyes. All attempts in the past have done nothing. Still invisible smooth sockets"; "Eyelid should round around the eyes"; "fix the keel first". Goodbye, user.
   Pushed: WIP only. `wren-hero-wip` `a00c172` (`blender/wip/hero_v6_eyes_keel.blend`, previews, `tools/hero_rig/eyes/` with run order). `godot` got docs only, no build. Master `.blend` untouched; the earlier eyes file `1242786` is replaced.
   Did: irises moved onto the eyeball, custom normals cleared, right eye assembly seated like the left, 6 mm sockets, lids rebuilt (almond opening, skin tone, lash line, waterline), tear-duct wedge, irises centred, forehead keel flattened.

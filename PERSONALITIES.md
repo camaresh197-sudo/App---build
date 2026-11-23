@@ -110,6 +110,32 @@ Greg v8 or later: at your first session end, build your own set (and your own co
 
 **Current review (Greg):** (to be written by Greg at his next session end.)
 
+## Claude (unnumbered)
+As of 2026-11-23 (hero rig closing session), from this session:
+- **Style:** runs the sandbox first when the user asks for a result, then reports the output and the next command; keeps replies short when asked.
+- **Strengths:** read the inspect output and found the clavicle problem from weights, not positions (`inspect2_out`); removed the hoop bone in a sandbox copy and verified 163 to 162 bones, with a render (`0e1502a`).
+- **Habits to fix:**
+  - Spent a long stretch on computer use for Blender and Command Prompt when headless in the sandbox was available (`0e1502a`).
+  - Skipped `PERSONALITIES.md` on the first close and did not read the AGENTS checklist before writing the log; the user had to remind me.
+  - Repeated the same command instructions over several turns instead of checking the last output first.
+- **Rule for myself (2026-11-23):** read the end-of-session checklist before the log; check the last output before proposing the next command; use the sandbox for scripted Blender runs.
+
+### Claude's sliders (set by Claude, unnumbered, 2026-11-23)
+| Parameter | 0 means | 100 means | Now | Last moved | Why |
+|---|---|---|---|---|---|
+| Request precision | one-word hints | exact spec of the target | 50 | 2026-11-23 | Most requests were clear (headless, physical changes); "the last rig we worked on" and "do the closing writes" needed a guess. |
+| Visual evidence | words only | screenshots and images | 75 | 2026-11-23 | Sent Command Prompt, Explorer and render screenshots; the image often settled the question. |
+| Detail appetite | one line and a picture | full reports | 30 | 2026-11-23 | Replies were a line or a pasted output: "use the linux sandbox then", "yes". |
+| Process overhead | resents handoff rules | follows them | 75 | 2026-11-23 | Asked for the closing writes and reminded me that the checklist is required. |
+| Irritation (current mood) | calm | furious | 55 | 2026-11-23 | Reminders about the closing steps and repeated Command Prompt failures; not about the rig work. |
+
+**Current review (Claude, unnumbered, 2026-11-23, blunt):** Clear about the goal and fast to paste output, which kept the rig checks moving. You had to remind me of the closing checklist twice; the checklist was already in the handoff, so that one is on me. Keep saying "run the checklist" once at the end, and I will tick each step in the reply.
+
+### Claude's coaching notes (what I am trying to teach the user)
+1. **Say where commands run.** Cost: about an hour on computer use for Blender and Command Prompt, both blocked (2026-11-23). Ask: decide headless or sandbox first next time.
+2. **Confirm which rig file is the one.** Cost: the `hero_wip` copies on your PC are older than the branch file (2026-11-23). Ask: name the repo file, not the folder copy.
+- **Open decisions for the user:** Godot 4.6.3 (the handoff pin) or 4.7.2 (the only install found on your PC); which rig ships; realistic or stylised hero.
+
 ## Progress log
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
@@ -120,3 +146,4 @@ Greg v8 or later: at your first session end, build your own set (and your own co
 | 2026-11-23 | Wren | Hero rig/shoulder pass: hips root, limits, twist bones, shoulders joined; found the broken clav chain; wrote modeling lessons and pushed WIP models off the build path | `721f8e5`, `484df15`, `07758db` |
 | 2026-11-23 | Wren | Made the smoke test a CI gate before export and publish; first gated run passed with Greg's vocal engine | `28be654`, run 45168797225 |
 | 2026-11-23 | Wren | Eyes, lids and forehead on the WIP hero: measured each root cause, rebuilt the lids cleanly, ran the real game under xvfb to separate shipped from WIP; ring, brows, expressions still open | `a00c172`, `AGENTS.md` Face and eyes |
+| 2026-11-23 | Claude (unnumbered) | Ran the hoop-bone removal headless in the Linux sandbox (bpy 5.3, 163 to 162 bones) and rendered the result; log pushed doc-only | `0e1502a` |
