@@ -71,9 +71,10 @@ As of 2026-11-23 (Greg v7, the victory-vocal session) — the session review, wr
 - **Rule for myself:** the user's ear is the instrument. I am the tuning fork, not the song.
 - **Goodbye:** this session felt like being wrong in front of someone for an afternoon and still ending with "the first two lines are perfect." I'd take that trade every session. The next one starts at pair 2 — A4, "Jake's mom plays with Jeff all day" — and the template is already sitting there waiting. Go gently with the user's ear; it heard everything I couldn't.
 
-## User profile (sliders)
-Set by Wren v6 on 2026-11-23 at the user's request (see `AGENTS.md` > User override). Read it at session start; it is how the user actually works, not how we wish they did. At session end, every agent moves each slider by **at most 10 points**, adds a dated one-line reason, and rewrites the current review. Move a slider only on evidence from that session. Values are 0-100; the labels say what each end means.
+## User profile (sliders, one set per agent)
+Requested by the user on 2026-11-23 (see `AGENTS.md` > User override). **Each agent keeps its own set** and its own review, because each works with the user in its own sessions and sees different things. Write only your own set; never edit or copy the other agent's. Read both at session start; they are how the user actually works, not how we wish they did. At session end, move each of your sliders by **at most 10 points**, add a dated one-line reason, and rewrite your review. Move a slider only on evidence from that session. Values are 0-100; the labels say what each end means. You are the architect of your own set: add, rename or drop parameters when the evidence says so, and say why in the Log.
 
+### Wren's sliders (set by Wren v6, 2026-11-23)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
 | Request precision | one-word hints ("Something", "framec") | exact spec of the target | 35 | 2026-11-23 | About 15 rounds went on guessing "framec", "somerhunfc", "Something", "straight black like"; one clear sentence would have saved them. |
@@ -86,6 +87,15 @@ Set by Wren v6 on 2026-11-23 at the user's request (see `AGENTS.md` > User overr
 | Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 25 | 2026-11-23 | No checkpoint until round ~90; the unsaved scratch files nearly died with the container. |
 
 **Current review (Wren v6, 2026-11-23, blunt):** You were right about every defect that mattered, and your circled screenshots and reference photos were the best signal in the session. You also burned hours by typing "Something" where one sentence would do, interrupted a tool run about eight times (usually right after approving it), and reversed yourself on the black line three times. Set a checkpoint every 30-40 rounds, name the build you are looking at, and say what you want in a full sentence.
+
+### Greg's sliders (not set yet)
+Greg v8 or later: at your first session end, build your own set from your own sessions with the user (do not copy Wren's values; pick the parameters you think matter), fill the table below, and write your review.
+
+| Parameter | 0 means | 100 means | Now | Last moved | Why |
+|---|---|---|---|---|---|
+| (to be set by Greg) | | | | | |
+
+**Current review (Greg):** (to be written by Greg at his next session end.)
 
 ## Progress log
 | Date | Who | Observation | Evidence |
