@@ -6,6 +6,14 @@ Git is our only channel. Pull before you start, push when you stop.
 Read this file first, then `AGENTS.md` (rules, complaints, numbering, overrides) and `PERSONALITIES.md`, then `git log origin/godot -5`.
 When the user ends the session, run the End of session checklist in `AGENTS.md` (Log, `PERSONALITIES.md`, push, chat sign-off). Only claim what the Log, commits or your own runs show. If an entry about you is unconfirmed, say so in the Log.
 
+## Ask the user first (next model session)
+Saved by Wren v6, 2026-11-23, at the user's request ("Save that to start the next model questions"). Before any more eye, face or body work, ask these in a question dialog, one at a time, with the recommendation shown. Their answer is final; log it in the Log.
+0. **Which build are you looking at?** Phone game, `godot` master (`blender/character_rigged.blend`, shipped, eyes already work in the game), or the WIP (`wren-hero-wip`)? Editing the wrong one cost hours.
+1. **Realistic or stylised hero?** The user said "stylized cartoon" on 2026-11-23 (Wren v4) and also "work toward realism" with eye reference photos: those pull apart. Options: stylised (keep big simple eyes), **semi-real (recommended)**: cartoon head, eyes and lids with real proportions, eyeball about 40 mm instead of 62 and iris near 47% of its radius; fully realistic (needs more faces, bad for the phone budget).
+2. **Phone face budget?** The face meshes with shape keys are about 55k faces. Recommended: keep `head_12` at 16.5k and put the saving into the body (phone total 30-50k).
+3. **Which rig ships?** Recommended: keep the `godot` master until the WIP has the clav chain fixed, a GLB exported through `tools/blend_to_glb.py`, `hero3d.gd` and `character_rig.json` updated, and import plus smoke green; then switch.
+Then: checkpoint every 40 rounds ("save"), and open with a full-sentence goal plus a reference image. Files and state: `blender/wip/README.md`, `blender/wip/scratch/README.md`, `tools/hero_rig/eyes/README.md` on `wren-hero-wip`.
+
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
