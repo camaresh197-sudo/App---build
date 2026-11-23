@@ -58,7 +58,7 @@ Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session.*
 Lessons from Wren v4-v5 (hero rework). When you make a new mistake, add one line here: symptom, cause, rule.
 
 **Setup**
-- No Godot in the sandbox. Blender runs as pip `bpy` (`python3 -I script.py`); render with Workbench. Scripts that worked are in `tools/hero_rig/` (edit the hard-coded `/home/claude/out` paths). Index: `views_neutral`/`closeup`/`bonevis` renders; `hipsbone`, `rootmove`, `centerlegs`, `straighten2`, `headback` body; `apose_rest`, `rolls2`, `limits4`, `twistbone`, `armposes`, `limrender4` arms; `pen2` penetration test; `bones`, `shoulders`, `bridge` surface detail.
+- Godot is not installed by default (see Face and eyes below for running it). Blender runs as pip `bpy` (`python3 -I script.py`); render with Workbench. Scripts that worked are in `tools/hero_rig/` (edit the hard-coded `/home/claude/out` paths). Index: `views_neutral`/`closeup`/`bonevis` renders; `hipsbone`, `rootmove`, `centerlegs`, `straighten2`, `headback` body; `apose_rest`, `rolls2`, `limits4`, `twistbone`, `armposes`, `limrender4` arms; `pen2` penetration test; `bones`, `shoulders`, `bridge` surface detail.
 - Work in copies, one saved file per step (`_hips`, `_torso`, ...); keep the last good one. Claim `blender/character_rigged.blend` before editing the real file.
 - Zero every expression shape key before judging the face or body (the original has them at 1.0).
 
@@ -78,6 +78,18 @@ Lessons from Wren v4-v5 (hero rework). When you make a new mistake, add one line
 - `LIMIT_ROTATION` is LOCAL space; Euler flips beyond about +-120 degrees. Elbow flexion capped at 110 degrees (more melts the forearm into the bicep). Keep shoulder ranges tight. Twist bones use `COPY_ROTATION`, order YZX, Y only.
 - Subdivide before sculpting small landmarks; features smaller than the ring spacing move almost no vertices.
 - A sphere shoulder reads as a ball: deltoid is about 1.2x arm radius, tapers into the arm, and its lower part is weighted to the upper-arm bone.
+
+**Face and eyes (Wren v6, 2026-11-23)**
+- Judge faces in Cycles, not Workbench: Workbench shows grey and hides skin and iris texture. pip `bpy` aborts on any render here; use the standalone Blender 5.2 from download.blender.org (`apt install libegl1 libgl1`). Godot 4.6.3 also runs here (GitHub release, `--import`, then `xvfb-run -a godot --path godot/hula --rendering-driver opengl3 -- <out> 0 sheet neutral 0`) and renders the real game face. The user must allow the download and the run once.
+- Ask which build the user is looking at (phone game, `godot` master, or the WIP) before editing. The shipped game already had working eyes while I edited the unshipped WIP for hours.
+- Imported meshes carry custom normals. Scale, flip or rebuild a part and it shades pitch black in Cycles (irises, lids, eyeballs, skin shells). Run `bpy.ops.mesh.customdata_custom_splitnormals_clear()` and check winding (lower lids had ~860 of 895 faces inward).
+- An eye part at the same depth as the white is invisible: compare front-y of iris and pupil with the white. Left and right must match: the right eye assembly (with `head_27`) sat 17 mm forward of the left. Measure protrusion past the skin per eye.
+- Nose-side skin covers the eyeball beyond ~16 mm of its centre, so the lid opening ends where the skin starts (inner corner ~24 deg, outer 62).
+- Don't patch old lid meshes (rim shards, spikes). Rebuild lids as dense sphere sections with the edge snapped to a curve (`tools/hero_rig/eyes/rebuild14.py`).
+- Proportions: eyeball is 62 mm (29% of head width, human ~16%); iris 36% of its radius (human 47%).
+- The face front was a V keel, 19-24 mm proud up the forehead. Measure a cross-section (rays at several x) before and after. Moving skin leaves brows and hair floating: move them with it.
+- Hidden leftovers inflate counts: `head_12_OLD` (38.5k faces), hidden `chest_3-6`. Face meshes with shape keys (55k faces) cannot be decimated.
+- Ambiguous words ("straight black line") cost three rebuilds: ask one question first.
 
 **Anatomy checklist (the user's rules)**
 - Hips are the centre of movement: root > hips > pelvis > spine and legs. Head and neck sit over the hips (no lean). Legs straight, centred under the hips, same size.

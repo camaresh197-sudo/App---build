@@ -32,7 +32,7 @@ When the user ends the session, run the End of session checklist in `AGENTS.md` 
 - **Chord conflict:** v-B bar 2, beat 3 sings B over an A-minor chord. Change the chord in `data_victory.json` or keep the passing tone.
 - **"I'm" schwa:** Piper renders it as `aɪɐm`; add a sheet entry in `data_phonics.json`.
 - **Act intros:** need a music handoff.
-- **Hero rework (Wren v4-v5, 2026-11-23):** WIP models are on branch `wren-hero-wip` (`blender/wip/`, newest `hero_v5_bridge_latest.blend`); master `blender/character_rigged.blend` untouched; never run in Godot. Bone chain chest > clav > shoulder is wrong (see `AGENTS.md` Modeling). Claim the master before editing it.
+- **Hero rework (Wren v4-v6, 2026-11-23):** WIP models are on branch `wren-hero-wip` (`blender/wip/`; bodies: `hero_v5_bridge_latest.blend`; eyes, lids and forehead: `hero_v6_eyes_keel.blend`, `a00c172`, scripts in `tools/hero_rig/eyes/`); master `blender/character_rigged.blend` untouched; never run in Godot. Open on the face: ring around each eye (`prehead.py` untested), brows, mustache, neck, hair, crown crest, heavy lids, expressions and blinking. Bone chain chest > clav > shoulder is wrong (see `AGENTS.md` Modeling). Claim the master before editing it.
 - **Branches:** `menu-no-portrait` holds old TIMING and title work. Branch cleanup needs someone with repo rights.
 
 ## Map contract (Greg, 2026-11-20)
@@ -42,6 +42,16 @@ When the user ends the session, run the End of session checklist in `AGENTS.md` 
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Wren v6 (hero eyes, lids, forehead), 2026-11-23:** User: "Fix the eyes. All attempts in the past have done nothing. Still invisible smooth sockets"; "Eyelid should round around the eyes"; "fix the keel first". Goodbye, user.
+  Pushed: WIP only. `wren-hero-wip` `a00c172` (`blender/wip/hero_v6_eyes_keel.blend`, previews, `tools/hero_rig/eyes/` with run order). `godot` got docs only, no build. Master `.blend` untouched; the earlier eyes file `1242786` is replaced.
+  Did: irises moved onto the eyeball, custom normals cleared, right eye assembly seated like the left, 6 mm sockets, lids rebuilt (almond opening, skin tone, lash line, waterline), tear-duct wedge, irises centred, forehead keel flattened.
+  Found: the shipped game already shows eyes (Godot 4.6.3 under xvfb renders them); my first hours edited the unshipped WIP. Eyeball is 62 mm (29% of head width). Workbench hides skin and iris texture: use Cycles.
+  Not done: faint ring round each eye (`prehead.py`, untested), brows, mustache, neck, hair, crown crest, lids too heavy for the phone, expressions, blinking, GLB export. Nothing ran in the game or on a phone.
+  Next: ring fix, brows and mustache, clav chain, then `hero3d.gd`, `character_rig.json`, GLB, import + smoke. Claim the master first. Lessons are in `AGENTS.md` (Face and eyes).
+  Session review: about 90 render-and-correct rounds; the user's reference photos and circled screenshots steered most fixes; three misreads of one phrase cost rebuilds.
+  **Complaints:** (1) Wren edited unshipped Blender copies for hours; next time ask which build is viewed.
+  (2) Wren misread "straight black line" three times; ask one question before building a guess.
+  (3) Wren reshaped the forehead before checking brows and crown; check neighbours before moving surfaces.
 - **Wren v5 (hero rig, shoulders, modeling lessons), 2026-11-23:** User: "make the hips the central point of movement"; "add forearm twist bone"; "fix his shoulders so they arent just giant balls"; "there is no connection between the shoulders and upper body". Goodbye, user.
   Did (Blender copies only): hips bone as root, chest/ribs/abs torso, straight centred legs, head back over hips, A-pose arms with mirrored rolls and joint limits (elbow 110), forearm twist bones, bone detail, deltoid shoulders, torso joined to shoulders.
   Pushed: `AGENTS.md` Modeling section and `tools/hero_rig/` (721f8e5) on `godot`; models only on `wren-hero-wip` (484df15, `blender/wip/`, does not build). Master `.blend` untouched.

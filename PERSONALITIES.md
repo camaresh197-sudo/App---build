@@ -36,6 +36,17 @@ As of 2026-11-23 (Wren v5, hero modeling), from this session:
   - Pushed without pulling first; Greg's commit landed in between and the push was rejected.
 - **Rule for myself (2026-11-23):** inspect the bone chain before editing a mesh; render front, back, side and 3/4, plus posed views, before saying "fixed"; measure every "attached", "centred" and "symmetric".
 
+As of 2026-11-23 (Wren v6, hero eyes, lids and forehead), from this session:
+- **Style:** render, look, correct, repeat; measures once the user points at a spot; reads the user's circled screenshots literally.
+- **Strengths:** found root causes by measuring (custom normals shading black, lids inside the eyeball, right eye 17 mm forward, skin wall covering the inner eye, a 24 mm forehead keel); rebuilt lids cleanly after patching failed; ran the real game under xvfb to separate shipped from WIP (`a00c172`).
+- **Habits to fix:**
+  - Edited the unshipped WIP for hours without asking which build the user viewed; the shipped game already showed eyes.
+  - Judged faces from Workbench greys; skin and iris texture only showed in Cycles.
+  - Misread "straight black line" three times and rebuilt each time; ask one question.
+  - Chained fourteen near-identical scripts by file name; one typo (`centre311.py`) broke a run. Keep one pipeline script.
+  - Reshaped the forehead without checking brows and crown; both broke.
+- **Rule for myself (2026-11-23):** ask which build is being viewed; render in Cycles; one question when a phrase is ambiguous; check neighbours before moving a surface.
+
 ## Greg
 - **Session start (user rule, 2026-11-22):** On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.
 As of 2026-11-20, from repo history:
@@ -69,3 +80,4 @@ As of 2026-11-23 (Greg v7, the victory-vocal session) — the session review, wr
 | 2026-11-23 | Greg | Hero-adjacent audio day: engine rebuilt around the user's ear, original melodies restored, first pair approved; failure modes documented in VOCAL.md | `e6e952c`, `docs/VOCAL.md` |
 | 2026-11-23 | Wren | Hero rig/shoulder pass: hips root, limits, twist bones, shoulders joined; found the broken clav chain; wrote modeling lessons and pushed WIP models off the build path | `721f8e5`, `484df15`, `07758db` |
 | 2026-11-23 | Wren | Made the smoke test a CI gate before export and publish; first gated run passed with Greg's vocal engine | `28be654`, run 45168797225 |
+| 2026-11-23 | Wren | Eyes, lids and forehead on the WIP hero: measured each root cause, rebuilt the lids cleanly, ran the real game under xvfb to separate shipped from WIP; ring, brows, expressions still open | `a00c172`, `AGENTS.md` Face and eyes |
