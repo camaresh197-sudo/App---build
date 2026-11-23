@@ -50,14 +50,13 @@ the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
 - Victory lyrics: one clip per line, `audio/vox/<id>.ogg` (`A0`, `B7`, `tag2`, …), keyed
   in `data_vox.json`; the words live in `data_lyrics.json`. Lines start on bar 0 of their
   section; each clip is pre-rolled by its lead-in so the first syllable lands on the
-  downbeat, and plays at `VOX_GAIN` (2.4) on the Vox bus.
+  downbeat, and plays at `VOX_GAIN` (1.8) on the Vox bus.
 - The clips are rendered, not recorded: Piper speech is re-pitched to the song's melody
   with WORLD (`tools/piper_sing.py`). The originals are backed up in
   `tools/vox_backup/originals/` (`--restore` puts them back).
-- Chorus grunts: bank `audio/grunt_r<midi>[_2].ogg` (`RANGE["grunt"]`), scheduled by
-  `VGRUNT` as `[section, bar, step]`, pitched to the bar's chord root `r`, routed to the
-  separate VoxGrunt bus (its own compressor, so grunts don't pump the sung line).
-  Keep them off `v-hold` bars and the final bar.
+- The grunt ad-libs are **removed** (`VGRUNT` is an empty table, 2026-11-23): the deep
+  "unh" bank read as pops against the sung line. The `audio/grunt_r*` samples and the
+  VoxGrunt bus stay for other uses; the victory song no longer schedules them.
 
 ### How the singer works (`tools/piper_sing.py`)
 
@@ -70,7 +69,7 @@ on an already-sung clip would borrow from itself).
 
 1. **Melody** — `tools/vox_backup/originals/<id>.ogg` is analyzed with WORLD; its F0
    contour and duration are the target.
-2. **Speech** — Piper (`en_US-ryan-high` by default) speaks the words from
+2. **Speech** — Piper (`en_US-bryce-medium` by default) speaks the words from
    `data_lyrics.json`.
 3. **Sing the notes.** Ryan's voiced runs are merged to match the song's note spans in
    order (`equalize_runs`), then a piecewise time map stretches each pair onto its span.
@@ -285,6 +284,7 @@ real time and prints PRE/POST peak/RMS/crest/clip plus music-bus levels, and wri
   no real change; don't commit that churn (`git checkout -- '*.import'`).
 - New samples need `--import` before `load()` sees them; the bank is loaded by `res://`
   path (case-sensitive), not by UID.
-- The Vox bus runs a compressor (−10 dB, 1.5:1): pushing `VOX_GAIN` too hard squashes the
-  sung line. Grunts (`VGRUNT_V`) go to VoxGrunt instead, but still check the mix with the
-  harness, not by ear alone.
+- The Vox bus runs a compressor (−10 dB, 1.5:1): `VOX_GAIN` 2.4 pushed the input to
+  +2.4 dBFS and clipped 2852 samples in a 70 s mix; 1.8 puts it at −0.1 dBFS with 0
+  clipped. The victory grunt ad-libs are removed (they read as pops); the VoxGrunt bus
+  and `audio/grunt_r*` stay for other uses.

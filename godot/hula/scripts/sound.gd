@@ -563,7 +563,7 @@ func _tstep(st: int, dl: float) -> void:
 
 # ---------- victory fanfare (instrumental: the tune is carried by the lead instruments) ----------
 const VE := 0.105
-const VOX_GAIN := 2.4
+const VOX_GAIN := 1.8   # 2.4 pushed the Vox bus input to +2.4 dBFS (2852 clipped samples in a 70 s mix); 1.8 keeps it just under 0 dBFS
 var have_vox := true
 # option 1: while a sung line is on, the bass, strums, bell and chord stabs step back so the voice sits clear.
 # The lines are two bars each, so a bar is "sung" when its own bar or the bar before starts a line.
@@ -578,15 +578,9 @@ func _vox_key(sec: String, bar: int) -> String:
 	if sec == "v-F": return "F%d" % bar
 	return ""
 const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-tag": 0.0}
-# Vocal ad-libs for the chorus singer: a deep, in-character grunt on the bar's chord root (r),
-# two per section on the strong steps (12/14) and the section-final bar, with an "unh-unh"
-# double when the phrase needs it. Never on a held bar or the final ring-out.
-# [section, bar, step]; the grunt is pitched to r so it sits on a chord tone.
-const VGRUNT := [["v-A", 3, 14], ["v-A", 7, 12], ["v-A", 7, 14],
-	["v-B", 1, 14], ["v-B", 3, 12], ["v-B", 5, 14], ["v-B", 7, 14],
-	["v-C", 3, 14], ["v-C", 5, 12], ["v-C", 5, 14], ["v-C", 7, 14],
-	["v-tag", 1, 14], ["v-tag", 3, 14],
-	["v-F", 1, 12], ["v-F", 3, 14]]
+# Vocal ad-libs REMOVED (user: "get rid of those stupid pops"): the deep "unh" grunts
+# read as pops against the sung line. Kept as an empty table so the loop stays harmless.
+const VGRUNT := []
 const VGRUNT_V := 4.2   # grunt level (linear, before the Vox bus); the body is pre-normalized in the sample bank
 func _vtrp(cv: Array, add: int, dur: float, v: float, dl: float) -> void:
 	for x in cv: note("trumpet", int(x) + add, dur, v * duck_gain, 0.05, dl)

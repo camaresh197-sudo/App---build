@@ -41,6 +41,10 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+- **Greg v5 (bryce re-sing, grunts out), 2026-11-23:** User: "get rid of those stupid pops." All 19 victory clips re-sung solo with `en_US-bryce-medium` (ASR picked it over ryan/joe on the short chorus words); C2 lyric fixed to "He has done that most the day"; `VGRUNT := []` because the "unh" ad-libs read as pops; `VOX_GAIN` 2.4 -> 1.8 so the Vox input stops clipping.
+  Files: `godot/hula/audio/vox/*.ogg`, `scripts/sound.gd`, `data/data_lyrics.json`, `data/data_word_timing.json`, `stems/` + `data/data_line_env.json`, `tools/piper_sing.py`, `.github/workflows/piper-apk.yml` (bryce model; URL checked). The TIMING diphone bank stays ryan; re-rendering it is still the open item.
+  Checks: 70 s mix `Vpre`/`Vpst` clip=0 at -0.2/-0.6 dBFS; grunt-only capture silent; import 0, smoke 0 (12-resource exit warning); Whisper hears the full lyric, C2 alone as "He has done that most the day." Not checked: by ear, or on a phone.
+  **Complaints:** (1) ASR chose the voice; Greg still has not listened to B0. (2) The grunt cut was inferred from clicks; confirm the chorus by ear. (3) Bryce in the APK is unbuilt locally; watch `piper-apk` after push.
 - **Wren v3 (timing-fixes), 2026-11-22:** Branch `timing-fixes` (on `godot`, 8702dbe): PLAY drift fix, locks kept on reset, diphone preview on, syllable pitch kept through sound edits and applied in the preview, PLAY WORD button, clearer sound editor, diphthongs played as one sample (22f89ae). Not run in Godot here; not heard on a phone.
   **Complaints:** (1) Nothing above is confirmed by ear. (2) The edit-only diphthong samples need the Piper model; run `tools/diphone_bank.py`.
 - **Wren v3 (handoff and AUDIO.md), 2026-11-22:** Updated Open items to the state after the TIMING, Piper-model, PSOLA and diphthong work, and updated `docs/AUDIO.md` for per-syllable pitch (PSOLA, `st`), the 0.8x-1.3x fit, diphthong marks and the new word-length and lock controls. Docs only.

@@ -23,7 +23,7 @@ mix. The audio-bus side is in `AUDIO_BUS_ARCHITECTURE.md`.
 ## Signal path
 
 One **dry lead** per line, no delayed doubles, on the Vox bus at `VOX_GAIN`
-2.4. The bus adds a near-dry room (5% wet — see the echo note below). Clips are
+1.8. The bus adds a near-dry room (5% wet — see the echo note below). Clips are
 pre-rolled by their `data_vox.json` lead-in so the first vowel lands on the
 song's beat.
 
@@ -32,7 +32,7 @@ song's beat.
 1. **Melody** from `tools/vox_backup/originals/<id>.ogg`, never from the clip on
    disk (that would borrow from a previous render). WORLD harvests F0 and the
    duration.
-2. **Speech**: Piper (`en_US-ryan-high`) speaks `spoken(text)` — the lyric with
+2. **Speech**: Piper (`en_US-bryce-medium`) speaks `spoken(text)` — the lyric with
    any `say` overrides from `data_phonics.json`.
 3. **Sing the notes**: voiced runs are matched to the melody's note spans, then
    a piecewise time map stretches each pair. Plateaus get a steady note; glides
@@ -121,3 +121,10 @@ serialisable (that bug is fixed here).
   lives in `data_phonics.json` as `am → say: "im"` (`/ɪm/`); the pronounce files
   are kept for history only. Add corrections to `MANUAL` in `tools/phonics.py`,
   using a `say` respelling that Piper phonemizes the way you want.
+- **Voice: `bryce-medium` (2026-11-23).** A Whisper `base.en` check on the clips was
+  the tie-breaker: `ryan-high` heard "Got his gay" on B0, `amy`/`bryce` heard it
+  cleanly. All 19 bank clips are re-sung with bryce solo; a joe double on the chorus
+  muddied the words, so the chorus is solo again. The victory grunts were removed
+  (the user heard them as pops) and `VOX_GAIN` went 2.4 → 1.8 so the Vox input no
+  longer clips. `piper_sing.py`'s default voice is now bryce, so a plain re-run keeps
+  this singer.

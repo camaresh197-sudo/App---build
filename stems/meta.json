@@ -1,9 +1,9 @@
 {
- "source_run": "mix_full70.wav: mix capture at 48000 Hz, rebuilt to 44100",
+ "source_run": "victory_new: mix capture at 48000 Hz, rebuilt to 44100",
  "sr": 44100,
  "frames": 3087236,
  "lag_samples": 0,
  "instruments": "master pre-limiter minus k * voxbus_post",
- "k_vox_in_master": 0.5605,
- "note": "victory full mix 70 s, current clips, 2026-11-22"
+ "k_vox_in_master": 0.5623,
+ "note": "2026-11-23 bryce re-sing, grunts removed"
 }
