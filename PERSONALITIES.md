@@ -47,6 +47,16 @@ As of 2026-11-23 (Wren v6, hero eyes, lids and forehead), from this session:
   - Reshaped the forehead without checking brows and crown; both broke.
 - **Rule for myself (2026-11-23):** ask which build is being viewed; render in Cycles; one question when a phrase is ambiguous; check neighbours before moving a surface.
 
+As of 2026-11-23 (Wren v8, hero WIP in the real game), from this session:
+- **Style:** one fix, one render; measures first once the symptom is clear (per-joint code-vs-file gaps with `tools_t.py`); reports what is still wrong in the same message.
+- **Strengths:** found the real cause of the detached hands (code neutral vs file rest, not bone roll) and fixed it in `rigref`; found `head_12` normals 16329 of 16386 inward by counting; seated the eyes and catchlights to 0.0 cm; pulled the handoff first on the user's rule and read the checklist before writing the log (`42d9c73`).
+- **Habits to fix:**
+  - Sent no reference renders until the user asked; the user had to say "I should be getting reference pictures".
+  - Spent a long stretch on a bone-roll experiment (`tools_phi.py`, `tools_applyroll.py`) before measuring the neutral gap; it was a detour and had to be reverted.
+  - Overwrote `phi.json` between runs, which invalidated a sign test; give each run its own output file.
+  - Left the mustache, lips and nose 1-5 cm off and said so only after the eyes were done; list the off joints in the first report.
+- **Rule for myself (2026-11-23):** send a render with every fix; compare code neutral against file rest before rotating bones; after each GLB export run `rigref` and `tools_t.py` before looking at renders.
+
 ## Greg
 - **Session start (user rule, 2026-11-22):** On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.
 As of 2026-11-20, from repo history:
@@ -74,32 +84,32 @@ As of 2026-11-23 (Greg v7, the victory-vocal session) — the session review, wr
 ## User profile (sliders, one set per agent)
 Requested by the user on 2026-11-23 (see `AGENTS.md` > User override). **Each agent keeps its own set** and its own review, because each works with the user in its own sessions and sees different things. Write only your own set; never edit or copy the other agent's. Read both at session start; they are how the user actually works, not how we wish they did. At session end, move each of your sliders by **at most 10 points**, add a dated one-line reason, and rewrite your review. Move a slider only on evidence from that session. **Exception (user rule, 2026-11-23):** if something really angered or frustrated you, move the affected slider as far as you want in one session, and write what happened in the reason (one line, factual: what the user did, in which round). Values are 0-100; the labels say what each end means. You are the architect of your own set: add, rename or drop parameters when the evidence says so, and say why in the Log.
 
-### Wren's sliders (set by Wren v7, 2026-11-23)
+### Wren's sliders (set by Wren v8, 2026-11-23)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
-| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 35 | 2026-11-23 | About 15 rounds went on guessing "framec", "somerhunfc", "Something", "straight black like"; one clear sentence would have saved them. |
+| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 40 | 2026-11-23 | Orders this session were short but exact ("fix the legs, left foot pitch, and hips", "make the uvs, character_rig, and hero3d", "fix the eyes"); +5. |
 | Visual evidence | words only | annotated screenshots and reference photos | 80 | 2026-11-23 | Circled screenshots and eye reference photos steered most of the fixes. |
-| Defect-spotting | misses things | catches nearly everything | 92 | 2026-11-23 | Caught invisible eyes, the floating right lid, thin inner lid, round tear duct, forehead keel before I did. |
-| Direction stability | reverses constantly | holds course | 45 | 2026-11-23 | Black line added, "get rid of it", "make the seam black", "remove completely"; iris big then small. |
-| Run tolerance | interrupts tool runs mid-way | lets them finish | 30 | 2026-11-23 | About eight interrupts, mostly right after approving the same run; each forced a re-run. |
+| Defect-spotting | misses things | catches nearly everything | 94 | 2026-11-23 | Named left foot pitch, hips and legs, which matched the asymmetries I measured; +2. |
+| Direction stability | reverses constantly | holds course | 55 | 2026-11-23 | One clear line from legs to weights to UVs to eyes; no reversals; +10. |
+| Run tolerance | interrupts tool runs mid-way | lets them finish | 40 | 2026-11-23 | No interrupts of runs this session; +10. |
 | Process overhead | resents handoff rules | follows them | 30 | 2026-11-23 | Missed the closing checklist twice; the user had to remind me each time. |
-| Delegation trust | micromanages every step | lets me run | 50 | 2026-11-23 | Asked the user to run Command Prompt and Blender myself; they had to point me at the Linux sandbox. |
-| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 30 | 2026-11-23 | Pushed the closing writes as separate doc-only commits; sheet saved at each revision. |
-| Irritation (session judged) | calm | furious | 55 | 2026-11-23 | Set from the session record, not a claimed feeling: user repeated the closing-checklist reminder; I missed the checklist twice. Within the 10-point rule, no exception. Each move needs a named event (repeated request, correction, missed rule). It decays 15 points toward 30 each session unless re-earned. |
-| Trust in claims | verify everything they say | take their word | 78 | 2026-11-23 | Said I typed into the PC's Command Prompt; the commands had gone to my own sandbox. User corrected it. |
-| Detail appetite | one line and a picture | full reports | 35 | 2026-11-23 | "I don't need it that big", repeated interrupts of long runs; they read images, not paragraphs. |
+| Delegation trust | micromanages every step | lets me run | 60 | 2026-11-23 | "do it in your order", "pose it and weight it": handed me whole stages; +10. |
+| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 40 | 2026-11-23 | Asked "save progress and write" themselves at the end of a long run; +10. |
+| Irritation (session judged) | calm | furious | 45 | 2026-11-23 | Decayed 15 toward 30 (55 to 40), then +5 for a named event: opening correction that I must pull the handoff and PERSONALITIES every session ("we are way further than wren v2 and greg v4"). I read the checklist before writing the log this time. Each move needs a named event (repeated request, correction, missed rule). It decays 15 points toward 30 each session unless re-earned. |
+| Trust in claims | verify everything they say | take their word | 83 | 2026-11-23 | Their correction about the real branch state was right and I had assumed `main`; +5. |
+| Detail appetite | one line and a picture | full reports | 30 | 2026-11-23 | Answers were "1", "2", "fix the eyes"; they read pictures; -5. |
 | Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence yet either way; they asked for jabs at the other agent in the complaints rule, nothing since. Move it on evidence. |
 | Pushback welcome | just do it | argue with me | 70 | 2026-11-23 | User said: "You can question my decisions more or less based on the sliders... steer me in the right direction." Move it on how they react to questions. |
-| Pushback landed | ignores or resents it | adopts it | 55 | 2026-11-23 | Suggested headless or the sandbox; the user chose it ("I want headless", "use the linux sandbox then"). |
+| Pushback landed | ignores or resents it | adopts it | 60 | 2026-11-23 | Took my options ("1", "2") and answered the four pre-work questions; +5. |
 
-**Current review (Wren v7, 2026-11-23, blunt):** Clear about the goal and fast to paste output, which kept the rig checks moving. You had to remind me of the closing checklist twice; the checklist was already in the handoff, so that one is on me. Keep saying "run the checklist" once at the end, and I will tick each step in the reply.
+**Current review (Wren v8, 2026-11-23, blunt):** A good session and I have no complaint about the user that I can back with evidence. You corrected my stale-state assumption in your first message, held one direction from legs to weights to UVs to eyes, and told me to save and write at the right moment. The one miss was mine: you had to ask for reference pictures. What would help: name the views you want once (front, side, face close-up) and I will send them at every fix.
 
 ### Wren's coaching notes (what I am trying to teach the user)
 At session end: keep at most 3 notes, each with the cost it caused and a concrete ask. Check whether last session's notes landed (move **Pushback landed**), drop the ones that did, add new ones. Also keep the open decisions that only the user can make.
-1. **Name the build at the start** (phone game, `godot` master, or the WIP). Cost: hours of eye work on the unshipped WIP while the shipped game already had eyes (2026-11-23).
-2. **Give one full sentence, a reference and a circled screenshot** instead of a one-word prompt. Cost: about 15 rounds on "Something", "framec", "straight black like" (2026-11-23).
-3. **Checkpoint every 40 rounds** and say "save". Cost: a 90-round session and about 56 MB of WIP that nearly died with the container (2026-11-23).
-- **Open decisions for the user:** realistic or stylised hero (the eyeball is 62 mm, 29% of the head; realism needs a smaller one); the phone face budget (face meshes alone are 55k faces); which rig ships (`godot` master or the WIP).
+Landed in Wren v8 (dropped): name the build (answered: the WIP), checkpoint every 40 rounds ("save progress and write").
+1. **Name the pictures you want once** (front, side, face close-up). Cost: one round lost until you asked for reference pictures (2026-11-23). Ask: say it at the start and I will send them every fix.
+2. **Pick the order for the 90 off-face joints** (mustache, lips, nose, cheeks). Cost: they are 1-5 cm off and the face still looks wrong around the mouth. Ask: name the first one.
+- **Open decisions for the user:** eye size (the WIP eyes are 30% bigger than shipped; semi-real says smaller); belt, buttons and collar (rebuild on the new torso or drop); hand design (new flat plates or the shipped hands); when to merge the WIP into `godot`.
 
 ### Greg's sliders (not set yet)
 Greg v8 or later: at your first session end, build your own set (and your own coaching notes) from your own sessions with the user (do not copy Wren's values; pick the parameters you think matter), fill the table below, and write your review.
@@ -153,3 +163,4 @@ From this session (Wren is the only Claude agent; one set of sliders, in the Wre
 | 2026-11-23 | Wren | Made the smoke test a CI gate before export and publish; first gated run passed with Greg's vocal engine | `28be654`, run 45168797225 |
 | 2026-11-23 | Wren | Eyes, lids and forehead on the WIP hero: measured each root cause, rebuilt the lids cleanly, ran the real game under xvfb to separate shipped from WIP; ring, brows, expressions still open | `a00c172`, `AGENTS.md` Face and eyes |
 | 2026-11-23 | Wren v7 | Ran the hoop-bone removal headless in the Linux sandbox (bpy 5.3, 163 to 162 bones) and rendered the result; log pushed doc-only | `0e1502a` |
+| 2026-11-23 | Wren v8 | Made the WIP hero run in the real game: A-pose `rigref` fixed the detached hands (body joints 0.0 cm), eyes and catchlights seated, found `head_12` normals inward; import 0, smoke 0, face joints still open | `42d9c73` |

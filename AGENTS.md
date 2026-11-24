@@ -95,10 +95,13 @@ Lessons from Wren v4-v5 (hero rework). When you make a new mistake, add one line
 - Hips are the centre of movement: root > hips > pelvis > spine and legs. Head and neck sit over the hips (no lean). Legs straight, centred under the hips, same size.
 - The torso must touch the hips and run up into the shoulders. Check against a white background for gaps.
 - Every joint has limits. "No abnormal bone bends unless a massive amount of force is applied. Then they explode into a million pieces of blood and bone shards."
-- **Known defect (2026-11-23):** shoulder chain chest > clav > shoulder > uarm is wrong. The chest bone slants sideways, the left clav hangs off its tip, the right clav floats, neither starts at the sternum, no mesh is weighted to a clav, and there is no scapula. The torso/shoulder join is only visual. Fix this before more shoulder work.
+- **Known defect (2026-11-23):** shoulder chain chest > clav > shoulder > uarm is wrong. The chest bone slants sideways, the left clav hangs off its tip, the right clav floats, neither starts at the sternum, no mesh is weighted to a clav, and there is no scapula. The torso/shoulder join is only visual. Fix this before more shoulder work. Fixed in Wren v8 (`42d9c73`).
 
 **Game side**
 - A bone, rest-pose or limit change needs `hero3d.gd` updated and `data/character_rig.json` regenerated (`godot --headless --path godot/hula -- /tmp/out 0 rigref`), then `tools/blend_to_glb.py`, import and smoke before any push. Not yet done for: the `hips` bone, `foretw_?` twist bones, the new limits, the bone-detail and shoulder meshes.
+- Neutral must match: a rotating joint swings its bone by (R-I)*t, t = code joint origin minus file bone origin, so `rigref` must capture the file's own rest pose (A-pose arms, file positions) and `tools/hero_rig/v8/tools_t.py` must show 0.0 cm. Bone roll does not matter (rotation axes are world-frame). Wren v8 lost hours on roll first.
+- Joints the code drives every frame (eyes, lids, catchlights, lips, mustache) ignore `character_offsets.json`: set the constants (`EYE_X/Y/Z/R`) and put the Blender bones on the same points. Catchlight meshes sit at the code's neutral spot, not the ball centre.
+- A mesh with every normal inward is culled in the game (hollow face, neck showing through). Count normals against the part's centre before exporting (`head_12`: 16329 of 16386 were inward).
 
 **Working with the user on models**
 - Short instructions, many rounds. They point at a picture ("4th picture is broken"); answer with the fix and new images.
