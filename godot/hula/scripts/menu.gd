@@ -647,17 +647,14 @@ func _timing_play(lid: String) -> void:
 		c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat, "from": VOX_LEAD + head,
 			"dur": maxf(0.05, line_len - head + VOX_LEAD)})
 		return
-	# Edited line: exact preview with the embedded Piper when present; diphone bank otherwise;
-	# real-clip word slices last. The shipped lines play the shipped clip.
+	# Edited line: diphone bank preview; real-clip word slices last. The shipped lines play the
+	# shipped clip. (The embedded-Piper exact preview was removed with the plugin, 2026-11-24.)
 	var w_ph: Array = line.get("phones", [])
-	if PiperVoice.available():
-		_timing_play_piper(lid, head, to_downbeat, line_len)
-		return
-	# Without the Piper build, edited words are sounded from the diphone bank at their edited onsets
+	# Edited words are sounded from the diphone bank at their edited onsets
 	# and phone lengths; unedited words keep the shipped clip. The bank is a rough preview (flat
 	# pitch, possibly audible joins); IPA and phone lengths are exact only after COPY + retime.py.
 	var use_bank := DIPHONE_PREVIEW and not di_bank.is_empty()
-	timing_msg = "diphone preview: IPA/length approximate; exact after COPY + retime.py, or the Piper build" if use_bank else "real clip at your onsets; IPA/length: COPY + retime.py, or the Piper build"
+	timing_msg = "diphone preview: IPA/length approximate; exact after COPY + retime.py" if use_bank else "real clip at your onsets; IPA/length: COPY + retime.py"
 	var shipped: Array = timing_base.get(lid, {}).get("onsets", [])
 	for i in onsets.size():
 		var at := float(onsets[i])
@@ -716,67 +713,12 @@ func _timing_play_bank_word(phs: Array, t: float, to_downbeat: float, segs: Arra
 const DIPHONE_PREVIEW := true
 var timing_play_id := 0   # bumped by PLAY and STOP, so a stale end-of-line stop does nothing
 
-var piper_cache := {}   # "lid_i_<ipa>" -> AudioStreamWAV from the embedded Piper
-
-# Exact on-device preview: edited words are rendered by the embedded Piper, unchanged words
-# play the shipped clip, so the line keeps the real voice where the user did not edit.
-func _timing_play_piper(lid: String, head: float, to_downbeat: float, line_len: float) -> void:
-	timing_msg = PiperVoice.status()   # shows whether Piper is really running, not just present
-	var base: Dictionary = timing_base.get(lid, {})
-	var shipped: Array = base.get("onsets", [])
-	var bipa: Array = base.get("ipa", [])
-	var bph: Array = base.get("phones", [])
-	var line: Dictionary = timing.get(lid, {})
-	var ipa: Array = line.get("ipa", [])
-	var w_ph: Array = line.get("phones", [])
-	var onsets: Array = line.get("onsets", [])
-	var sang := 0
-	for i in onsets.size():
-		var at := float(onsets[i])
-		if at < head - 0.001: continue
-		var dur: float = _timing_shipped_len(lid, i, line_len)
-		var edited: bool = i < w_ph.size() and (i >= bipa.size() or String(ipa[i]) != String(bipa[i])
-			or JSON.stringify(w_ph[i]) != JSON.stringify(bph[i]))
-		var st: AudioStreamWAV = _piper_word(lid, i) if edited else null
-		if edited and st == null:
-			timing_msg = "%s  Piper gave no audio for '%s': real clip used" % [PiperVoice.status(), ipa[i]]
-		if st != null:
-			dur = maxf(0.05, st.get_length()) + 0.03
-			sang += 1
-			c.snd.play_stream(st, {"v": 2.4, "dl": to_downbeat + at - head, "dur": dur, "bus": "Vox"})
-		elif i < shipped.size():
-			c.snd.play("vox/" + lid, {"v": 2.4, "dl": to_downbeat + at - head,
-				"from": VOX_LEAD + maxf(float(shipped[i]), head), "dur": maxf(0.05, dur)})
-	if sang > 0 and not timing_msg.contains("no audio"):
-		timing_msg = "Piper sang %d edited word(s): natural %.2f s, fitted to %.2f s" % [
-			sang, float(piper_last.get("natural", 0.0)), float(piper_last.get("final", 0.0))]
-
 # length of word i in the shipped clip: to the next shipped onset, or the line's end. A moved word
 # keeps this length; the gap to its new neighbour must not cut or lengthen it.
 func _timing_shipped_len(lid: String, i: int, line_len: float) -> float:
 	var sh: Array = timing_base.get(lid, {}).get("onsets", [])
 	if i >= sh.size(): return 0.2
 	return maxf(0.05, (float(sh[i + 1]) if i + 1 < sh.size() else line_len) - float(sh[i]))
-
-var piper_last := {}     # what the last word Piper sang measured, for the status line
-var piper_info := {}     # same key as piper_cache -> {"natural", "final"} seconds, for the status line
-
-func _piper_word(lid: String, i: int) -> AudioStreamWAV:
-	var ipa := String((timing[lid].get("ipa", []) as Array)[i]) if i < (timing[lid].get("ipa", []) as Array).size() else ""
-	if ipa.is_empty(): return null
-	var target := _timing_word_len(lid, i)
-	var segs := _timing_syl_segs(lid, i)
-	var key := "%s_%d_%s_%d_%s" % [lid, i, ipa, int(round(target * 1000.0)), str(segs)]
-	if piper_cache.has(key):
-		piper_last = piper_info.get(key, {})
-		return piper_cache[key]
-	var info := {}
-	var st := PiperVoice.sing_stream(ipa, target, info, segs)
-	if st != null:
-		piper_cache[key] = st
-		piper_info[key] = info
-		piper_last = info
-	return st
 
 # A/B: play the shipped line exactly as it is today, ignoring every edit.
 func _timing_play_before(lid: String) -> void:
@@ -1163,7 +1105,7 @@ func _draw_timing_word(ox: float, line: Dictionary) -> void:
 	for k in labels.size():
 		button(Rect2(panel.position.x + 8 + step * k, by, bw, 26), labels[k], cols[k], acts[k], 8)
 
-# Play only this word, from its own audio: Piper or the diphone bank if it was edited (as in PLAY),
+# Play only this word, from its own audio: the diphone bank if it was edited (as in PLAY),
 # otherwise its shipped clip. The word starts now and needs no track.
 func _timing_play_word(lid: String, i: int) -> void:
 	var line: Dictionary = timing.get(lid, {})
@@ -1171,14 +1113,6 @@ func _timing_play_word(lid: String, i: int) -> void:
 	var w_ph: Array = line.get("phones", [])
 	if i < 0 or i >= onsets.size(): return
 	var edited := _timing_word_edited(lid, i)
-	if edited and PiperVoice.available():
-		timing_msg = PiperVoice.status()
-		var st: AudioStreamWAV = _piper_word(lid, i)
-		if st != null:
-			c.snd.play_stream(st, {"v": 2.4, "dur": maxf(0.05, st.get_length()) + 0.03, "bus": "Vox"})
-			timing_msg = "playing word %d (Piper)" % (i + 1)
-			return
-		timing_msg = "%s  Piper gave no audio for this word" % PiperVoice.status()
 	if edited and DIPHONE_PREVIEW and not di_bank.is_empty() and i < w_ph.size():
 		_timing_play_bank_word(w_ph[i], 0.0, 0.0, _timing_syl_segs(lid, i))
 		timing_msg = "playing word %d (diphone preview)" % (i + 1)

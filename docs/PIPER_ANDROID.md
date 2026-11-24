@@ -1,4 +1,9 @@
-# Embedded Piper (offline, exact)
+# Embedded Piper (offline, exact) — REMOVED 2026-11-24
+
+**Removed (Greg v8, user decision):** with the in-game editor gone, the embedded Piper had no
+consumer. `android/piper/`, `scripts/piper.gd`, `.github/workflows/piper-apk.yml` and the
+AndroidPiper export preset were deleted; `menu.gd` now plays edited words from the diphone bank
+or the shipped clip. This file remains as the record of how it was built.
 
 The TIMING editor's exact preview: a Piper VITS model runs **inside the APK**, so an edited
 word's IPA is heard in the real singer's voice with no PC. Unchanged words play the shipped
