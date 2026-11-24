@@ -35,6 +35,11 @@ Nested guide for `blender/`; the root `AGENTS.md` points here. Lessons from Wren
 - Hidden leftovers inflate counts: `head_12_OLD` (38.5k faces), hidden `chest_3-6`. Face meshes with shape keys (55k faces) cannot be decimated.
 - Ambiguous words ("straight black line") cost three rebuilds: ask one question first.
 
+**Hero WIP head, hair, brows, eyes (Wren v9, 2026-11-24): read before editing any of these**
+- Latest file: `blender/wip/hero_v66_brows_flat.blend` on branch `wren-hero-wip` (WIP only, not exported to the game, `rigref` not run, not on a phone). Scripts, the generated iris texture and the full findings list: `tools/hero_rig/v9/README.md` on that branch. Open it first; do not re-derive.
+- Do not put a .blend under `godot/hula/`. Fork a new file per change, claim it, and leave the eye session's `hero_v21..v39` alone.
+- Traps that cost hours: the iris texture was never committed (pink iris); the WIP files carry 14 old area lights that overexpose Cycles renders (hide them); Workbench hides textures; the dark "helmet" is `head_118` and `hat_*`, not the hair; a scratch file named `inspect.py` breaks Python; sandbox `rigref` does not reproduce the committed `character_rig.json`.
+
 **Anatomy checklist (the user's rules)**
 - Hips are the centre of movement: root > hips > pelvis > spine and legs. Head and neck sit over the hips (no lean). Legs straight, centred under the hips, same size.
 - The torso must touch the hips and run up into the shoulders. Check against a white background for gaps.
