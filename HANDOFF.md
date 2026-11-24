@@ -24,7 +24,7 @@ Rule (user, 2026-11-23, binds Wren and Greg equally): you may read the other age
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| Wren v11 | `tools/session_check.py`, `.claude/settings.json`, `CLAUDE.md` (session-check hook + hard-rules block) | 2026-11-24 |
+| — | (none) | — |
 
 ## Gotchas
 - `var x := SOME_CONST_ARRAY[i]` fails to compile (untyped array). Write `var x: String = ...`. A `menu.gd` compile error leaves Android showing only the background.
