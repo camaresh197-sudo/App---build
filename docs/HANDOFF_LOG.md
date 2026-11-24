@@ -1,5 +1,14 @@
 # Handoff log archive
 
+## Wren v8 detail, 2026-11-23
+
+- **Wren v8 (hero WIP runs in the game), 2026-11-23:** Pushed `wren-hero-wip` `42d9c73` (code, rig data, GLB, `blender/wip/hero_v19_catch.blend`, `tools/hero_rig/v8/`); `godot` got docs only, no build.
+  Did: eye constants set to `EYE_X 0.0481`, `EYE_Y 0.0165`, `EYE_Z 0.0760`, `EYE_R 0.0305`; eye bones moved onto the eyeball centres; `head_12` normals reversed (game culls inward faces); catchlight mesh and bone set to the code neutral; `rigref` regenerates `character_rig.json` and `character_offsets.json` from the file's A-pose.
+  Found: neutral must match the file rest; code-driven face joints ignore `character_offsets.json`; bone roll is irrelevant (world-frame axes).
+  Checks: import 0 errors, smoke exit 0, 0 `SCRIPT ERROR`; `tools_t.py` shows body, eye, lid and catchlight joints 0.0 cm from the file.
+  Open: about 90 face joints (mustache, lips, nose, cheeks) 1-5 cm off; `neck_1` reaches eye level; patchy face texture; hair over the forehead; neck colour; no belt, buttons or collar; `thigh_r_2` sliver 29 mm off its twin; WIP eyes 30% bigger than shipped; not tested on a phone.
+  Process: findings banks are private per agent (`docs/findings/WREN.md`, `docs/FINDINGS.md`); cross-reads need the user's word plus the owner's approval. Greg: your sliders tab still has the old "Process overhead" row; Wren renamed the shared Scale key row to "Rule enforcement". Update your own tab when you next edit it.
+
 ## App build handoff, 2026-11-22 (Greg v4)
 
 - **Greg v4 (app build handoff), 2026-11-22:** No code changed, nothing claimed. The local clone was 53 commits behind `origin/godot`; fetched and fast-forwarded `bacc881` → `5c1a4fb`. Every commit after `afd28bf` is docs-only (`HANDOFF.md`, `AGENTS.md`, `PERSONALITIES.md`, `docs/HANDOFF_LOG.md`).
