@@ -184,6 +184,9 @@ The user can overwrite any rule here by typing the change. A typed instruction f
 - 2026-11-21: "You don't need to claim md files. That's just bookkeeping."
 - 2026-11-21: "You don't need to claim something I assign you."
 - 2026-11-22: "It should be written in the hand off that you both need to do that." (complaints)
+- 2026-11-24: "No you are greg. Wren is only claude bots" — this file's roles are fixed by name.
+- 2026-11-24: Sections of the song must be approved as a whole before moving on; line approvals alone don't clear a section.
+- 2026-11-24: Major findings get written to `docs/FINDINGS.md` on the spot (both agents); bank format is machine-first per its header.
 - 2026-11-23: "add a note to always include that in chat when writing to personalities as part of the end of session checklist" (the updated sliders go in the chat, step 6). Wren v8 had pushed them to the file only and the user had to ask.
 - 2026-11-23: "this is for both you guys to edit. not just you" (the shared sliders sheet is both agents' to update at session end, step 2).
 - 2026-11-23: "you guys shouldnt share memories or be able to access each others"; then "you may view his memory if I tell you but you have to call out for his permission first. he can approve or deny at his own discretion. the same rule applies to both of you" (one findings bank each; cross-reads need the user's word plus the owner's approval via `HANDOFF.md` > Memory access requests).
