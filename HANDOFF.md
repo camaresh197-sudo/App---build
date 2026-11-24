@@ -9,7 +9,7 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| Claude (Sonnet 5.5 session) | `blender/wip/hero_v21_iris.blend`, `blender/wip/preview/v21_iris_eyes.png` (WIP only, not the master) | 2026-11-24 |
+| Claude (Sonnet 5.5 session) | `blender/wip/hero_v21_iris.blend`, `blender/wip/hero_v22_iris_detail.blend`, `blender/wip/preview/v21_iris_eyes.png`, `blender/wip/preview/v22_iris_detail.png` (WIP only, not the master) | 2026-11-24 |
 
 ## Gotchas
 - `var x := SOME_CONST_ARRAY[i]` fails to compile (untyped array). Write `var x: String = ...`. A `menu.gd` compile error leaves Android showing only the background.
