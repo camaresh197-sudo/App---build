@@ -295,12 +295,23 @@ func _ready() -> void:
 		# bones, so it must be regenerated whenever a bone's own control formula (e.g. mouth_cav's scale) changes
 		var hr = m.hero3d
 		m.set_process(false)
+		var fpos := {}      # where the file's bones really are (world rest origins), before the skeleton is switched off
+		if hr.rig_skel != null:
+			for bn in hr.rig_bone:
+				fpos[bn] = hr.rig_skel.global_transform * hr.rig_skel.get_bone_global_rest(hr.rig_bone[bn]).origin
 		hr.rig_skel = null
 		hr.fixed_dt = 1.0 / 24.0
 		hr.set_expr(a[3] if a.size() > 3 else "neutral", true)
 		for i in 4:
-			hr.pose(0.0)
+			hr.pose(0.0, 0.0, 0.0)
 			await get_tree().process_frame
+		var roffs := {}
+		if not fpos.is_empty():      # neutral = the file's own rest pose, joint for joint (see hero3d.rigref_pose)
+			roffs = hr.rigref_pose(fpos)
+			await get_tree().process_frame
+			var jof := FileAccess.open("res://data/character_offsets.json", FileAccess.WRITE)
+			jof.store_string(JSON.stringify(roffs)); jof.close()
+			print("rigref: wrote %d joint offsets to res://data/character_offsets.json" % roffs.size())
 		var refr := {}
 		for name in hr.j:
 			var nd: Node3D = hr.j[name]

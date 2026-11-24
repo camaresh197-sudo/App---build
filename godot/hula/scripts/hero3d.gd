@@ -55,8 +55,9 @@ func put(parent: Node3D, mesh: Mesh, m: Material, pos := Vector3.ZERO, scl := Ve
 func _declare_bones() -> Array:
 	var out: Array = [
 		["root", "", Vector3.ZERO],
-		["pelvis", "root", Vector3(0, 0.82, 0)],
-		["spine", "pelvis", Vector3(0, 0.07, 0)],
+		["hips", "root", Vector3(0, 0.84, 0)],               # the centre of movement: the hip sway, drop and tilt are written here
+		["pelvis", "hips", Vector3.ZERO],
+		["spine", "pelvis", Vector3(0, 0.029, 0)],
 		["spine2", "spine", Vector3(0, 0.15, 0)],           # mid-spine: the back curves through three joints instead of two
 		["chest", "spine2", Vector3(0, 0.15, 0)],           # upper body twists on this, above the waist joint
 		["neck", "chest", Vector3(0, 0.2, 0)],
@@ -68,11 +69,11 @@ func _declare_bones() -> Array:
 	for s in [-1, 1]:
 		var side := "l" if s < 0 else "r"
 		out.append_array([
-			["hip_" + side, "pelvis", Vector3(0.1 * s, -0.04, 0)],
+			["hip_" + side, "pelvis", Vector3(0.098 * s, -0.069, 0)],
 			["thigh_" + side, "hip_" + side, Vector3.ZERO],          # thigh twist: knees and toes turn out / in
-			["knee_" + side, "thigh_" + side, Vector3(0, -0.36, 0)],
+			["knee_" + side, "thigh_" + side, Vector3(0, -0.32, 0)],
 			["shin_" + side, "knee_" + side, Vector3.ZERO],          # shin twist
-			["ankle_" + side, "shin_" + side, Vector3(0, -0.34, 0)],
+			["ankle_" + side, "shin_" + side, Vector3(0, -0.311, 0)],
 			["foot_" + side, "ankle_" + side, Vector3(0, -0.06, -0.04)],   # pivots on the heel: toe taps and flicks
 			["toe_" + side, "foot_" + side, Vector3(0, 0.01, 0.13)],       # ball of the foot: heel lifts, toe taps
 			["clav_" + side, "chest", Vector3(0.08 * s, 0.12, 0)],   # collarbone: shrugs and rolls the shoulder
@@ -80,15 +81,16 @@ func _declare_bones() -> Array:
 			["uarm_" + side, "shoulder_" + side, Vector3.ZERO],      # upper-arm twist
 			["elbow_" + side, "uarm_" + side, Vector3(0, -0.3, 0)],
 			["fore_" + side, "elbow_" + side, Vector3.ZERO],         # forearm twist (palm turns)
+			["foretw_" + side, "fore_" + side, Vector3(0, -0.151, 0)],   # mid-forearm twist: turns half as far as the wrist (set in _rig_sync)
 			["hand_" + side, "fore_" + side, Vector3(0, -0.3, 0)],   # wrist
 			["thumb_" + side, "hand_" + side, Vector3(0.04 * s, -0.045, 0.012), Vector3(0, 0, -0.9 * s)],
 			["hair_" + side, "head", Vector3(0.068 * s, 0.03, -0.055), Vector3(0, 0, 0.08 * s)],   # pivots at the top so the lock can swing
 			# eyes: a real ball that turns inside two lids, so the iris can never slide off the eye
-			["white_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],
+			["white_" + side, "head", Vector3(EYE_X * s, EYE_Y, EYE_Z)],
 			["iris_" + side, "white_" + side, Vector3.ZERO],
 			["pupil_" + side, "iris_" + side, Vector3.ZERO],
-			["lidu_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],     # upper lid
-			["lidl_" + side, "head", Vector3(0.04 * s, 0.025, 0.0725)],     # lower lid
+			["lidu_" + side, "head", Vector3(EYE_X * s, EYE_Y, EYE_Z)],     # upper lid
+			["lidl_" + side, "head", Vector3(EYE_X * s, EYE_Y, EYE_Z)],     # lower lid
 			["brow_" + side, "head", Vector3(0.043 * s, 0.062, 0.081)],     # brow ridge: raise and tilt live on this bone; the three brow pieces are local detail
 		])
 		for f in 4:            # four fingers, two joints each
@@ -322,6 +324,7 @@ func _apply_glb() -> void:
 # the control rig, because a loaded skinned mesh is static geometry.
 const RIG_GLB := "res://art/character_skinned.glb"
 const RIG_REF := "res://data/character_rig.json"   # the joint transforms the .glb was exported from
+const RIG_OFFS := "res://data/character_offsets.json"   # each joint's rest offset measured from the .glb (written by rigref)
 var rig_scene: Node3D
 var rig_skel: Skeleton3D
 var rig_bone := {}            # bone name -> skeleton bone index
@@ -366,6 +369,13 @@ func _load_rig() -> void:
 		return
 	var jf := FileAccess.open(RIG_REF, FileAccess.READ)
 	var refd = JSON.parse_string(jf.get_as_text()); jf.close()
+	if FileAccess.file_exists(RIG_OFFS):   # the file's own joint offsets, so a joint that turns pivots where the file's bone is
+		var of := FileAccess.open(RIG_OFFS, FileAccess.READ)
+		var od = JSON.parse_string(of.get_as_text()); of.close()
+		if od is Dictionary:
+			for name in od:
+				var nd0: Node3D = j.get(name)
+				if nd0 != null and name != "hips": nd0.position = Vector3(od[name][0], od[name][1], od[name][2])
 	var rest := {}
 	if refd is Dictionary:
 		for name in refd:
@@ -433,9 +443,44 @@ func _load_rig() -> void:
 				if c is MeshInstance3D: (c as MeshInstance3D).layers = 0 if (not TEETH or (rig_teeth_u != null and rig_teeth_l != null)) else 1
 	print("hero3d: rig from %s: %d bones, %d parts" % [RIG_GLB, rig_skel.get_bone_count(), rig_parts])
 
+# rigref neutral: put every body joint exactly where the file's bone is (fp: bone name -> world rest origin) and aim each limb
+# joint's -Y along the file's bone, so the baseline has no gap to the file. A joint that turns then pivots on the file's bone,
+# and the hands stay on the wrists. Returns each joint's offset in its parent's frame; the game applies it on load (RIG_OFFS).
+func rigref_pose(fp: Dictionary) -> Dictionary:
+	var order: Array = []
+	for e in _declare_bones(): order.append(String(e[0]))
+	for n in order:                                      # rest rotations: the bind pose the declaration asked for
+		(j[n] as Node3D).rotation = rig[n].rot
+	(j.hips as Node3D).position = fp.hips
+	var aim := {}     # joint -> the file bone it should point along (-Y)
+	for sd in ["l", "r"]:
+		aim["shoulder_" + sd] = [fp["uarm_" + sd], fp["elbow_" + sd]]
+		aim["elbow_" + sd] = [fp["fore_" + sd], fp["hand_" + sd]]
+		var fc := Vector3.ZERO
+		for f in 4: fc += fp["fg%d_%s" % [f, sd]] / 4.0
+		aim["hand_" + sd] = [fp["hand_" + sd], fc]
+		for f in 4:
+			aim["fg%d_%s" % [f, sd]] = [fp["fg%d_%s" % [f, sd]], fp["fh%d_%s" % [f, sd]]]
+	var offs := {}
+	for n in order:
+		var nd: Node3D = j[n]
+		if aim.has(n):
+			var a: Array = aim[n]
+			var q := Quaternion(Vector3.DOWN, ((a[1] as Vector3) - (a[0] as Vector3)).normalized())
+			nd.global_basis = Basis(q)
+		var par: String = rig[n].parent
+		if par != "" and n != "hips" and fp.has(n) and fp.has(par):
+			var off: Vector3 = (j[par] as Node3D).global_basis.inverse() * ((fp[n] as Vector3) - (fp[par] as Vector3))
+			nd.position = off
+			offs[n] = [off.x, off.y, off.z]
+	return offs
+
 # copy the control rig onto the loaded skeleton, and carry each part's visibility across
 func _rig_sync() -> void:
 	if rig_skel == null or rig_c.is_empty(): return
+	for sd in ["l", "r"]:     # the forearm twist bone takes half the wrist's twist back out, so the skin turns in two steps
+		var ftw: Node3D = j.get("foretw_" + sd)
+		if ftw != null: ftw.rotation = Vector3(0, -0.5 * (j["fore_" + sd] as Node3D).rotation.y, 0)
 	for name in rig_bone:
 		var nd: Node3D = j.get(name)
 		if nd == null: continue
@@ -527,10 +572,10 @@ const LIP_N := 17
 const HEAD_A := 0.09765
 const HEAD_B := 0.1155
 const HEAD_C := 0.105
-const EYE_X := 0.04
-const EYE_Y := 0.025
-const EYE_Z := 0.0725
-const EYE_R := 0.0235
+const EYE_X := 0.0481
+const EYE_Y := 0.0165
+const EYE_Z := 0.0760
+const EYE_R := 0.0305
 const TOOTH_U := 5            # upper teeth in the visible row
 const TOOTH_L := 5            # lower teeth (only shown when the mouth is really open)
 const TOOTH_H := 0.0130       # tooth height: the row has to fill the opening, not sit in it
@@ -1348,8 +1393,8 @@ const MUSCLE := {           # bone family -> [stiffness, gain]
 	"clav": [20.0, 0.08], "shoulder": [22.0, 0.08], "elbow": [26.0, 0.04], "hand": [30.0, 0.0],
 	"ankle": [34.0, 0.0],   # the foot target the legs are solved to: a foot is put down, it does not drift
 }
-const L1 := 0.36            # thigh length
-const L2 := 0.34            # shin length
+const L1 := 0.32            # thigh length (the hero_v12 rig: hip to knee)
+const L2 := 0.311           # shin length (knee to ankle)
 const FOOT_Y := 0.1         # ankle height of a planted foot
 const FOOT_X := 0.125       # half stance width
 const BPS := 2.0            # dance tempo: beats per second (120 bpm). The fallback beat grid when no external source drives the dance
@@ -1619,7 +1664,7 @@ func pose(phase: float, bank := 0.0, wave := 1.0, hurt := 0.0) -> void:
 		M = _mix(M, _G, gk)
 	else: _G = {}
 	root.rotation.y = yaw + bank * 0.35 + float(M.spin)
-	var pel: Node3D = j.pelvis
+	var pel: Node3D = j.hips      # hips are the centre of movement; the pelvis bone follows at zero offset
 	var pp: Vector3 = _muscle("pel", "pelvis", M.pel)
 	pel.position = pp
 	pel.rotation = _muscle("pr", "pelvis", M.pr)
