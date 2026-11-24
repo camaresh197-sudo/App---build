@@ -22,7 +22,8 @@ LYRICS = ROOT / "godot" / "hula" / "data" / "data_lyrics.json"
 
 # the lines the victory sequence actually plays, in song order (F2 aliases B6)
 LINES = ["A0", "A2", "A4", "A6", "B0", "B1", "B2", "B3",
-         "C0", "C2", "C4", "C6", "tag0", "tag2", "F0", "B6"]
+         "C0", "C2", "C4", "C6", "D0", "D2", "D4", "D6",
+         "tag0", "tag2", "F0", "B6"]
 
 
 def main() -> int:

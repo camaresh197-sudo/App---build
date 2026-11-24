@@ -142,6 +142,8 @@ User rule (2026-11-23, their wording): "You can question my decisions more or le
 
 Git is the only channel between the two agents. Pull before you start; push when you stop. Full state lives in `HANDOFF.md`.
 
+**Findings bank (user rule, 2026-11-23, binds BOTH agents — Wren and Greg):** write major findings to `docs/FINDINGS.md` the moment they land — one dense record (schema in its header), stable IDs, append or refine in place, never delete. Machine-first format; nothing human-facing required. After every noteworthy discovery, write the record; the next session (either agent) reads it at start like `HANDOFF.md`.
+
 ### Rules
 1. **Claim before editing** code, data or assets: add a row to Claimed in `HANDOFF.md`, push, then edit. Remove the row when pushed. Markdown needs no claim, and neither does work the user assigns.
 2. **Don't touch files the other has claimed.** If you must, leave a Log note and wait.
