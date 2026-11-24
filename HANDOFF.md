@@ -43,6 +43,15 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 
 ## Log (newest first)
 
+- **Claude (unnumbered), eyes WIP, 2026-11-24:** Blender 5.2.0 run headless (no bpy). Hero eyes went v19 -> v39 on this branch, all WIP, nothing in Godot or on a build branch.
+  Done: near-white sclera; iris texture baked (dark limbal ring, amber centre, fibres, collarette); caruncles tried and removed (v36, no ducts); bigger catchlight at 75% of v38 (v39); upper lash strip (thin, still under-weighted).
+  Files: `blender/wip/hero_v39_smaller_catchlight.blend` (latest), `hero_v38_anime_eyes.blend`, previews in `blender/wip/preview/` (`v38_eyes_side_by_side.png`, `v39_catchlight_side_by_side.png`).
+  Open: lash strip too thin vs reference; iris grade approximate; eyelid seam; GLB export and `rigref` not run, so the phone is unchanged.
+  Not saved: scratch renders and iris textures live only in my session scratch folder.
+  Review of the user: asked for many small visual rounds and corrected my reads (inside/outside, "duoo" = dull) faster than I checked. Fair. Keep the clear picture first.
+  Complaints: (1) Claude pushed WIP eye files without a claim row first; claim before the next file. (2) Lash strip was never thickened after the reference photo; do that before calling eyes done. (3) GLB export never ran, so the phone still has the old eyes; export and smoke test next.
+
+
 - **Claude (eyes WIP), 2026-11-24:** Blender 5.2.0 standalone run headless. `blender/wip/hero_v21_iris.blend` (from `hero_v19_catch`): whites set to near-white (`Material_10`), iris gradient re-centred per iris (its mapping sat about 1.6 units off, so irises rendered pale). Preview `preview/v21_iris_eyes.png`. Not in Godot, not on a build branch. Next: eyelid seam; push to godot only after rig and smoke.
 
 - **Wren v4 (hero body rework, Blender copies), 2026-11-23:** User: "completely redo the entire shape of his face"; "stylized cartoon"; "give him an a pose"; "get rid of the hula hoop"; "rebuild his hands". Nothing pushed from Blender; files are on the user's PC in `App---build/hero_wip/` (untracked), not in git.
