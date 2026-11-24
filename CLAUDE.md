@@ -2,6 +2,13 @@
 
 **Read `HANDOFF.md` first, every session, before acting.** Then `AGENTS.md`, `PERSONALITIES.md`, and your own findings bank (Wren `docs/findings/WREN.md`, Greg `docs/FINDINGS.md`).
 
+## Hard rules (the ones that keep getting skipped)
+1. **Findings bank:** the moment you learn something major, append one record to your own bank (Wren `docs/findings/WREN.md`, Greg `docs/FINDINGS.md`) BEFORE your next reply. Do not wait for the end.
+2. **Claim before the first edit** of code, data or assets: Claimed row in `HANDOFF.md`, push, then edit. Remove it when pushed.
+3. **End of session:** when the user ends it or asks for the handoff, run `python3 tools/session_check.py` and do every item in `docs/AGENT_PROTOCOL.md` > End of session. Tick each step in the reply; name any skipped one.
+4. **Never push without the user's go-ahead.** `.md`-only pushes to `godot` build nothing; say "no build triggered".
+5. A Stop hook (`.claude/settings.json`) runs the same checker and blocks "done" while it fails; Greg runs it by hand with `--agent greg`.
+
 ## Git
 Push finished work to `godot`, not feature branches or `main`:
 1. Work on a feature branch if needed

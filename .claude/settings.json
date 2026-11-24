@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/tools/session_check.py\" --hook || python \"$CLAUDE_PROJECT_DIR/tools/session_check.py\" --hook",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
