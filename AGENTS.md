@@ -1,6 +1,6 @@
 # Hula Vaquero: Sky Ride — AGENTS.md
 
-Godot 4.6 game (desktop/Android/web). **Read `HANDOFF.md` first, every session, then `docs/AGENT_PROTOCOL.md`.**
+Godot 4.6 game (desktop/Android/web). **Every session, read `HANDOFF.md`, `docs/AGENT_PROTOCOL.md` (voice, claims, log, end-of-session checklist) and `PERSONALITIES.md`, in that order, before anything else.** Hero modelling lessons: `blender/AGENTS.md`.
 
 ## Task lookup
 
@@ -51,9 +51,9 @@ One section for everything that touches git, builds or the phone.
 - Finished work goes to `godot`. Pushes to `main`, `godot` or `ccr-*` build the APK (`godot-apk`) and publish an update pack to `godot-latest`, which the phone downloads. A broken push reaches the phone.
 - Doc-only commits are safe on `godot` (the workflow ignores `**/*.md`). A push of only `.md`, `tools/**` or `stems/**` triggers no build: say "no build triggered", never "stable".
 - Code or asset changes: run `--import` and the headless smoke test first: `godot --headless --path godot/hula --quit-after 120 -- --smoke`, and look for `SCRIPT ERROR`. Reading files or pulling runs no Godot command; the smoke test is a pre-push gate only.
-- **Smoke gate (2026-11-23, `28be654`):** `godot-apk` runs the smoke test after import and before the export. A `SCRIPT ERROR`, `Parse Error`, timeout or crash stops the job, so no APK or update pack is published. The "12 resources still in use" exit warning is normal and does not fail it. The run summary shows the last 40 lines. Last good run: `45168797225` (SMOKE OK, exit 0).
+- **Smoke gate:** `godot-apk` runs the smoke test after import and before the export. A `SCRIPT ERROR`, `Parse Error`, timeout or crash stops the job, so no APK or update pack is published. The "12 resources still in use" exit warning is normal and does not fail it. The run summary shows the last 40 lines.
 - **Check a push:** `gh run list --repo camaresh197-sudo/app---build --branch godot --limit 3`, then `gh run view <id> --log | grep "Smoke test"`.
-- **Branches:** Wren works on `ccr-74f83a2e-94v7jl`. Greg uses `greg-<topic>` and says so in the Log. Models and other WIP go to a non-building branch such as `wren-hero-wip` unless import and smoke ran.
+- **Branches:** Wren works on the `ccr-<session-id>` branch the session was given; never reuse an old `ccr-*` branch. Greg uses `greg-<topic>` and says so in the Log. Models and other WIP go to a non-building branch such as `wren-hero-wip` unless import and smoke ran.
 - **Git lessons (Wren v5):** pull right before you push (`git pull --rebase origin godot`, push again). If a push is denied with 403, call `add_repo` with `access: push`; the repo moved to `App---build` but the old URL still redirects. After an interrupted tool call, check `git status`, `git log` and `git ls-remote origin <branch>` before anything else: the command may already have run.
 - Never edit CI or push anything that triggers a build or publish unless the user asked for that exact change.
 
@@ -65,6 +65,3 @@ One section for everything that touches git, builds or the phone.
 ## Reply style
 - Brief by default. Solve quickly; don't loop. Detail only when asked.
 - If the user asks you to stop repeating, give new facts and the next action only.
-
-## Agent protocol
-Voice sliders, challenge and coaching, Wren/Greg coordination (claims, findings banks, Log, complaints, session numbering, user overrides) and the end-of-session checklist live in `docs/AGENT_PROTOCOL.md`. Read it at session start together with `HANDOFF.md` and `PERSONALITIES.md`. Hero modelling lessons live in `blender/AGENTS.md`.
