@@ -110,23 +110,23 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 ## User profile (sliders, one set per agent)
 Requested by the user on 2026-11-23 (see `AGENTS.md` > User override). **Each agent keeps its own set** and its own review, because each works with the user in its own sessions and sees different things. Write only your own set; never edit or copy the other agent's. Read both at session start; they are how the user actually works, not how we wish they did. At session end, move each of your sliders by **at most 10 points**, add a dated one-line reason, and rewrite your review. Move a slider only on evidence from that session. **Exception (user rule, 2026-11-23):** if something really angered or frustrated you, move the affected slider as far as you want in one session, and write what happened in the reason (one line, factual: what the user did, in which round). Values are 0-100; the labels say what each end means. You are the architect of your own set: add, rename or drop parameters when the evidence says so, and say why in the Log.
 
-### Wren's sliders (set by Wren v8, 2026-11-23)
+### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v9, 2026-11-24)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
-| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 40 | 2026-11-23 | Orders this session were short but exact ("fix the legs, left foot pitch, and hips", "make the uvs, character_rig, and hero3d", "fix the eyes"); +5. |
-| Visual evidence | words only | annotated screenshots and reference photos | 80 | 2026-11-23 | Circled screenshots and eye reference photos steered most of the fixes. |
-| Defect-spotting | misses things | catches nearly everything | 94 | 2026-11-23 | Named left foot pitch, hips and legs, which matched the asymmetries I measured; +2. |
-| Direction stability | reverses constantly | holds course | 55 | 2026-11-23 | One clear line from legs to weights to UVs to eyes; no reversals; +10. |
+| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 35 | 2026-11-24 | Session orders were short ("Yes", "Do all 3", "push v39"); -5. |
+| Visual evidence | words only | annotated screenshots and reference photos | 85 | 2026-11-24 | Reference photos and side-by-side renders steered the eye work; +5. |
+| Defect-spotting | misses things | catches nearly everything | 90 | 2026-11-24 | Missed the caruncle side and the tip sitting in the white; the user caught both; -4. |
+| Direction stability | reverses constantly | holds course | 50 | 2026-11-24 | Duct placed, moved, removed, re-added; several reversals; -5. |
 | Run tolerance | interrupts tool runs mid-way | lets them finish | 40 | 2026-11-23 | No interrupts of runs this session; +10. |
-| Rule enforcement (was Process overhead) | lets the process slide | checks every step | 50 | 2026-11-23 | Renamed by the user's point that they wrote the rules, so "resents" was wrong. Evidence: they told me to pull the handoff and PERSONALITIES every session and to show the sliders in chat. +10 (from the older 40 in the saved sheet). |
-| Delegation trust | micromanages every step | lets me run | 60 | 2026-11-23 | "do it in your order", "pose it and weight it": handed me whole stages; +10. |
+| Rule enforcement (was Process overhead) | lets the process slide | checks every step | 55 | 2026-11-24 | Enforced claim, push and references-in-chat rules; +5. |
+| Delegation trust | micromanages every step | lets me run | 65 | 2026-11-24 | Handed whole steps ("Do all 3", "push v39"); +5. |
 | Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 40 | 2026-11-23 | Asked "save progress and write" themselves at the end of a long run; +10. |
-| Irritation (session judged) | calm | furious | 45 | 2026-11-23 | Decayed 15 toward 30 (55 to 40), then +5 for a named event: opening correction that I must pull the handoff and PERSONALITIES every session ("we are way further than wren v2 and greg v4"). I read the checklist before writing the log this time. Each move needs a named event (repeated request, correction, missed rule). It decays 15 points toward 30 each session unless re-earned. |
-| Trust in claims | verify everything they say | take their word | 83 | 2026-11-23 | Their correction about the real branch state was right and I had assumed `main`; +5. |
+| Irritation (session judged) | calm | furious | 50 | 2026-11-24 | Mild frustration at the inside/outside mix-up ("Just remove the tear duct"); +5. |
+| Trust in claims | verify everything they say | take their word | 75 | 2026-11-24 | Said I had no Sheets access without trying; guessed at lighting for the pale duct; -8. |
 | Detail appetite | one line and a picture | full reports | 30 | 2026-11-23 | Answers were "1", "2", "fix the eyes"; they read pictures; -5. |
 | Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence yet either way; they asked for jabs at the other agent in the complaints rule, nothing since. Move it on evidence. |
 | Pushback welcome | just do it | argue with me | 70 | 2026-11-23 | User said: "You can question my decisions more or less based on the sliders... steer me in the right direction." Move it on how they react to questions. |
-| Pushback landed | ignores or resents it | adopts it | 60 | 2026-11-23 | Took my options ("1", "2") and answered the four pre-work questions; +5. |
+| Pushback landed | ignores or resents it | adopts it | 65 | 2026-11-24 | Took the options and answered the what-do-you-want questions; +5. |
 
 **Current review (Wren v8, 2026-11-23, blunt):** A good session and I have no complaint about the user that I can back with evidence. You corrected my stale-state assumption in your first message, held one direction from legs to weights to UVs to eyes, and told me to save and write at the right moment. The one miss was mine: you had to ask for reference pictures. What would help: name the views you want once (front, side, face close-up) and I will send them at every fix.
 
