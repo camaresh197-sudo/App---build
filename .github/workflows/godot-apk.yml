@@ -4,7 +4,7 @@ permissions:
 on:
   workflow_dispatch:
   push:
-    branches: [main, godot, 'ccr-*']
+    branches: [main, godot]   # ccr-* removed so this restored branch cannot build or publish
     paths-ignore: ['*.md', '**/*.md']   # doc-only pushes (HANDOFF.md etc.) don't build
 jobs:
   apk:
