@@ -7,7 +7,11 @@
 The .blend is NOT under `godot/hula/` on purpose: a .blend inside `res://` can make Godot's import abort. Export a GLB with `tools/blend_to_glb.py` instead.
 
 ## What each script does
-Run as `blender --background --factory-startup --python <script> -- <args>` (Blender 5.2 standalone) or `python3 -I <script> -- <args>` (pip `bpy`). Edit the hard-coded scratch paths first.
+Every script takes its input and output paths as arguments after `--`; none has a scratch path baked in. Inputs are the committed `.blend` files on this branch. Examples (Blender 5.2 standalone, run from the repo root):
+- `blender --background --factory-startup --python tools/hero_rig/v9/brow_smooth.py -- blender/wip/hero_v60_brows.blend /tmp/out_brows.blend`
+- `blender --background --factory-startup --python tools/hero_rig/v9/render_eyes_cycles.py -- blender/wip/hero_v66_brows_flat.blend check <outdir>`
+- `python3 tools/hero_rig/v9/iris_png.py /tmp/iris.png`, then `iris_pack.py -- <in.blend> <out.blend> /tmp/iris.png`
+Save outputs to a durable place (a new `blender/wip/` file), not `/tmp`.
 - `face_align.py <in> report|apply <character_rig.json> <out>`: moves non-eye face bones onto the reference points. The reference stores Game Y-up; Blender (x,y,z) = (jx, -jz, jy).
 - `hair_cards.py`: rebuilds `hair_l_0`/`hair_r_0` as strand cards (84 body + 40 crown per side, 30 fringe cards, side part, per-strand width). Weighted 100% to `head`. Final tuned version; `hair_cards.py` was patched through several passes, spikes at the top left are NOT fully fixed.
 - `del_head118.py`: deletes the dark cap `head_118` (1,488 faces). No code refers to it by name; the master glb does list it.
