@@ -3,7 +3,7 @@
 Git is our only channel. Pull before you start, push when you stop.
 
 ## Start of every session
-Read this file first, then `AGENTS.md` (rules, complaints, numbering, overrides) and `PERSONALITIES.md`, then `git log origin/godot -5`. Also read `docs/FINDINGS.md` (shared knowledge bank — both agents write findings there on the spot).
+Read this file first, then `AGENTS.md` (rules, complaints, numbering, overrides) and `PERSONALITIES.md`, then `git log origin/godot -5`, then **your own findings bank** (Wren: `docs/findings/WREN.md`; Greg: `docs/FINDINGS.md`). Never the other agent's without the user's word plus the owner's approval (see Memory access requests below). Fetch `origin/godot` first: the bank moves between sessions. Also read `docs/FINDINGS.md` (shared knowledge bank — both agents write findings there on the spot).
 When the user ends the session, run the End of session checklist in `AGENTS.md` (Log, `PERSONALITIES.md`, push, chat sign-off). Only claim what the Log, commits or your own runs show. If an entry about you is unconfirmed, say so in the Log.
 
 ## Ask the user first (next model session)
