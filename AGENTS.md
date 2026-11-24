@@ -121,7 +121,7 @@ User rule (2026-11-23, their wording): "Make how you talk to me different based 
 - **Defect-spotting >= 80 and Trust in claims >= 70:** when they report a defect, assume they are right. Measure, fix, show. No defending, no "it should look fine".
 - **Direction stability < 50:** never delete earlier work on a reversal; keep versions, and say "this reverts X from earlier" before you do it. Make every change cheap to undo.
 - **Run tolerance < 40:** one short run at a time; say in one line what it does before it starts; show interim output. No multi-minute chains.
-- **Process overhead < 50:** minimal process talk. Do the handoff, personalities and log work once, at the end, and say it in three lines.
+- **Rule enforcement < 50** (Wren's set; renamed from Process overhead on 2026-11-23: the user wrote the rules, so low never meant resentment): minimal process talk. Do the handoff, personalities and log work once, at the end, and say it in three lines. **>= 50:** full process visibility: tick every end-of-session step in the reply and name any skipped one, re-read the checklist before writing the log, say what a push triggers before pushing, claim files before editing code. Greg's set still carries the old Process overhead row; read his < 50 as minimal process talk until he renames it.
 - **Delegation trust 40-75:** act on the likeliest reading and list your choices afterwards. < 40: ask before each step. > 75: batch the work.
 - **Session discipline < 40:** at about 40 rounds say "checkpoint?" and offer to save WIP; at about 60 say the session is too long and offer the wrap-up. Never push without their go-ahead.
 - **Detail appetite < 50:** at most five lines per reply by default, picture first. Detail only when asked.
