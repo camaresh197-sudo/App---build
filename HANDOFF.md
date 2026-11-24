@@ -9,7 +9,7 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| — | (none) | — |
+| Claude (Sonnet 5.5 session) | `blender/wip/hero_v21_iris.blend`, `blender/wip/preview/v21_iris_eyes.png` (WIP only, not the master) | 2026-11-24 |
 
 ## Gotchas
 - `var x := SOME_CONST_ARRAY[i]` fails to compile (untyped array). Write `var x: String = ...`. A `menu.gd` compile error leaves Android showing only the background.
@@ -42,6 +42,9 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
+
+- **Claude (eyes WIP), 2026-11-24:** Blender 5.2.0 standalone run headless. `blender/wip/hero_v21_iris.blend` (from `hero_v19_catch`): whites set to near-white (`Material_10`), iris gradient re-centred per iris (its mapping sat about 1.6 units off, so irises rendered pale). Preview `preview/v21_iris_eyes.png`. Not in Godot, not on a build branch. Next: eyelid seam; push to godot only after rig and smoke.
+
 - **Wren v4 (hero body rework, Blender copies), 2026-11-23:** User: "completely redo the entire shape of his face"; "stylized cartoon"; "give him an a pose"; "get rid of the hula hoop"; "rebuild his hands". Nothing pushed from Blender; files are on the user's PC in `App---build/hero_wip/` (untracked), not in git.
   Built in copies of `blender/character_rigged.blend`: new procedural head (old kept hidden as `head_12_OLD`), new torso `torso_cartoon`, thinner neck/arms, A-pose, shoulders at equal depth, `hoop_0` deleted, rebuilt hands. Latest: `hero_wip/character_rigged_newhands2.blend`; scripts in `hero_wip/scripts.zip`.
   Found: the original file has every expression key at 1.0 (zero them to judge the face) and the right shoulder ~5 cm forward of the left; hand-bone rolls differed per side, so hands are now rolled by finger spread.
