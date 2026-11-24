@@ -574,10 +574,11 @@ func _vox_key(sec: String, bar: int) -> String:
 	if sec == "v-A": return "A%d" % bar
 	if sec == "v-B": return "B%d" % (bar >> 1) if bar % 2 == 0 else ""
 	if sec == "v-C": return "C%d" % bar
+	if sec == "v-D": return "D%d" % bar
 	if sec == "v-tag": return "tag%d" % bar
 	if sec == "v-F": return "F%d" % bar
 	return ""
-const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-tag": 0.0}
+const VFILL := {"v-intro": 0.6, "v-A": 1.0, "v-B": 0.55, "v-F": 0.25, "v-C": 1.0, "v-D": 1.0, "v-tag": 0.0}
 # Vocal ad-libs REMOVED (user: "get rid of those stupid pops"): the deep "unh" grunts
 # read as pops against the sung line. Kept as an empty table so the loop stays harmless.
 const VGRUNT := []
@@ -637,11 +638,11 @@ func _vstep(st: int, dl: float) -> void:
 	if first and s == 0 and sc != "v-intro" and not hold:
 		var big := 0.3
 		if sc == "v-B" or sc == "v-F": big = 1.0 if fin else 0.8
-		elif sc == "v-C": big = 0.7
+		elif sc == "v-C" or sc == "v-D": big = 0.7
 		elif sc == "v-A": big = 0.4
 		if big >= 0.7:
 			hit("cymbal", dd, 0.03 * big, 0.05); hit("clap", dd, 0.05 * big, 0.05); _vtrp(cv, 12, VE * 4.0, 0.03 * big, dd)
-		if sc == "v-B" or sc == "v-F" or sc == "v-C" or sc == "v-tag": play("impact", {"v": (0.12 if fin else 0.09) / 0.1 * SMP_MUS, "dl": dd})
+		if sc == "v-B" or sc == "v-F" or sc == "v-C" or sc == "v-D" or sc == "v-tag": play("impact", {"v": (0.12 if fin else 0.09) / 0.1 * SMP_MUS, "dl": dd})
 	if hy >= 1 and bar % 2 == 1 and s == 10 and not is_end and not hold: hit("kick", dd, 0.1, 0.17)
 	if hy >= 2 and bar % 4 == 3 and s == 6 and not is_end and not hold:
 		hit("hat", dd, 0.05, 0.04); hit("hat", dd + VE * 0.5, 0.04, 0.04)

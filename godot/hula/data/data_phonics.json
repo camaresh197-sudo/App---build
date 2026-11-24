@@ -13,9 +13,9 @@
       "syllables": 1
     },
     "am": {
-      "say": "im",
-      "ipa": "ɪm",
-      "pron": "/ɪm/",
+      "say": "am",
+      "ipa": "æm",
+      "pron": "/æm/",
       "syllables": 1
     },
     "and": {
@@ -264,9 +264,9 @@
       "syllables": 1
     },
     "to": {
-      "say": "to",
+      "say": "tou",
       "ipa": "tuː",
-      "pron": "tuː",
+      "pron": "/tuː/",
       "syllables": 1
     },
     "wants": {
