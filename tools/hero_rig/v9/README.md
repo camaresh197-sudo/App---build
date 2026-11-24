@@ -3,7 +3,7 @@
 **Read this before editing the hero's head, hair, brows or eyes.** Models are WIP only (branch `wren-hero-wip`, `blender/wip/`); the shipped master `blender/character_rigged.blend` is untouched. Nothing here is exported to the game, `rigref` has not been run on it, and it has not been on a phone.
 
 ## Latest file
-`blender/wip/hero_v66_brows_flat.blend`. Lineage: `hero_v19_catch` -> eye session `hero_v21..v39` (claimed by another session) -> `hero_v40_face_joints` (87 face bones moved onto `character_rig.json` points) -> `hero_v58_blend` (hair) -> `hero_v59_iris_fix` -> `hero_v60_brows` -> `hero_v66_brows_flat` (smooth brows). Versions in between are failed or superseded passes; the HANDOFF Claimed table has one row each.
+`blender/wip/hero_v67_lids_light.blend`. Lineage: `hero_v19_catch` -> eye session `hero_v21..v39` (claimed by another session) -> `hero_v40_face_joints` (87 face bones moved onto `character_rig.json` points) -> `hero_v58_blend` (hair) -> `hero_v59_iris_fix` -> `hero_v60_brows` -> `hero_v66_brows_flat` (smooth brows) -> `hero_v67_lids_light` (lids 15,860 -> 4,318 faces, Greg v9 2026-11-24). Versions in between are failed or superseded passes; the HANDOFF Claimed table has one row each.
 The .blend is NOT under `godot/hula/` on purpose: a .blend inside `res://` can make Godot's import abort. Export a GLB with `tools/blend_to_glb.py` instead.
 
 ## What each script does
@@ -17,6 +17,7 @@ Save outputs to a durable place (a new `blender/wip/` file), not `/tmp`.
 - `del_head118.py`: deletes the dark cap `head_118` (1,488 faces). No code refers to it by name; the master glb does list it.
 - `iris_png.py` + `iris_pack.py`: generate and pack the iris texture. `iris_tex_v59.png` is the generated file.
 - `brow_smooth.py` + `brow_dark.py`: smooth tapered brows ray-cast onto the skin, dark brown material `BrowHairMat`.
+- `lids_light.py`: un-subdivides the four eyelid meshes (2 iterations). v66 -> v67: lids 15,860 -> 4,318 faces, rim shift <= 1.35 mm, bbox <= 0.11 mm, single-bone weights and UVs kept; Cycles eye close-up pixel diff mean 0.1/255. Iteration 3 (2,440 faces) shifts the upper rim 2.43 mm and reads faceted at 2x zoom; not used. Hero total: 100,314 -> 88,772 faces.
 - `render_eyes_cycles.py`, `render_hair_views.py`, `face_joint_distances.py`: checks (see below).
 
 ## Findings (read these, they cost hours)
@@ -31,4 +32,4 @@ Save outputs to a durable place (a new `blender/wip/` file), not `/tmp`.
 - **Brows:** capsules read as caterpillars; triangle strokes read spiky. Smooth tapered crescents on the skin work.
 
 ## Open
-Hair colour (black), top-left fringe spikes, forehead skin seams, GLB export + `rigref` + smoke + a phone look, phone budget (hair about 3,900 faces, check it), and whether the eyes session wants the generated iris or its own.
+Hair colour (black), top-left fringe spikes, forehead skin seams, GLB export + `rigref` + smoke + a phone look, phone budget (hero 88,772 faces; hair about 3,900; `head_12` 16,500; `hat_*` 5,912), and whether the eyes session wants the generated iris or its own.
