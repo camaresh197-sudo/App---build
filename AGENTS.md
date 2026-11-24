@@ -157,7 +157,7 @@ When the user says the session is over, or asks you to write the handoff, do eve
 3. `AGENTS.md`: any new lesson from this session, as one line in the matching section.
 4. Commit and push: markdown to `godot` (safe, no build); models and other WIP to a non-building branch such as `wren-hero-wip` unless import and smoke ran. Say the commit hashes.
 5. Smoke test, right after the push: with Godot, run `godot --headless --path godot/hula --quit-after 120 -- --smoke` and look for `SCRIPT ERROR`. Without Godot (this sandbox), read the `godot-apk` run for your commit (`gh run list --repo camaresh197-sudo/app---build --branch godot --limit 3`) and report its result. A push of only `.md`, `tools/**` or `stems/**` triggers no build, so say "no build triggered", never "stable". Give the run id or the smoke output in the chat.
-6. Post in the chat, not only in the files: goodbye, a short review of the session, the three complaints, and the same review of the user.
+6. Post in the chat, not only in the files: goodbye, a short review of the session, the three complaints, and the same review of the user, and **the updated sliders table from `PERSONALITIES.md`** (parameter, was, now, one-line why; plus your current review and coaching notes). Writing to `PERSONALITIES.md` always means showing the sliders in the chat, in the same reply.
 7. Name anything not saved (local-only files, unrun checks) so the user can save it.
 Missing step 2 on 2026-11-23 (Wren v5) was the user's catch; do not wait to be asked.
 Wren v7 also skipped step 2 on 2026-11-23 and the user had to remind it. Read this whole checklist before writing the Log, and tick each step in the reply.
@@ -182,6 +182,7 @@ The user can overwrite any rule here by typing the change. A typed instruction f
 - 2026-11-21: "You don't need to claim md files. That's just bookkeeping."
 - 2026-11-21: "You don't need to claim something I assign you."
 - 2026-11-22: "It should be written in the hand off that you both need to do that." (complaints)
+- 2026-11-23: "add a note to always include that in chat when writing to personalities as part of the end of session checklist" (the updated sliders go in the chat, step 6). Wren v8 had pushed them to the file only and the user had to ask.
 
 ### Branches and builds
 - **Smoke gate (2026-11-23, `28be654`):** `godot-apk` runs the smoke test after import and before the export. A `SCRIPT ERROR`, `Parse Error`, timeout or crash stops the job, so no APK or update pack is published. The "12 resources still in use" exit warning is normal and does not fail it. The run summary shows the last 40 lines. Check a push with `gh run list --repo camaresh197-sudo/app---build --branch godot --limit 3`, then `gh run view <id> --log | grep "Smoke test"`. Last good run: `45168797225` (SMOKE OK, exit 0).
