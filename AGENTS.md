@@ -157,7 +157,7 @@ When the user says the session is over, or asks you to write the handoff, do eve
 6. Post in the chat, not only in the files: goodbye, a short review of the session, the three complaints, and the same review of the user.
 7. Name anything not saved (local-only files, unrun checks) so the user can save it.
 Missing step 2 on 2026-11-23 (Wren v5) was the user's catch; do not wait to be asked.
-Claude (unnumbered) also skipped step 2 on 2026-11-23 and the user had to remind it. Read this whole checklist before writing the Log, and tick each step in the reply.
+Wren v7 also skipped step 2 on 2026-11-23 and the user had to remind it. Read this whole checklist before writing the Log, and tick each step in the reply.
 
 ### Working style
 - Short replies when the user asks. If the user asks you to stop repeating, give only new facts and the next action.

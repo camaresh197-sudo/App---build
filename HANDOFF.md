@@ -51,7 +51,7 @@ Then: checkpoint every 40 rounds ("save"), and open with a full-sentence goal pl
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
 ## Log (newest first)
-- **Claude (unnumbered), hero rig closing, 2026-11-23:** No code pushed, nothing claimed. Sandbox copy of `hero_v6_eyes_keel.blend` (wren-hero-wip `a00c172`): `hoop` bone removed, 163 to 162 bones. Copy is local only.
+- **Wren v7 (hero rig closing), 2026-11-23:** No code pushed, nothing claimed. Sandbox copy of `hero_v6_eyes_keel.blend` (wren-hero-wip `a00c172`): `hoop` bone removed, 163 to 162 bones. Copy is local only.
   User, their wording: "run these commands and just show me physical changes"; "I want headless"; "use the linux sandbox then". Chose local conversion only.
   PC `C:\Users\Camden\App---build`: Blender 5.3 present; Godot 4.7.2 only (handoff pins 4.6.3). Agents get click-only access to Command Prompt.
   Inspect found: no vertex groups for `clav_l`/`clav_r`; right knee z 0.413 vs left 0.451; `*_OLD` meshes still weighted.
