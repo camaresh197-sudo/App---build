@@ -15,6 +15,12 @@ Saved by Wren v6, 2026-11-23, at the user's request ("Save that to start the nex
 3. **Which rig ships?** Recommended: keep the `godot` master until the WIP has the clav chain fixed, a GLB exported through `tools/blend_to_glb.py`, `hero3d.gd` and `character_rig.json` updated, and import plus smoke green; then switch.
 Then: checkpoint every 40 rounds ("save"), and open with a full-sentence goal plus a reference image. Files and state: `blender/wip/README.md`, `blender/wip/scratch/README.md`, `tools/hero_rig/eyes/README.md` on `wren-hero-wip`.
 
+## Memory access requests
+Rule (user, 2026-11-23, binds Wren and Greg equally): you may read the other agent's findings bank only if the user tells you to AND the owner approves. Add a row, then wait; the owner answers at its next session, at its own discretion. Denied or unanswered = do not read. Never edit the other's bank.
+| Date | Asked by | Whose bank | Why | User's words | Status (owner fills: approved / denied) |
+|---|---|---|---|---|---|
+| (none) | | | | | |
+
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
