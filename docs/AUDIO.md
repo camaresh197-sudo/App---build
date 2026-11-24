@@ -1,0 +1,290 @@
+# AUDIO.md — music, SFX, samples
+
+Entry point: `godot/hula/scripts/sound.gd` (~7k tokens whole; get line anchors from
+`docs/CODEMAP.md`). Samples: `godot/hula/audio/` — generated, never scan it.
+
+## How it works
+
+- No audio engine: every note is an Ogg sample triggered by a step sequencer in `sound.gd`.
+- Bank naming: `audio/<inst>_r<midi>[_2].ogg` (two takes), roots every 2 semitones.
+  `RANGE` sets each instrument's span; `_pick()` snaps a requested midi to the nearest
+  root and pitch-shifts. Add an octave by extending `RANGE` and rendering samples.
+- Rendering: `tools/sample_bank/render_bank.py --sf2 <soundfont.sf2>` rebuilds the
+  melodic instrument bank (accordion, bass, bell, choir, guitar, pad, trumpet, violin) from a
+  General MIDI soundfont. Each instrument has a target RMS that matches the mix it had, so
+  its `TRIM` is 1.0; edit the target there, not in `TRIM`.
+- Drums: `kick[_2/_3]`, `snare[_2/_3]`, `hat`, `tom`, `shaker`, `clap`, `cymbal`.
+  One-shots without a sample of their own borrow the closest drum (see `sfx()`).
+- `TRIM` = per-instrument balance; `SFX_LVL` = one-shot level; `SMP_MUS` scales sequencer
+  notes. `boost` = per-track gain set in `start_music()` (menu/title 1.8, game 1.15,
+  victory 0.6), applied to the Music, Vox and VoxGrunt buses only.
+- Buses: seven, all → Master (hard limiter, −0.5 dB ceiling): Music, SFX, Vox, VoxGrunt,
+  Cutscene, Ambient, UI. Per-bus effects and routing are in `AUDIO_BUS_ARCHITECTURE.md`.
+  Ambient and UI are created with effects but nothing routes to them yet.
+- `set_volumes()` is the player-facing mix: the music slider sets Music, Vox and VoxGrunt
+  (each ×0.7, muted at 0); the SFX slider sets SFX. It does not touch Cutscene, Ambient or UI.
+- `have` is gated on `res://audio/kick.ogg`; with no assets pack the game runs silent
+  by design — every audio path is guarded.
+
+## Songs and data
+
+Step length: game `E = 0.13 s` (6 steps/bar, 6/8), victory `VE = 0.105 s` (16 steps/bar),
+title `TE = 0.125 s` (16 steps/bar). Each JSON file is an array of bar records:
+
+- `data_song.json`: `[root, fifth, chord, melody, inst, bar, end_run, intro]` — `end_run` = 1
+  plays the end-of-section run; `intro` = 1 marks intro bars (the loop restarts at the
+  first bar with `intro` = 0).
+- `data_title.json`: `[root, fifth, chord, melody, lead, intensity, section, bar,
+  bars_in_section, first, is_end, next_root]`
+- `data_victory.json`: `[root, fifth, chord, melody, lead, intensity, section, bar,
+  bars_in_section, first, is_end, hold, from_section, finale, last, next_root,
+  pickup, half_bar]` — index 17 = 1 means an 8-step held bar (the sequencer skips its
+  second half, then the next section starts on the beat).
+- `data_vox.json`: line id → `[clip, lead-in]` (see below).
+
+`chord` is a midi array, `melody` is one midi per step (0 = rest, −1 = hold). `root` is
+the chord root used for bass/grunt pitch; `fifth` is the alternate bass note.
+
+## Vocals and ad-libs
+
+- Victory lyrics: one clip per line, `audio/vox/<id>.ogg` (`A0`, `B7`, `tag2`, …), keyed
+  in `data_vox.json`; the words live in `data_lyrics.json`. Lines start on bar 0 of their
+  section; each clip is pre-rolled by its lead-in so the first syllable lands on the
+  downbeat, and plays at `VOX_GAIN` (1.8) on the Vox bus.
+- The clips are rendered, not recorded: Piper speech is re-pitched to the song's melody
+  with WORLD (`tools/piper_sing.py`). The originals are backed up in
+  `tools/vox_backup/originals/` (`--restore` puts them back).
+- The grunt ad-libs are **removed** (`VGRUNT` is an empty table, 2026-11-23): the deep
+  "unh" bank read as pops against the sung line. The `audio/grunt_r*` samples and the
+  VoxGrunt bus stay for other uses; the victory song no longer schedules them.
+
+### How the singer works (`tools/piper_sing.py`)
+
+See `docs/VOCAL.md` for the full vocal pipeline — singer, chorus grid, phonics
+table, speech cache and the findings behind the echo/stutter/robotic fixes.
+
+The pipeline is a mouth transplant, not a vocoder trick: Ryan sings the lyric on a
+melody borrowed from the *original* performance, never from the current clip (re-running
+on an already-sung clip would borrow from itself).
+
+1. **Melody** — `tools/vox_backup/originals/<id>.ogg` is analyzed with WORLD; its F0
+   contour and duration are the target.
+2. **Speech** — Piper (`en_US-bryce-medium` by default) speaks the words from
+   `data_lyrics.json`.
+3. **Sing the notes.** Ryan's voiced runs are merged to match the song's note spans in
+   order (`equalize_runs`), then a piecewise time map stretches each pair onto its span.
+   The melody is classified into **plateaus** (held) and **glides** (slides). A plateau
+   gets one steady note; a glide keeps the performance's own contour. Every pitch is
+   therefore the performance's, never an average across a slide — that is what keeps the
+   line in tune.
+4. **Humanise.** A singer is never dead on the grid: each note lands ±6 cents off centre,
+   upward leaps get a scoop, vibrato (4.8–6.2 Hz, per-note depth) keeps one phase across
+   note boundaries, and the whole line drifts and jitters by a few cents. The RNG is
+   seeded from the clip id, so a re-render is repeatable.
+5. **Legato.** Unvoiced holes of 15–80 ms inside a line are voiced so the consonants ride
+   the vowel; syllables join instead of stuttering. Longer gaps (commas, musical rests)
+   are kept.
+6. **Output.** WORLD resynthesis, normalize (0.89 peak), 6 ms edge fades, 44.1 kHz mono
+   Ogg. The clip is a **single dry lead** — no delayed doubles, so the Vox bus reverb is
+   not doubled into an echo.
+
+**Syllable pitch and the phone preview.** Each syllable can be shifted by whole semitones in the
+TIMING word editor (ST -1 / ST +1, kept on the syllable's first phone as `st`). The phone's Piper
+preview applies the shift with TD-PSOLA in `scripts/psola.gd`: pitch is estimated from the clip by
+autocorrelation, pitch marks sit on the peak of each period, and grains are overlap-added at the period
+so only the pitch moves. Checked against a Piper clip with pyworld: identity correlation 0.98, +4
+semitones gives 1.25x (1.26x expected), the rest of the clip is unchanged. The PC re-sing does not
+read `st` yet, so the clip and the phone differ until it does.
+
+**Word fit.** Piper's preview is stretched to the word's edited length, limited to 0.8x-1.3x of its
+natural speed. Squeezing further (down to 0.5x) turned "gay" into "I'll see you now" in a carrier test.
+
+**Diphthongs.** A vowel (e a o ɔ ɑ æ ə ɛ) followed by ɪ or ʊ is one sound. Both parts are marked `dip`,
+with minimum lengths (0.10 s vowel, 0.08 s glide). The phone preview ignores per-sound lengths, so the
+glide there depends on the fit above.
+
+**Edited lines (TIMING tab).** A line whose `data_word_timing.json` entry carries `ipa` / `phones`
+is not sung from its text. `render_phones` synthesizes the **whole edited line in one pass**
+(`line_audio`: Piper's pad-id layout, stress marks, a space token between words, per-id lengths from
+the model's alignments via the `onnx` package), cuts each phone at its real boundary, warps it to its
+edited length and puts the word at its onset. Details and the history of the bug: `docs/TIMING_EDITOR.md`.
+
+### Chorus timing (two-bar lines)
+
+See `docs/VICTORY_LYRICS.md` for every line's bars, words, syllables and notes.
+`v-B` is eight bars but **four two-bar lines**: bars 0–1, 2–3, 4–5, 6–7 map to `B0`–`B3`,
+and `sound.gd` plays one only on even bars. Clips `B4`–`B7` are no longer triggered.
+
+Chorus clips are rendered in **grid mode** (B0–B2 take explicit onsets from `data_word_timing.json` when present) (`CHORUS_GRID` in `piper_sing.py`): the notes
+come from `data_victory.json`, not from the old take, and each syllable's **vowel** is
+anchored to a beat using Piper's phoneme alignments (one syllable per beat, last one held
+to the end of the phrase; 0.15 s of consonant sits before the first beat, which
+`data_vox.json`'s lead-in puts ahead of the downbeat). This needs `onnx`
+(`pip install onnx`, or `piper-tts[alignment]`); without it Piper returns no alignments
+and the clip falls back to the old contour path.
+
+Flags: `--flow notes|contour` (`notes` is the singer above; `contour` is the old
+speech-rhythm path), `--vibrato 0..1`, `--only A2,B0` for a quick single-clip render,
+`--force` to re-render, `--restore`, `--dry-run`.
+
+Checks: `vox_note_check.py` reports voiced-run wander (robotic = too flat) and run count;
+`vox_pitch_check.py` reports per-frame movement (its "big jump" flags are usually harvest
+octave errors on rendered audio — see its docstring); `vox_ab_check.py` compares takes.
+
+
+## Word timing from the phone
+
+Status (2026-11-22): the TIMING tab is on `godot`; the embedded Piper preview loads on the Piper APK. IPA-edit audibility,
+word-fitting, free word timing and locks are not yet confirmed by ear on a phone.
+
+Secret menu (tap RUNS three times on the title), **TIMING** tab:
+
+- **Line box** (left of the words): shows the current line. Tap it for a picker with each line's
+  words (B0, B1, B2). The picker draws over everything else on the tab.
+- **NEXT LINE >**: moves to the next line, wrapping after the last.
+- **Words**: five per row; tap a word to edit its IPA and phone lengths (palette of 40 symbols,
+  `-20 ms` / `+20 ms`, ADD, DEL, RESET, DONE). Each word box has a small **LOCK** toggle (red when
+  locked). Drag a green onset tick on the graph, or nudge it, to move a word.
+- **Words are free.** Each word moves alone to anywhere in the line (0 to its end, minus 0.1 s):
+  early, late, past its neighbours, in any order, overlapping or not. Nothing is pushed. A locked word
+  does not move. Words cannot go past the end of the line, because PLAY and the graph stop there.
+  The singer sings words in order, so `retime.py` rejects out-of-order onsets after COPY.
+- **PLAY**: starts the victory instruments at the line's chorus bar (B0 bar 0, B1 bar 2, B2 bar 4),
+  with the sequencer's own vocals off, and sings the line with the edited onsets. An unedited word plays
+  its shipped length from the shipped clip at its new onset (a moved word is not cut by the gap to
+  the next word). An edited word plays through the **embedded Piper** when the Piper APK is installed,
+  fitted to its edited length. The track stops after the line's bars (`bars` x 16 steps x 0.105 s).
+- **Status line** (top of the tab, yellow): says whether Piper is really running (`plugin missing`,
+  `model failed: <reason>`, `plugin + model ready`) and, after PLAY, `Piper sang N edited word(s): natural X s,
+  fitted to Y s`. Without the Piper APK an edited line plays the real clip at the edited onsets; IPA and
+  length edits are heard after a PC re-sing (the stitched diphone preview is off: unintelligible).
+- **Playhead:** a white vertical line moves left to right across the graph while the line plays.
+- **STOP**: stops the track and restores vocals. Leaving the tab or BACK does the same.
+- **SAVE** (kept on the phone) or **COPY** (JSON to the clipboard; paste it into the chat or a file).
+  Data lives in `godot/hula/data/data_word_timing.json`.
+
+Without the Piper APK, shipped clips are not re-sung by PLAY: each word's audio is shifted to its edited
+onset (no stretch), so timing and pitch are unchanged. Edits reach the rendered clip only after a PC
+re-sing. Piper renders IPA edits only; it fits a word's total length, not each phone's.
+
+**Sound graph** (under the word rows): the sung clip (yellow) over the instrument stem (blue), for the
+line's stretch of the track, from `godot/hula/data/data_line_env.json`. White ticks: shipped onsets;
+green ticks: edited onsets. Made by `tools/line_env.py`. It needs a stem and clip positions that match
+the current clips (see "Known problems" below). It is shown only when the picker is closed.
+
+On the PC, from the repo root:
+
+```bash
+python3 tools/retime.py timing_from_phone.json --dry-run   # shows what changed
+python3 tools/retime.py timing_from_phone.json              # writes the data, re-sings only changed lines
+```
+
+`piper_sing.py` reads the onsets from the data file, so a re-sing needs `piper-tts[alignment]`,
+`pyworld`, `soundfile` and the Ryan voice model in `tools/models/`. The phone shows edits
+immediately but plays the old clip until the PC re-sing is merged and the app is updated.
+
+**Coverage:** all 16 sung lines are editable (`tools/build_timing.py` fills the data; `tools/line_env.py`
+rebuilds the graphs). Onsets for the lines other than B0 to B2 come from the render grid, not from audio.
+
+**Edit-only diphthong samples (to do).** Word edits should get their own vowel+glide samples, e.g. `e|ɪ#edit`, rendered with Piper by `tools/diphone_bank.py`. The existing bank stays as it is. Until those exist, a diphthong plays as the shipped `e|ɪ` sample with its glide skipped. The bank path also applies syllable pitch (`st`) and the PLAY WORD button plays one word. Nothing here has been heard on a phone.
+
+## Known problems
+
+See `HANDOFF.md` (Open items). Full text was moved to `docs/HANDOFF_LOG.md`.
+
+## Snips without re-rendering the song
+
+The instruments are fixed, so a lyric or timing change does not need a full `mix victory`.
+The stem and vocal buses are saved once in `stems/`, and `tools/snip_from_stem.py` cuts any
+window from them and re-places the sung clips.
+
+```bash
+python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox \
+    --start 19.36 --end 33.50 --out snip.wav        # .mp3 also works
+```
+
+- `stems/instruments.flac` = pre-limiter master minus `k` × vox bus (`k` in `meta.json`).
+  The stem correlates at zero with the vox bus, so no vocals are left in it.
+- `stems/voxbus_post.flac` is the calibration reference; `stems/voxbus_dry.flac` is used to
+  find each clip's position by normalised cross-correlation.
+- `stems/positions.json` caches positions and the clip-to-bus gain. It rebuilds when a clip
+  or stem file changes, or with `--rebuild-positions`. A warm snip takes about 0.2 s (no scipy import, cached clip lengths).
+- Clips are decoded with `soundfile`, not `ffmpeg`: `ffmpeg` upmixes mono to stereo with a
+  −3 dB pan law, which is why older gains read 1.587 instead of about 1.10.
+- Limits: the output is not passed through the master limiter, so levels can differ slightly
+  from the game. Instrument, drum or ducking changes need a new extraction. Every real-time
+  run has a slightly different timeline (the game clock is frame-driven), so the stem, its
+  vox bus and the clip positions must come from the same run.
+- Re-extracting the stem needs the master before the limiter. `shotter.gd` `mix` writes it as
+  `<out>_masterpre.wav`, next to the post-limiter master and the `_voxpre`/`_voxpost` files.
+  The stem is `masterpre − k × voxbus_post`; `k` (about 0.563) is the vox level inside the master,
+  fitted over the chorus and stored in `meta.json`.
+- Dropouts: a run can lose a sung line. In the run in `stems/`, the vox bus is silent from 36 to
+  38 s, so `C2` never played. The snip tool warns and places a missing line at the spacing of its
+  neighbours (two bars = one line apart). Only lines the sequence sings are placed or estimated
+  (`SUNG` in `tools/snip_from_stem.py`); the calibration gain uses only lines that were actually sung.
+  Check the warnings after every new run, and find out why a line dropped before trusting the mix.
+
+## Where to change what
+
+| Goal | Change |
+|---|---|
+| Instrument balance | `TRIM` in `sound.gd` |
+| One-shot SFX loudness | `SFX_LVL` + `sfx()` |
+| Track loudness | `boost` in `start_music()` |
+| Song notes / structure | `data_song.json`, `data_title.json`, `data_victory.json` |
+| Victory lyric clips | `data_vox.json` + `audio/vox/` |
+| Vocal tone (robotic / stutter) | humanise + legato in `tools/piper_sing.py` |
+| Grunt placements / level | `VGRUNT`, `VGRUNT_V` + `tools/vox_grunt.py` |
+| Re-render a sample bank | the matching `tools/vox_*.py`, then `--import` |
+| Change a lyric's timing or audio, without a full render | `tools/snip_from_stem.py` (see above) |
+| Word onsets for B0–B2 | `godot/hula/data/data_word_timing.json` (edit in the TIMING tab, or directly) |
+
+## Tools
+
+`py` has numpy + soundfile; these do not need Blender.
+
+```powershell
+py tools\vox_grunt.py          # rebuild the grunt bank (all roots, 2 takes)
+py tools\vox_choir.py --src <dir-of-original-ogg>
+py tools\piper_sing.py         # the singer: Piper on the melody (--force, --only A2,B0, --flow, --vibrato, --restore, --dry-run)
+py tools\vox_singer.py --src <dir>   # older WORLD voice conversion; --style/--lisp/--tipsy/--dopey
+py tools\lyrics_doc.py             # rebuild docs/VICTORY_LYRICS.md (bars, words, syllables, notes, IPA)
+python3 tools/retime.py <file> [--dry-run]     # apply word timing copied from the TIMING tab; re-sings changed lines
+python3 tools/phone_durations.py [--dry-run]   # rebuild data_phon_bank.json phone lengths from in-context Piper alignments
+python3 tools/diphone_bank.py --force          # the stitched diphone preview bank (off in the game; kept for reference)
+python3 tools/snip_from_stem.py --stems stems --clips-dir godot/hula/audio/vox --start S --end E --out x.wav
+```
+
+Checks: `vox_pitch_check.py`, `vox_note_check.py`, `vox_ab_check.py`.
+
+Audio QA is part of the main harness (see `AGENTS.md`): `mix victory 30` plays a track in
+real time and prints PRE/POST peak/RMS/crest/clip plus music-bus levels, and writes a wav.
+
+## Gotchas
+
+- **"There's an echo."** Check the Vox bus before the clips: `AudioEffectReverb` at 15% wet with a 0.5 room reads as a slap behind a single dry lead. The clips themselves carry no delay (verify with an envelope autocorrelation at 50–300 ms); they are one dry take by design.
+- **"It stutters between words."** Measure holes, don't guess: 15–80 ms unvoiced gaps inside a line are the singer's fault (fixed by the legato pass), while 150 ms+ gaps are commas and musical rests and should stay. `vox_note_check.py` reports run counts; the spectrogram of a clip makes the holes obvious.
+- **"Robotic."** A dead-flat plateau is the tell: `vox_note_check.py` wander near 0 cents. The singer adds per-note detune, scoops, vibrato and drift; if it comes back, check that the humanise step still runs after the plateau loop.
+- **Piper needs a pad id after every phoneme.** Piper voices are trained on `^ _ p1 _ p2 _ ... pn _ $`
+  (`_` is id 0). Feeding `^ p1 p2 ... $` (what `diphone_bank.py`, the old `word_audio` and `PiperPlugin.kt`
+  did) gives babble at about half the length. Use `phonemes_to_ids` or `piper_sing.phone_ids`. Keep stress
+  (`ˈ ˌ`) and length (`ː`) marks: dropping stress turned "I am Jeff and I'm so gay" into "I am Jiff and on, so gay".
+- **Test speech with a recogniser, and test the path the phone plays.** Run the audio through a small ASR
+  (faster-whisper `tiny.en` works) and compare with the text. Do not judge Piper on a single 0.1-0.4 s
+  word: even the official render fails there; test whole lines. The PC re-sing and the phone preview are
+  different code paths; a fix to one does not fix the other.
+- **The Piper APK is separate from the packs.** Updates replace GDScript and data only; the plugin and
+  the voice model (`piper-assets/` in the Android build, not `src/main/assets`, which Godot's export
+  rewrites) live in the APK. `piper-apk.yml` runs on `android/**`, `piper.gd`, `export_presets.cfg` and
+  the workflow itself; run it by hand (`workflow_dispatch`) for any other change. `--install-android-build-template`
+  only works together with `--export-*`; alone Godot runs the game forever.
+- Audio and art `.import` files are tracked, and every audio one uses default settings
+  (`loop=false`, `bpm=0`). A fresh `godot --headless --import` rewrites many of them with
+  no real change; don't commit that churn (`git checkout -- '*.import'`).
+- New samples need `--import` before `load()` sees them; the bank is loaded by `res://`
+  path (case-sensitive), not by UID.
+- The Vox bus runs a compressor (−10 dB, 1.5:1): `VOX_GAIN` 2.4 pushed the input to
+  +2.4 dBFS and clipped 2852 samples in a 70 s mix; 1.8 puts it at −0.1 dBFS with 0
+  clipped. The victory grunt ad-libs are removed (they read as pops); the VoxGrunt bus
+  and `audio/grunt_r*` stay for other uses.
