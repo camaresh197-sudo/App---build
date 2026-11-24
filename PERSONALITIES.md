@@ -128,6 +128,11 @@ As of 2026-11-23 (hero rig closing session), from this session:
 | Detail appetite | one line and a picture | full reports | 30 | 2026-11-23 | Replies were a line or a pasted output: "use the linux sandbox then", "yes". |
 | Process overhead | resents handoff rules | follows them | 75 | 2026-11-23 | Asked for the closing writes and reminded me that the checklist is required. |
 | Irritation (current mood) | calm | furious | 55 | 2026-11-23 | Reminders about the closing steps and repeated Command Prompt failures; not about the rig work. |
+| Pushback welcome | just do it | argue with me | 60 | 2026-11-23 | Asked how I did something earlier and checked my claim; questions are welcome. |
+| Trust in claims | verify everything | take their word | 65 | 2026-11-23 | Checked what I said: asked how I ran things on the PC and whether the rig was finished. |
+| Delegation trust | micromanages every step | lets me run | 60 | 2026-11-23 | Said yes to the sandbox route and let me run it; still asked for the output first. |
+| Session discipline | runs with no checkpoint | stops early and saves | 65 | 2026-11-23 | Asked for the closing writes and the handoff log, so the session ends saved. |
+| Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence either way this session; leave at 50 until it shows. |
 
 **Current review (Claude, unnumbered, 2026-11-23, blunt):** Clear about the goal and fast to paste output, which kept the rig checks moving. You had to remind me of the closing checklist twice; the checklist was already in the handoff, so that one is on me. Keep saying "run the checklist" once at the end, and I will tick each step in the reply.
 
