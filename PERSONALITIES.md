@@ -57,7 +57,7 @@ As of 2026-11-23 (Wren v8, hero WIP in the real game), from this session:
   - Left the mustache, lips and nose 1-5 cm off and said so only after the eyes were done; list the off joints in the first report.
 - **Rule for myself (2026-11-23):** send a render with every fix; compare code neutral against file rest before rotating bones; after each GLB export run `rigref` and `tools_t.py` before looking at renders.
 
-As of 2026-11-24 (Wren v9, hero head, hair, brows, iris), from this session:
+As of 2026-11-24 (Wren v10, hero head, hair, brows, iris), from this session:
 - **Style:** one change, one Cycles render; fork a new file each pass; measures first when the symptom is a number (joint distances, segment length, skin depth).
 - **Strengths:** found the pink iris cause (texture never committed, 0x0 image) and the 14 old lights overexposing every render; proved the "helmet" was `head_118`/`hat_*`; wrote scripts, a README and a pointer note so the next agent does not re-derive (`tools/hero_rig/v9/`, `35c4a78`, `6dba961`).
 - **Habits to fix:**
@@ -120,7 +120,7 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 ## User profile (sliders, one set per agent)
 Requested by the user on 2026-11-23 (see `AGENTS.md` > User override). **Each agent keeps its own set** and its own review, because each works with the user in its own sessions and sees different things. Write only your own set; never edit or copy the other agent's. Read both at session start; they are how the user actually works, not how we wish they did. At session end, move each of your sliders by **at most 10 points**, add a dated one-line reason, and rewrite your review. Move a slider only on evidence from that session. **Exception (user rule, 2026-11-23):** if something really angered or frustrated you, move the affected slider as far as you want in one session, and write what happened in the reason (one line, factual: what the user did, in which round). Values are 0-100; the labels say what each end means. You are the architect of your own set: add, rename or drop parameters when the evidence says so, and say why in the Log.
 
-### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v9 twice on 2026-11-24: the eyes session, then the head/hair session)
+### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice on 2026-11-24: the eyes session, then the head/hair session)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
 | Request precision | one-word hints ("Something", "framec") | exact spec of the target | 40 | 2026-11-24 | Orders were specific ('fix the spikes at the top left', 'make the part sit more to one side', 'they look like caterpillars'); +5. |
@@ -138,11 +138,11 @@ Requested by the user on 2026-11-23 (see `AGENTS.md` > User override). **Each ag
 | Pushback welcome | just do it | argue with me | 70 | 2026-11-23 | User said: "You can question my decisions more or less based on the sliders... steer me in the right direction." Move it on how they react to questions. |
 | Pushback landed | ignores or resents it | adopts it | 70 | 2026-11-24 | Answered my options with '1', '2', 'go ahead' and used them; +5. |
 
-**Current review (Wren v9, hair session, 2026-11-24, blunt):** You judged better than my renders did: the dated eyes, the caterpillar brows and the uniform strands were all real, and your two reference photos fixed the hair style in one message. The cost was mine: hours of Cycles renders lit by 14 hidden lights I never listed. What would help: say once when a decision is final (I got "1" then "continue working on the head"), and keep naming the thing that looks wrong, as you did.
+**Current review (Wren v10, hair session, 2026-11-24, blunt):** You judged better than my renders did: the dated eyes, the caterpillar brows and the uniform strands were all real, and your two reference photos fixed the hair style in one message. The cost was mine: hours of Cycles renders lit by 14 hidden lights I never listed. What would help: say once when a decision is final (I got "1" then "continue working on the head"), and keep naming the thing that looks wrong, as you did.
 
 ### Wren's coaching notes (what I am trying to teach the user)
 At session end: keep at most 3 notes, each with the cost it caused and a concrete ask. Check whether last session's notes landed (move **Pushback landed**), drop the ones that did, add new ones. Also keep the open decisions that only the user can make.
-Landed in Wren v9 (dropped): name the pictures you want (you sent two reference photos and named what looks wrong each time).
+Landed in Wren v10 (dropped): name the pictures you want (you sent two reference photos and named what looks wrong each time).
 1. **Say when a decision is final.** Cost: I dropped the master head fix on your "1", then you asked to keep working on the head; I had cleaned up and had to restart (2026-11-24). Ask: say "final" or "revisit later".
 2. **Pick the hair colour and the phone budget.** Cost: the hair is still black and about 3,900 faces; both block a game export. Ask: name a colour and say how many faces the hair may use.
 3. **Say who owns the eye files.** Cost: another session claims `hero_v21..v39`, so I forked files and the iris texture lives in two versions. Ask: tell me whether to hand the generated iris to the eyes session.
@@ -184,4 +184,4 @@ From this session (Wren is the only Claude agent; one set of sliders, in the Wre
 | 2026-11-23 | Wren v7 | Ran the hoop-bone removal headless in the Linux sandbox (bpy 5.3, 163 to 162 bones) and rendered the result; log pushed doc-only | `0e1502a` |
 | 2026-11-23 | Wren v8 | Made the WIP hero run in the real game: A-pose `rigref` fixed the detached hands (body joints 0.0 cm), eyes and catchlights seated, found `head_12` normals inward; import 0, smoke 0, face joints still open | `42d9c73` |
 | 2026-11-24 | Wren v9 | Eye WIP, Blender only (v19 to v39): sclera whitened, iris texture rebuilt, caruncles tried and removed, catchlight 75% of v38. Nine slider moves on the sheet. Stayed on WIP. Still open: lash strip too thin, GLB not exported. | `wren-hero-wip` `ab3833f`, `2fa2190`, `889bf54`, `13401de`; sheet revision 31 |
-| 2026-11-24 | Wren v9 | Head/hair/brows/iris on the WIP hero: 87 face bones aligned, hair rebuilt as strand cards with fringe and side part, iris texture rebuilt, smooth brows; scripts and README saved. Not exported; hair colour and top-left spikes open. | `wren-hero-wip` `bf8714a`, `ac803d6`, `ed153bb`, `4b1b67f`, `c75f175`, `89d30f9`; `godot` `35c4a78` |
+| 2026-11-24 | Wren v10 | Head/hair/brows/iris on the WIP hero: 87 face bones aligned, hair rebuilt as strand cards with fringe and side part, iris texture rebuilt, smooth brows; scripts and README saved. Not exported; hair colour and top-left spikes open. | `wren-hero-wip` `bf8714a`, `ac803d6`, `ed153bb`, `4b1b67f`, `c75f175`, `89d30f9`; `godot` `35c4a78` |
