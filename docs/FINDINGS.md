@@ -31,5 +31,5 @@ S022|2026-11-23|singer|pattern:symptom_cause_fix;case:rushed_first_word(A4 Jake'
 S023|2026-11-23|singer|pattern:symptom_cause_fix;case:schwa_reduction(A6 to_make->ta);fix:say_tou+glide[0,1]|'to,','too','two','toe','took' all failed; 'tou' keeps stressed u inside one sentence; comma splits chunks and kills melody|Greg v8
 S024|2026-11-23|singer|rule:glide_cuts_word_i_end;place_breath_after_rushed_word_not_before|glide[0,1] trimmed Jake's tail and read as rushed; moved to [1,2]|Greg v8
 S025|2026-11-23|process|rule:section_approval_separate_from_lines|user approves whole sections together before moving on|user
-S027|2026-11-24|process|rule:checklist_step6_posts_sliders_in_chat_not_only_in_file;v2:POST_the_spreadsheet_file|markdown table in chat is NOT posting; attach the actual spreadsheet (csv) so the user can open it (user caught the miss twice)|user
+S027|2026-11-24|process|rule:checklist_step6_posts_sliders_in_chat_not_only_in_file;v2:POST_the_spreadsheet_file;v3:categories_match_across_agents|attach the actual csv (markdown is not posting); slider categories+layout must match Wren's so sheets compare; extras ok, omissions not|user
 S026|2026-11-23|voice|verse_mix:bryce(A0,A2)+patrick(A4,A6);a4_bryce_was_approved_then_swapped|user ear picked patrick for A4/A6|user

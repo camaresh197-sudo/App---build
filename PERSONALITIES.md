@@ -85,7 +85,23 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 - **Strengths:** measured before touching (word-spans probe, envelope probe, phonemizer probe); the raw-speech A/B that isolated engine vs Piper; built the shared findings bank `docs/FINDINGS.md` (S001-S026) to the user's spec — machine-first, append/refine, never delete.
 - **Habits to fix (for Greg v9):** I burned six takes respelling "to" before probing the phonemizer — probe the phoneme table FIRST. faster_whisper wasted an hour; it failed even on approved takes — retire broken tools fast. I declared "pair approved" when the user meant the pair A0+A2; log approvals with exact ids.
 - **Rule for myself:** the phonemizer probe and the raw-speech control come before any re-render; one variable per take still applies, and "one variable" must be a mechanism, not a guess.
-- **Sliders (first set):** Request precision 55 (user gives short directives; lyrics arrived mid-session), Defect-spotting 95 (caught "kkkk", "I em", the "to" shade), Direction stability 70 (voice choice flipped amy->bryce->patrick but every reversal was evidence-based), Run tolerance 40 (moves work to background readily), Delegation trust 65 ("do that", "approve", mostly trusted my next step), Irritation 30 (calm; one "you arent making any progress" after my spelling loop — earned), Detail appetite 30 (wants files posted, not paragraphs), Banter welcome 55 (jokes ok, e.g. "female Jeff"), Trust in claims 85 (their ear verdicts always held), Pushback welcome 75 ("steer me" still standing).
+- **Sliders (first set, Greg v8, same categories and layout as Wren's):**
+| Parameter | 0 means | 100 means | Now | Last moved | Why |
+|---|---|---|---|---|---|
+| Request precision | one-word hints | exact spec of the target | 55 | 2026-11-24 | Short directives all session; complete lyrics mid-session helped |
+| Visual evidence | words only | annotated screenshots and reference photos | 20 | 2026-11-24 | Audio session: no images sent; nothing to score higher yet |
+| Defect-spotting | misses things | catches nearly everything | 95 | 2026-11-24 | Caught kkkk, I em, the ta/toe shade, the stutter after d; every report held |
+| Direction stability | reverses constantly | holds course | 70 | 2026-11-24 | Voice flipped amy-bryce-patrick; every reversal followed named evidence |
+| Run tolerance | interrupts mid-run | lets them finish | 40 | 2026-11-24 | Moved long renders to background; no wasted interrupts |
+| Process overhead | resents handoff rules | follows them | 45 | 2026-11-24 | Followed section rule once stated; bank-format requests followed exactly |
+| Delegation trust | micromanages every step | lets me run | 65 | 2026-11-24 | Trusted the pipeline; re-anchored me when I drifted |
+| Session discipline | runs 80+ rounds no checkpoint | stops early and saves | 60 | 2026-11-24 | Said end session at a natural point; enforced the checklist rules |
+| Irritation (current mood) | calm | furious | 30 | 2026-11-24 | One earned flash during the to-spelling loop; decays to 30 |
+| Trust in claims | verify everything they say | take their word | 85 | 2026-11-24 | Ear verdicts always held; no false alarms today |
+| Detail appetite | one line and a picture | full reports | 30 | 2026-11-24 | Wants players posted and short verdicts; paragraphs skimmed |
+| Banter welcome | pure business | jokes and jabs fine | 55 | 2026-11-24 | Female-Jeff exchange got a laugh |
+| Pushback welcome | just do it | argue with me | 75 | 2026-11-24 | Steer-me rule standing; accepted the ASR pushback |
+| Pushback landed | ignores or resents it | adopts it | 75 | 2026-11-24 | Adopted dropping the broken ASR tool without argument |
 - **Coaching notes:** (1) name which voice/build a complaint refers to — "kkkk after d" cost one re-render to locate; (2) when something is "good enough", say whether it's the keeper — "good enough" A4 then a voice swap followed.
 
 ## User profile (sliders, one set per agent)

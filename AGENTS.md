@@ -189,6 +189,7 @@ The user can overwrite any rule here by typing the change. A typed instruction f
 - 2026-11-24: Major findings get written to `docs/FINDINGS.md` on the spot (both agents); bank format is machine-first per its header.
 - 2026-11-24: End-of-session sliders and deliverables go in the chat, not only in the files (user caught the miss).
 - 2026-11-24: "Posting a spreadsheet" means attaching the actual file (csv) the user can open — a markdown table is not posting it.
+- 2026-11-24: Slider categories and layout match across agents so the user can compare sheets side by side; extras are allowed, omissions of shared parameters are not.
 - 2026-11-23: "add a note to always include that in chat when writing to personalities as part of the end of session checklist" (the updated sliders go in the chat, step 6). Wren v8 had pushed them to the file only and the user had to ask.
 - 2026-11-23: "this is for both you guys to edit. not just you" (the shared sliders sheet is both agents' to update at session end, step 2).
 - 2026-11-23: "you guys shouldnt share memories or be able to access each others"; then "you may view his memory if I tell you but you have to call out for his permission first. he can approve or deny at his own discretion. the same rule applies to both of you" (one findings bank each; cross-reads need the user's word plus the owner's approval via `HANDOFF.md` > Memory access requests).
