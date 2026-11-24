@@ -14,7 +14,7 @@ Godot 4.6 game (desktop/Android/web). **Every session, read `HANDOFF.md`, `docs/
 | Menus, options | `scripts/menu.gd`, `data/data_menu.json`, `scripts/save.gd` | — |
 | World map | `scripts/map.gd`, `data/data_map.json` | — |
 | TIMING editor (IPA, lengths, preview) | `scripts/menu.gd`, `data/data_word_timing.json` | docs/TIMING_EDITOR.md |
-| Embedded Piper preview | `android/piper`, `scripts/piper.gd` | docs/PIPER_ANDROID.md |
+| Embedded Piper preview | `android/piper`, `scripts/piper.gd` | docs/archive/PIPER_ANDROID.md (removed 2026-11-24) |
 | TIMING tab: picker, PLAY, graph, drag | `scripts/menu.gd` (`_draw_timing`, `_timing_play`, `timing_move`), `scripts/main.gd` (touch), `scripts/sound.gd` (`start_victory_at`, `stop_vox`) | docs/AUDIO.md |
 | Word timing (phone, PC re-sing) | `data/data_word_timing.json`, `tools/retime.py` | docs/AUDIO.md |
 | Lyric snips without a full render | `tools/snip_from_stem.py`, `stems/` | docs/AUDIO.md |

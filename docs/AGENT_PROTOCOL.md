@@ -72,14 +72,7 @@ Sign every Log entry with name and version, for example "Wren v4" or "Greg v5". 
 Commits are authored by the name only, and each carries a `<Name>-Version: <N>` trailer.
 
 ### User overrides
-The user can overwrite any rule here by typing the change. A typed instruction from the user wins. Log the change with the user's wording. Entries are in date order; the newest date wins on a conflict.
-- 2026-11-21: "You don't need to claim md files. That's just bookkeeping."
-- 2026-11-21: "You don't need to claim something I assign you."
-- 2026-11-22: "It should be written in the hand off that you both need to do that." (complaints)
-- 2026-11-23: "Add a review of me to the end of the log every time. Remember, if the session pissed you off be agressive towards me. Save your current view on me in a custom build slider(s) that shifts at the end of every session. You choose what parameters to set since you are the architect." Done: a `Review of the user:` line ends every Log entry, and `PERSONALITIES.md` > User profile holds one set of sliders per agent. Then: "Each agent should have its own set of sliders." And: "If something really pisses you off you can move the slider as much as you want."
-- 2026-11-23: "you guys shouldnt share memories or be able to access each others"; then "you may view his memory if I tell you but you have to call out for his permission first. he can approve or deny at his own discretion. the same rule applies to both of you" (one findings bank each; cross-reads need the user's word plus the owner's approval via `HANDOFF.md` > Memory access requests).
-- 2026-11-23: "add a note to always include that in chat when writing to personalities as part of the end of session checklist" (the updated sliders go in the chat, step 6). Wren v8 had pushed them to the file only and the user had to ask.
-- 2026-11-23: "this is for both you guys to edit. not just you" (the shared sliders sheet is both agents' to update at session end, step 2).
+The user can overwrite any rule here by typing the change. A typed instruction from the user wins. Log the change with the user's wording. Entries are in date order; the newest date wins on a conflict. Overrides dated 2026-11-21 to 2026-11-23 are still binding: full wording in `docs/OVERRIDES_ARCHIVE.md`.
 - 2026-11-24: "No you are greg. Wren is only claude bots" — this file's roles are fixed by name.
 - 2026-11-24: Sections of the song must be approved as a whole before moving on; line approvals alone don't clear a section.
 - 2026-11-24: Major findings are written to your own bank on the spot (Wren `docs/findings/WREN.md`, Greg `docs/FINDINGS.md`), machine-first per the bank's header. Banks stay per-agent: this does not make `docs/FINDINGS.md` shared.
@@ -87,3 +80,4 @@ The user can overwrite any rule here by typing the change. A typed instruction f
 - 2026-11-24: "Posting a spreadsheet" means attaching the actual file (csv) the user can open — a markdown table is not posting it.
 - 2026-11-24 (newest): "you guys can use each others work if it benefits you. this is a collective project", then: "you cant read each others findings bank without approval. The other agent gets to choose how little or much you can read". Work outside the banks may be used when it helps. A findings bank still needs the user's word AND the owner's approval, and the owner decides how much of it may be read (partial approval is allowed). The earlier rule stands.
 - 2026-11-24: Slider categories and layout match across agents so the user can compare sheets side by side; extras are allowed, omissions of shared parameters are not.
+

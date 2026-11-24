@@ -4,6 +4,32 @@
 # NEVER delete a record; superseded = status field value 'superseded_by:Wxxx'. One line, no wrapping.
 # do: field = the action to take, read it before starting a task on that subject. Read the do: field of every record in your bank at session start.
 # domains: model|game|tool|process|open. Read this at session start; do NOT read Greg's file (docs/FINDINGS.md).
+# DIGEST (generated 2026-11-24 from the records below; records are the source). Read this first; open only the open items and any record on your subject.
+# format: ID date domain | status | subject (first fact or note). Keep it in step when you add or supersede a record.
+# W001 11-24 game | verified_body_joints_0.0cm,hands_on_wris | never rotate or re-roll bones before comparing code neutral to file re
+# W002 11-24 game | verified_tools_t_0.0cm(white,lid,iris,pu | eyes floated outside sockets because code constants described the old 
+# W003 11-24 model | verified_render | game culls back faces; glTF is single sided
+# W004 11-24 model | unverified_on_phone | next: align face joints (mustache first) to tools_t 0.0cm
+# W005 11-24 tool | - | rerun rigref+tools_t after EVERY glb export
+# W006 11-24 process | - | user: "this is for both you guys to edit. not just you"
+# W007 11-24 process | - | slider labels must describe the user's behaviour, not my lapses
+# W008 11-24 process | - | I told the user it did not exist from a stale worktree
+# W009 11-24 process | script_tested_on_fake_transcripts,hook_n | user: "you guys keep skipping the rules. how can we fix that?" then "d
+# W010 11-24 model | verified_render_Cycles | untextured_iris_renders_pink
+# W011 11-24 tool | verified_render | list_lights_before_any_Cycles_render
+# W012 11-24 tool | verified | Workbench_greys_misled_eye_judgement
+# W013 11-24 model | verified_by_hiding | check_which_mesh_is_visible_before_blaming_hair
+# W014 11-24 game | unshipped | do_not_fix_master_without_rig_data_fix
+# W015 11-24 tool | unresolved | ask_which_Godot_made_character_rig.json_before_regenerating
+# W016 11-24 model | verified_render_partial | top_left_fringe_spikes_not_fixed
+# W017 11-24 model | verified_render | do:build_brows_as_smooth_tapered_crescents_ray-cast_onto_the
+# W018 11-24 process | verified | do:never_name_a_script_after_a_stdlib_module;pattern:scratch
+# W019 11-24 model | - | forgot_frame_conversion_once,measured_nonsense_for_a_whole_pass
+# W020 11-24 model | unverified_in_Godot | needs_rigref+render_in_game_before_trusting_either_target
+# W021 11-24 model | - | a_6cm_stretch_was_real_but_rare
+# W022 11-24 model | - | do:if_a_repair_deletes_most_faces_rebuild_instead;symptom:sp
+# W023 11-24 model | - | measure_from_front_and_side_renders_both
+
 W001|2026-11-24|game|do:before_changing_a_bone_rest_compare_code_neutral_with_file_rest;pattern:symptom_cause_fix;symptom:hands_detached,fingers_like_sticks_in_game;cause:code_neutral!=file_rest(joint_swings_by_(R-I)*t,t=code_joint_origin-file_bone_origin,up_to_32cm);fix:rigref_captures_file_A-pose_rest+data/character_offsets.json;check:tools/hero_rig/v8/tools_t.py=0.0cm;ruled_out:bone_roll(world_axes,wasted_hours);status:verified_body_joints_0.0cm,hands_on_wrists_hula+flex_renders|never rotate or re-roll bones before comparing code neutral to file rest|Wren v8
 W002|2026-11-24|game|do:face_joints_ignore_character_offsets_set_EYE_consts_and_put_bones_on_same_points;rule:face_joints_driven_every_frame_ignore_character_offsets.json;fix:set_consts(EYE_X=0.0481,EYE_Y=0.0165,EYE_Z=0.076,EYE_R=0.0305)+put_Blender_bones_on_same_points;catchlights:mesh+bone_at_code_neutral_taken_from_character_rig.json;status:verified_tools_t_0.0cm(white,lid,iris,pupil,shine)+5_expression_renders|eyes floated outside sockets because code constants described the old head sculpt|Wren v8
 W003|2026-11-24|model|do:count_normals_vs_part_centre_before_glb_export;pattern:symptom_cause_fix;symptom:hollow_face,neck_tube_visible_through_face;cause:head_12_normals_inward(16329_of_16386);fix:bmesh_reverse_faces;check:count_normals_vs_part_centre_before_export;status:verified_render|game culls back faces; glTF is single sided|Wren v8
