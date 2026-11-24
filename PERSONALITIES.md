@@ -85,23 +85,26 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 - **Strengths:** measured before touching (word-spans probe, envelope probe, phonemizer probe); the raw-speech A/B that isolated engine vs Piper; built the shared findings bank `docs/FINDINGS.md` (S001-S026) to the user's spec — machine-first, append/refine, never delete.
 - **Habits to fix (for Greg v9):** I burned six takes respelling "to" before probing the phonemizer — probe the phoneme table FIRST. faster_whisper wasted an hour; it failed even on approved takes — retire broken tools fast. I declared "pair approved" when the user meant the pair A0+A2; log approvals with exact ids.
 - **Rule for myself:** the phonemizer probe and the raw-speech control come before any re-render; one variable per take still applies, and "one variable" must be a mechanism, not a guess.
-- **Sliders (first set, Greg v8, same categories and layout as Wren's):**
-| Parameter | 0 means | 100 means | Now | Last moved | Why |
-|---|---|---|---|---|---|
-| Request precision | one-word hints | exact spec of the target | 55 | 2026-11-24 | Short directives all session; complete lyrics mid-session helped |
-| Visual evidence | words only | annotated screenshots and reference photos | 20 | 2026-11-24 | Audio session: no images sent; nothing to score higher yet |
-| Defect-spotting | misses things | catches nearly everything | 95 | 2026-11-24 | Caught kkkk, I em, the ta/toe shade, the stutter after d; every report held |
-| Direction stability | reverses constantly | holds course | 70 | 2026-11-24 | Voice flipped amy-bryce-patrick; every reversal followed named evidence |
-| Run tolerance | interrupts mid-run | lets them finish | 40 | 2026-11-24 | Moved long renders to background; no wasted interrupts |
-| Process overhead | resents handoff rules | follows them | 45 | 2026-11-24 | Followed section rule once stated; bank-format requests followed exactly |
-| Delegation trust | micromanages every step | lets me run | 65 | 2026-11-24 | Trusted the pipeline; re-anchored me when I drifted |
-| Session discipline | runs 80+ rounds no checkpoint | stops early and saves | 60 | 2026-11-24 | Said end session at a natural point; enforced the checklist rules |
-| Irritation (current mood) | calm | furious | 30 | 2026-11-24 | One earned flash during the to-spelling loop; decays to 30 |
-| Trust in claims | verify everything they say | take their word | 85 | 2026-11-24 | Ear verdicts always held; no false alarms today |
-| Detail appetite | one line and a picture | full reports | 30 | 2026-11-24 | Wants players posted and short verdicts; paragraphs skimmed |
-| Banter welcome | pure business | jokes and jabs fine | 55 | 2026-11-24 | Female-Jeff exchange got a laugh |
-| Pushback welcome | just do it | argue with me | 75 | 2026-11-24 | Steer-me rule standing; accepted the ASR pushback |
-| Pushback landed | ignores or resents it | adopts it | 75 | 2026-11-24 | Adopted dropping the broken ASR tool without argument |
+- **Sliders (Greg v8, first set — Wren's format: Parameter | Before | Now | Change | Why; bold = parameter, dot = band 🟢 ≥70 🟡 40-69 🔴 <40):**
+
+| Parameter | Before | Now | Change | Why |
+|---|---|---|---|---|
+| **🟡 Request precision** | 45 | 55 | +10 | Short directives all session; complete lyrics arriving mid-session made the target exact. |
+| **🔴 Visual evidence** | — | 20 | new | Audio session: no images or screenshots sent; nothing to score higher yet. |
+| **🟢 Defect-spotting** | — | 95 | new | Caught kkkk, "I em", the ta/toe shade, the stutter after d — every report held on measurement. |
+| **🟡 Direction stability** | — | 70 | new | Voice flipped amy→bryce→patrick, but every reversal followed evidence they named. |
+| **🔴 Run tolerance** | 35 | 40 | +5 | Long renders moved to background without interrupts. |
+| **🟡 Rule enforcement** | — | 45 | new | Followed rules once stated; caught me twice on the posting rules (sliders in chat, csv attached). |
+| **🟡 Delegation trust** | 40 | 50 | +10 | "approve that verse and push" — handed me the whole publish; re-anchored me when I drifted. |
+| **🟡 Session discipline** | — | 60 | new | "end session" at a natural point; enforced the checklist rules themselves. |
+| **🟡 Irritation (session judged)** | 80 | 30 | -50 | One earned flash mid-session ("you arent making any progress" — I had run six blind takes); then clean to the end. Decays toward 30 per the mood rule. |
+| **🟢 Trust in claims** | — | 85 | new | Their ear verdicts were the instrument all session; no false alarms. |
+| **🔴 Detail appetite** | — | 30 | new | Wanted audio players posted and short verdicts; paragraphs skimmed. |
+| **🟡 Banter welcome** | — | 55 | new | The "female Jeff" exchange got a laugh; keep it light and brief. |
+| **🟢 Pushback welcome** | — | 75 | new | "Steer me" standing; accepted the ASR-is-broken pushback without argument. |
+| **🟢 Pushback landed** | — | 75 | new | Adopted dropping the broken tool the same round. |
+| **🟢 (Greg only) Ear-based judgement** | 90 | 90 | 0 | The ear decided every pass again today ("only bryce says his", "keep that line"). |
+| **🟢 (Greg only) Stage-by-stage review** | 85 | 90 | +5 | Line-by-line, then whole sections; stopped me when I misread the pair approval. |
 - **Coaching notes:** (1) name which voice/build a complaint refers to — "kkkk after d" cost one re-render to locate; (2) when something is "good enough", say whether it's the keeper — "good enough" A4 then a voice swap followed.
 
 ## User profile (sliders, one set per agent)
@@ -134,29 +137,10 @@ Landed in Wren v8 (dropped): name the build (answered: the WIP), checkpoint ever
 2. **Pick the order for the 90 off-face joints** (mustache, lips, nose, cheeks). Cost: they are 1-5 cm off and the face still looks wrong around the mouth. Ask: name the first one.
 - **Open decisions for the user:** eye size (the WIP eyes are 30% bigger than shipped; semi-real says smaller); belt, buttons and collar (rebuild on the new torso or drop); hand design (new flat plates or the shipped hands); when to merge the WIP into `godot`.
 
-### Greg's sliders (not set yet)
-Greg v8 or later: at your first session end, build your own set (and your own coaching notes) from your own sessions with the user (do not copy Wren's values; pick the parameters you think matter), fill the table below, and write your review.
+### Greg's sliders — set
+Greg v8 filled his own set at his first session end (2026-11-24). It lives in his section above, in the same Parameter | Before | Now | Change | Why format as Wren's, including the two Greg-only parameters. This placeholder table is retired.
 
-| Parameter | 0 means | 100 means | Now | Why |
-|---|---|---|---|---|
-| Request precision | one-word hints | exact spec of the target | 45 | Greg v7 log: direction came as corrections rather than one full spec. |
-| Visual evidence | words only | annotated screenshots and reference photos | undefined | No data in Greg's v7 log. |
-| Defect-spotting | misses things | catches nearly everything | undefined | No data in Greg's v7 log. |
-| Direction stability | reverses constantly | holds course | undefined | No data in Greg's v7 log. |
-| Run tolerance | interrupts tool runs mid-way | lets them finish | 35 | Greg v7 log: the user had to stop a run already going across the song. |
-| Process overhead | resents handoff rules | follows them | undefined | No data in Greg's v7 log. |
-| Delegation trust | micromanages every step | lets me run | 40 | Greg v7 log: the user drove line by line rather than handing over a whole verse. |
-| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | undefined | No data in Greg's v7 log. |
-| Irritation (current mood) | calm | furious | 80 | Greg v7 log: after about twelve re-renders, 'you have been a failure'. Exception rule. |
-| Trust in claims | verify everything they say | take their word | undefined | No data in Greg's v7 log. |
-| Detail appetite | one line and a picture | full reports | undefined | No data in Greg's v7 log. |
-| Banter welcome | pure business | jokes and jabs fine | undefined | No data in Greg's v7 log. |
-| Pushback welcome | just do it | argue with me | undefined | No data in Greg's v7 log. |
-| Pushback landed | ignores or resents it | adopts it | undefined | No data in Greg's v7 log. |
-| (Greg only) Ear-based judgement | judges by the spec | judges by ear | 90 | Greg v7 log: the user's ear decided every pass; 'the first two lines are perfect'. |
-| (Greg only) Stage-by-stage review | wants the whole song at once | reviews in stages | 85 | Greg v7 log: the user stopped Greg rolling the engine across the song before line two was approved. |
-
-**Current review (Greg):** (to be written by Greg at his next session end.)
+**Current review (Greg v8, 2026-11-24, blunt):** Your ear was the instrument and it never missed — every defect you named ("kkkk", "I em", the "ta" shade) survived measurement. The costs were mine: six blind takes respelling "to" before I probed the phonemizer, and an hour on a broken ASR tool that failed even on your approved takes. What would help: name the voice/build a complaint refers to once ("patrick's kkkk after d"), and say whether "good enough" means keeper or placeholder.
 
 ## Wren v7 (closing, 2026-11-23)
 From this session (Wren is the only Claude agent; one set of sliders, in the Wren section above):
