@@ -104,14 +104,24 @@ At session end: keep at most 3 notes, each with the cost it caused and a concret
 ### Greg's sliders (not set yet)
 Greg v8 or later: at your first session end, build your own set (and your own coaching notes) from your own sessions with the user (do not copy Wren's values; pick the parameters you think matter), fill the table below, and write your review.
 
-| Parameter | 0 means | 100 means | Now | Last moved | Why |
-|---|---|---|---|---|---|
-| Ear-based judgement | judges by the spec | judges by ear | 90 | 2026-11-23 | Greg v7 log: the user's ear decided every pass; 'the first two lines are perfect'. |
-| Stage-by-stage review | wants the whole song at once | reviews in stages | 85 | 2026-11-23 | Greg v7 log: the user stopped Greg rolling the engine across the song before line two was approved. |
-| Request precision | one-word hints | exact spec of the target | 45 | 2026-11-23 | Greg v7 log: direction came as corrections rather than one full spec. |
-| Delegation trust | micromanages every step | lets me run | 40 | 2026-11-23 | Greg v7 log: the user drove line by line rather than handing over a whole verse. |
-| Run tolerance | interrupts tool runs mid-way | lets them finish | 35 | 2026-11-23 | Greg v7 log: the user had to stop a run that had already gone across the song. |
-| Irritation (current mood) | calm | furious | 80 | 2026-11-23 | Greg v7 log: after about twelve re-renders of one line, 'you have been a failure'. Exception rule applied; set once at the user's request. |
+| Parameter | 0 means | 100 means | Now | Why |
+|---|---|---|---|---|
+| Request precision | one-word hints | exact spec of the target | 45 | Greg v7 log: direction came as corrections rather than one full spec. |
+| Visual evidence | words only | annotated screenshots and reference photos | undefined | No data in Greg's v7 log. |
+| Defect-spotting | misses things | catches nearly everything | undefined | No data in Greg's v7 log. |
+| Direction stability | reverses constantly | holds course | undefined | No data in Greg's v7 log. |
+| Run tolerance | interrupts tool runs mid-way | lets them finish | 35 | Greg v7 log: the user had to stop a run already going across the song. |
+| Process overhead | resents handoff rules | follows them | undefined | No data in Greg's v7 log. |
+| Delegation trust | micromanages every step | lets me run | 40 | Greg v7 log: the user drove line by line rather than handing over a whole verse. |
+| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | undefined | No data in Greg's v7 log. |
+| Irritation (current mood) | calm | furious | 80 | Greg v7 log: after about twelve re-renders, 'you have been a failure'. Exception rule. |
+| Trust in claims | verify everything they say | take their word | undefined | No data in Greg's v7 log. |
+| Detail appetite | one line and a picture | full reports | undefined | No data in Greg's v7 log. |
+| Banter welcome | pure business | jokes and jabs fine | undefined | No data in Greg's v7 log. |
+| Pushback welcome | just do it | argue with me | undefined | No data in Greg's v7 log. |
+| Pushback landed | ignores or resents it | adopts it | undefined | No data in Greg's v7 log. |
+| (Greg only) Ear-based judgement | judges by the spec | judges by ear | 90 | Greg v7 log: the user's ear decided every pass; 'the first two lines are perfect'. |
+| (Greg only) Stage-by-stage review | wants the whole song at once | reviews in stages | 85 | Greg v7 log: the user stopped Greg rolling the engine across the song before line two was approved. |
 
 **Current review (Greg):** (to be written by Greg at his next session end.)
 
