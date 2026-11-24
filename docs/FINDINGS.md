@@ -26,7 +26,7 @@ S017|2026-11-23|process|pattern:symptom_cause_fix|records that store all three l
 S018|2026-11-23|process|rule:record_unverified_with_claim|every claim carries its verification status; untested = never trusted, never re-tested blindly|Greg v8
 S019|2026-11-23|process|domain:open;use:pending_user_decisions|open-question records so a session resumes mid-thought|Greg v8
 S020|2026-11-23|song|unverified:all_bryce_renders_by_ear;verified:mojibake_fix_nuclei7v7,declick_measurement|nothing sung today is user-approved except A0 take7 pending|Greg v8
-S021|2026-11-23|song|approved_lines:A0,A2,A4,A6;open:verse1_SECTION_approval;open:chorus1_section_review|rule:whole section approved together before moving on, separate from line approvals|user via Greg v8
+S021|2026-11-23|song|approved_lines:A0,A2,A4(take4_patrick),A6;open:verse1_SECTION_approval;open:chorus1_section_review|rule:whole section approved together before moving on, separate from line approvals|user via Greg v8
 S022|2026-11-23|singer|pattern:symptom_cause_fix;case:rushed_first_word(A4 Jake's);fix:keep_first_pitch,no_scoop|first-word rush = entrance scoop + flattened note fighting the voice's natural attack; mirror of keep_last_pitch|Greg v8
 S023|2026-11-23|singer|pattern:symptom_cause_fix;case:schwa_reduction(A6 to_make->ta);fix:say_tou+glide[0,1]|'to,','too','two','toe','took' all failed; 'tou' keeps stressed u inside one sentence; comma splits chunks and kills melody|Greg v8
 S024|2026-11-23|singer|rule:glide_cuts_word_i_end;place_breath_after_rushed_word_not_before|glide[0,1] trimmed Jake's tail and read as rushed; moved to [1,2]|Greg v8
