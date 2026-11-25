@@ -24,7 +24,7 @@ Rule (user, 2026-11-23, binds Wren and Greg equally): you may read the other age
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| — | (none) | — |
+| Wren v11 | `wren-hero-wip` `blender/wip/hero_v67_lids_light.blend` (new copy `hero_v68_hair_nodes.blend`); scripts `tools/hero_rig/v11/` (hair Geometry Nodes, on the WIP branch) | 2026-11-24 |
 
 ## Gotchas
 - `var x := SOME_CONST_ARRAY[i]` fails to compile (untyped array). Write `var x: String = ...`. A `menu.gd` compile error leaves Android showing only the background.
