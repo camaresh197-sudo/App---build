@@ -3,7 +3,7 @@
 **Read this before editing the hero's head, hair, brows or eyes.** Models are WIP only (branch `wren-hero-wip`, `blender/wip/`); the shipped master `blender/character_rigged.blend` is untouched. Nothing here is exported to the game, `rigref` has not been run on it, and it has not been on a phone.
 
 ## Latest file
-`blender/wip/hero_v67_lids_light.blend`. Lineage: `hero_v19_catch` -> eye session `hero_v21..v39` (claimed by another session) -> `hero_v40_face_joints` (87 face bones moved onto `character_rig.json` points) -> `hero_v58_blend` (hair) -> `hero_v59_iris_fix` -> `hero_v60_brows` -> `hero_v66_brows_flat` (smooth brows) -> `hero_v67_lids_light` (lids 15,860 -> 4,318 faces, Greg v9 2026-11-24). Versions in between are failed or superseded passes; the HANDOFF Claimed table has one row each.
+`blender/wip/hero_v67_lids_light.blend`. Lineage: `hero_v19_catch` -> eye session `hero_v21..v39` (claimed by another session) -> `hero_v40_face_joints` (87 face bones moved onto `character_rig.json` points) -> `hero_v58_blend` (hair) -> `hero_v59_iris_fix` -> `hero_v60_brows` -> `hero_v66_brows_flat` (smooth brows) -> `hero_v67_lids_light` (lids 15,860 -> 4,318 faces, Greg v9 2026-11-24) -> `hero_v68_bald` (bald: hair + hat removed; head reshaped human; ears + real nose geometry added, Greg v9 2026-11-24). Versions in between are failed or superseded passes; the HANDOFF Claimed table has one row each.
 The .blend is NOT under `godot/hula/` on purpose: a .blend inside `res://` can make Godot's import abort. Export a GLB with `tools/blend_to_glb.py` instead.
 
 ## What each script does
@@ -18,6 +18,11 @@ Save outputs to a durable place (a new `blender/wip/` file), not `/tmp`.
 - `iris_png.py` + `iris_pack.py`: generate and pack the iris texture. `iris_tex_v59.png` is the generated file.
 - `brow_smooth.py` + `brow_dark.py`: smooth tapered brows ray-cast onto the skin, dark brown material `BrowHairMat`.
 - `lids_light.py`: un-subdivides the four eyelid meshes (2 iterations). v66 -> v67: lids 15,860 -> 4,318 faces, rim shift <= 1.35 mm, bbox <= 0.11 mm, single-bone weights and UVs kept; Cycles eye close-up pixel diff mean 0.1/255. Iteration 3 (2,440 faces) shifts the upper rim 2.43 mm and reads faceted at 2x zoom; not used. Hero total: 100,314 -> 88,772 faces.
+- `head_shape.py`: v67 -> v68 head reshape. Narrows temples (-10% at the eye line), pulls the back skull in (-16%), widens jaw/chin (+9%), brings chin forward, slopes the forehead back, compresses the cranium 10% toward the brow line, sculpts a nose bridge/tip/wings and a mandible edge into the skin. **CRITICAL: `head_12` has shape keys; the `Basis` key block stores its own vertex copies and OVERRIDES the base mesh at render time. After editing `v.co`, the new positions must be written into `Basis.data` too — six render passes were wasted before this was found.**
+- `drop_hat.py`: deletes the five `hat_*` meshes (5,912 faces). User: hat scrapped, redo later.
+- `add_ears.py`: builds `ear_l_0`/`ear_r_0` (helix rim + concha bowl), each vertex rooted at the skull surface at its own (y, z). The head never had ears; the old hair covered them.
+- `add_nose_geo.py`: builds `nose_geo`, a lofted shell (bridge with concave dip, tip, wings, under-nose recess) rooted at a least-squares quadratic fit of the face surface, riding 1.5 mm proud (lift proportional to protrusion so the rim sits flush). Point-wise skin lookups and rim-tucking both produced jagged seams; the smooth fit is what works.
+- `hair_cards_v2.py`, `hair_shell.py`, `hair_locks.py`: FAILED hair experiments, kept as a record. Cards read as wires or leave bald gaps; one continuous shell reads as a hood; tube locks read as tentacles. The game builds its own hair in `hero3d.gd` (`_hair_cap` + side locks) — fix hair there or hand-sculpt, not with parameter sweeps.
 - `render_eyes_cycles.py`, `render_hair_views.py`, `face_joint_distances.py`: checks (see below).
 
 ## Findings (read these, they cost hours)
