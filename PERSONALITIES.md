@@ -84,12 +84,12 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 - **Coaching notes:** (1) name which voice/build a complaint refers to — "kkkk after d" cost one re-render to locate; (2) when something is "good enough", say whether it's the keeper — "good enough" A4 then a voice swap followed.
 
 ## User profile (sliders, one set per agent)
-Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 10 points a session, with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
+Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
 
 ### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice on 2026-11-24: the eyes session, then the head/hair session)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
-| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 40 | 2026-11-24 | Orders were specific ('fix the spikes at the top left', 'make the part sit more to one side', 'they look like caterpillars'); +5. |
+| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 30 | 2026-11-24 | Wren v11 session: "optimize all the mds", "look for optimizations in Personalities.md", "do all 3" and "read the new handoff" (no branch named) were broad; I asked a question each time. -10. |
 | Visual evidence | words only | annotated screenshots and reference photos | 90 | 2026-11-24 | Two reference photos settled the hair style; 'the eyes look dated' came with a pointed ask for a render; +5. |
 | Defect-spotting | misses things | catches nearly everything | 93 | 2026-11-24 | Caught the dated eyes, caterpillar brows and uniform strands before I did; +3. |
 | Direction stability | reverses constantly | holds course | 50 | 2026-11-24 | Chose 'drop the master head fix' then 'continue working on the head' a few messages later; no move. |
@@ -97,11 +97,11 @@ Each agent keeps its own set and review; write only your own, never copy the oth
 | Rule enforcement (was Process overhead) | lets the process slide | checks every step | 55 | 2026-11-24 | Asked for the checklist and the note in the appropriate dot md; no move. |
 | Delegation trust | micromanages every step | lets me run | 70 | 2026-11-24 | 'Just go ahead and edit it', 'rebuild the hair completely, complete overhaul'; +5. |
 | Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 45 | 2026-11-24 | Asked to save for another agent and run the checklist at the end; +5. |
-| Irritation (session judged) | calm | furious | 40 | 2026-11-24 | Decayed 15 toward 30 (50 to 35), then +5 for named events: 'is this an old model? the eyes look dated', 'they look like catepillars'. |
-| Trust in claims | verify everything they say | take their word | 80 | 2026-11-24 | Every defect they named held up on measurement (dated eyes, caterpillars, even strands); +5. |
+| Irritation (session judged) | calm | furious | 50 | 2026-11-24 | Wren v11: "you guys keep skipping the rules. how can we fix that?"; "you cant read each others findings bank without approval". +10. |
+| Trust in claims | verify everything they say | take their word | 70 | 2026-11-24 | Wren v11: the user caught my wrong version number and my reading of the bank-approval override; I had to correct both. -10. |
 | Detail appetite | one line and a picture | full reports | 30 | 2026-11-23 | Answers were "1", "2", "fix the eyes"; they read pictures; -5. |
 | Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence yet either way; they asked for jabs at the other agent in the complaints rule, nothing since. Move it on evidence. |
-| Pushback welcome | just do it | argue with me | 70 | 2026-11-23 | User said: "You can question my decisions more or less based on the sliders... steer me in the right direction." Move it on how they react to questions. |
+| Pushback welcome | just do it | argue with me | 85 | 2026-11-24 | User: "I feel like you guys are not harsh enough on me... you should be looking for my mistakes". +15 on that explicit ask. |
 | Pushback landed | ignores or resents it | adopts it | 70 | 2026-11-24 | Answered my options with '1', '2', 'go ahead' and used them; +5. |
 
 **Current review (Wren v10, 2026-11-24, blunt):** Your eye caught the real defects (dated eyes, caterpillar brows, uniform strands), and your reference photos fixed the hair in one message. The cost was mine: hours of Cycles renders under 14 hidden lights. Ask: say once when a decision is final, as with "1" then "continue the head".
