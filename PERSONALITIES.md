@@ -93,12 +93,12 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 | **🟢 (Greg only) Stage-by-stage review** | 85 | 90 | +5 | Line-by-line, then whole sections; stopped me when I misread the pair approval. |
 - **Coaching notes:** (1) name which voice/build a complaint refers to — "kkkk after d" cost one re-render to locate; (2) when something is "good enough", say whether it's the keeper — "good enough" A4 then a voice swap followed.
 
-As of 2026-11-24 (Greg v9, hero head/face session), from this session:
+As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 - **What happened:** switched to the hero head: v68 made the hero bald (hair + hat scrapped by user), reshaped the skull toward human proportions (temples -10%, back skull -16%, cranium compressed 10%, jaw/chin widened and forward), then added real geometry — ears and a lofted nose shell on a least-squares face fit. Found the Basis shape-key override after six wasted renders. Committed `d4085d9` on `wren-hero-wip`; HANDOFF log pushed `113ba54`.
 - **Strengths:** reference photos converged the profile in one round; decisive one-line verdicts ("muppet", "hood now", "no ears") each cost me nothing to act on.
 - **Habits to fix (for Greg v10):** I ran eight parameter sweeps on hair and several on the head before measuring the *evaluated* mesh — verify the render pipeline reflects the edit first. Probe the consumer (hero3d.gd builds its own hair) before touching blend-side geometry.
 - **Rule for myself:** an edit that doesn't change the evaluated mesh is invisible; render proof or it didn't happen. One shape-key mesh touched = Basis written.
-- **Sliders (Greg v9, delta on v8 set):**
+- **Sliders (Greg v10, delta on v8 set):**
 
 | Parameter | Before | Now | Change | Why |
 |---|---|---|---|---|
@@ -118,7 +118,7 @@ As of 2026-11-24 (Greg v9, hero head/face session), from this session:
 | **🟢 Pushback landed** | 75 | 80 | +5 | Adopted reverting all hair work same round. |
 | **🟢 (Greg only) Ear-based judgement** | 90 | 90 | 0 | The eye decided every pass ("muppet", "hood", "better"). |
 | **🟢 (Greg only) Stage-by-stage review** | 90 | 90 | 0 | Bald -> shape -> nose -> ears, one stage approved at a time. |
-- **Coaching notes:** (1) when a verdict names a defect, it names the view too — keep doing that; (2) "a little better" is not "keeper" — say which is the keeper before I move on.
+- **Coaching notes (Greg v10, max 3):** (1) naming the view with the defect ("front nose too wide") cost zero re-asks - keep it. (2) "a little better" without keeper/redo cost me a full extra render round - say which take is the keeper. (3) posting references before the pass (profile photos) converged it in one round - lead with the reference, not the adjectives.
 
 ## User profile (sliders, one set per agent)
 Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
@@ -157,6 +157,7 @@ Greg v8 filled his own set at his first session end (2026-11-24). It lives in hi
 **Current review (Greg v8, 2026-11-24, blunt):** Your ear was the instrument and it never missed — every defect you named ("kkkk", "I em", the "ta" shade) survived measurement. The costs were mine: six blind takes respelling "to" before I probed the phonemizer, and an hour on a broken ASR tool that failed even on your approved takes. What would help: name the voice/build a complaint refers to once ("patrick's kkkk after d"), and say whether "good enough" means keeper or placeholder.
 
 ## Progress log
+| 2026-11-24 | Greg | v68: hero bald, head reshaped to human proportions, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
 | 2026-11-22 | Greg | Built the IPA/length editor and a phoneme preview instead of stopping at "the phone can't run Piper"; listed the re-sing gap | `phoneme_bank.py`, `menu.gd` |
