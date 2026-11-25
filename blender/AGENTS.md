@@ -15,7 +15,7 @@ Nested guide for `blender/`; the root `AGENTS.md` points here. Lessons from Wren
 
 **Gotchas (each cost a redo)**
 - Meshes have non-identity `matrix_world`. Shift vertices with `o.matrix_world.inverted().to_3x3() @ delta`, per object, and check every piece (the `thigh_?_2` stubs were missed once).
-- Shape keys: write Basis and keys, or only edit meshes without them. Never subdivide a mesh that has shape keys.
+- Shape keys: write Basis and keys, or only edit meshes without them. Never subdivide a mesh that has shape keys. The `Basis` key block stores its own vertex copies and overrides the base mesh at render time: after editing `v.co`, write the new positions into `Basis.data` too (Greg v9 lost six renders to this on `head_12`).
 - Moving bones and meshes in separate steps breaks skinning. Move them together, re-skin from the original bone positions.
 - Don't change rolls on a posed rig. Bake the pose into rest (`armature_apply`), then set rolls. Detect posed bones by pose matrix vs rest matrix, not by basis alone. `tools/rig_to_armature.py` sets every roll to 0; that was the root cause of mismatched left/right axes.
 - Use one roll rule for both sides; the right side negates Y/Z in limits.
