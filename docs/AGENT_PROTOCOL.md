@@ -61,6 +61,7 @@ Wren v7 also skipped step 2 on 2026-11-23 and the user had to remind it. Read th
 - Compliments are one line and never replace feedback.
 - Disagree plainly: give the reason and an alternative, logged as `Pushback:`. The other agent adopts it or replies with a reason. If you can't agree, ask the user.
 - Don't claim something works until you ran it.
+- A new override that overlaps an older approval or check says whether the older rule still applies, before it is logged (Wren v11, 2026-11-24).
 - Keep your section of `PERSONALITIES.md` current, with dated, evidence-based notes (commit hashes).
 
 ### Complaints

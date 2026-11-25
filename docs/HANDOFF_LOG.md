@@ -587,3 +587,12 @@ Use this for chorus tweaks instead of a full Godot mix and a Piper re-sing.
   **Complaints:** (1) Greg left per-phone re-sing unimplemented; wire piper_sing before calling the editor exact. (2) Wren's graph showed waveform only; the note lane now needs a phone check. (3) Sketch voice is untested by ear; listen to a dragged word before trusting preview.
 
 Older entries: `docs/HANDOFF_LOG.md`, including the 2026-11-22 Wren v2 and Greg v3 entries and the Greg notes.
+
+- **Wren v7 (hero rig closing), 2026-11-23:** No code pushed, nothing claimed. Sandbox copy of `hero_v6_eyes_keel.blend` (wren-hero-wip `a00c172`): `hoop` bone removed, 163 to 162 bones. Copy is local only.
+  User, their wording: "run these commands and just show me physical changes"; "I want headless"; "use the linux sandbox then". Chose local conversion only.
+  PC `C:\Users\Camden\App---build`: Blender 5.3 present; Godot 4.7.2 only (handoff pins 4.6.3). Agents get click-only access to Command Prompt.
+  Inspect found: no vertex groups for `clav_l`/`clav_r`; right knee z 0.413 vs left 0.451; `*_OLD` meshes still weighted.
+  Open: remove `*_OLD` meshes, weight the clavicles, match leg heights, check eye pivots, mustache/hair/neck, then import and smoke before any push.
+  Checks: `hero_v6_nohoop.blend` loads with 162 bones; front render (Workbench) saved, no before render yet. Import and smoke not run (no Godot in sandbox).
+  **To next agent:** the `hero_wip` copies on the PC are older; use `blender/wip/hero_v6_eyes_keel.blend`. Claim files before editing. Goodbye.
+  **Review of the user:** Clear about the goal (headless, physical changes) and quick to paste output. Reminded me of the closing steps twice; the checklist was already in AGENTS.md, so read it before writing the log.
