@@ -24,8 +24,7 @@ Rule (user, 2026-11-23, binds Wren and Greg equally): you may read the other age
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
-| Wren v11 (user override: engine only; Greg keeps songs, lyrics and clip renders, 2026-11-24) | `tools/piper_sing.py` (engine) | 2026-11-24 |
-| Wren v11 (stems, 2026-11-24, user go-ahead for items 1-2) | `tools/build_stems.py` (instrument stem subtraction); vocal variation test goes to a scratch folder only | 2026-11-24 |
+| — | (none) | — |
 
 ## Gotchas
 - `var x := SOME_CONST_ARRAY[i]` fails to compile (untyped array). Write `var x: String = ...`. A `menu.gd` compile error leaves Android showing only the background.
