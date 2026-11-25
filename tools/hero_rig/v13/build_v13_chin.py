@@ -145,6 +145,12 @@ for v in me.vertices:
         hx,hy=v.co.x,v.co.y-byo
         hl=math.hypot(hx,hy) or 1.0
         v.co.x+=w*hx/hl; v.co.y+=w*hy/hl
+# chin: a groove under the lower lip (mentolabial sulcus) and a chin pad, on the finer jaw mesh
+for v in me.vertices:
+    p=v.co
+    if p.y>-0.04 or p.z>1.47 or p.z<1.39: continue
+    v.co.y+=gbump(p,Vector((0,0,1.4385)),0.0200,0.0060,-0.0040)   # groove (dent)
+    v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0050)    # chin pad (forward)
 # eye sockets, applied after the features so the brow and cheek stay forward of the dish
 for v in me.vertices:
     if v.co.y>-0.06: continue
@@ -250,5 +256,7 @@ for sx in (1,-1):
     n.rotation_euler=(0.0,math.radians(14*sx),math.radians(0))
     n.data.materials.append(nost)
     n.data.update()
+for _p in me.polygons:
+    if all(me.vertices[i].co.z<1.49 for i in _p.vertices): _p.use_smooth=True
 bpy.ops.wm.save_as_mainfile(filepath="feat_v13_chin.blend")
 print("saved feat_v143 verts", len(me.vertices))
