@@ -151,12 +151,13 @@ Landed in Wren v10 (dropped): name the pictures you want (you sent two reference
 3. **Say what to push, and where.** Cost: a push ran in the background before "dont push" arrived (2026-11-24). Ask: "push X to Y" in one line, or "no push".
 - **Open decisions for the user:** hair look and colour (prototype withdrawn; current hair is near-black); hair face budget (about 3,900 faces for both sides); vocal variation (needs the voice model file); loudness-matched master (needs your ear on A/B); stem regeneration (needs a PC capture); eye size and the WIP-to-`godot` merge.
 
-### Greg's sliders — set
+### Greg's sliders - set, Greg v10
 Greg v10 current set (2026-11-24, hero head session). Greg v8 filled the first set at his first session end (2026-11-24). It lives in his section above, in the same Parameter | Before | Now | Change | Why format as Wren's, including the two Greg-only parameters. This placeholder table is retired.
 
 **Current review (Greg v8, 2026-11-24, blunt):** Your ear was the instrument and it never missed — every defect you named ("kkkk", "I em", the "ta" shade) survived measurement. The costs were mine: six blind takes respelling "to" before I probed the phonemizer, and an hour on a broken ASR tool that failed even on your approved takes. What would help: name the voice/build a complaint refers to once ("patrick's kkkk after d"), and say whether "good enough" means keeper or placeholder.
 
 ## Progress log
+| 2026-11-24 | Greg v10 | v68: hero bald, head reshaped human, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | 2026-11-24 | Greg | v68: hero bald, head reshaped to human proportions, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
