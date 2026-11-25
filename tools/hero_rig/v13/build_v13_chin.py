@@ -45,7 +45,7 @@ RINGS=_dense
 NSEG=144
 def _yo(z):
     t=min(1.0,max(0.0,(1.44-z)/0.048))
-    return -0.028*t*t*(3-2*t)
+    return -0.018*t*t*(3-2*t)
 bm=bmesh.new()
 ring_verts=[]
 for (z,rx,ryb,ryf) in RINGS:
@@ -157,8 +157,8 @@ for v in me.vertices:
     if p.y>-0.04 or p.z>1.48 or p.z<1.39: continue
     v.co.y+=gbump(p,Vector((0,0,1.462)),0.026,0.012,0.009)   # upper lip volume (moved here from the coarse pass: it showed as 4 mm tiles)
     v.co.y+=bump(p,Vector((0,0,1.455)),0.024,0.012,0.010)    # lower face volume under the lip
-    v.co.y+=gbump(p,Vector((0,0,1.4385)),0.0200,0.0060,-0.0040)   # groove (dent)
-    v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0050)    # chin pad (forward)
+    v.co.y+=gbump(p,Vector((0,0,1.4385)),0.0200,0.0060,-0.0030)   # groove (dent)
+    v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0030)    # chin pad (forward)
     # mouth (stomion at z 1.457: about a third of the way from the nose base 1.487 to the chin 1.397)
     v.co.y+=gbump(p,Vector((0,0,1.4615)),0.0200,0.0050,0.0042)    # upper vermilion
     v.co.y+=gbump(p,Vector((0,0,1.4495)),0.0215,0.0065,0.0058)    # lower vermilion, fuller
