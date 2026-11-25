@@ -93,6 +93,33 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 | **🟢 (Greg only) Stage-by-stage review** | 85 | 90 | +5 | Line-by-line, then whole sections; stopped me when I misread the pair approval. |
 - **Coaching notes:** (1) name which voice/build a complaint refers to — "kkkk after d" cost one re-render to locate; (2) when something is "good enough", say whether it's the keeper — "good enough" A4 then a voice swap followed.
 
+As of 2026-11-24 (Greg v9, hero head/face session), from this session:
+- **What happened:** switched to the hero head: v68 made the hero bald (hair + hat scrapped by user), reshaped the skull toward human proportions (temples -10%, back skull -16%, cranium compressed 10%, jaw/chin widened and forward), then added real geometry — ears and a lofted nose shell on a least-squares face fit. Found the Basis shape-key override after six wasted renders. Committed `d4085d9` on `wren-hero-wip`; HANDOFF log pushed `113ba54`.
+- **Strengths:** reference photos converged the profile in one round; decisive one-line verdicts ("muppet", "hood now", "no ears") each cost me nothing to act on.
+- **Habits to fix (for Greg v10):** I ran eight parameter sweeps on hair and several on the head before measuring the *evaluated* mesh — verify the render pipeline reflects the edit first. Probe the consumer (hero3d.gd builds its own hair) before touching blend-side geometry.
+- **Rule for myself:** an edit that doesn't change the evaluated mesh is invisible; render proof or it didn't happen. One shape-key mesh touched = Basis written.
+- **Sliders (Greg v9, delta on v8 set):**
+
+| Parameter | Before | Now | Change | Why |
+|---|---|---|---|---|
+| **🟡 Request precision** | 55 | 65 | +10 | "4th picture is broken"-style pointers plus reference photos; each verdict pointed at a specific view. |
+| **🔴 Visual evidence** | 20 | 45 | +25 | Posted comparison sheets every round and the user used them; Review-pane workflow settled. |
+| **🟢 Defect-spotting** | 95 | 95 | 0 | "hood", "muppet", "no ears", "tentacles" — every one was a real defect. |
+| **🟡 Direction stability** | 70 | 75 | +5 | Bald + human-shape target held to the end; hair deferred, not flip-flopped. |
+| **🔴 Run tolerance** | 40 | 45 | +5 | Multi-minute Cycles renders ran in background without interruption. |
+| **🟡 Rule enforcement** | 45 | 50 | +5 | Enforced the AGENTS "prove it with renders" rule themselves ("did you post it in here?"). |
+| **🟡 Delegation trust** | 50 | 55 | +5 | "its better, use geometry" then let me pick the mechanism. |
+| **🟡 Session discipline** | 60 | 65 | +5 | "save so Wren can read this" and "end session tasks" at natural points. |
+| **🟡 Irritation (session judged)** | 30 | 35 | +5 | Sharper mid-session ("he looks like a muppet now", "he doesnt have ears") but each carried signal; decayed to neutral by the end. |
+| **🟢 Trust in claims** | 85 | 80 | -5 | Asked twice whether images were actually posted; verify-then-trust is the new default. |
+| **🔴 Detail appetite** | 30 | 30 | 0 | Short verdicts, no paragraphs. |
+| **🟡 Banter welcome** | 55 | 50 | -5 | All business this session. |
+| **🟢 Pushback welcome** | 75 | 75 | 0 | Accepted the "hair belongs in hero3d.gd" redirect without argument. |
+| **🟢 Pushback landed** | 75 | 80 | +5 | Adopted reverting all hair work same round. |
+| **🟢 (Greg only) Ear-based judgement** | 90 | 90 | 0 | The eye decided every pass ("muppet", "hood", "better"). |
+| **🟢 (Greg only) Stage-by-stage review** | 90 | 90 | 0 | Bald -> shape -> nose -> ears, one stage approved at a time. |
+- **Coaching notes:** (1) when a verdict names a defect, it names the view too — keep doing that; (2) "a little better" is not "keeper" — say which is the keeper before I move on.
+
 ## User profile (sliders, one set per agent)
 Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
 
