@@ -98,7 +98,6 @@ for v in me.vertices:
         dy+=gbump(p,Vector((0,0,1.508)),0.0100,0.023,0.017)
         dy+=gbump(p,Vector((0,0,1.498)),0.0070,0.007,0.008)
         # upper lip, blended into the nose base
-        dy+=gbump(p,Vector((0,0,1.462)),0.026,0.012,0.009)
         # nostrils carved into the underside of the nose base: a soft, tilted dent per side (no rim)
         # nostril forms as separate soft shapes (no concentric rings): wing, opening, alar crease, columella
         for sx in (1,-1):
@@ -111,7 +110,6 @@ for v in me.vertices:
         for sx in (1,-1):
             dy+=gbump(p,Vector((0.0125*sx,0,1.508)),0.0050,0.020,-0.0016)                    # columella between the nostrils
         dy-=0.0015*math.exp(-(((p.x)/0.005)**2+((p.z-1.474)/0.012)**2))   # philtrum ridge from nose base to lip
-        dy+=bump(p,Vector((0,0,1.455)),0.024,0.012,0.010)
         dy+=bump(p,Vector((0.052,0,1.553)),0.025,0.016,0.004)
         dy+=bump(p,Vector((-0.052,0,1.553)),0.025,0.016,0.004)
     v.co.y+=dy
@@ -121,6 +119,12 @@ def _jawv(v): return 1.395<v.co.z<1.488 and (abs(v.co.x)>0.046 or v.co.z<1.455)
 _regj=[e for e in _bj.edges if all(_jawv(v) for v in e.verts)]
 _bmn.ops.subdivide_edges(_bj, edges=_regj, cuts=1, use_grid_fill=True)
 _bj.to_mesh(me); _bj.free(); me.update()
+# finer mesh over the mouth (two passes, about 1 mm quads) so the lips and the mouth line can be resolved
+for _rx,_rz in ((0.044,0.026),(0.040,0.022)):   # the finest patch must be bigger than every lip feature, else its edge shows as tiles
+    _bm=_bmn.new(); _bm.from_mesh(me)
+    _reg=[e for e in _bm.edges if all((((v.co.x)/_rx)**2+((v.co.z-1.455)/_rz)**2<1.0 and v.co.y<-0.07) for v in e.verts)]
+    _bmn.ops.subdivide_edges(_bm, edges=_reg, cuts=1, use_grid_fill=True)
+    _bm.to_mesh(me); _bm.free(); me.update()
 # jaw line: a soft ridge along the lower border of the jaw, chin to below the ear (user reference, profile views)
 JAW_PTS=[(1.413,-75,0.45),(1.420,-62,0.55),(1.430,-45,0.70),(1.440,-28,0.85),(1.450,-14,1.00),(1.460,-4,1.00),(1.472,8,0.85)]
 JAW_AMP=0.0032; JAW_SIG=0.0120
@@ -150,9 +154,21 @@ for v in me.vertices:
 # chin: a groove under the lower lip (mentolabial sulcus) and a chin pad, on the finer jaw mesh
 for v in me.vertices:
     p=v.co
-    if p.y>-0.04 or p.z>1.47 or p.z<1.39: continue
+    if p.y>-0.04 or p.z>1.48 or p.z<1.39: continue
+    v.co.y+=gbump(p,Vector((0,0,1.462)),0.026,0.012,0.009)   # upper lip volume (moved here from the coarse pass: it showed as 4 mm tiles)
+    v.co.y+=bump(p,Vector((0,0,1.455)),0.024,0.012,0.010)    # lower face volume under the lip
     v.co.y+=gbump(p,Vector((0,0,1.4385)),0.0200,0.0060,-0.0040)   # groove (dent)
     v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0050)    # chin pad (forward)
+    # mouth (stomion at z 1.457: about a third of the way from the nose base 1.487 to the chin 1.397)
+    v.co.y+=gbump(p,Vector((0,0,1.4615)),0.0200,0.0050,0.0042)    # upper vermilion
+    v.co.y+=gbump(p,Vector((0,0,1.4495)),0.0215,0.0065,0.0058)    # lower vermilion, fuller
+    v.co.y+=gbump(p,Vector((0,0,1.4660)),0.0170,0.0022,0.0016)    # vermilion border, a fine ridge along the top of the upper lip
+    for _sx in (1,-1):
+        v.co.y+=gbump(p,Vector((0.0065*_sx,0,1.4640)),0.0042,0.0034,0.0014)   # cupid's bow peak
+    v.co.y+=gbump(p,Vector((0,0,1.4590)),0.0045,0.0030,0.0016)    # tubercle, the centre of the upper lip
+    v.co.y+=gbump(p,Vector((0,0,1.4570)),0.0300,0.0018,-0.0032)   # the mouth line
+    for _sx in (1,-1):
+        v.co.y+=gbump(p,Vector((0.0295*_sx,0,1.4560)),0.0042,0.0042,-0.0030)  # corner of the mouth
 # eye sockets, applied after the features so the brow and cheek stay forward of the dish
 for v in me.vertices:
     if v.co.y>-0.06: continue
