@@ -94,7 +94,7 @@ Each agent keeps its own set and review; write only your own, never copy the oth
 | Defect-spotting | misses things | catches nearly everything | 93 | 2026-11-24 | Caught the dated eyes, caterpillar brows and uniform strands before I did; +3. |
 | Direction stability | reverses constantly | holds course | 50 | 2026-11-24 | Chose 'drop the master head fix' then 'continue working on the head' a few messages later; no move. |
 | Run tolerance | interrupts tool runs mid-way | lets them finish | 40 | 2026-11-24 | No run interrupts of mine; one interrupted tool read at the end; no move. |
-| Rule enforcement (was Process overhead) | lets the process slide | checks every step | 55 | 2026-11-24 | Asked for the checklist and the note in the appropriate dot md; no move. |
+| Rule enforcement (was Process overhead) | lets the process slide | checks every step | 65 | 2026-11-24 | User: "you guys keep skipping the rules. how can we fix that?"; then asked for the checker and hook to be built. +10. |
 | Delegation trust | micromanages every step | lets me run | 70 | 2026-11-24 | 'Just go ahead and edit it', 'rebuild the hair completely, complete overhaul'; +5. |
 | Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 45 | 2026-11-24 | Asked to save for another agent and run the checklist at the end; +5. |
 | Irritation (session judged) | calm | furious | 50 | 2026-11-24 | Wren v11: "you guys keep skipping the rules. how can we fix that?"; "you cant read each others findings bank without approval". +10. |
