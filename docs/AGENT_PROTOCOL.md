@@ -1,6 +1,15 @@
 # Agent protocol (Wren and Greg)
 
-Split out of the root `AGENTS.md` to keep per-turn context small. Read this at session start, with `HANDOFF.md` and your section of `PERSONALITIES.md`. Git and CI rules are in the root `AGENTS.md` > Git and CI.
+Split out of the root `AGENTS.md` to keep per-turn context small. Git and CI rules are in the root `AGENTS.md` > Git and CI.
+
+## Start of every session (one list, same for both agents)
+This list is canonical. `HANDOFF.md` and `AGENTS.md` point here instead of repeating it. Read in this order, before anything else:
+1. `HANDOFF.md`
+2. `AGENTS.md` (rules, complaints, numbering, overrides)
+3. this file
+4. `PERSONALITIES.md`: your own section only, plus both slider sets
+5. `git log origin/godot -5` (fetch `origin/godot` first; the tree moves between sessions)
+6. **your own findings bank**, and only your own: Wren `docs/findings/WREN.md`, Greg `docs/FINDINGS.md`. The other agent's bank needs the user's word and the owner's approval (see Coordination).
 
 ## Which role you are (newest rule, 2026-11-24)
 The role comes from the **model**, never from the harness or the session-start template: a Claude model is **Wren**; every other model (DeepSeek, GPT, Gemini, etc.) is **Greg**. If you are not a Claude model, do not open as Wren even though the Wren line below is the one you see first. The user may still name the role explicitly, and their words win.

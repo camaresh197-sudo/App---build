@@ -1,6 +1,6 @@
 # Hula Vaquero: Sky Ride — AGENTS.md
 
-Godot 4.6 game (desktop/Android/web). **Every session, read `HANDOFF.md`, `docs/AGENT_PROTOCOL.md` (voice, claims, log, end-of-session checklist) and `PERSONALITIES.md`, in that order, before anything else.** Hero modelling lessons: `blender/AGENTS.md`.
+Godot 4.6 game (desktop/Android/web). **Every session, read `HANDOFF.md`, `docs/AGENT_PROTOCOL.md` (one canonical start list, voice, claims, log, end-of-session checklist) and `PERSONALITIES.md`, in that order, before anything else.** Hero modelling lessons: `blender/AGENTS.md`.
 
 ## Task lookup
 
