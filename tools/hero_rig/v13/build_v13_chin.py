@@ -112,6 +112,38 @@ for v in me.vertices:
         dy+=bump(p,Vector((0.052,0,1.553)),0.025,0.016,0.004)
         dy+=bump(p,Vector((-0.052,0,1.553)),0.025,0.016,0.004)
     v.co.y+=dy
+# finer mesh over the jaw and chin only (below z 1.49, clear of the lids); skip the nose strip that is already fine
+_bj=_bmn.new(); _bj.from_mesh(me)
+def _jawv(v): return 1.395<v.co.z<1.488 and (abs(v.co.x)>0.046 or v.co.z<1.455)
+_regj=[e for e in _bj.edges if all(_jawv(v) for v in e.verts)]
+_bmn.ops.subdivide_edges(_bj, edges=_regj, cuts=1, use_grid_fill=True)
+_bj.to_mesh(me); _bj.free(); me.update()
+# jaw line: a soft ridge along the lower border of the jaw, chin to below the ear (user reference, profile views)
+JAW_PTS=[(1.413,-75,0.45),(1.420,-62,0.55),(1.430,-45,0.70),(1.440,-28,0.85),(1.450,-14,1.00),(1.460,-4,1.00),(1.472,8,0.85)]
+JAW_AMP=0.0032; JAW_SIG=0.0120
+_jp=[]
+_n=len(JAW_PTS)-1
+for _i in range(_n):
+    for _k in range(12):
+        _u=_k/12.0
+        _z=JAW_PTS[_i][0]*(1-_u)+JAW_PTS[_i+1][0]*_u
+        _t=math.radians(JAW_PTS[_i][1]*(1-_u)+JAW_PTS[_i+1][1]*_u)
+        _a=JAW_PTS[_i][2]*(1-_u)+JAW_PTS[_i+1][2]*_u
+        _rx=float(_f[0](_z)); _rb=float(_f[1](_z)); _rf=float(_f[2](_z))
+        _ry=_rb*math.sin(_t) if math.sin(_t)>=0 else _rf*math.sin(_t)
+        _jp.append((_rx*math.cos(_t), _ry+_yo(_z), _z, _a, _yo(_z)))
+for v in me.vertices:
+    if v.co.z>1.50 or v.co.z<1.39: continue
+    qx,qy,qz=abs(v.co.x),v.co.y,v.co.z
+    best=1e9; ba=0.0; byo=0.0
+    for (px,py,pz,pa,pyo) in _jp:
+        d2=(qx-px)**2+(qy-py)**2+(qz-pz)**2
+        if d2<best: best=d2; ba=pa; byo=pyo
+    if best<(3*JAW_SIG)**2:
+        w=math.exp(-best/JAW_SIG**2)*ba*JAW_AMP
+        hx,hy=v.co.x,v.co.y-byo
+        hl=math.hypot(hx,hy) or 1.0
+        v.co.x+=w*hx/hl; v.co.y+=w*hy/hl
 # eye sockets, applied after the features so the brow and cheek stay forward of the dish
 for v in me.vertices:
     if v.co.y>-0.06: continue
