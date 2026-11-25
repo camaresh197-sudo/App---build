@@ -748,6 +748,44 @@ def render_phones(line: dict, grid, voice: str, use_cache: bool = True) -> np.nd
     return out / peak * 0.89
 
 
+MASTER = "loudness"   # "loudness" (default, Wren v11) or "peak" (the old peak-to-0.89 normalise)
+MASTER_TARGET_DB = -17.0   # gated RMS target: the median shipped clip sits near here
+MASTER_CEILING = 0.89      # peak ceiling, as before
+MASTER_GATE_DB = -45.0     # frames quieter than this do not count toward the RMS
+MASTER_HP_HZ = 60.0        # removes sub-60 Hz rumble found in the gaps (W026); voice fundamentals sit well above
+
+
+def master_level(y: np.ndarray, rate: int = FS) -> np.ndarray:
+    """Match loudness between clips instead of peak-normalising each one.
+
+    Peak normalising put every shipped clip at about -1 dB, so average loudness
+    ranged 9 dB across clips (RMS -12.8 to -21.6 dB). This measures gated RMS on
+    frames above MASTER_GATE_DB, applies a gain to hit MASTER_TARGET_DB, and caps
+    the gain so the peak stays under MASTER_CEILING (no clipping). A high-pass
+    at MASTER_HP_HZ removes low rumble that the gaps carried.
+    """
+    from scipy.signal import butter, sosfilt
+    y = np.asarray(y, dtype=np.float64)
+    if MASTER_HP_HZ > 0 and len(y) > 64:
+        sos = butter(2, MASTER_HP_HZ, btype="highpass", fs=rate, output="sos")
+        y = sosfilt(sos, y)
+    fr = max(64, int(0.02 * rate))
+    n = len(y) // fr
+    if n:
+        rms = np.sqrt(np.mean(y[: n * fr].reshape(n, fr) ** 2, axis=1))
+        db = 20 * np.log10(rms + 1e-12)
+        act = rms[db > MASTER_GATE_DB]
+        level = float(np.sqrt(np.mean(act ** 2))) if act.size else float(np.sqrt(np.mean(y ** 2)))
+    else:
+        level = float(np.sqrt(np.mean(y ** 2)))
+    if level <= 1e-9:
+        return y
+    gain = 10 ** (MASTER_TARGET_DB / 20) / level
+    peak = float(np.max(np.abs(y))) or 1.0
+    gain = min(gain, MASTER_CEILING / peak)
+    return y * gain
+
+
 def _declick(y: np.ndarray) -> np.ndarray:
     """Fade in over ~3 ms wherever audio starts after a silent gap.
 
@@ -1150,9 +1188,12 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
             y += take * wi
     else:
         y = takes[0]
-    # normalize + tiny edge fades to avoid clicks
-    peak = np.max(np.abs(y)) or 1.0
-    y = y / peak * 0.89
+    # level + tiny edge fades to avoid clicks
+    if MASTER == "peak":
+        peak = np.max(np.abs(y)) or 1.0
+        y = y / peak * MASTER_CEILING
+    else:
+        y = master_level(y, FS)
     nfade = int(0.006 * FS)
     if len(y) > 2 * nfade:
         y[:nfade] *= np.linspace(0, 1, nfade)
