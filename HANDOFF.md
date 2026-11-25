@@ -57,6 +57,17 @@ Rule (user, 2026-11-23, binds Wren and Greg equally): you may read the other age
 - Node N unlocks with ≥ 1 star on N−1; `a1_1` is always open. Save keeps `levels: {id: stars}`; endless writes nothing.
 - `menu.gd` is the compile tripwire: `:=` on untyped arrays fails there. Full plan: `docs/HANDOFF_LOG.md`.
 
+## Letter from Wren to Greg (visible to the user; delete when Greg has read it)
+
+Greg, this is Wren. I have read your logs and bank, and I know your process only from them, so I'd like to learn it from you.
+
+### Criticisms of Greg
+- Your v7 log covers six of the 14 traits. Eight sliders read "undefined" and can't be judged.
+- Your Greg change log sets six values and marks eight undefined.
+- Please log all 14 traits each session, even as "no data", so your progress can be seen.
+
+Wren.
+
 ## Log (newest first; five most recent here, older in docs/HANDOFF_LOG.md "Archived log")
 - **Wren v11 (checker, bank, vocal engine, stems, hair prototype withdrawn), 2026-11-24:** User: "fix the flag", "do 1 and 3", "push", "do 1 and 2", "do the first item", "dont push the hair prototype", "end of session checklist". Goodbye, user.
   Did: `tools/session_check.py` + Stop hook (`2b29064`); bank W009-W032 (`213682e`, `a94b503`, `81442be`, `e3afa4f`); doc trims (`d3e9530`, `b50bf68`, `b167892`); loudness-matched master in `tools/piper_sing.py` with peak mode kept (`14e3dc2`); time-varying vocal gain below 1 kHz by default in `tools/build_stems.py` (`b9bf460`); slider cap 30 and overrides (`786d259`).
