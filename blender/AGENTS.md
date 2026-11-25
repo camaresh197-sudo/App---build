@@ -58,3 +58,5 @@ Nested guide for `blender/`; the root `AGENTS.md` points here. Lessons from Wren
 - Own a mistake plainly, fix it, move on.
 
 - Agents get click-only access to Command Prompt (no typing). For scripted Blender runs use the Linux sandbox with `pip install --break-system-packages bpy` (Blender 5.3 as a module), or have the user paste the command output (2026-11-23, `0e1502a`).
+- Head shape wrong ("egg", "dome", "regressing"): five passes of nudging ring values by eye made it worse. Cause: no measurement. Rule: threshold the reference silhouette, normalise by head height, generate the ring table from it, then compare front and side renders (Wren v12, `tools/hero_rig/v12/`).
+- A fine-mesh strip that reaches the eye area breaks the lid outlines and balloons the vertex count (v138: 71k). Keep nose strips clear of the lids; model small forms as Gaussians, not ring terms, which turn into terraces on fine mesh (Wren v12).

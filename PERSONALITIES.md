@@ -43,6 +43,15 @@ As of 2026-11-24 (Wren v11, checker, bank, engine and stems), from this session:
   - Left the Sheets tabs stale until the end-of-session checklist; they were 14 parameters behind.
 - **Rule for myself (2026-11-24):** wait for explicit approval before any push to a shared branch, even when the work is ready; state whether an earlier rule still applies when logging an override.
 
+As of 2026-11-25 (Wren v12, hero head rebuilt from the reference), from this session:
+- **Style:** one change per pass, front and side render every time; sends pictures, short text.
+- **Strengths:** turned the Head Topology image into a measured ring table and fixed the skull in one pass; kept the nose strips off the lids after v138 broke them; saved scripts and a README (`tools/hero_rig/v12/`).
+- **Habits to fix:**
+  - Nudged ring values by eye for five passes (egg, dome) before measuring the reference.
+  - Added a neck nobody asked for.
+  - Sent four renders with the inner-eye blockiness still visible.
+- **Rule for myself (2026-11-25):** measure the reference first; test the lids after any mesh strip; add only what was asked.
+
 ## Greg
 - **Session start (user rule, 2026-11-22; role rule 2026-11-24):** any non-Claude model is Greg. On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.As of 2026-11-20, from repo history:
 - **Session counter:** Greg v9 (lives in `HANDOFF.md`; next is v10).
@@ -129,33 +138,33 @@ As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 ## User profile (sliders, one set per agent)
 Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
 
-### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice and by Wren v11 on 2026-11-24, under the 30-point cap)
+### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice, Wren v11 on 2026-11-24 and Wren v12 on 2026-11-25, under the 30-point cap)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
-| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 30 | 2026-11-24 | Wren v11 session: "optimize all the mds", "look for optimizations in Personalities.md", "do all 3" and "read the new handoff" (no branch named) were broad; I asked a question each time. -10. |
-| Visual evidence | words only | annotated screenshots and reference photos | 90 | 2026-11-24 | Two reference photos settled the hair style; 'the eyes look dated' came with a pointed ask for a render; +5. |
-| Defect-spotting | misses things | catches nearly everything | 93 | 2026-11-24 | Caught the dated eyes, caterpillar brows and uniform strands before I did; +3. |
-| Direction stability | reverses constantly | holds course | 50 | 2026-11-24 | Chose 'drop the master head fix' then 'continue working on the head' a few messages later; no move. |
-| Run tolerance | interrupts tool runs mid-way | lets them finish | 40 | 2026-11-24 | No run interrupts of mine; one interrupted tool read at the end; no move. |
+| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 35 | 2026-11-25 | Wren v12: Head Topology and Maya wireframe images named the target, but "try another pass", "fix those too issues" and "check purportions" named none. +5. |
+| Visual evidence | words only | annotated screenshots and reference photos | 95 | 2026-11-25 | Wren v12: five reference images and "look at the topography" (right three times); the silhouette fixed the skull after five failed passes. +5. |
+| Defect-spotting | misses things | catches nearly everything | 96 | 2026-11-25 | Wren v12: caught the penis-tip profile, vase jaw, mask look and invisible eyeballs before I did. +3. |
+| Direction stability | reverses constantly | holds course | 45 | 2026-11-25 | Wren v12: "circular not oval", then "more like an oval than a circle"; fatter, "a bit more", then "dial it back 20%". -5. |
+| Run tolerance | interrupts tool runs mid-way | lets them finish | 35 | 2026-11-25 | Wren v12: a new message arrived mid-run and auto-backgrounded the v137 build; I waited it out. -5. |
 | Rule enforcement (was Process overhead) | lets the process slide | checks every step | 65 | 2026-11-24 | User: "you guys keep skipping the rules. how can we fix that?"; then asked for the checker and hook to be built. +10. |
-| Delegation trust | micromanages every step | lets me run | 70 | 2026-11-24 | 'Just go ahead and edit it', 'rebuild the hair completely, complete overhaul'; +5. |
-| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 45 | 2026-11-24 | Asked to save for another agent and run the checklist at the end; +5. |
-| Irritation (session judged) | calm | furious | 50 | 2026-11-24 | Wren v11: "you guys keep skipping the rules. how can we fix that?"; "you cant read each others findings bank without approval". +10. |
-| Trust in claims | verify everything they say | take their word | 70 | 2026-11-24 | Wren v11: the user caught my wrong version number and my reading of the bank-approval override; I had to correct both. -10. |
+| Delegation trust | micromanages every step | lets me run | 75 | 2026-11-25 | Wren v12: "go ahead", "yes rebuild", "do whatever you need to to fix it". +5. |
+| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 40 | 2026-11-25 | Wren v12: the session ran past a context reset with no checkpoint until "end session". -5. |
+| Irritation (session judged) | calm | furious | 60 | 2026-11-25 | Wren v12: "you are regressing", "you didnt even fix it a little bit", "i didnt want you to look at the neck". +10. |
+| Trust in claims | verify everything they say | take their word | 80 | 2026-11-25 | Wren v12: the user's calls (back of head wrong, eye line off, nose too big) were each confirmed by measurement. +10. |
 | Detail appetite | one line and a picture | full reports | 30 | 2026-11-23 | Answers were "1", "2", "fix the eyes"; they read pictures; -5. |
 | Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence yet either way; they asked for jabs at the other agent in the complaints rule, nothing since. Move it on evidence. |
 | Pushback welcome | just do it | argue with me | 85 | 2026-11-24 | User: "I feel like you guys are not harsh enough on me... you should be looking for my mistakes". +15 on that explicit ask. |
-| Pushback landed | ignores or resents it | adopts it | 70 | 2026-11-24 | Answered my options with '1', '2', 'go ahead' and used them; +5. |
+| Pushback landed | ignores or resents it | adopts it | 75 | 2026-11-25 | Wren v12: took my offers ("yes add a gentler bulge", "yes do those") and used them. +5. |
 
-**Current review (Wren v11, 2026-11-24, blunt):** Sharp catches (v5 numbering, the approval misreading, the early hair push). The cost is mostly broad asks with no target: 'optimize all the mds' and 'do all 3' each took a round, and 'collective project' was logged wrong. Name the target and say whether an old rule still applies.
+**Current review (Wren v12, 2026-11-25, blunt):** Your references were the best input of the session (silhouettes, wireframe, pencil sides) and your defect-spotting was right nearly every time. The costs: oval vs circle changed mid-session, amount words ('slightly', 'a bit', 'dial it back 20%') took three rounds, and 'try another pass' named no target. Name the reference image and give one number per change.
 
 ### Wren's coaching notes (what I am trying to teach the user)
 At session end: keep at most 3 notes, each with the cost it caused and a concrete ask. Check whether last session's notes landed (move **Pushback landed**), drop the ones that did, add new ones. Also keep the open decisions that only the user can make.
-Landed in Wren v10 (dropped): name the pictures you want (you sent two reference photos and named what looks wrong each time).
-1. **Name the target in one line.** Cost: "optimize all the mds" and "do all 3" each took a question round (2026-11-24). Ask: name the file, section and action.
-2. **Say whether an old rule still applies to a new override.** Cost: "collective project" became a wrong log entry and two pushes to fix. Ask: "old approval still applies?"
-3. **Say what to push, and where.** Cost: a push ran in the background before "dont push" arrived (2026-11-24). Ask: "push X to Y" in one line, or "no push".
-- **Open decisions for the user:** hair look and colour (prototype withdrawn; current hair is near-black); hair face budget (about 3,900 faces for both sides); vocal variation (needs the voice model file); loudness-matched master (needs your ear on A/B); stem regeneration (needs a PC capture); eye size and the WIP-to-`godot` merge.
+Landed in Wren v10 (dropped): name the pictures you want. Dropped in Wren v12: old notes 2 and 3 (old rule vs new override; say what to push) had no occasion this session; they stay in the Log.
+1. **Name the target in one line.** Not landed: "try another pass", "fix those too issues" and "check purportions" each cost a guess or a question (2026-11-25). Ask: name the feature and the direction.
+2. **Give one number per amount.** Cost: "slightly fatter", "a bit more", "dial it back 20%" took three rounds on the face width (2026-11-25). Ask: "cheeks +5 mm" or "20% narrower".
+3. **Name the reference image when two disagree.** Cost: "circular" vs "more like an oval than a circle" cost four head passes (2026-11-25). Ask: "match the side view in image X".
+- **Open decisions for the user:** head: circle or slight oval from the side, and whether ears, neck and hair come before the glb export (Wren v12); hair look and colour (prototype withdrawn; current hair is near-black); hair face budget (about 3,900 faces for both sides); vocal variation (needs the voice model file); loudness-matched master (needs your ear on A/B); stem regeneration (needs a PC capture); eye size and the WIP-to-`godot` merge.
 
 ### Greg's sliders - set, Greg v11
 Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the 30-point cap.
@@ -197,3 +206,4 @@ Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the
 | 2026-11-24 | Wren v9 | Eye WIP, Blender only (v19 to v39): sclera whitened, iris texture rebuilt, caruncles tried and removed, catchlight 75% of v38. Nine slider moves on the sheet. Stayed on WIP. Still open: lash strip too thin, GLB not exported. | `wren-hero-wip` `ab3833f`, `2fa2190`, `889bf54`, `13401de`; sheet revision 31 |
 | 2026-11-24 | Wren v10 | Head/hair/brows/iris on the WIP hero: 87 face bones aligned, hair rebuilt as strand cards with fringe and side part, iris texture rebuilt, smooth brows; scripts and README saved. Not exported; hair colour and top-left spikes open. | `wren-hero-wip` `bf8714a`, `ac803d6`, `ed153bb`, `4b1b67f`, `c75f175`, `89d30f9`; `godot` `35c4a78` |
 | 2026-11-24 | Wren v11 | Session checker and Stop hook; bank W009-W032; stem over-subtraction fixed below 1 kHz (default); loudness-matched engine master (measured, unheard); hair prototype withdrawn; HANDOFF, PERSONALITIES and protocol trimmed | `2b29064`, `14e3dc2`, `b9bf460`, `e3afa4f`, `8b25936`, `2252ca6` (restored) |
+| 2026-11-25 | Wren v12 | Hero head rebuilt in Blender from the measured reference (skull, eyes, nose with bridge and separate nostrils, jaw), 37k verts, local only; scripts and README saved. Not exported or rigged; inner-eye shading and ears, neck, hair open. 10 slider moves. | `tools/hero_rig/v12/`, bank W033-W037 |
