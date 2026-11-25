@@ -9,6 +9,7 @@ Only claim what the Log, commits or your own runs show. If an entry about you is
 ## Claimed
 | Who | Files | Since |
 |---|---|---|
+| Wren v12 | blender/wip/ (hero head: chin, lower lip, jaw), godot/hula/scripts/hero3d.gd (JAW_P, JAW_OPEN, face joints), data/character_rig.json | 2026-11-24 |
 | Claude (Sonnet 5.5 session) | `blender/wip/hero_v21_iris.blend`, `blender/wip/hero_v22_iris_detail.blend`, `blender/wip/hero_v26_iris_texture.blend`, `blender/wip/hero_v38_anime_eyes.blend`, `blender/wip/hero_v39_smaller_catchlight.blend` (catchlight 25% smaller than v38; `preview/v39_catchlight_side_by_side.png`) (no tear ducts; bigger catchlight, upper lash strip, graded iris; `preview/v38_eyes_side_by_side.png`) (baked iris texture, `preview/iris_texture_v26.png`, comparison `preview/v26_iris_side_by_side.png`), `blender/wip/preview/v21_iris_eyes.png`, `blender/wip/preview/v22_iris_detail.png` (WIP only, not the master) | 2026-11-24 |
 
 ## Gotchas
