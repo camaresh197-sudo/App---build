@@ -56,6 +56,7 @@ One section for everything that touches git, builds or the phone.
 - **Branches:** Wren works on the `ccr-<session-id>` branch the session was given; never reuse an old `ccr-*` branch. Greg uses `greg-<topic>` and says so in the Log. Models and other WIP go to a non-building branch such as `wren-hero-wip` unless import and smoke ran.
 - **Git lessons (Wren v5):** pull right before you push (`git pull --rebase origin godot`, push again). If a push is denied with 403, call `add_repo` with `access: push`; the repo moved to `App---build` but the old URL still redirects. After an interrupted tool call, check `git status`, `git log` and `git ls-remote origin <branch>` before anything else: the command may already have run.
 - Never edit CI or push anything that triggers a build or publish unless the user asked for that exact change.
+- **Mix checks (Greg v11):** the real-time `mix` harness renders from the imported bank and the current `data_victory.json`; re-run `--import` after any clip re-render, and after each mix log the vocal onset positions (or a one-line debug print of `_vox_key`) before judging what you hear. A capture can drop out (-12 dB) and a JSON string bar plays no vox at all.
 
 ## Where things are
 - Commands, harness modes, mix and stem: `docs/COMMANDS.md`.

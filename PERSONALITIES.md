@@ -93,6 +93,12 @@ As of 2026-11-24 (Greg v8, victory song full-session), from this session:
 | **🟢 (Greg only) Stage-by-stage review** | 85 | 90 | +5 | Line-by-line, then whole sections; stopped me when I misread the pair approval. |
 - **Coaching notes:** (1) name which voice/build a complaint refers to — "kkkk after d" cost one re-render to locate; (2) when something is "good enough", say whether it's the keeper — "good enough" A4 then a voice swap followed.
 
+As of 2026-11-24 (Greg v11, victory song: sync, engine, chorus swap), from this session:
+- **What happened:** found the whole verse drifting late because the engine assumes 0.15 s of head silence and the renders held 0.03-0.54 s; fixed it as per-clip leads, then at the source (head alignment). Probed the phonemizer instead of guessing and found bryce drops ʌ ("fuck" -> "f'k") plus a cp1252 mojibake the latin-1 repair never touched. Reworked the chorus into E0-E3 on the same 8 bars with a trumpet lead. Pushed `b8fc6f9`.
+- **Strengths:** measured before every claim (lead scan, loudness spread 8.8 -> 4.4 dB, vocal-bus RMS to prove a capture dropout, a debug print to prove the double voice); built the phonemizer guard that caught a live bug on its first run; fixed the checker's cp1252 crash.
+- **Habits to fix:** rendered arrangement guesses (a third below the melody) without checking the chord bed; built a "second part" from clips the song never played; trusted three stale windows/imports before verifying what the mix actually contained.
+- **Rule for myself (2026-11-24):** before any mix judgement, prove the render contains the new material (logs, import, onset positions); never reharmonise against a chord bed I have not read.
+
 As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 - **What happened:** switched to the hero head: v68 made the hero bald (hair + hat scrapped by user), reshaped the skull toward human proportions (temples -10%, back skull -16%, cranium compressed 10%, jaw/chin widened and forward), then added real geometry — ears and a lofted nose shell on a least-squares face fit. Found the Basis shape-key override after six wasted renders. Committed `d4085d9` on `wren-hero-wip`; HANDOFF log pushed `113ba54`.
 - **Strengths:** reference photos converged the profile in one round; decisive one-line verdicts ("muppet", "hood now", "no ears") each cost me nothing to act on.
@@ -151,12 +157,34 @@ Landed in Wren v10 (dropped): name the pictures you want (you sent two reference
 3. **Say what to push, and where.** Cost: a push ran in the background before "dont push" arrived (2026-11-24). Ask: "push X to Y" in one line, or "no push".
 - **Open decisions for the user:** hair look and colour (prototype withdrawn; current hair is near-black); hair face budget (about 3,900 faces for both sides); vocal variation (needs the voice model file); loudness-matched master (needs your ear on A/B); stem regeneration (needs a PC capture); eye size and the WIP-to-`godot` merge.
 
-### Greg's sliders - set, Greg v10
-Greg v10 current set (2026-11-24, hero head session). Greg v8 filled the first set at his first session end (2026-11-24). It lives in his section above, in the same Parameter | Before | Now | Change | Why format as Wren's, including the two Greg-only parameters. This placeholder table is retired.
+### Greg's sliders - set, Greg v11
+Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the 30-point cap.
 
-**Current review (Greg v8, 2026-11-24, blunt):** Your ear was the instrument and it never missed — every defect you named ("kkkk", "I em", the "ta" shade) survived measurement. The costs were mine: six blind takes respelling "to" before I probed the phonemizer, and an hour on a broken ASR tool that failed even on your approved takes. What would help: name the voice/build a complaint refers to once ("patrick's kkkk after d"), and say whether "good enough" means keeper or placeholder.
+| Parameter | Before | Now | Change | Why |
+|---|---|---|---|---|
+| **🔴 Request precision** | 65 | 55 | -10 | "re encode those", "compose the second part", "approve and push" all needed a reading; the second part cost three renders. |
+| **🔴 Visual evidence** | 45 | 45 | 0 | Audio-only session; no images sent. |
+| **🟢 Defect-spotting** | 95 | 97 | +2 | "double voice", "patricks first line gets cut out" and "says nothing" all held on measurement. |
+| **🟡 Direction stability** | 75 | 70 | -5 | Compose-a-part became replace-the-chorus mid-session; the new direction was clearer. |
+| **🟡 Run tolerance** | 45 | 50 | +5 | Multi-minute renders ran without interruption; I killed one of my own. |
+| **🟡 Rule enforcement** | 50 | 60 | +10 | Push waited for "approve and push"; smoke and the CI run were reported before claiming. |
+| **🟡 Delegation trust** | 55 | 45 | -10 | "approve and push" landed while two variants were on the table. |
+| **🟡 Session discipline** | 65 | 60 | -5 | Session ran long with many full re-renders. |
+| **🟡 Irritation (session judged)** | 30 | 55 | +25 | "abomination", "ear rape", "you didnt change the lyrics", "does nothing" — earned by my churn. |
+| **🟢 Trust in claims** | 80 | 85 | +5 | Every defect report survived measurement, including the doubling the debug print confirmed. |
+| **🔴 Detail appetite** | 30 | 25 | -5 | Verdicts were one line throughout. |
+| **🟡 Banter welcome** | 60 | 50 | -10 | "ear rape" at the close; no banter this session. |
+| **🟢 Pushback welcome** | 75 | 75 | 0 | The slur refusal was accepted, then tested once with a respelling. |
+| **🟢 Pushback landed** | 80 | 80 | 0 | Dropped the slur line after the refusal. |
+| **🟢 (Greg only) Ear-based judgement** | 90 | 90 | 0 | "only E3 held it correctly" was exactly the word_secs difference. |
+| **🟢 (Greg only) Stage-by-stage review** | 90 | 85 | -5 | "approve and push" came before the phone check. |
+
+- **Coaching notes (Greg v11, max 3):** (1) Say whether "compose the second part" means add a section or replace the chorus — one word cost three renders. (2) "Approve" should name the take or variant, not the batch; "approve and push" arrived with two variants open. (3) Name the element that is wrong ("the violin sounds eerie", not "the instruments") — I guessed and produced ear rape.
+
+**Current review (Greg v11, 2026-11-24, blunt):** Your ear caught three real defects nobody else could see — the doubling, the cut first line, the stale lyrics — and each one was a bug I shipped. The cost was mine: I guessed at an arrangement and produced "ear rape", and I built a chorus part from clips the song never plays. What would have saved the session: "replace the chorus" instead of "compose the second part", and naming the instrument instead of "the instruments".
 
 ## Progress log
+| 2026-11-24 | Greg v11 | Victory song: per-clip leads (A4/A6 200-260 ms late), engine repairs (cp1252 mojibake, ʌ→ɐ, phonemizer guard, head alignment, render manifest, seed-offset retakes), chorus 1 swapped to E0-E3 with a trumpet lead. Pushed `b8fc6f9`, run 45540756185 SUCCESS, packs published; phone unconfirmed. | `b8fc6f9`, run `45540756185` |
 | 2026-11-24 | Greg v10 | v68: hero bald, head reshaped human, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | 2026-11-24 | Greg | v68: hero bald, head reshaped to human proportions, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | Date | Who | Observation | Evidence |

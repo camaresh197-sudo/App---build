@@ -45,7 +45,8 @@ def read(rel):
 
 def git(*a):
     try:
-        return subprocess.run(["git", "-C", ROOT, *a], capture_output=True, text=True, timeout=30).stdout.strip()
+        return subprocess.run(["git", "-C", ROOT, *a], capture_output=True, text=True,
+                              encoding="utf-8", errors="replace", timeout=30).stdout.strip()
     except Exception:
         return ""
 
