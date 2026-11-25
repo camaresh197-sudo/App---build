@@ -25,11 +25,12 @@ RINGS=[
 (1.482,0.086,0.122,0.099),
 (1.458,0.082,0.092,0.097),
 (1.440,0.078,0.074,0.100),
-(1.426,0.068,0.054,0.114),
-(1.416,0.058,0.040,0.113),
-(1.406,0.046,0.030,0.100),
-(1.396,0.032,0.020,0.078),
-(1.387,0.018,0.012,0.050),
+(1.426,0.068,0.056,0.106),
+(1.4158,0.0649,0.0534,0.1011),
+(1.4073,0.0568,0.0468,0.0885),
+(1.4005,0.0450,0.0370,0.0701),
+(1.3954,0.0296,0.0244,0.0462),
+(1.3931,0.0165,0.0136,0.0258),
 ]
 # densify with a smooth monotone spline (no linear creases between rings)
 import numpy as _np
@@ -41,6 +42,9 @@ _dense=[(float(z),float(_f[0](z)),float(_f[1](z)),float(_f[2](z))) for z in _zs]
 _dense.append(RINGS[-1])
 RINGS=_dense
 NSEG=144
+def _yo(z):
+    t=min(1.0,max(0.0,(1.44-z)/0.048))
+    return -0.028*t*t*(3-2*t)
 bm=bmesh.new()
 ring_verts=[]
 for (z,rx,ryb,ryf) in RINGS:
@@ -49,10 +53,10 @@ for (z,rx,ryb,ryf) in RINGS:
         t=2*math.pi*j/NSEG
         s=math.sin(t); c=math.cos(t)
         ry = ryb*s if s>=0 else ryf*s
-        row.append(bm.verts.new((rx*c, ry, z)))
+        row.append(bm.verts.new((rx*c, ry+_yo(z), z)))
     ring_verts.append(row)
 top=bm.verts.new((0,0,RINGS[0][0]))
-bot=bm.verts.new((0,0,RINGS[-1][0]-0.004))
+bot=bm.verts.new((0,_yo(RINGS[-1][0]),RINGS[-1][0]-0.0008))
 for i in range(len(ring_verts)-1):
     a=ring_verts[i]; b=ring_verts[i+1]
     for j in range(NSEG):
