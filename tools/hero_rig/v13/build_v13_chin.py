@@ -82,6 +82,8 @@ for _rx,_rz in ((0.044,0.038),(0.036,0.030),(0.0115,0.028),(0.0080,0.022)):
     _bmn.ops.subdivide_edges(_b, edges=_reg, cuts=1, use_grid_fill=True)
     _b.to_mesh(me); _b.free(); me.update()
 # features (same bumps as features.py)
+def sst(a,b,x):
+    t=min(1.0,max(0.0,(x-a)/(b-a))); return t*t*(3-2*t)
 def bump(p,c,rx,rz,amp):
     d=((p.x-c.x)/rx)**2+((p.z-c.z)/rz)**2
     return -amp*(1-d)**2 if d<1.0 else 0.0
@@ -201,6 +203,15 @@ for e in bm.edges:
 bmesh.ops.subdivide_edges(bm, edges=region2, cuts=1, use_grid_fill=True)
 bm.to_mesh(me); bm.free()
 me.update()
+# fourth pass: the tightest ring around each eye opening, so the lid rim and crease are not stair-stepped
+bm=bmesh.new(); bm.from_mesh(me)
+region4=[]
+for e in bm.edges:
+    if all(any(((v.co.x-EYE_X*sx)/0.0215)**2+((v.co.z-EYE_Z)/0.0135)**2<1.0 and v.co.y<-0.06 for sx in (1,-1)) for v in e.verts):
+        region4.append(e)
+bmesh.ops.subdivide_edges(bm, edges=region4, cuts=1, use_grid_fill=True)
+bm.to_mesh(me); bm.free()
+me.update()
 for v in me.vertices:
     if v.co.y>-0.06: continue
     for sx in (1,-1):
@@ -215,14 +226,14 @@ for v in me.vertices:
         r=((dx)**2+(dz_raw/bz)**2)**0.5
         if r<1.8:
             # upper lid drapes forward over the eyeball; lower lid stays flatter
-            drape=0.0030*max(0.0,1-r) if dz_raw>0 else 0.0012*max(0.0,1-r)
+            drape=(0.0012+0.0018*sst(-0.0020,0.0020,dz_raw))*max(0.0,1-r)   # smooth: a hard step at dz=0 made a band across the opening
             # lid margin: a soft edge at r~1, then a crease dip just outside
             rim=0.0010*max(0.0,1-abs(r-1.0)/0.2)
             crease=-0.0011*max(0.0,1-abs(r-1.35)/0.2)   # closed crease ring, all round
             v.co.y-=rim+crease
             # outer margin: extra forward lift on the side away from the nose, so the lid covers the eyeball edge
             if 0.9<r<1.3:
-                side=0.0030 if dx*sx>0.5 else 0.0018
+                side=0.0018+0.0012*sst(0.25,0.75,dx*sx)   # smooth blend (a hard step at 0.5 made a notch in the lid rim)
                 v.co.y-=side*max(0.0,1-abs(r-1.1)/0.2)
             # eyebag crease: a closed ring further out
             v.co.y+=0.0006*max(0.0,1-abs(r-1.75)/0.25)
@@ -244,6 +255,7 @@ for sx,nm in ((1,'l'),(-1,'r')):
     cx=EYE_X*sx
     bpy.ops.mesh.primitive_uv_sphere_add(segments=32, ring_count=20, radius=0.0135, location=(cx,-0.0685,EYE_Z))
     e=bpy.context.active_object; e.name='eye_'+nm; e.data.materials.append(white)
+    for _q in e.data.polygons: _q.use_smooth=True
 # nostril openings as separate small pieces: dark ellipsoids set into the dents so each reads as an opening
 nost=mat('nostril',(0.07,0.04,0.04,1))
 for sx in (1,-1):
@@ -256,7 +268,6 @@ for sx in (1,-1):
     n.rotation_euler=(0.0,math.radians(14*sx),math.radians(0))
     n.data.materials.append(nost)
     n.data.update()
-for _p in me.polygons:
-    if all(me.vertices[i].co.z<1.49 for i in _p.vertices): _p.use_smooth=True
+for _p in me.polygons: _p.use_smooth=True   # whole head smooth: flat shading gave the blocky brow and inner-corner squares
 bpy.ops.wm.save_as_mainfile(filepath="feat_v13_chin.blend")
 print("saved feat_v143 verts", len(me.vertices))
