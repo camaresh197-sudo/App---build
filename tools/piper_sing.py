@@ -111,6 +111,12 @@ def words_of(text: str) -> list:
 # 0.27 s apart, and the last word is short (about 0.35 s), with no hold.
 GAY_WORD = 0.27
 GAY_LAST = 0.35
+
+# Approved voice split (Greg v8, the user's ear): bryce is Jeff; patrick sings A4/A6.
+# --voice overrides everything only if you pass it explicitly per run; a plain run
+# renders THIS split, so re-rendering the bank never clobbers it by accident.
+VOICE_BY_LINE = {"A4": "en_US-patrick-medium", "A6": "en_US-patrick-medium",
+                 "E0": "en_US-patrick-medium", "E1": "en_US-patrick-medium"}
 CHORUS_GRID = {"B0": ("v-B", 0, 2, 7.6, GAY_WORD, None, [], [], {'keep_last_pitch': True}),
                "B1": ("v-B", 2, 2, 7.6, GAY_WORD, None, [], [], {'keep_last_pitch': True}),
                "B2": ("v-B", 4, 2, 7.6, GAY_WORD, None, [], [], {'keep_last_pitch': True}),
@@ -129,6 +135,14 @@ CHORUS_GRID.update({"D0": ("v-D", 0, 2, 7.6),
                     "C4": ("v-C", 4, 2, 7.6), "C6": ("v-C", 6, 2, 7.6),
                     "tag0": ("v-tag", 0, 2, 0.0, GAY_WORD), "tag2": ("v-tag", 2, 2, 0.0, GAY_WORD),
                     "F0": ("v-F", 0, 2, 7.6, GAY_WORD), "B6": ("v-F", 2, 2, 7.6, GAY_WORD)})
+
+# The second part (2026-11-24, the user: "compose the second part in because thats
+# the melody"): the chorus's own bars 8-15, sung as a repeat. New clip ids E0-E3 so
+# the finale's B6 (v-F bars 2-3) keeps its own take.
+CHORUS_GRID.update({"E0": ("v-B", 0, 2, 7.6, 0.0, None, [], [], {'keep_last_pitch': True}),
+                    "E1": ("v-B", 2, 2, 7.6, 0.0, None, [], [], {'keep_last_pitch': True}),
+                    "E2": ("v-B", 4, 2, 7.6, 0.0, None, [], [], {'keep_last_pitch': True}),
+                    "E3": ("v-B", 6, 2, 7.6, 0.0, None, [], [], {'keep_last_pitch': True})})
 
 
 # Word timing edited in the game (secret menu, TIMING tab) and copied to tools/retime.py.
@@ -451,6 +465,11 @@ _ALIGNED = {}
 # every clip through the abandoned runs-mapping that garbles words.
 MOJIBAKE = {"Ëˆ": "ˈ", "É”": "ɔ", "Éª": "ɪ"}
 
+# Some voices ship no STRUT vowel at all (bryce: no U+028C in the id map), so any
+# ʌ that survives the mojibake repair is dropped by Piper and the word comes out
+# mangled ("fuck" -> "fk"). Substitute the American STRUT realisation the voice has.
+VOICE_FALLBACK = {"ʌ": "ɐ"}
+
 
 def _fix_mojibake(p: str, id_map) -> str:
     """Repair phonemizer output that arrived mangled on this machine."""
@@ -458,11 +477,18 @@ def _fix_mojibake(p: str, id_map) -> str:
         return p
     fixed = MOJIBAKE.get(p)
     if fixed is None:
-        try:
-            cand = p.encode("latin-1").decode("utf-8")
-        except (UnicodeEncodeError, UnicodeDecodeError):
-            return p
+        cand = None
+        for codec in ("cp1252", "latin-1"):   # espeak mojibake here is cp1252 (ʌ -> "ÊŒ")
+            try:
+                cand = p.encode(codec).decode("utf-8")
+                break
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                continue
+        if cand is None:
+            cand = p
         fixed = cand
+    if fixed not in id_map:
+        fixed = VOICE_FALLBACK.get(fixed, fixed)
     return fixed if fixed in id_map else p
 
 
@@ -482,6 +508,14 @@ def aligned_voice(name):
             out = []
             for sent in _phm(text):
                 out.append([_fix_mojibake(p, _v.config.phoneme_id_map) for p in sent])
+            # fail loudly instead of feeding Piper a garbled line (Greg v8: the
+            # mojibake fallback once routed every take through it unnoticed)
+            unknown = sorted({p for sent in out for p in sent if p not in _v.config.phoneme_id_map})
+            if unknown:
+                raise RuntimeError(
+                    f"phonemizer produced {len(unknown)} phoneme(s) the voice cannot sing "
+                    f"({[ascii(u) for u in unknown]!r}) for text {text!r} - fix data_phonics.json "
+                    "or the mojibake map, do not render this take")
             return out
 
         v.phonemize = _fixed_phonemize
@@ -753,6 +787,34 @@ MASTER_TARGET_DB = -17.0   # gated RMS target: the median shipped clip sits near
 MASTER_CEILING = 0.89      # peak ceiling, as before
 MASTER_GATE_DB = -45.0     # frames quieter than this do not count toward the RMS
 MASTER_HP_HZ = 60.0        # removes sub-60 Hz rumble found in the gaps (W026); voice fundamentals sit well above
+LEAD_S = 0.15              # data_vox.json lead-in: the first sound must sit exactly here
+SEED_OFFSET = 0            # retake control: +1, +2 ... render a different take of the same line
+
+
+def align_head(y: np.ndarray, rate: int = FS, target: float = LEAD_S) -> np.ndarray:
+    """Trim or pad the head so the first audible sample sits at `target` seconds.
+
+    Every line clip must keep its total length (two bars), so whatever is removed
+    from (added to) the head is added to (removed from) the tail. Without this, a
+    clip that renders extra leading silence enters the song late: the engine starts
+    it `lead` seconds before the downbeat and assumes the sound is already there
+    (Greg v11: A4 sang +200 ms, A6 +260 ms late).
+    """
+    hop = max(1, int(0.005 * rate))
+    n = len(y) // hop
+    e = np.sqrt(np.mean(y[:n * hop].reshape(n, hop) ** 2, axis=1))
+    db = 20 * np.log10(np.maximum(e, 1e-9) / max(1e-9, e.max()))
+    idx = int(np.argmax(db > -40.0))
+    s0 = idx * hop
+    want = int(round(target * rate))
+    if s0 == want:
+        return y
+    out = np.zeros_like(y)
+    if s0 > want:                      # too much silence: slide earlier, keep length
+        out[: len(y) - (s0 - want)] = y[s0 - want:]
+    else:                              # not enough: slide later, keep length
+        out[want - s0:] = y[: len(y) - (want - s0)]
+    return out
 
 
 def master_level(y: np.ndarray, rate: int = FS) -> np.ndarray:
@@ -881,7 +943,7 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                     ap = warp_along(ap_r, src_idx)
                     f0_rw = warp_along(f0_r.reshape(-1, 1), src_idx).ravel()
 
-                    rng = np.random.default_rng(zlib.crc32(clip_id.encode("utf-8")))
+                    rng = np.random.default_rng(zlib.crc32(clip_id.encode("utf-8")) + SEED_OFFSET)
                     phase = float(rng.uniform(0.0, 2.0 * np.pi))
                     prev = 0.0
                     notes = []
@@ -918,9 +980,11 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                         t = np.arange(L)
                         note = hz * np.power(2.0, float(rng.normal(0.0, 6.0)) / 1200.0)
                         notes.append(note)
-                        natural_last = si == len(sp2) - 1 and flags.get('keep_last_pitch')
+                        is_last = si == len(sp2) - 1
+                        natural_last = is_last and flags.get('keep_last_pitch')
                         natural_first = si == 0 and flags.get('keep_first_pitch')
-                        if (natural_last or natural_first):
+                        if natural_first:
+                            # the first word keeps the take's own contour (the scoop)
                             which = f0_rw[a:b]
                             voiced = np.where(which > 0)[0]
                             if len(voiced) > 8 and float(which[voiced].max()) > 0:
@@ -932,20 +996,29 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
                                 f = note * ratio
                             else:
                                 f = np.full(L, note)
+                        elif natural_last:
+                            # a clean held note: stretching the take's short "gay" over the
+                            # multi-second hold turned its vibrato into a slow see-saw (the
+                            # user's "horse nays"), so the hold is one steady note instead
+                            f = np.full(L, note)
                         else:
                             f = np.full(L, note)
-                        if prev > 0.0 and not natural_last:
+                        if prev > 0.0 and not natural_first:
                             # legato: every note change slides from the previous note over
                             # ~20 ms (40 ms into a punch) so syllables float instead of stepping
                             k = min(8 if si in punches else 4, L)
                             cents = 1200.0 * np.log2(note / prev)
                             f[:k] = prev * np.power(2.0, cents * (np.arange(k) + 1) / k / 1200.0)
-                        if L >= 24 and not (natural_last or natural_first):
+                        if L >= 24 and not natural_first:
                             rate = float(rng.uniform(4.8, 6.2))
                             depth = (float(rng.uniform(16.0, 26.0)) if L < 60
                                      else float(rng.uniform(28.0, 44.0)) if L < 150
                                      else float(rng.uniform(20.0, 31.0)))
                             ramp = np.clip((t - 0.10 * (1000.0 / FRAME_MS)) / (0.15 * (1000.0 / FRAME_MS)), 0.0, 1.0)
+                            if is_last:
+                                # the held "gay" stays plain: shallow vibrato that enters late
+                                depth = min(depth, 14.0)
+                                ramp = np.clip((t - 0.25 * (1000.0 / FRAME_MS)) / (0.50 * (1000.0 / FRAME_MS)), 0.0, 1.0)
                             if si + 1 in punches:
                                 # a punch wants a steady note to hit: taper this span's vibrato
                                 # out over its last 60 ms so the F0 is flat entering the hit
@@ -1194,6 +1267,7 @@ def sing_clip(clip_id: str, text: str, voices: list, args_mix_weights, vib: floa
         y = y / peak * MASTER_CEILING
     else:
         y = master_level(y, FS)
+    y = align_head(y, FS)
     nfade = int(0.006 * FS)
     if len(y) > 2 * nfade:
         y[:nfade] *= np.linspace(0, 1, nfade)
@@ -1221,6 +1295,8 @@ def main() -> int:
     ap.add_argument("--flow", choices=["notes", "contour"], default="notes",
                     help="notes: align syllables to the song's held notes and sing steady notes; "
                          "contour: the old path (speech rhythm, melody painted over it)")
+    ap.add_argument("--seed-offset", type=int, default=0,
+                    help="retake: shift the take's random seed (vibrato, detune) without touching the data")
     ap.add_argument("--force", action="store_true")
     ap.add_argument("--only", default="",
                     help="comma-separated clip ids to render (testing; default: every used clip)")
@@ -1231,6 +1307,8 @@ def main() -> int:
     weights = [float(x) for x in args.mix.split(",")]
     ps_vib = args.vibrato
     ps_flow = args.flow
+    global SEED_OFFSET
+    SEED_OFFSET = args.seed_offset
 
     vox_map = json.loads(DATA_VOX.read_text(encoding="utf-8"))
     lyrics = json.loads(LYRICS.read_text(encoding="utf-8"))["victory_vocals"]
@@ -1258,13 +1336,38 @@ def main() -> int:
             shutil.copy2(VOX / f"{clip_id}.ogg", dst)
 
     report = []
+    # change detection: a clip re-renders only when something that shapes it moved
+    # (text, grid, voices, mix, master settings, engine code). Saves a full 23-clip
+    # Piper+WORLD pass when one line changes, and stops accidental take churn.
+    import hashlib as _h
+    engine_src = _h.sha1(Path(__file__).read_bytes()).hexdigest()[:12]
+    manifest_path = CACHE / "render_manifest.json"
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        manifest = {}
     for clip_id in ids:
         text = lyrics[clip_id]
         if args.dry_run:
             print(f"would sing {clip_id}: {text!r}")
             continue
-        info = sing_clip(clip_id, text, voices, weights, ps_vib, ps_flow,
-                         grid=CHORUS_GRID.get(clip_id), use_cache=not args.force)
+        grid = CHORUS_GRID.get(clip_id)
+        clip_voices = [VOICE_BY_LINE[clip_id]] if clip_id in VOICE_BY_LINE else voices
+        key = _h.sha1(json.dumps({
+            "engine": engine_src, "clip": clip_id, "text": text, "voices": clip_voices,
+            "weights": weights, "vib": ps_vib, "flow": ps_flow,
+            "grid": [list(g) if isinstance(g, (list, tuple)) else g for g in grid] if grid else None,
+            "master": [MASTER, MASTER_TARGET_DB, MASTER_CEILING, MASTER_GATE_DB, MASTER_HP_HZ, LEAD_S],
+            "seed": SEED_OFFSET,
+        }, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+        if not args.force and manifest.get(clip_id) == key and (VOX / f"{clip_id}.ogg").exists():
+            print(f"  {clip_id}: unchanged, skip")
+            continue
+        info = sing_clip(clip_id, text, clip_voices, weights, ps_vib, ps_flow,
+                         grid=grid, use_cache=not args.force)
+        manifest[clip_id] = key
+        manifest_path.parent.mkdir(parents=True, exist_ok=True)
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         report.append(info)
         print(f"  {clip_id}: '{text}'  melody {info['melody_hz']} Hz, "
               f"Ryan base {info['ryan_hz']} Hz, {info['dur']} s, {info['takes']} takes")

@@ -572,7 +572,9 @@ var duck_gain := 1.0
 const LOOK_AHEAD := 0.2     # seconds a step is scheduled before its beat
 func _vox_key(sec: String, bar: int) -> String:
 	if sec == "v-A": return "A%d" % bar
-	if sec == "v-B": return "B%d" % (bar >> 1) if bar % 2 == 0 else ""
+	if sec == "v-B":
+		# chorus: one clip every two bars; the clips carry the current chorus lyric
+		return "E%d" % (bar >> 1) if bar % 2 == 0 else ""
 	if sec == "v-C": return "C%d" % bar
 	if sec == "v-D": return "D%d" % bar
 	if sec == "v-tag": return "tag%d" % bar
