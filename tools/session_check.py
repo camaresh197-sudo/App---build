@@ -4,10 +4,14 @@
 Checks the parts of the end-of-session checklist a script can see. It cannot judge
 whether a finding is real or a review is honest; it only checks that the pieces exist.
 
-  python3 tools/session_check.py                 # full end-of-session check, agent wren
-  python3 tools/session_check.py --agent greg    # Greg: bank is docs/FINDINGS.md
+  python3 tools/session_check.py                 # full end-of-session check for your agent
+  python3 tools/session_check.py --set-agent greg # once per session: record who is running
+  python3 tools/session_check.py --agent greg    # force one agent (default: auto)
   python3 tools/session_check.py --bank-only     # mid-session: bank has a record dated today
-  python3 tools/session_check.py --hook          # Claude Code Stop hook (reads JSON on stdin)
+  python3 tools/session_check.py --hook          # Stop hook (reads JSON on stdin); same for both agents
+
+Agent resolution (default --agent auto): $AGENT env, then .claude/.agent (written by
+--set-agent, gitignored), then wren. So both agents and the hook run the same command.
 
 Exit 0 = pass, 1 = fail. In --hook mode a failure prints {"decision":"block",...} and exits 0.
 Hook rules: a reply containing a line starting "Found:" needs a bank record dated today;
@@ -72,6 +76,31 @@ def log_entries(handoff, name):
 
 
 CACHE = os.path.join(ROOT, ".claude", ".session_version")
+AGENT_FILE = os.path.join(ROOT, ".claude", ".agent")
+
+
+def resolve_agent(arg):
+    """auto -> $AGENT, then .claude/.agent, then wren."""
+    if arg in BANKS:
+        return arg
+    env = os.environ.get("AGENT", "").strip().lower()
+    if env in BANKS:
+        return env
+    try:
+        with open(AGENT_FILE, encoding="utf-8") as f:
+            who = f.read().strip().lower()
+        if who in BANKS:
+            return who
+    except OSError:
+        pass
+    return "wren"
+
+
+def set_agent(who):
+    os.makedirs(os.path.dirname(AGENT_FILE), exist_ok=True)
+    with open(AGENT_FILE, "w", encoding="utf-8") as f:
+        f.write(who + "\n")
+    print("agent marker: %s (%s)" % (who, BANKS[who]))
 
 
 def session_version(entries, date, session_id):
@@ -197,12 +226,17 @@ def last_texts(path):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--agent", default="wren", choices=["wren", "greg"])
+    ap.add_argument("--agent", default="auto", choices=["auto", "wren", "greg"])
+    ap.add_argument("--set-agent", choices=["wren", "greg"])
     ap.add_argument("--version", type=int)
     ap.add_argument("--date")
     ap.add_argument("--bank-only", action="store_true")
     ap.add_argument("--hook", action="store_true")
     a = ap.parse_args()
+    if a.set_agent:
+        set_agent(a.set_agent)
+        return 0
+    agent = resolve_agent(a.agent)
     date = today(a.date)
     res = []
 
@@ -215,23 +249,23 @@ def main():
             return 0
         user, asst = last_texts(data.get("transcript_path", ""))
         if re.search(r"^\s*\**Found\**:", asst, re.M):
-            check_bank(a.agent, date, res)
+            check_bank(agent, date, res)
         if END_RE.search(user):
-            check_full(a.agent, date, a.version, res, data.get("session_id"))
-        fails, text = report(res, a.agent)
+            check_full(agent, date, a.version, res, data.get("session_id"))
+        fails, text = report(res, agent)
         if fails:
             print(json.dumps({"decision": "block", "reason":
-                              "Session checklist (tools/session_check.py) failed. Fix these, then finish:\n" + text + "\n" + "\n".join(manual(a.agent))}))
+                              "Session checklist (tools/session_check.py) failed. Fix these, then finish:\n" + text + "\n" + "\n".join(manual(agent))}))
         return 0
 
     if a.bank_only:
-        check_bank(a.agent, date, res)
+        check_bank(agent, date, res)
     else:
-        check_full(a.agent, date, a.version, res)
-    fails, text = report(res, a.agent)
+        check_full(agent, date, a.version, res)
+    fails, text = report(res, agent)
     print(text)
     if not a.bank_only:
-        print("\n" + "\n".join(manual(a.agent)))
+        print("\n" + "\n".join(manual(agent)))
     print("\n%d check(s) failed." % len(fails) if fails else "\nAll scripted checks passed.")
     return 1 if fails else 0
 

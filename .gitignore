@@ -28,3 +28,4 @@ android/piper/src/main/assets/*.onnx
 android/piper/src/main/assets/*.onnx.json
 .gradle/
 .claude/.session_version
+.claude/.agent
