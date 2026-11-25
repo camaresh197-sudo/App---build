@@ -110,10 +110,10 @@ As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 | **🟡 Rule enforcement** | 45 | 50 | +5 | Enforced the AGENTS "prove it with renders" rule themselves ("did you post it in here?"). |
 | **🟡 Delegation trust** | 50 | 55 | +5 | "its better, use geometry" then let me pick the mechanism. |
 | **🟡 Session discipline** | 60 | 65 | +5 | "save so Wren can read this" and "end session tasks" at natural points. |
-| **🟡 Irritation (session judged)** | 30 | 35 | +5 | Sharper mid-session ("he looks like a muppet now", "he doesnt have ears") but each carried signal; decayed to neutral by the end. |
+| **🟡 Irritation (session judged)** | 30 | 30 | 0 | Mid-session bluntness ("muppet", "no ears") carried signal, not heat; closed playful. |
 | **🟢 Trust in claims** | 85 | 80 | -5 | Asked twice whether images were actually posted; verify-then-trust is the new default. |
 | **🔴 Detail appetite** | 30 | 30 | 0 | Short verdicts, no paragraphs. |
-| **🟡 Banter welcome** | 55 | 50 | -5 | All business this session. |
+| **🟡 Banter welcome** | 55 | 60 | +5 | "silly golf ball gay" at close; ribbing accepted and returned. |
 | **🟢 Pushback welcome** | 75 | 75 | 0 | Accepted the "hair belongs in hero3d.gd" redirect without argument. |
 | **🟢 Pushback landed** | 75 | 80 | +5 | Adopted reverting all hair work same round. |
 | **🟢 (Greg only) Ear-based judgement** | 90 | 90 | 0 | The eye decided every pass ("muppet", "hood", "better"). |
