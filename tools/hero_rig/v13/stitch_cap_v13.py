@@ -16,6 +16,9 @@ def cr_cut(c):
     d=c-C; r=d.length
     return r>0 and d.z/r>COS and d.z>0
 _cut=[f for f in bm.faces if cr_cut(f.calc_center_median())]
+_cutset=set(_cut)
+# W094: the rim IS the set of edges shared by a removed face and a kept face (taken before the delete)
+RIM_EDGES=set(e for f in _cut for e in f.edges if any((g not in _cutset) for g in e.link_faces))
 bmesh.ops.delete(bm,geom=_cut,context='FACES_ONLY')
 print("head cranium cut:",len(_cut),"faces")
 bm.verts.ensure_lookup_table()
@@ -47,7 +50,7 @@ def loop_of(edges):
         loops.append(loop)
     return loops
 cap_set=set(cmap.values())
-hb=loop_of([e for e in bnd_edges(dirz_ok) if not (e.verts[0] in cap_set or e.verts[1] in cap_set)])
+hb=loop_of([e for e in RIM_EDGES if not (e.verts[0] in cap_set or e.verts[1] in cap_set)])
 hb=[l for l in hb if len(l)>100]
 cap_v=set(cmap.values())
 capedges=[e for e in bm.edges if len(e.link_faces)==1 and e.verts[0] in cap_v and e.verts[1] in cap_v]
