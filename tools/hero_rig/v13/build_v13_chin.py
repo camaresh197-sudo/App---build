@@ -178,7 +178,7 @@ for v in me.vertices:
     if 'tubercle' not in SKIP: v.co.y+=gbump(p,Vector((0,0,1.4590)),0.0045,0.0030,0.0016)    # tubercle, the centre of the upper lip
     if 'mouthline' not in SKIP: v.co.y+=gbump(p,Vector((0,0,1.4570)),0.0300,0.0030,-0.0026)   # the mouth line (3 mm wide: 1.8 mm tore on the density edge at z 1.457)
     for _sx in (1,-1):
-        if 'corner' not in SKIP: v.co.y+=gbump(p,Vector((0.0295*_sx,0,1.4560)),0.0050,0.0050,-0.0026)  # corner of the mouth
+        if 'corner' not in SKIP: v.co.y+=gbump(p,Vector((0.0295*_sx,0,1.4560)),0.0050,0.0050,-0.0036)  # corner of the mouth
 # eye sockets, applied after the features so the brow and cheek stay forward of the dish
 for v in me.vertices:
     if v.co.y>-0.06: continue
