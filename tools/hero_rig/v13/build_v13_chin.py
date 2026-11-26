@@ -105,12 +105,12 @@ for v in me.vertices:
             while _k<len(_cz)-2 and p.z>_cz[_k+1]: _k+=1
             _t=(p.z-_cz[_k])/(_cz[_k+1]-_cz[_k])
             dy+=1e-3*((1-_t)*_cc[_k]+_t*_cc[_k+1])*math.exp(-(p.x/0.0045)**2)
-        dy+=gbump(p,Vector((0,0,1.498)),0.0070,0.007,0.008)
+        dy+=gbump(p,Vector((0,0,1.495)),0.0070,0.007,0.008)   # tip ridge lowered 3 mm
         # nose tip as its own block (pencil study, plane 2): a forward plate with soft 2 mm edges, over the tip only
         def _ss(d,w): 
             t=max(0.0,min(1.0,d/w)); return t*t*(3-2*t)
         _bx=_ss(0.0085-abs(p.x),0.0035)
-        _bz=_ss(p.z-1.4925,0.0035)*_ss(1.5065-p.z,0.0035)
+        _bz=_ss(p.z-1.4895,0.0035)*_ss(1.5035-p.z,0.0035)   # tip block lowered 3 mm: apex comes down onto the base (was pointing up)
         dy-=0.0030*_bx*_bz
         # upper lip, blended into the nose base
         # nostrils carved into the underside of the nose base: a soft, tilted dent per side (no rim)
