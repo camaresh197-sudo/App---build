@@ -10,7 +10,7 @@ hi=bpy.data.objects['head_quad']
 bv=BVHTree.FromObject(hi,bpy.context.evaluated_depsgraph_get())
 C=Vector((0.0,-0.02,1.58))                  # cranium centre (post-scale)
 A,B,Cz=0.088,0.112,0.115                     # half-axes: width, depth, height of the cranium ellipsoid
-RINGS=[12,22,32,42,52,62]                    # polar angles (deg) from the crown pole
+RINGS=[12,22,32,42,52,62,72,82]              # polar angles (deg) from the crown pole, extended to temples and occiput (W086)
 SPOKES=16
 mat=bpy.data.materials.new('craniummark'); mat.diffuse_color=(0.2,0.8,1.0,1)
 pts=[]
