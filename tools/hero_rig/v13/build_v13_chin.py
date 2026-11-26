@@ -1,4 +1,5 @@
-import bpy, math
+import bpy, math, os
+SKIP=set(os.environ.get('V13_SKIP','').split(','))   # debug: terms to leave out, e.g. V13_SKIP=cupid,border
 from mathutils import Vector
 
 # ---- base head as rings, with the jaw loop designed in ----
@@ -123,7 +124,7 @@ _regj=[e for e in _bj.edges if all(_jawv(v) for v in e.verts)]
 _bmn.ops.subdivide_edges(_bj, edges=_regj, cuts=1, use_grid_fill=True)
 _bj.to_mesh(me); _bj.free(); me.update()
 # finer mesh over the mouth (two passes, about 1 mm quads) so the lips and the mouth line can be resolved
-for _rx,_rz in ((0.044,0.026),(0.040,0.022)):   # the finest patch must be bigger than every lip feature, else its edge shows as tiles
+for _rx,_rz in ((0.044,0.026),(0.040,0.022)):   # the finest patch must be bigger than every lip feature, else its edge shows as tiles   # the finest patch must be bigger than every lip feature, else its edge shows as tiles
     _bm=_bmn.new(); _bm.from_mesh(me)
     _reg=[e for e in _bm.edges if all((((v.co.x)/_rx)**2+((v.co.z-1.455)/_rz)**2<1.0 and v.co.y<-0.07) for v in e.verts)]
     _bmn.ops.subdivide_edges(_bm, edges=_reg, cuts=1, use_grid_fill=True)
@@ -158,7 +159,7 @@ for v in me.vertices:
 for v in me.vertices:
     p=v.co
     if p.y>-0.04 or p.z>1.48 or p.z<1.39: continue
-    v.co.y+=gbump(p,Vector((0,0,1.462)),0.026,0.012,0.0035)   # upper lip volume (moved here from the coarse pass: it showed as 4 mm tiles)
+    if 'upper_vol' not in SKIP: v.co.y+=gbump(p,Vector((0,0,1.462)),0.026,0.012,0.0035)   # upper lip volume (moved here from the coarse pass: it showed as 4 mm tiles)
     v.co.y+=bump(p,Vector((0,0,1.455)),0.024,0.012,0.0040)    # lower face volume under the lip
     v.co.y+=gbump(p,Vector((0,0,1.4385)),0.0200,0.0060,-0.0030)   # groove (dent)
     v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0040)    # chin pad (forward)
@@ -169,15 +170,15 @@ for v in me.vertices:
     _d=math.hypot(abs(p.x)-(_ax+_t*_dx),p.z-(_az+_t*_dz))
     if _d<0.012: v.co.y+=0.0016*math.exp(-(_d/0.0038)**2)*(math.sin(math.pi*_t)**0.7)
     # mouth (stomion at z 1.457: about a third of the way from the nose base 1.487 to the chin 1.397)
-    v.co.y+=gbump(p,Vector((0,0,1.4615)),0.0200,0.0050,0.0030)    # upper vermilion
+    if 'vermilion' not in SKIP: v.co.y+=gbump(p,Vector((0,0,1.4615)),0.0200,0.0050,0.0030)    # upper vermilion
     v.co.y+=gbump(p,Vector((0,0,1.4495)),0.0215,0.0065,0.0040)    # lower vermilion, fuller
-    v.co.y+=gbump(p,Vector((0,0,1.4660)),0.0170,0.0022,0.0016)    # vermilion border, a fine ridge along the top of the upper lip
+    if 'border' not in SKIP: v.co.y+=gbump(p,Vector((0,0,1.4660)),0.0170,0.0022,0.0016)    # vermilion border, a fine ridge along the top of the upper lip
     for _sx in (1,-1):
-        v.co.y+=gbump(p,Vector((0.0065*_sx,0,1.4640)),0.0042,0.0034,0.0014)   # cupid's bow peak
-    v.co.y+=gbump(p,Vector((0,0,1.4590)),0.0045,0.0030,0.0016)    # tubercle, the centre of the upper lip
-    v.co.y+=gbump(p,Vector((0,0,1.4570)),0.0300,0.0018,-0.0032)   # the mouth line
+        if 'cupid' not in SKIP: v.co.y+=gbump(p,Vector((0.0065*_sx,0,1.4640)),0.0042,0.0034,0.0014)   # cupid's bow peak
+    if 'tubercle' not in SKIP: v.co.y+=gbump(p,Vector((0,0,1.4590)),0.0045,0.0030,0.0016)    # tubercle, the centre of the upper lip
+    if 'mouthline' not in SKIP: v.co.y+=gbump(p,Vector((0,0,1.4570)),0.0300,0.0030,-0.0026)   # the mouth line (3 mm wide: 1.8 mm tore on the density edge at z 1.457)
     for _sx in (1,-1):
-        v.co.y+=gbump(p,Vector((0.0295*_sx,0,1.4560)),0.0042,0.0042,-0.0030)  # corner of the mouth
+        if 'corner' not in SKIP: v.co.y+=gbump(p,Vector((0.0295*_sx,0,1.4560)),0.0050,0.0050,-0.0026)  # corner of the mouth
 # eye sockets, applied after the features so the brow and cheek stay forward of the dish
 for v in me.vertices:
     if v.co.y>-0.06: continue
