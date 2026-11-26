@@ -95,7 +95,7 @@ for v in me.vertices:
     p=v.co.copy(); dy=0.0
     if p.y<-0.02:
         # nose (redone): one smooth Gaussian ridge with a tip, no steep walls
-        dy+=gbump(p,Vector((0,0,1.508)),0.0100,0.023,0.017)
+        dy+=gbump(p,Vector((0,0,1.503)),0.0100,0.022,0.0165)
         dy+=gbump(p,Vector((0,0,1.498)),0.0070,0.007,0.008)
         # upper lip, blended into the nose base
         # nostrils carved into the underside of the nose base: a soft, tilted dent per side (no rim)
