@@ -17,7 +17,7 @@ SGN=1.0 if EYE in ('eye_l','nostril_l') else -1.0
 vs=[v.co for v in eye.data.vertices]
 cx=sum(v.x for v in vs)/len(vs); cz=sum(v.z for v in vs)/len(vs)
 if NOSE:
-    cx=0.0092*SGN; cz=1.5048   # nostril centre (nostril_l/r objects, location z 1.5048)
+    cx=0.0083*SGN; cz=1.5089   # nostril centre = the dark nostril pieces (world centre, measured; W064)
 print("eye centre x %.4f z %.4f"%(cx,cz))
 A=(0.0046 if NOSE else 0.0185)*SC; BU=(0.0023 if NOSE else 0.0095)*SC; BL=(0.0023 if NOSE else 0.0068)*SC   # almond opening (same numbers as the lid code), scaled
 def opening(th):
