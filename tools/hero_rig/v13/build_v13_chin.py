@@ -116,11 +116,11 @@ for v in me.vertices:
         # nostrils carved into the underside of the nose base: a soft, tilted dent per side (no rim)
         # nostril forms as separate soft shapes (no concentric rings): wing, opening, alar crease, columella
         for sx in (1,-1):
-            dy+=gbump(p,Vector((0.0115*sx,0,1.494)),0.0068,0.0085,0.005)            # alar wing, a soft bulge beside the tip
-            dy+=gbump(p,Vector((0.0092*sx,0,1.4875)),0.0052,0.0038,-0.0070)     # nostril opening, a small dent under the tip
-            dy+=gbump(p,Vector((0.0205*sx,0,1.4975)),0.0042,0.0095,-0.0015)     # alar crease, softer and wider (was 3 mm wide, -2.2 mm)
-            dy+=gbump(p,Vector((0.0158*sx,0,1.4925)),0.0050,0.0075,0.0035)      # outer wing: with the inner bulge it wraps the nostril as a crescent
-            _rho=math.sqrt(((p.x-0.0092*sx)/0.0064)**2+((p.z-1.4875)/0.0048)**2)
+            dy+=gbump(p,Vector((0.0115*sx,0,1.494+0.0045)),0.0068,0.0085,0.005)            # alar wing, a soft bulge beside the tip
+            dy+=gbump(p,Vector((0.0092*sx,0,1.4875+0.0045)),0.0052,0.0038,-0.0070)     # nostril opening, a small dent under the tip
+            dy+=gbump(p,Vector((0.0205*sx,0,1.4975+0.0045)),0.0042,0.0095,-0.0015)     # alar crease, softer and wider (was 3 mm wide, -2.2 mm)
+            dy+=gbump(p,Vector((0.0158*sx,0,1.4925+0.0045)),0.0050,0.0075,0.0035)      # outer wing: with the inner bulge it wraps the nostril as a crescent
+            _rho=math.sqrt(((p.x-0.0092*sx)/0.0064)**2+((p.z-(1.4875+0.0045))/0.0048)**2)
             dy+=-0.0020*math.exp(-((_rho-1.0)/0.38)**2)                          # rim loop around the nostril opening (forward)
         dy+=gbump(p,Vector((0,0,1.488)),0.0040,0.0080,0.0025)
         # nasal bridge: a narrow raised ridge from between the eyes down to the tip, with a shadow line along each side
@@ -301,9 +301,9 @@ nost=mat('nostril',(0.07,0.04,0.04,1))
 nost.specular_intensity=0.0; nost.roughness=1.0   # was glossy seeds up close (W037)
 for sx in (1,-1):
     xs=0.0092*sx
-    ys=[v.co.y for v in me.vertices if abs(v.co.x-xs)<0.003 and abs(v.co.z-1.4875)<0.002 and v.co.y<-0.05]
+    ys=[v.co.y for v in me.vertices if abs(v.co.x-xs)<0.003 and abs(v.co.z-(1.4875+0.0045))<0.002 and v.co.y<-0.05]
     sy=min(ys)
-    bpy.ops.mesh.primitive_uv_sphere_add(segments=24, ring_count=14, radius=1.0, location=(xs,sy+0.0035,1.4875))
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=24, ring_count=14, radius=1.0, location=(xs,sy+0.0035,1.4875+0.0045))
     n=bpy.context.active_object; n.name='nostril_'+('l' if sx>0 else 'r')
     n.scale=(0.0046,0.0048,0.0023)
     n.rotation_euler=(0.0,math.radians(14*sx),math.radians(0))
