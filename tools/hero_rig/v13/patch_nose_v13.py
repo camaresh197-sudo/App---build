@@ -36,9 +36,10 @@ def onsurface(x,z,yref=None):
     p,nn,ii,dd=bv.find_nearest(Vector((x,yref,z)))
     return Vector(p) if p is not None else Vector((x,loc.y,z))
 # 1) hole: delete faces whose centre is inside an ellipse around the eye
-RX,RZ=((float(os.environ.get('V13_NRX','0.0058')),float(os.environ.get('V13_NRZ','0.0045'))) if NOSE else (0.044,0.033))   # nostril hole: stops short of the midline (nostrils are 9.2 mm off-centre)
+RX,RZ=((float(os.environ.get('V13_NRX','0.0072')),float(os.environ.get('V13_NRZ','0.0065'))) if NOSE else (0.044,0.033))   # nostril hole: stops short of the midline (nostrils are 9.2 mm off-centre)
 bm=bmesh.new(); bm.from_mesh(lo.data); bm.faces.ensure_lookup_table()
-dele=[f for f in bm.faces if f.calc_center_median().y<-0.04 and ((f.calc_center_median().x-cx)/RX)**2+((f.calc_center_median().z-cz)/RZ)**2<1.0]
+HX=cx+SGN*(float(os.environ.get('V13_NSHIFT','0.0014')) if NOSE else 0.0)   # hole centre pushed outward, away from the midline (wing)
+dele=[f for f in bm.faces if f.calc_center_median().y<-0.04 and ((f.calc_center_median().x-HX)/RX)**2+((f.calc_center_median().z-cz)/RZ)**2<1.0]
 print("faces removed:",len(dele))
 bmesh.ops.delete(bm,geom=dele,context='FACES_ONLY')
 # 2) order the boundary loop
@@ -69,7 +70,7 @@ for i in range(M):
     a,b=_u[i],_u[(i+1)%M]; _cum.append(_cum[-1]+math.hypot(b[0]-a[0],b[1]-a[1]))
 th=[math.atan2(_u[0][1],_u[0][0])+2*math.pi*_cum[i]/_cum[-1] for i in range(M)]
 # 3) rings, from the opening (k=0) out to the boundary (k=K)
-RING=[(1.00,0.0),(1.08,0.0),(1.16,0.0),(1.24,0.25)] if NOSE else [(1.00,0.0),(1.14,0.0),(1.38,0.0),(1.70,0.18),(2.10,0.40),(2.60,0.62),(3.20,0.82)]     # (scale of the almond, blend toward the boundary)
+RING=[(1.00,0.0),(1.10,0.0),(1.25,0.0),(1.45,0.22),(1.70,0.45)] if NOSE else [(1.00,0.0),(1.14,0.0),(1.38,0.0),(1.70,0.18),(2.10,0.40),(2.60,0.62),(3.20,0.82)]     # (scale of the almond, blend toward the boundary)
 rings=[]
 for (s,w) in RING:
     row=[]
