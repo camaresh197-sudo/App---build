@@ -100,7 +100,7 @@ for v in me.vertices:
         # straighten the bridge: push the centre back onto the line from the brow (z 1.556, -103 mm) to the tip (z 1.500, -127 mm)
         # (measured with prof_nose.py; the bridge was 1-6 mm behind that line). Correction in mm, weighted to the bridge width.
         if 1.500<=p.z<=1.556:
-            _cz=[1.500,1.508,1.516,1.524,1.532,1.540,1.548,1.556]; _cc=[0.2,-1.5,-1.0,-3.2,-5.8,-4.0,-2.6,0.0]   # ascending, mm
+            _cz=[1.500,1.508,1.516,1.524,1.532,1.540,1.548,1.556]; _cc=[0.20, -2.40, -1.47, -3.69, -6.24, -5.78, -3.32, 0.00]   # ascending, mm
             _k=0
             while _k<len(_cz)-2 and p.z>_cz[_k+1]: _k+=1
             _t=(p.z-_cz[_k])/(_cz[_k+1]-_cz[_k])
@@ -110,7 +110,7 @@ for v in me.vertices:
         def _ss(d,w): 
             t=max(0.0,min(1.0,d/w)); return t*t*(3-2*t)
         _bx=_ss(0.0085-abs(p.x),0.0035)
-        _bz=_ss(p.z-1.4895,0.0035)*_ss(1.5035-p.z,0.0035)   # tip block lowered 3 mm: apex comes down onto the base (was pointing up)
+        _bz=_ss(p.z-1.4895,0.0035)*_ss(1.5065-p.z,0.0070)   # top edge: wider falloff (7 mm) so the tip blends into the bridge, no ledge (W067)   # tip block lowered 3 mm: apex comes down onto the base (was pointing up)
         dy-=0.0030*_bx*_bz
         # upper lip, blended into the nose base
         # nostrils carved into the underside of the nose base: a soft, tilted dent per side (no rim)
