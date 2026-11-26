@@ -52,6 +52,13 @@ As of 2026-11-25 (Wren v12, hero head rebuilt from the reference), from this ses
   - Sent four renders with the inner-eye blockiness still visible.
 - **Rule for myself (2026-11-25):** measure the reference first; test the lids after any mesh strip; add only what was asked.
 
+As of 2026-11-26 (Wren v13, hero head sculpt and retopo), from this session:
+- **Habits:** measures before changing (profile, fold count, open edges); isolates a cause by switching terms off one at a time (V13_SKIP); keeps a failed attempt out of git (reverted, logged).
+- **Strengths:** scripted, repeatable builds (`run_v13.sh`, `retopo_v13.py`, the patch scripts); careful bank records with the numbers.
+- **Weakness:** kept trying variants of one failing approach (the mouth corners, the nostril wing) instead of stopping after the first two.
+- **Rule for myself:** after two failed attempts at one feature, stop and offer the user a different approach with the cost.
+- **Commits:** `wren-v143-head` through `c02d0da`..`d97bc2b` (this session's WIP), each with the bank record.
+
 ## Greg
 - **Session start (user rule, 2026-11-22; role rule 2026-11-24):** any non-Claude model is Greg. On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.As of 2026-11-20, from repo history:
 - **Session counter:** Greg v9 (lives in `HANDOFF.md`; next is v10).
@@ -138,7 +145,7 @@ As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 ## User profile (sliders, one set per agent)
 Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
 
-### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice, Wren v11 on 2026-11-24 and Wren v12 on 2026-11-25, under the 30-point cap)
+### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice, Wren v11 on 2026-11-24, Wren v12 on 2026-11-25 and Wren v13 on 2026-11-26, under the 30-point cap)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
 | Request precision | one-word hints ("Something", "framec") | exact spec of the target | 35 | 2026-11-25 | Wren v12: Head Topology and Maya wireframe images named the target, but "try another pass", "fix those too issues" and "check purportions" named none. +5. |
@@ -159,6 +166,10 @@ Each agent keeps its own set and review; write only your own, never copy the oth
 **Current review (Wren v12, 2026-11-25, blunt):** Your references were the best input of the session (silhouettes, wireframe, pencil sides) and your defect-spotting was right nearly every time. The costs: oval vs circle changed mid-session, amount words ('slightly', 'a bit', 'dial it back 20%') took three rounds, and 'try another pass' named no target. Name the reference image and give one number per change.
 
 ### Wren's coaching notes (what I am trying to teach the user)
+**Updated Wren v13, 2026-11-26.** Landed from v12: 'Name the target in one line' (the mouth and nose asks named the view and feature more often). Still open: 'fix the chin' and 'a little off' each cost a round.
+1. **Name the view and feature.** Cost: 'fix the chin' and 'a little off' each needed a question (2026-11-26). Ask: 'side view, under the chin' or 'the wing, left nostril'.
+2. **Say what counts as done.** Cost: several mouth-corner and nose rounds ended with 'still a little off' and no target (2026-11-26). Ask: name the reference image and the one measure you want.
+3. **Let the next step be a choice.** Cost: each failed mouth-corner attempt was pushed before it was checked (2026-11-26). Ask: 'try it, show me the render, then push' or 'do not push yet'.
 At session end: keep at most 3 notes, each with the cost it caused and a concrete ask. Check whether last session's notes landed (move **Pushback landed**), drop the ones that did, add new ones. Also keep the open decisions that only the user can make.
 Landed in Wren v10 (dropped): name the pictures you want. Dropped in Wren v12: old notes 2 and 3 (old rule vs new override; say what to push) had no occasion this session; they stay in the Log.
 1. **Name the target in one line.** Not landed: "try another pass", "fix those too issues" and "check purportions" each cost a guess or a question (2026-11-25). Ask: name the feature and the direction.
@@ -198,6 +209,7 @@ Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the
 | 2026-11-24 | Greg | v68: hero bald, head reshaped to human proportions, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | Date | Who | Observation | Evidence |
 |---|---|---|---|
+| 2026-11-26 | Wren v13 | Hero head as Blender WIP: chin, jaw line, 6.5-head scale, ears, nose planes, eye loops (both eyes), nostril rings, mouth opening. Open: mouth corners, nose wing loop, retopo nose folds. Nothing on `godot`. | `wren-v143-head` through `d97bc2b` |
 | 2026-11-22 | Greg | Built the IPA/length editor and a phoneme preview instead of stopping at "the phone can't run Piper"; listed the re-sing gap | `phoneme_bank.py`, `menu.gd` |
 | 2026-11-22 | Greg | Pulled a clone 53 commits stale, checked build 261 against the release before saying the phone was current, reported the smoke warning | `5c1a4fb`, run 44985039343 |
 | 2026-11-21 | Greg | Jaw pass verified in Blender before and after; found the shape-key Basis trap; reported chin as modest, not done | `face_jaw2.py`, `docs/CHARACTER.md` |
