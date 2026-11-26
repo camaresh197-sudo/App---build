@@ -158,7 +158,7 @@ for v in me.vertices:
     v.co.y+=gbump(p,Vector((0,0,1.462)),0.026,0.012,0.0035)   # upper lip volume (moved here from the coarse pass: it showed as 4 mm tiles)
     v.co.y+=bump(p,Vector((0,0,1.455)),0.024,0.012,0.0040)    # lower face volume under the lip
     v.co.y+=gbump(p,Vector((0,0,1.4385)),0.0200,0.0060,-0.0030)   # groove (dent)
-    v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0020)    # chin pad (forward)
+    v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0040)    # chin pad (forward)
     # mouth (stomion at z 1.457: about a third of the way from the nose base 1.487 to the chin 1.397)
     v.co.y+=gbump(p,Vector((0,0,1.4615)),0.0200,0.0050,0.0030)    # upper vermilion
     v.co.y+=gbump(p,Vector((0,0,1.4495)),0.0215,0.0065,0.0040)    # lower vermilion, fuller
