@@ -47,7 +47,7 @@ while True:
     if n is None or n is start or len(loop)>len(comp)+2: break
     loop.append(n); prev,cur=cur,n
 M=len(loop); print("loop verts:",M,"of",len(comp))
-KR=4; rings=[loop]
+KR=8; rings=[loop]
 # W088: rings step the POLAR angle from the boundary (82 deg) toward the crown, keeping each boundary azimuth, and cast
 # the rays along those directions. (The earlier version shrank distance, so rings fell back onto the boundary's rays.)
 TH0=math.radians(82)
