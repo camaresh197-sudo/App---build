@@ -60,12 +60,24 @@ print("head loop:",[len(l) for l in hb],"cap loop:",[len(l) for l in cl])
 if len(hb)!=1 or len(cl)!=1:
     print("LOOP COUNT MISMATCH - not stitching"); sys.exit(1)
 def az(v): return math.atan2(v.co.y-C.y, v.co.x-C.x)
-A=sorted(cl[0],key=az); B=sorted(hb[0],key=az)
+# W095: keep each rim in its own loop order (sorting by azimuth scrambles the folded back of the rim)
+A=list(cl[0]); B=list(hb[0])
+def _pt(v): return v.co
+# orient both loops the same way (signed azimuth progression along the loop)
+def _orient(L):
+    tot=0.0
+    for i in range(len(L)):
+        d=az(L[(i+1)%len(L)])-az(L[i]); d=(d+math.pi)%(2*math.pi)-math.pi; tot+=d
+    return L if tot>0 else list(reversed(L))
+A=_orient(A); B=_orient(B)
+# rotate B so its first vertex is the one nearest A[0]
+k0=min(range(len(B)), key=lambda k: (B[k].co-A[0].co).length)
+B=B[k0:]+B[:k0]
 N1,N2=len(A),len(B)
 i=j=0; made=0; skipped=0
 for _ in range(N1+N2):
     a0,a1=A[i%N1],A[(i+1)%N1]; b0,b1=B[j%N2],B[(j+1)%N2]
-    adv_a = (az(a1)<=az(b1)) if (i<N1) else False
+    adv_a = ((az(a1)-az(a0))%(2*math.pi) <= (az(b1)-az(b0))%(2*math.pi)) if (i<N1) else False
     if j>=N2: adv_a=True
     if i>=N1: adv_a=False
     try:
