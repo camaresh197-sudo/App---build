@@ -58,6 +58,16 @@ tot=0.0
 for i in range(M):
     d=ang(loop[(i+1)%M])-ang(loop[i]); d=(d+math.pi)%(2*math.pi)-math.pi; tot+=d
 if tot<0: loop.reverse()
+# smooth the hole boundary itself along the loop (its staircase is the source of the teeth on the cheek seam); the boundary
+# verts are reused, so the outer grid just follows. Each pass: average with the two loop neighbours, re-project to the skin.
+for _ in range(int(os.environ.get('V13_BSMOOTH','20'))):
+    _new=[]
+    for i in range(M):
+        a,b,c=loop[i-1].co,loop[i].co,loop[(i+1)%M].co
+        q=0.5*b+0.25*(a+c)
+        p=onsurface(q.x,q.z,q.y)
+        _new.append(p if p else q)
+    for i in range(M): loop[i].co=_new[i]
 # angle of every boundary vertex by normalised arc length (monotonic by construction): the staircase boundary runs almost
 # vertically at the two ends of the long axis, where atan2 goes backwards and crossed radial lines fold thin slits
 _u=[((v.co.x-cx)/RX,(v.co.z-cz)/RZ) for v in loop]
@@ -87,8 +97,9 @@ for k in range(len(rings)-1):
         except ValueError: pass
 # relax the outer three rings (not the stitched boundary): average each vertex with its neighbours, then put it back on the high-poly surface,
 # so the radial lines stop following the staircase of the old grid
-_outer=set(v for row in rings[-4:-1] for v in row)
-for _ in range(6):
+_NR=int(os.environ.get('V13_RELAX_N','5'))
+_outer=set(v for row in rings[-(_NR+1):-1] for v in row)
+for _ in range(int(os.environ.get('V13_RELAX_P','16'))):
     _pos={}
     for v in _outer:
         nb=[e.other_vert(v) for e in v.link_edges]
