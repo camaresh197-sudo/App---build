@@ -21,9 +21,15 @@ def opening(th):
     x=cx+A*dx
     z=cz+0.09*dx*0.0105*SC+b*math.sin(th)  # outer corner lifted like the lid code
     return x,z
-def onsurface(x,z):
+def onsurface(x,z,yref=None):
+    """project (x,z) onto the high-poly skin along y. With yref (the depth of the neighbour ring at the same angle) a hit more
+    than 2 mm away is a different sheet (lid wrap vs skin at the eye corners): stay on the neighbour's sheet by snapping to the
+    nearest surface point from (x,yref,z) instead. That jump was folding thin back-facing slits at both corners."""
     loc,n,i,d=bv.ray_cast(Vector((x,-0.5,z)),Vector((0,1,0)))
-    return Vector((x,loc.y,z)) if loc else None
+    if loc is None: return None
+    if yref is None or abs(loc.y-yref)<0.002: return Vector((x,loc.y,z))
+    p,nn,ii,dd=bv.find_nearest(Vector((x,yref,z)))
+    return Vector(p) if p is not None else Vector((x,loc.y,z))
 # 1) hole: delete faces whose centre is inside an ellipse around the eye
 RX,RZ=0.044,0.033
 bm=bmesh.new(); bm.from_mesh(lo.data); bm.faces.ensure_lookup_table()
@@ -50,7 +56,13 @@ tot=0.0
 for i in range(M):
     d=ang(loop[(i+1)%M])-ang(loop[i]); d=(d+math.pi)%(2*math.pi)-math.pi; tot+=d
 if tot<0: loop.reverse()
-th=[ang(v) for v in loop]
+# angle of every boundary vertex by normalised arc length (monotonic by construction): the staircase boundary runs almost
+# vertically at the two ends of the long axis, where atan2 goes backwards and crossed radial lines fold thin slits
+_u=[((v.co.x-cx)/RX,(v.co.z-cz)/RZ) for v in loop]
+_cum=[0.0]
+for i in range(M):
+    a,b=_u[i],_u[(i+1)%M]; _cum.append(_cum[-1]+math.hypot(b[0]-a[0],b[1]-a[1]))
+th=[math.atan2(_u[0][1],_u[0][0])+2*math.pi*_cum[i]/_cum[-1] for i in range(M)]
 # 3) rings, from the opening (k=0) out to the boundary (k=K)
 RING=[(1.00,0.0),(1.14,0.0),(1.38,0.0),(1.70,0.18),(2.10,0.40),(2.60,0.62),(3.20,0.82)]     # (scale of the almond, blend toward the boundary)
 rings=[]
@@ -61,7 +73,7 @@ for (s,w) in RING:
         px,pz=cx+s*(ox-cx),cz+s*(oz-cz)
         bx,bz_=loop[i].co.x,loop[i].co.z
         x=(1-w)*px+w*bx; z=(1-w)*pz+w*bz_
-        p=onsurface(x,z)
+        p=onsurface(x,z,rings[-1][i].co.y if rings else None)
         row.append(bm.verts.new(p if p else Vector((x,loop[i].co.y,z))))
     rings.append(row)
 rings.append(loop)
@@ -80,7 +92,7 @@ for _ in range(6):
         nb=[e.other_vert(v) for e in v.link_edges]
         if not nb: continue
         c=sum((n.co for n in nb),Vector())/len(nb)
-        p=onsurface(0.5*v.co.x+0.5*c.x,0.5*v.co.z+0.5*c.z)
+        p=onsurface(0.5*v.co.x+0.5*c.x,0.5*v.co.z+0.5*c.z,v.co.y)
         _pos[v]=p if p else v.co.copy()
     for v,p in _pos.items(): v.co=p
 # outward normals (front of the face is -y)
