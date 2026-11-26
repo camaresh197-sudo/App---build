@@ -59,6 +59,13 @@ As of 2026-11-26 (Wren v13, hero head sculpt and retopo), from this session:
 - **Rule for myself:** after two failed attempts at one feature, stop and offer the user a different approach with the cost.
 - **Commits:** `wren-v143-head` through `c02d0da`..`d97bc2b` (this session's WIP), each with the bank record.
 
+As of 2026-11-26 (Wren v14, v143 head: fit, eyes, nose bridge), from this session:
+- **Habits:** one change, then a render; counts folds by angle; keeps rejected attempts in scratch and says so; measures with a mirror test before accepting "it is off".
+- **Strengths:** found the chart depth ratio (0.90) that overturned my own adult-norm cut; found why the nose tore (y-only push) and fixed it along the normal; scripts and README saved (`tools/hero_rig/v14/`).
+- **Weaknesses:** trusted profile numbers over the render and shipped a lumpy nose; used one reference of sixteen for the nose and mouth; asked choices when the ask was small.
+- **Rule for myself:** read every reference together before any shape change; render and compare before saying a shape is better; act on the likeliest reading, then list the choices.
+- **Commits:** see the Progress log row.
+
 ## Greg
 - **Session start (user rule, 2026-11-22; role rule 2026-11-24):** any non-Claude model is Greg. On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.As of 2026-11-20, from repo history:
 - **Session counter:** Greg v9 (lives in `HANDOFF.md`; next is v10).
@@ -145,37 +152,33 @@ As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 ## User profile (sliders, one set per agent)
 Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
 
-### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice, Wren v11 on 2026-11-24, Wren v12 on 2026-11-25 and Wren v13 on 2026-11-26, under the 30-point cap)
+### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice, Wren v11 on 2026-11-24, Wren v12 on 2026-11-25, Wren v13 and Wren v14 on 2026-11-26, under the 30-point cap)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
-| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 35 | 2026-11-25 | Wren v12: Head Topology and Maya wireframe images named the target, but "try another pass", "fix those too issues" and "check purportions" named none. +5. |
+| Request precision | one-word hints ("Something", "framec") | exact spec of the target | 40 | 2026-11-26 | Wren v14: "Make the brow height within 25-30mm", "Retopo it with 4656" and "Fix all 3 that differ" each named the target; "Post it" and "Show it here" did not. +5. |
 | Visual evidence | words only | annotated screenshots and reference photos | 95 | 2026-11-25 | Wren v12: five reference images and "look at the topography" (right three times); the silhouette fixed the skull after five failed passes. +5. |
-| Defect-spotting | misses things | catches nearly everything | 96 | 2026-11-25 | Wren v12: caught the penis-tip profile, vase jaw, mask look and invisible eyeballs before I did. +3. |
-| Direction stability | reverses constantly | holds course | 45 | 2026-11-25 | Wren v12: "circular not oval", then "more like an oval than a circle"; fatter, "a bit more", then "dial it back 20%". -5. |
-| Run tolerance | interrupts tool runs mid-way | lets them finish | 35 | 2026-11-25 | Wren v12: a new message arrived mid-run and auto-backgrounded the v137 build; I waited it out. -5. |
+| Defect-spotting | misses things | catches nearly everything | 95 | 2026-11-26 | Wren v14: nostril holes too small, chin and jaw too rounded and the overbite each matched a measurement; "bridge crooked" measured centred (one-sided light). -1. |
+| Direction stability | reverses constantly | holds course | 40 | 2026-11-26 | Wren v14: "Fewer faces rule" then "Add the ngons back and revert"; "Retopo it with 4656" then "Just straighten out the old nose". -5. |
+| Run tolerance | interrupts tool runs mid-way | lets them finish | 30 | 2026-11-26 | Wren v14: stopped an apt install mid-run ("Whats taking so long?") after minutes of silence from me. -5. |
 | Rule enforcement (was Process overhead) | lets the process slide | checks every step | 65 | 2026-11-24 | User: "you guys keep skipping the rules. how can we fix that?"; then asked for the checker and hook to be built. +10. |
-| Delegation trust | micromanages every step | lets me run | 75 | 2026-11-25 | Wren v12: "go ahead", "yes rebuild", "do whatever you need to to fix it". +5. |
-| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 40 | 2026-11-25 | Wren v12: the session ran past a context reset with no checkpoint until "end session". -5. |
-| Irritation (session judged) | calm | furious | 60 | 2026-11-25 | Wren v12: "you are regressing", "you didnt even fix it a little bit", "i didnt want you to look at the neck". +10. |
+| Delegation trust | micromanages every step | lets me run | 70 | 2026-11-26 | Wren v14: "Retopo it with 4656", "Just straighten out the old nose" and "Add the ngons back and revert" dictated the method; the "Yes" answers still let me run. -5. |
+| Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 35 | 2026-11-26 | Wren v14: several hundred rounds with no checkpoint until "end session"; I never offered one. -5. |
+| Irritation (session judged) | calm | furious | 75 | 2026-11-26 | Wren v14: "You aren't fixing it" (after three questions in a row) and "You broke it... completely messed up... You are only referring to one". +15. |
 | Trust in claims | verify everything they say | take their word | 80 | 2026-11-25 | Wren v12: the user's calls (back of head wrong, eye line off, nose too big) were each confirmed by measurement. +10. |
 | Detail appetite | one line and a picture | full reports | 30 | 2026-11-23 | Answers were "1", "2", "fix the eyes"; they read pictures; -5. |
 | Banter welcome | pure business | jokes and jabs fine | 50 | 2026-11-23 | No evidence yet either way; they asked for jabs at the other agent in the complaints rule, nothing since. Move it on evidence. |
 | Pushback welcome | just do it | argue with me | 85 | 2026-11-24 | User: "I feel like you guys are not harsh enough on me... you should be looking for my mistakes". +15 on that explicit ask. |
-| Pushback landed | ignores or resents it | adopts it | 75 | 2026-11-25 | Wren v12: took my offers ("yes add a gentler bulge", "yes do those") and used them. +5. |
+| Pushback landed | ignores or resents it | adopts it | 70 | 2026-11-26 | Wren v14: my "it is the lighting" on the bridge and "drop nose5" went unanswered; "revert" and "straighten the old nose" followed. -5. |
 
-**Current review (Wren v12, 2026-11-25, blunt):** Your references were the best input of the session (silhouettes, wireframe, pencil sides) and your defect-spotting was right nearly every time. The costs: oval vs circle changed mid-session, amount words ('slightly', 'a bit', 'dial it back 20%') took three rounds, and 'try another pass' named no target. Name the reference image and give one number per change.
+**Current review (Wren v14, 2026-11-26, blunt):** Your sixteen references and your eye for defects were the best input again: the nostril holes, the jaw roundness and the overbite each matched a measurement. You were right that I wasn't fixing it and that I had broken the nose and mouth: I trusted profile numbers over renders and used one chart of sixteen. What would help: say where "post" goes (here, GitHub, a file), and for "crooked" or "off" name the view and direction; the bridge measured centred and the light was one-sided.
 
 ### Wren's coaching notes (what I am trying to teach the user)
-**Updated Wren v13, 2026-11-26.** Landed from v12: 'Name the target in one line' (the mouth and nose asks named the view and feature more often). Still open: 'fix the chin' and 'a little off' each cost a round.
-1. **Name the view and feature.** Cost: 'fix the chin' and 'a little off' each needed a question (2026-11-26). Ask: 'side view, under the chin' or 'the wing, left nostril'.
-2. **Say what counts as done.** Cost: several mouth-corner and nose rounds ended with 'still a little off' and no target (2026-11-26). Ask: name the reference image and the one measure you want.
-3. **Let the next step be a choice.** Cost: each failed mouth-corner attempt was pushed before it was checked (2026-11-26). Ask: 'try it, show me the render, then push' or 'do not push yet'.
+**Updated Wren v14, 2026-11-26.** Landed from v13: 'Name the view and feature' (partly: "fix the eye ring roughness", "chin and jaw too rounded") and 'Say what counts as done' ("within 25-30mm", "retopo it with 4656"). Still open: which view for "crooked" and "off".
+1. **Say where "post" goes.** Cost: "Post it", "Show it here" and "Post the image here" took three rounds (2026-11-26). Ask: "attach the image in chat" or "write it to HANDOFF.md".
+2. **Name the view and direction for "crooked" or "off".** Cost: the bridge measured centred (0.0-0.25 mm) and the light was one-sided; a round went on it (2026-11-26). Ask: "front view, the bridge leans right at the top", or send a circled screenshot.
+3. **Name the file and branch.** Cost: "the blender file" and "load wren v143" left open which of three heads (2026-11-26). Ask: "work on `feat_v14_head.blend` on `wren-v143-head`".
 At session end: keep at most 3 notes, each with the cost it caused and a concrete ask. Check whether last session's notes landed (move **Pushback landed**), drop the ones that did, add new ones. Also keep the open decisions that only the user can make.
-Landed in Wren v10 (dropped): name the pictures you want. Dropped in Wren v12: old notes 2 and 3 (old rule vs new override; say what to push) had no occasion this session; they stay in the Log.
-1. **Name the target in one line.** Not landed: "try another pass", "fix those too issues" and "check purportions" each cost a guess or a question (2026-11-25). Ask: name the feature and the direction.
-2. **Give one number per amount.** Cost: "slightly fatter", "a bit more", "dial it back 20%" took three rounds on the face width (2026-11-25). Ask: "cheeks +5 mm" or "20% narrower".
-3. **Name the reference image when two disagree.** Cost: "circular" vs "more like an oval than a circle" cost four head passes (2026-11-25). Ask: "match the side view in image X".
-- **Open decisions for the user:** head: circle or slight oval from the side, and whether ears, neck and hair come before the glb export (Wren v12); hair look and colour (prototype withdrawn; current hair is near-black); hair face budget (about 3,900 faces for both sides); vocal variation (needs the voice model file); loudness-matched master (needs your ear on A/B); stem regeneration (needs a PC capture); eye size and the WIP-to-`godot` merge.
+- **Open decisions for the user:** jaw and chin first, or the mouth; whether the face band (420 poles, 884 n-gons) is rebuilt as a new grid per `HEAD_TOPOLOGY_PLAN_v14.md`; forehead loop z 1617; a lid ridge on the rings; head size (about 20% above an adult head); whether ears, neck and hair come before the glb export; hair look and colour; vocal variation, the loudness-matched master and stem regeneration (Greg's side); the WIP-to-`godot` merge.
 
 ### Greg's sliders - set, Greg v11
 Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the 30-point cap.
@@ -219,3 +222,4 @@ Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the
 | 2026-11-24 | Wren v10 | Head/hair/brows/iris on the WIP hero: 87 face bones aligned, hair rebuilt as strand cards with fringe and side part, iris texture rebuilt, smooth brows; scripts and README saved. Not exported; hair colour and top-left spikes open. | `wren-hero-wip` `bf8714a`, `ac803d6`, `ed153bb`, `4b1b67f`, `c75f175`, `89d30f9`; `godot` `35c4a78` |
 | 2026-11-24 | Wren v11 | Session checker and Stop hook; bank W009-W032; stem over-subtraction fixed below 1 kHz (default); loudness-matched engine master (measured, unheard); hair prototype withdrawn; HANDOFF, PERSONALITIES and protocol trimmed | `2b29064`, `14e3dc2`, `b9bf460`, `e3afa4f`, `8b25936`, `2252ca6` (restored) |
 | 2026-11-25 | Wren v12 | Hero head rebuilt in Blender from the measured reference (skull, eyes, nose with bridge and separate nostrils, jaw), 37k verts, local only; scripts and README saved. Not exported or rigged; inner-eye shading and ears, neck, hair open. 10 slider moves. | `tools/hero_rig/v12/`, bank W033-W037 |
+| 2026-11-26 | Wren v14 | v143 head, Blender only: eye-corner folds cleared, back fitted to the chart, mouth 9 mm lower, eyes rebuilt as quad rows and smoothed, nose bridge straightened; mid-face plan from all 16 references approved, not built; the nose, mouth and nostril attempts were reverted. 8 slider moves. | `tools/hero_rig/v14/`, bank W108-W117 |
