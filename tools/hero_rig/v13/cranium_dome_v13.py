@@ -1,4 +1,4 @@
-# Step 2 (W087): cut the cranium faces above the 82-degree line on the retopo head, and fill the hole with rings that
+# Step 2 (W087, fixed in W088): cut the cranium faces above the 82-degree line on the retopo head, and fill the hole with rings that
 # shrink toward the crown pole (same vertex count as the boundary, so every ring joins), then project onto the skin.
 # python3 -I cranium_dome_v13.py -- in.blend out.blend
 import bpy, bmesh, math, sys
@@ -48,14 +48,17 @@ while True:
     loop.append(n); prev,cur=cur,n
 M=len(loop); print("loop verts:",M,"of",len(comp))
 KR=4; rings=[loop]
+# W088: rings step the POLAR angle from the boundary (82 deg) toward the crown, keeping each boundary azimuth, and cast
+# the rays along those directions. (The earlier version shrank distance, so rings fell back onto the boundary's rays.)
+TH0=math.radians(82)
 for k in range(1,KR+1):
-    f=1.0-k/(KR+1)
+    th=TH0*(1.0-k/(KR+1))
     row=[]
     for v in loop:
-        p=C+(v.co-C)*f
-        d=(p-C).normalized() if (p-C).length>0 else Vector((0,0,1))
+        az=math.atan2(v.co.y-C.y, v.co.x-C.x)
+        d=Vector((math.sin(th)*math.cos(az), math.sin(th)*math.sin(az), math.cos(th)))
         loc,n,i,dd=bv.ray_cast(C,d)
-        row.append(bm.verts.new(loc if loc else p))
+        row.append(bm.verts.new(loc if loc else C+d*0.07))
     rings.append(row)
 pole=bm.verts.new(C+Vector((0,0,0.02)))
 loc,n,i,dd=bv.ray_cast(C,Vector((0,0,1)))
