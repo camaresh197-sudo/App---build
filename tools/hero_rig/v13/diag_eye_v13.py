@@ -1,7 +1,7 @@
 # counts bad faces in the eye patch: flipped, tiny, slivers  (python3 -I diag_eye_v13.py -- file.blend)
-import bpy, bmesh, math, sys
+import bpy, bmesh, math, sys, os
 bpy.ops.wm.open_mainfile(filepath=sys.argv[-1])
-lo=bpy.data.objects['head_low']; eye=bpy.data.objects['eye_l']; vs=[v.co for v in eye.data.vertices]
+lo=bpy.data.objects['head_low']; eye=bpy.data.objects[os.environ.get('V13_EYE','eye_l')]; vs=[v.co for v in eye.data.vertices]
 cx=sum(v.x for v in vs)/len(vs); cz=sum(v.z for v in vs)/len(vs)
 bm=bmesh.new(); bm.from_mesh(lo.data); bm.faces.ensure_lookup_table()
 RX,RZ=0.044,0.033

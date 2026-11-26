@@ -2,7 +2,7 @@
 # Cuts a hole around the +x eye in the QuadriFlow mesh and fills it with rings: lid opening, lid rim, crease, then
 # rings that blend out to the hole boundary (the boundary vertices are reused, so the patch is stitched). Every new
 # point is projected onto the high-poly head (head_quad).
-import bpy, bmesh, math, sys
+import bpy, bmesh, math, sys, os
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 src,out=sys.argv[-2],sys.argv[-1]
@@ -10,7 +10,9 @@ bpy.ops.wm.open_mainfile(filepath=src)
 lo=bpy.data.objects['head_low']; hi=bpy.data.objects['head_quad']
 bv=BVHTree.FromObject(hi,bpy.context.evaluated_depsgraph_get())
 SC=0.907                                   # the head was scaled by this about the crown (z 1.674)
-eye=bpy.data.objects['eye_l']              # sx=+1 eye
+EYE=os.environ.get('V13_EYE','eye_l')       # eye_l = +x (character's left, viewer's right); eye_r = -x
+eye=bpy.data.objects[EYE]
+SGN=1.0 if EYE=='eye_l' else -1.0
 vs=[v.co for v in eye.data.vertices]
 cx=sum(v.x for v in vs)/len(vs); cz=sum(v.z for v in vs)/len(vs)
 print("eye centre x %.4f z %.4f"%(cx,cz))
@@ -19,7 +21,7 @@ def opening(th):
     dx=math.cos(th)*1.0; up=math.sin(th)>=0
     b=BU if up else BL
     x=cx+A*dx
-    z=cz+0.09*dx*0.0105*SC+b*math.sin(th)  # outer corner lifted like the lid code
+    z=cz+0.09*SGN*dx*0.0105*SC+b*math.sin(th)  # outer corner lifted like the lid code (side-aware)
     return x,z
 def onsurface(x,z,yref=None):
     """project (x,z) onto the high-poly skin along y. With yref (the depth of the neighbour ring at the same angle) a hit more
