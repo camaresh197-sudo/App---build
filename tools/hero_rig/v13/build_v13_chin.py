@@ -97,6 +97,14 @@ for v in me.vertices:
     if p.y<-0.02:
         # nose (redone): one smooth Gaussian ridge with a tip, no steep walls
         dy+=gbump(p,Vector((0,0,1.503)),0.0100,0.022,0.0165)
+        # straighten the bridge: push the centre back onto the line from the brow (z 1.556, -103 mm) to the tip (z 1.500, -127 mm)
+        # (measured with prof_nose.py; the bridge was 1-6 mm behind that line). Correction in mm, weighted to the bridge width.
+        if 1.500<=p.z<=1.556:
+            _cz=[1.500,1.508,1.516,1.524,1.532,1.540,1.548,1.556]; _cc=[0.2,-1.5,-1.0,-3.2,-5.8,-4.0,-2.6,0.0]   # ascending, mm
+            _k=0
+            while _k<len(_cz)-2 and p.z>_cz[_k+1]: _k+=1
+            _t=(p.z-_cz[_k])/(_cz[_k+1]-_cz[_k])
+            dy+=1e-3*((1-_t)*_cc[_k]+_t*_cc[_k+1])*math.exp(-(p.x/0.0045)**2)
         dy+=gbump(p,Vector((0,0,1.498)),0.0070,0.007,0.008)
         # upper lip, blended into the nose base
         # nostrils carved into the underside of the nose base: a soft, tilted dent per side (no rim)
