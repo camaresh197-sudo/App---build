@@ -116,17 +116,17 @@ for v in me.vertices:
         # nostrils carved into the underside of the nose base: a soft, tilted dent per side (no rim)
         # nostril forms as separate soft shapes (no concentric rings): wing, opening, alar crease, columella
         for sx in (1,-1):
-            dy+=gbump(p,Vector((0.0115*sx,0,1.494+0.0045)),0.0068,0.0085,0.005)            # alar wing, a soft bulge beside the tip
+            dy+=gbump(p,Vector((0.0115*sx,0,1.494+0.0045)),0.0068,0.0085,0.0035)            # alar wing, a soft bulge beside the tip
             dy+=gbump(p,Vector((0.0092*sx,0,1.4875+0.0045)),0.0052,0.0038,-0.0070)     # nostril opening, a small dent under the tip
             dy+=gbump(p,Vector((0.0205*sx,0,1.4975+0.0045)),0.0042,0.0095,-0.0015)     # alar crease, softer and wider (was 3 mm wide, -2.2 mm)
-            dy+=gbump(p,Vector((0.0158*sx,0,1.4925+0.0045)),0.0050,0.0075,0.0035)      # outer wing: with the inner bulge it wraps the nostril as a crescent
+            dy+=gbump(p,Vector((0.0158*sx,0,1.4925+0.0045)),0.0050,0.0075,0.0020)      # outer wing: with the inner bulge it wraps the nostril as a crescent
             _rho=math.sqrt(((p.x-0.0092*sx)/0.0064)**2+((p.z-(1.4875+0.0045))/0.0048)**2)
             dy+=-0.0020*math.exp(-((_rho-1.0)/0.38)**2)                          # rim loop around the nostril opening (forward)
         dy+=gbump(p,Vector((0,0,1.488)),0.0040,0.0080,0.0025)
         # nasal bridge: a narrow raised ridge from between the eyes down to the tip, with a shadow line along each side
         dy+=gbump(p,Vector((0,0,1.518)),0.0070,0.018,0.0045)
         for sx in (1,-1):
-            dy+=gbump(p,Vector((0.0125*sx,0,1.508)),0.0050,0.020,-0.0010)                    # columella between the nostrils
+            pass  # bridge shadow lines removed (W068: they made dark wedges beside the bridge)                    # columella between the nostrils
         dy-=0.0015*math.exp(-(((p.x)/0.005)**2+((p.z-1.474)/0.012)**2))   # philtrum ridge from nose base to lip
         dy+=bump(p,Vector((0.052,0,1.553)),0.025,0.016,0.004)
         dy+=bump(p,Vector((-0.052,0,1.553)),0.025,0.016,0.004)
