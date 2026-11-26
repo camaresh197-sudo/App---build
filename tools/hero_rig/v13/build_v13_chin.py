@@ -103,12 +103,15 @@ for v in me.vertices:
         for sx in (1,-1):
             dy+=gbump(p,Vector((0.0115*sx,0,1.494)),0.0068,0.0085,0.005)            # alar wing, a soft bulge beside the tip
             dy+=gbump(p,Vector((0.0092*sx,0,1.4875)),0.0052,0.0038,-0.0070)     # nostril opening, a small dent under the tip
-            dy+=gbump(p,Vector((0.0180*sx,0,1.497)),0.0030,0.0090,-0.0022)      # alar crease, a short groove outside the wing
+            dy+=gbump(p,Vector((0.0205*sx,0,1.4975)),0.0042,0.0095,-0.0015)     # alar crease, softer and wider (was 3 mm wide, -2.2 mm)
+            dy+=gbump(p,Vector((0.0158*sx,0,1.4925)),0.0050,0.0075,0.0035)      # outer wing: with the inner bulge it wraps the nostril as a crescent
+            _rho=math.sqrt(((p.x-0.0092*sx)/0.0064)**2+((p.z-1.4875)/0.0048)**2)
+            dy+=-0.0020*math.exp(-((_rho-1.0)/0.38)**2)                          # rim loop around the nostril opening (forward)
         dy+=gbump(p,Vector((0,0,1.488)),0.0040,0.0080,0.0025)
         # nasal bridge: a narrow raised ridge from between the eyes down to the tip, with a shadow line along each side
         dy+=gbump(p,Vector((0,0,1.518)),0.0070,0.018,0.0045)
         for sx in (1,-1):
-            dy+=gbump(p,Vector((0.0125*sx,0,1.508)),0.0050,0.020,-0.0016)                    # columella between the nostrils
+            dy+=gbump(p,Vector((0.0125*sx,0,1.508)),0.0050,0.020,-0.0010)                    # columella between the nostrils
         dy-=0.0015*math.exp(-(((p.x)/0.005)**2+((p.z-1.474)/0.012)**2))   # philtrum ridge from nose base to lip
         dy+=bump(p,Vector((0.052,0,1.553)),0.025,0.016,0.004)
         dy+=bump(p,Vector((-0.052,0,1.553)),0.025,0.016,0.004)
@@ -159,6 +162,12 @@ for v in me.vertices:
     v.co.y+=bump(p,Vector((0,0,1.455)),0.024,0.012,0.0040)    # lower face volume under the lip
     v.co.y+=gbump(p,Vector((0,0,1.4385)),0.0200,0.0060,-0.0030)   # groove (dent)
     v.co.y+=gbump(p,Vector((0,0,1.4120)),0.0210,0.0130,0.0040)    # chin pad (forward)
+    # nasolabial fold: a soft diagonal groove from the alar base to the mouth corner (references: red lines)
+    _ax,_az,_bx,_bz=0.0205,1.4890,0.0305,1.4565
+    _dx,_dz=_bx-_ax,_bz-_az; _L2=_dx*_dx+_dz*_dz
+    _t=max(0.0,min(1.0,((abs(p.x)-_ax)*_dx+(p.z-_az)*_dz)/_L2))
+    _d=math.hypot(abs(p.x)-(_ax+_t*_dx),p.z-(_az+_t*_dz))
+    if _d<0.012: v.co.y+=0.0016*math.exp(-(_d/0.0038)**2)*(math.sin(math.pi*_t)**0.7)
     # mouth (stomion at z 1.457: about a third of the way from the nose base 1.487 to the chin 1.397)
     v.co.y+=gbump(p,Vector((0,0,1.4615)),0.0200,0.0050,0.0030)    # upper vermilion
     v.co.y+=gbump(p,Vector((0,0,1.4495)),0.0215,0.0065,0.0040)    # lower vermilion, fuller
@@ -274,6 +283,7 @@ for sx,nm in ((1,'l'),(-1,'r')):
     for _q in e.data.polygons: _q.use_smooth=True
 # nostril openings as separate small pieces: dark ellipsoids set into the dents so each reads as an opening
 nost=mat('nostril',(0.07,0.04,0.04,1))
+nost.specular_intensity=0.0; nost.roughness=1.0   # was glossy seeds up close (W037)
 for sx in (1,-1):
     xs=0.0092*sx
     ys=[v.co.y for v in me.vertices if abs(v.co.x-xs)<0.003 and abs(v.co.z-1.4875)<0.002 and v.co.y<-0.05]
