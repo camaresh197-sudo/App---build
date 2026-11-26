@@ -10,7 +10,15 @@ with bpy.data.libraries.load(capsrc, link=False) as (df,dt):
     dt.meshes=['cranium_cap']
 capme=dt.meshes and bpy.data.meshes['cranium_cap']
 C=Vector((0.0,-0.02,1.58)); COS=math.cos(math.radians(82))
-bm=bmesh.new(); bm.from_mesh(lo.data); bm.verts.ensure_lookup_table()
+bm=bmesh.new(); bm.from_mesh(lo.data); bm.faces.ensure_lookup_table()
+# W092: cut the head's cranium first (faces above 82 deg), so the head has an open rim for the cap to join
+def cr_cut(c):
+    d=c-C; r=d.length
+    return r>0 and d.z/r>COS and d.z>0
+_cut=[f for f in bm.faces if cr_cut(f.calc_center_median())]
+bmesh.ops.delete(bm,geom=_cut,context='FACES_ONLY')
+print("head cranium cut:",len(_cut),"faces")
+bm.verts.ensure_lookup_table()
 cb=bmesh.new(); cb.from_mesh(capme)
 cmap={}
 for v in cb.verts:
@@ -23,7 +31,7 @@ bm.faces.ensure_lookup_table()
 def bnd_edges(verts_ok):
     return [e for e in bm.edges if len(e.link_faces)==1 and all(verts_ok(v.co) for v in e.verts)]
 def dirz_ok(p):
-    d=p-C; return d.length>0 and d.z/d.length>COS-0.15 and d.z>0
+    d=p-C; return d.length>0 and d.z/d.length>COS-0.05 and d.z>0
 def loop_of(edges):
     adj={}
     for e in edges:
@@ -38,7 +46,8 @@ def loop_of(edges):
             cur=nx[0]; seen.add(cur); loop.append(cur); prev=loop[-2]
         loops.append(loop)
     return loops
-hb=loop_of(bnd_edges(dirz_ok))
+cap_set=set(cmap.values())
+hb=loop_of([e for e in bnd_edges(dirz_ok) if not (e.verts[0] in cap_set or e.verts[1] in cap_set)])
 hb=[l for l in hb if len(l)>100]
 cap_v=set(cmap.values())
 capedges=[e for e in bm.edges if len(e.link_faces)==1 and e.verts[0] in cap_v and e.verts[1] in cap_v]
