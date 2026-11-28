@@ -13,52 +13,52 @@ Sections, in song order: Verse 1 (`v-A`) → Chorus (`v-B`) → Verse 2 (`v-C`) 
 | Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | **A0** | 0 | 7 | words | I | am | Jeff | and | I'm | so | gay | 0:G5 3:B5 6:D6 12:G5 |
-| | | | IPA | ˈaɪ | /ɪm/ | dʒˈɛf | ænd | aɪm | sˈoʊ | /ɡeɪ/ | |
+| | | | IPA | ˈaɪ | /æm/ | dʒˈɛf | ænd | aɪm | sˈoʊ | /ɡeɪ/ | |
 | **A2** | 2 | 7 | words | I | like | Jake's | mom | cuz | of | Jake | 0:B5 2:G5 5:B5 |
 | | | | IPA | ˈaɪ | lˈaɪk | dʒˈeɪkz | mˈɑːm | kˈʌz | ʌv | dʒˈeɪk | |
 | **A4** | 4 | 7 | words | Jake's | mom | plays | with | Jeff | all | day | 0:B5 3:D6 6:B5 10:G5 |
 | | | | IPA | dʒˈeɪkz | mˈɑːm | plˈeɪz | wɪð | dʒˈɛf | ˈɔːl | dˈeɪ | |
 | **A6** | 6 | 7 | words | To | make | Jeff | feel | proud | and | gay | 0:E5 3:G5 7:C6 10:G5 |
-| | | | IPA | tuː | mˈeɪk | dʒˈɛf | fˈiːl | pɹˈaʊd | ænd | /ɡeɪ/ | |
+| | | | IPA | /tuː/ | mˈeɪk | dʒˈɛf | fˈiːl | pɹˈaʊd | ænd | /ɡeɪ/ | |
 
 ## Chorus (`v-B`)
 
-| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | Notes (step:note) |
-|---|---|---|---|---|---|---|---|---|---|---|
-| **B0** | 0–1 | 5 | words | Jeff | is | gay | so | gay |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
-| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  | |
-| **B1** | 2–3 | 5 | words | Jeff | is | gay | so | gay |  | 0:A5 4:C6 8:B5 12:A5 16:A5 (last held) |
-| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  | |
-| **B2** | 4–5 | 5 | words | Jeff | is | gay | so | gay |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
-| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  | |
-| **B3** | 6–7 | 6 | words | Gay | gay | gay | Jeff's | so | gay | 0:A5 4:D6 8:D6 12:F#5 16:G5 20:B5 (last held) |
-| | | | IPA | /ɡeɪ/ | /ɡeɪ/ | /ɡeɪ/ | dʒˈɛfs | sˈoʊ | /ɡeɪ/ | |
+| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **B0** | 0–1 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
+| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  |  | |
+| **B1** | 2–3 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:A5 4:C6 8:B5 12:A5 16:A5 (last held) |
+| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  |  | |
+| **B2** | 4–5 | 5 | words | Jeff | is | gay | so | gay |  |  | 0:G5 4:C6 8:G5 12:E5 16:B5 (last held) |
+| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  |  | |
+| **B3** | 6–7 | 7 | words | Gay | gay | gay | fuck | im | so | gay | 0:A5 4:D6 8:D6 12:F#5 16:G5 20:B5 24:D6 (last held) |
+| | | | IPA | /ɡeɪ/ | /ɡeɪ/ | /ɡeɪ/ | fuck | aɪm | sˈoʊ | /ɡeɪ/ | |
 
 ## Verse 2 (`v-C`)
 
 | Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | **C0** | 0 | 7 | words | Jake | is | baked | Jeff | wants | to | bate | 0:G5 3:B5 6:D6 12:B5 |
-| | | | IPA | dʒˈeɪk | ɪz | bˈeɪkt | dʒˈɛf | wˈɔnts | tuː | bˈeɪt | |
+| | | | IPA | dʒˈeɪk | ɪz | bˈeɪkt | dʒˈɛf | wˈɔnts | /tuː/ | bˈeɪt | |
 | **C2** | 2 | 7 | words | He | has | done | that | most | the | day | 0:G5 3:C6 6:G5 10:C6 |
 | | | | IPA | hiː | hˈæz | dˈʌn | ðˈæt | mˈoʊst | ðə | dˈeɪ | |
-| **C4** | 4 | 7 | words | He'll | hug | Jake | on | their | next | date | 0:G5 3:B5 6:D6 10:B5 |
-| | | | IPA | hiːl | hˈʌɡ | dʒˈeɪk | ˈɔn | ðɛɹ | nˈɛkst | dˈeɪt | |
-| **C6** | 6 | 7 | words | What | a | shame | that | Jake | is | tall | 0:E5 2:E5 4:A5 7:C6 10:A5 |
-| | | | IPA | wˌʌt | ˈeɪ | ʃˈeɪm | ðˈæt | dʒˈeɪk | ɪz | tˈɔːl | |
+| **C4** | 4 | 7 | words | He'll | suck | Jake | on | their | next | date | 0:G5 3:B5 6:D6 10:B5 |
+| | | | IPA | hiːl | suck | dʒˈeɪk | ˈɔn | ðɛɹ | nˈɛkst | dˈeɪt | |
+| **C6** | 6 | 6 | words | What | a | shame | hes | so | straight |  | 0:E5 2:E5 4:A5 7:C6 10:A5 |
+| | | | IPA | wˌʌt | ˈeɪ | ʃˈeɪm | hes | sˈoʊ | straight |  | |
 
 ## Tag (`v-tag`)
 
-| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | Notes (step:note) |
-|---|---|---|---|---|---|---|---|---|---|
-| **tag0** | 0 | 5 | words | Jeff | is | gay | so | gay | 0:G5 2:G5 4:C6 |
-| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ | |
-| **tag1** | 1 | 5 | words | Jeff | is | gay | so | gay | 0:D6 4:F#5 |
-| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ | |
-| **tag2** | 2 | 5 | words | Jeff | is | gay | so | gay | 0:B5 3:B5 6:D6 9:D6 12:B5 |
-| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ | |
-| **tag3** | 3 | 4 | words | Gay | gay | gay | gay |  | 0:D6 |
-| | | | IPA | /ɡeɪ/ | /ɡeɪ/ | /ɡeɪ/ | /ɡeɪ/ |  | |
+| Line | Bars | Syll. | Row | 1 | 2 | 3 | 4 | 5 | 6 | 7 | Notes (step:note) |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **tag0** | 0 | 5 | words | Jeff | is | gay | so | gay |  |  |  |
+| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  |  | |
+| **tag1** | 1 | 5 | words | Jeff | is | gay | so | gay |  |  |  |
+| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  |  | |
+| **tag2** | 2 | 5 | words | Jeff | is | gay | so | gay |  |  |  |
+| | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  |  | |
+| **tag3** | 3 | 7 | words | Gay | gay | gay | fuck | im | so | gay |  |
+| | | | IPA | /ɡeɪ/ | /ɡeɪ/ | /ɡeɪ/ | fuck | aɪm | sˈoʊ | /ɡeɪ/ | |
 
 ## Finale (`v-F`)
 
@@ -88,9 +88,9 @@ beat, last held. Bars 6–7 (`B3`) use seven beats.
 | **B2** | 4–5 | words | Jeff | is | gay | so | gay |  |  |  |
 | | | IPA | dʒˈɛf | ɪz | /ɡeɪ/ | sˈoʊ | /ɡeɪ/ |  |  |  |
 | | | note | G5 | C6 | G5 | E5 | B5 |  |  |  |
-| **B3** | 6–7 | words | Gay | gay | gay | Jeff's | so | gay |  |  |
-| | | IPA | /ɡeɪ/ | /ɡeɪ/ | /ɡeɪ/ | dʒˈɛfs | sˈoʊ | /ɡeɪ/ |  |  |
-| | | note | A5 | D6 | D6 | F#5 | G5 | B5 |  |  |
+| **B3** | 6–7 | words | Gay | gay | gay | fuck | im | so | gay |  |
+| | | IPA | /ɡeɪ/ | /ɡeɪ/ | /ɡeɪ/ | fuck | aɪm | sˈoʊ | /ɡeɪ/ |  |
+| | | note | A5 | D6 | D6 | F#5 | G5 | B5 | D6 |  |
 
 ### Chorus notes on the grid
 
@@ -102,7 +102,7 @@ beat, last held. Bars 6–7 (`B3`) use seven beats.
 | 4 | 12 | E5 | A5 | E5 | F#5 |
 | 5 | 16 | B5 | A5 | B5 | G5 |
 | 6 | 20 | · | · | · | B5 |
-| 7 | 24 | · | · | · | · |
+| 7 | 24 | · | · | · | D6 |
 | 8 | 28 | · | · | · | · |
 
 `B4`–`B7` are the old one-bar chorus clips and are no longer triggered.

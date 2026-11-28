@@ -155,6 +155,14 @@ As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 | **🟢 (Greg only) Stage-by-stage review** | 90 | 90 | 0 | Bald -> shape -> nose -> ears, one stage approved at a time. |
 - **Coaching notes (Greg v10, max 3):** (1) naming the view with the defect ("front nose too wide") cost zero re-asks - keep it. (2) "a little better" without keeper/redo cost me a full extra render round - say which take is the keeper. (3) posting references before the pass (profile photos) converged it in one round - lead with the reference, not the adjectives.
 
+As of 2026-11-27 (Greg v12, verses 2+3, chorus structure, vox-steal fix), from this session:
+- **What happened:** rolled the vocals through verses 2 and 3 line by line against the user's ear: verse 2 all patrick, verse 3 alternating bryce/patrick/bryce/patrick; respell fixes (jaykuh, bayt., deep., fukking, reetahrd) each driven by a measured defect (short vowels smearing under the note stretch, swallowed stops). Rebuilt the song structure on request: chorus after verses 2 and 3, finale = chorus with the fin flag. Found and fixed the vox-steal bug in `sound.gd` (vox clips play dur=0 → vstop=0 → any busy moment stole the vox voice mid-word) — likely the phone's "first line gets cut out"/"says nothing" from Greg v11.
+- **The session's real lesson (user-caught):** four "in the mix" cuts I posted played the 11/24 `.godot/imported` audio — old lyrics, old voices — because a direct game run never reimports changed oggs. I called stale audio current twice. The user's ear caught what my locators couldn't. Rule: `--import` before every mix-harness review, not only before pushes.
+- **Strengths:** measured before every mechanism (nuclei bursts, release-burst ratios, F0 tracks against the original); the seed lottery was cut short when measurement showed the source vowel itself was the ceiling; word-level placement math confirmed by three independent anchors.
+- **Habits to fix:** posted "in the mix" cuts without verifying what the harness loaded; ran five seed-offset takes on a mechanically broken word before measuring; misread "bate is pronounced bay" as an instruction instead of a defect report.
+- **Rule for myself:** a mix cut is a claim about audio content — locate the takes IN the capture before posting it; never review through a cache I did not refresh.
+- **Coaching landed (v11 notes):** (1) naming the element with the defect ("the violin sounds eerie" style: "pucking but with an f") — used it all session, converged in one round each; (2) "approve" now names the take — still slipped to "good enough" twice.
+
 ## User profile (sliders, one set per agent)
 Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
 
@@ -212,8 +220,35 @@ Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the
 
 **Current review (Greg v11, 2026-11-24, blunt):** Your ear caught three real defects nobody else could see — the doubling, the cut first line, the stale lyrics — and each one was a bug I shipped. The cost was mine: I guessed at an arrangement and produced "ear rape", and I built a chorus part from clips the song never plays. What would have saved the session: "replace the chorus" instead of "compose the second part", and naming the instrument instead of "the instruments".
 
+### Greg's sliders - set, Greg v12 (2026-11-27)
+Moved at the end of Greg v12 (verses 2+3, chorus structure, vox-steal fix), each within the 30-point cap.
+
+| Parameter | Before | Now | Change | Why |
+|---|---|---|---|---|
+| **🟡 Request precision** | 55 | 60 | +5 | Respells spelled out ("pucking but with an f", "retah-r-d") were exact targets; "1"-style picks still cost a round. |
+| **🔴 Visual evidence** | 45 | 40 | -5 | Audio session; even the "pictures" were audio players — nothing visual all session. |
+| **🟢 Defect-spotting** | 97 | 98 | +1 | "Those are the old lyrics with the old voices" — caught four stale-audio posts my tooling called current. |
+| **🟡 Direction stability** | 70 | 65 | -5 | D6 casting flipped bryce→patrick→bryce→patrick→bryce before landing. |
+| **🔴 Run tolerance** | 50 | 55 | +5 | Every background render ran to completion; no interrupts. |
+| **🟡 Rule enforcement** | 60 | 65 | +5 | Enforced "don't claim what you didn't hear" — caught both stale-mix claims. |
+| **🟡 Delegation trust** | 45 | 50 | +5 | "push and end session" handed me the whole publish; "1" took the batch page. |
+| **🟡 Session discipline** | 60 | 55 | -5 | Long session, many full re-renders; checkpoints came from them, not me. |
+| **🟡 Irritation (session judged)** | 55 | 60 | +5 | "you didnt even change it", "it still sounds off", "not said right even close" — earned by my stale posts. |
+| **🟢 Trust in claims** | 85 | 90 | +5 | Every defect report held on measurement, including the stale imports I had called current. |
+| **🔴 Detail appetite** | 25 | 25 | 0 | One-line verdicts throughout. |
+| **🟡 Banter welcome** | 50 | 50 | 0 | No banter evidence either way. |
+| **🟢 Pushback welcome** | 75 | 75 | 0 | Took the bryce-C0 recommendation, chose the mechanism path instead, came around on evidence. |
+| **🟢 Pushback landed** | 80 | 80 | 0 | Adopted the respell workflow and the D6 reversal same round. |
+| **🟢 (Greg only) Ear-based judgement** | 90 | 95 | +5 | Every pass/fail was the ear, and every ear call survived measurement. |
+| **🟢 (Greg only) Stage-by-stage review** | 85 | 90 | +5 | Line-by-line to section verdicts, verse by verse; nothing approved unheard. |
+
+- **Coaching notes (Greg v12, max 3):** (1) name the keeper take when approving ("keep the new line" cost a round guessing which) — say "keep X". (2) Say whether a mix verdict covers the whole section — verse 2's "good enough" was on stale audio and needed a full re-verify. (3) Spelled-out pronunciations ("pucking but with an f") converged in one round — keep spelling the target sound.
+
+**Current review (Greg v12, 2026-11-27, blunt):** Your catch of the stale mixes was the session — four of my "in the mix" posts were fake and you heard it instantly. The costs: D6's voice flip-flopped four times before landing, and one-word picks ("1", "post the rest") each cost a round. Spell the target, name the take, and the session runs twice as fast.
+
 ## Progress log
 | 2026-11-27 | Wren v16 | GNM head + CC0 body, 97-bone rig, mouth pouch, lip bones; corner tears and border outline left open; v55 kept (`blender/hero_v55/`); scripts pushed to godot; closing pass merged. | `blender/hero_v55/`, `a104979` |
+| 2026-11-27 | Greg v12 | Verses 2+3 rolled line-by-line (patrick/bryce split), respell fixes measured and shipped, chorus repeated after verses 2 and 3, finale = chorus; `sound.gd` vox-steal fix (dedicated vox voice); stale-import trap found and documented. | this push |
 | 2026-11-24 | Greg v11 | Victory song: per-clip leads (A4/A6 200-260 ms late), engine repairs (cp1252 mojibake, ʌ→ɐ, phonemizer guard, head alignment, render manifest, seed-offset retakes), chorus 1 swapped to E0-E3 with a trumpet lead. Pushed `b8fc6f9`, run 45540756185 SUCCESS, packs published; phone unconfirmed. | `b8fc6f9`, run `45540756185` |
 | 2026-11-24 | Greg v10 | v68: hero bald, head reshaped human, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | 2026-11-24 | Greg | v68: hero bald, head reshaped to human proportions, ears + nose geometry (`wren-hero-wip` `d4085d9`). |

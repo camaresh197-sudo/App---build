@@ -67,9 +67,10 @@ OCTAVE_SHIFT = -24
 # then mostly COMPRESSES onto the grid, which is artifact-free, instead of stretching a
 # short word into a long hold (that is what garbled the held 'gay's).
 GRID_LS = 2.6
+PHONE_LS = 2.6   # the phone render path's source speed (same idea as GRID_LS)
 # Per-line render-speed override (D0 test: the smeared "isss"/"luhimp" may come from
 # the 2.6x-slow render elongating fricatives before the warp; natural speed keeps them).
-LS_BY_LINE = {"D0": 1.0}
+LS_BY_LINE = {"D0": 1.0, "D6": 4.2}
 
 # Pronunciation table. data_phonics.json is the source of truth and is read on
 # first render; these dicts are only fallbacks used while building that file.
@@ -116,7 +117,10 @@ GAY_LAST = 0.35
 # --voice overrides everything only if you pass it explicitly per run; a plain run
 # renders THIS split, so re-rendering the bank never clobbers it by accident.
 VOICE_BY_LINE = {"A4": "en_US-patrick-medium", "A6": "en_US-patrick-medium",
-                 "E0": "en_US-patrick-medium", "E1": "en_US-patrick-medium"}
+                 "E0": "en_US-patrick-medium", "E1": "en_US-patrick-medium",
+                 "C0": "en_US-patrick-medium", "C2": "en_US-patrick-medium",
+                 "C4": "en_US-patrick-medium", "C6": "en_US-patrick-medium",
+                 "D2": "en_US-patrick-medium"}
 CHORUS_GRID = {"B0": ("v-B", 0, 2, 7.6, GAY_WORD, None, [], [], {'keep_last_pitch': True}),
                "B1": ("v-B", 2, 2, 7.6, GAY_WORD, None, [], [], {'keep_last_pitch': True}),
                "B2": ("v-B", 4, 2, 7.6, GAY_WORD, None, [], [], {'keep_last_pitch': True}),
@@ -160,6 +164,20 @@ if WORD_TIMING.exists():
                                 [float(x) for x in _line["onsets"]],
                                 [(int(g[0]), int(g[1])) for g in _line.get("glides", [])],
                                 [int(x) for x in _line.get("punches", [])])
+
+# PATRICK_FIRST: the approved A4 template for patrick's short first vowel - keep the
+# take's own attack contour and trim the tail so the first word is neither rushed
+# nor flattened. A4 was approved with exactly these flags (Greg v8/v11).
+PATRICK_FIRST = {"keep_first_pitch": True, "no_release": True}
+for _fid in ("C0",):
+    _g = CHORUS_GRID.get(_fid)
+    if _g and len(_g) == 8:
+        CHORUS_GRID[_fid] = (*_g, PATRICK_FIRST)
+# C6: "Jake's straight" - the z of "Jake's" can ride into the st cluster; the glide gives
+# the cluster a breath so it attacks clean.
+_g6 = CHORUS_GRID.get("C6")
+if _g6 and len(_g6) == 8:
+    CHORUS_GRID["C6"] = (*_g6[:6], [[4, 5]], *_g6[7:])
 
 
 def find_ffmpeg() -> str:
@@ -664,8 +682,11 @@ def line_audio(voice: str, words: list, use_cache: bool = True):
     taken from the model's own per-id lengths (Piper alignments), not from guessed lengths.
     """
     PHON_CACHE.mkdir(parents=True, exist_ok=True)
+    # phone clips synthesize Piper SLOW (the grid path's GRID_LS trick): the render warps each
+    # phone to its target length, so a natively long vowel compresses instead of stretching -
+    # stretching a short source vowel is what read as rasp on "Jake"/"baked".
     tag = " | ".join(" ".join(_chars(ph) for ph in w) for w in words)
-    base = PHON_CACHE / f"{voice}_l3_{_key('line|' + tag, voice)}"
+    base = PHON_CACHE / f"{voice}_l3_ls{PHONE_LS:g}_{_key('line|' + tag, voice)}"
     wav, js = base.with_suffix(".wav"), base.with_suffix(".json")
     if use_cache and wav.exists() and js.exists():
         x, sr = sf.read(str(wav), dtype="float64")
@@ -674,7 +695,8 @@ def line_audio(voice: str, words: list, use_cache: bool = True):
     ids, spans = phone_ids(model.config.phoneme_id_map, words)
     if len(ids) < 4:
         return np.zeros(0), [[] for _ in words]
-    res = model.phoneme_ids_to_audio(ids, include_alignments=True)
+    res = model.phoneme_ids_to_audio(ids, syn_config=SynthesisConfig(length_scale=PHONE_LS),
+                                     include_alignments=True)
     audio, counts = res if isinstance(res, tuple) else (res, None)
     x = np.asarray(audio, dtype=np.float64)
     sr = model.config.sample_rate

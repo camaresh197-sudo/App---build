@@ -1,20 +1,20 @@
 ﻿line,section,bars,syllables,word1,word2,word3,word4,word5,word6,word7,ipa1,ipa2,ipa3,ipa4,ipa5,ipa6,ipa7,notes
-A0,v-A,0,7,I,am,Jeff,and,I'm,so,gay,ˈaɪ,/ɪm/,dʒˈɛf,ænd,aɪm,sˈoʊ,/ɡeɪ/,0:G5 3:B5 6:D6 12:G5
+A0,v-A,0,7,I,am,Jeff,and,I'm,so,gay,ˈaɪ,/æm/,dʒˈɛf,ænd,aɪm,sˈoʊ,/ɡeɪ/,0:G5 3:B5 6:D6 12:G5
 A2,v-A,2,7,I,like,Jake's,mom,cuz,of,Jake,ˈaɪ,lˈaɪk,dʒˈeɪkz,mˈɑːm,kˈʌz,ʌv,dʒˈeɪk,0:B5 2:G5 5:B5
 A4,v-A,4,7,Jake's,mom,plays,with,Jeff,all,day,dʒˈeɪkz,mˈɑːm,plˈeɪz,wɪð,dʒˈɛf,ˈɔːl,dˈeɪ,0:B5 3:D6 6:B5 10:G5
-A6,v-A,6,7,To,make,Jeff,feel,proud,and,gay,tuː,mˈeɪk,dʒˈɛf,fˈiːl,pɹˈaʊd,ænd,/ɡeɪ/,0:E5 3:G5 7:C6 10:G5
+A6,v-A,6,7,To,make,Jeff,feel,proud,and,gay,/tuː/,mˈeɪk,dʒˈɛf,fˈiːl,pɹˈaʊd,ænd,/ɡeɪ/,0:E5 3:G5 7:C6 10:G5
 B0,v-B,0–1,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:G5 4:C6 8:G5 12:E5 16:B5 (last held)
 B1,v-B,2–3,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:A5 4:C6 8:B5 12:A5 16:A5 (last held)
 B2,v-B,4–5,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:G5 4:C6 8:G5 12:E5 16:B5 (last held)
-B3,v-B,6–7,6,Gay,gay,gay,Jeff's,so,gay,,/ɡeɪ/,/ɡeɪ/,/ɡeɪ/,dʒˈɛfs,sˈoʊ,/ɡeɪ/,,0:A5 4:D6 8:D6 12:F#5 16:G5 20:B5 (last held)
-C0,v-C,0,7,Jake,is,baked,Jeff,wants,to,bate,dʒˈeɪk,ɪz,bˈeɪkt,dʒˈɛf,wˈɔnts,tuː,bˈeɪt,0:G5 3:B5 6:D6 12:B5
+B3,v-B,6–7,7,Gay,gay,gay,fuck,im,so,gay,/ɡeɪ/,/ɡeɪ/,/ɡeɪ/,fuck,aɪm,sˈoʊ,/ɡeɪ/,0:A5 4:D6 8:D6 12:F#5 16:G5 20:B5 24:D6 (last held)
+C0,v-C,0,7,Jake,is,baked,Jeff,wants,to,bate,dʒˈeɪk,ɪz,bˈeɪkt,dʒˈɛf,wˈɔnts,/tuː/,bˈeɪt,0:G5 3:B5 6:D6 12:B5
 C2,v-C,2,7,He,has,done,that,most,the,day,hiː,hˈæz,dˈʌn,ðˈæt,mˈoʊst,ðə,dˈeɪ,0:G5 3:C6 6:G5 10:C6
-C4,v-C,4,7,He'll,hug,Jake,on,their,next,date,hiːl,hˈʌɡ,dʒˈeɪk,ˈɔn,ðɛɹ,nˈɛkst,dˈeɪt,0:G5 3:B5 6:D6 10:B5
-C6,v-C,6,7,What,a,shame,that,Jake,is,tall,wˌʌt,ˈeɪ,ʃˈeɪm,ðˈæt,dʒˈeɪk,ɪz,tˈɔːl,0:E5 2:E5 4:A5 7:C6 10:A5
-tag0,v-tag,0,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:G5 2:G5 4:C6
-tag1,v-tag,1,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:D6 4:F#5
-tag2,v-tag,2,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:B5 3:B5 6:D6 9:D6 12:B5
-tag3,v-tag,3,4,Gay,gay,gay,gay,,,,/ɡeɪ/,/ɡeɪ/,/ɡeɪ/,/ɡeɪ/,,,,0:D6
+C4,v-C,4,7,He'll,suck,Jake,on,their,next,date,hiːl,suck,dʒˈeɪk,ˈɔn,ðɛɹ,nˈɛkst,dˈeɪt,0:G5 3:B5 6:D6 10:B5
+C6,v-C,6,6,What,a,shame,hes,so,straight,,wˌʌt,ˈeɪ,ʃˈeɪm,hes,sˈoʊ,straight,,0:E5 2:E5 4:A5 7:C6 10:A5
+tag0,v-tag,0,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,
+tag1,v-tag,1,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,
+tag2,v-tag,2,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,
+tag3,v-tag,3,7,Gay,gay,gay,fuck,im,so,gay,/ɡeɪ/,/ɡeɪ/,/ɡeɪ/,fuck,aɪm,sˈoʊ,/ɡeɪ/,
 F0,v-F,0,5,Jeff,is,gay,So,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:G5 2:G5 4:C6 8:G5 10:E5
 F1,v-F,1,4,Fun,for,all,hey,,,,fˈʌn,fɔːɹ,ˈɔːl,hˈeɪ,,,,0:B5 2:B5 4:D6 8:D6 10:G5
 B6,v-F,2,5,Jeff,is,gay,so,gay,,,dʒˈɛf,ɪz,/ɡeɪ/,sˈoʊ,/ɡeɪ/,,,0:A5 2:A5 4:D6 8:D6 10:F#5

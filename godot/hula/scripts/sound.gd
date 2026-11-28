@@ -11,12 +11,15 @@ const SFX_LVL := {"shoot": 0.5, "hit": 0.43, "pop": 0.25, "coin": 0.38, "click":
 # melodic instruments: [lowest root, highest root], roots every 2 semitones; each root has a second take "_2"
 const RANGE := {"guitar": [40, 88], "bass": [28, 64], "trumpet": [52, 88], "violin": [55, 99], "accordion": [48, 84], "pad": [40, 80], "choir": [48, 84], "bell": [60, 100], "grunt": [40, 50]}
 const NVOICE := 40
+const VOX_VOICE := NVOICE - 1   # dedicated: instruments never steal it (a section-boundary
+								# burst fills all 40 and the fallback stole the vox clip mid-"Jeff")
 
 var voices: Array = []        # AudioStreamPlayer pool
 var vstop: Array = []         # per voice: time to release (0 = none)
 var vbase: Array = []         # per voice: base volume db
 var vstart: Array = []        # per voice: start time
 var vatt: Array = []          # per voice: attack (fade-in) seconds
+var vname: Array = []         # per voice: the name it last played ("vox/..." gets its own steal pool)
 var cache := {}
 var later: Array = []         # [time, Callable]
 var now := 0.0
@@ -46,7 +49,7 @@ func _ready() -> void:
 	process_priority = -1   # run our clock before main reads beat_pos()
 	_buses()
 	for i in NVOICE:
-		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0)
+		var p := AudioStreamPlayer.new(); add_child(p); voices.append(p); vstop.append(0.0); vbase.append(0.0); vstart.append(0.0); vatt.append(0.0); vname.append("")
 	var f := FileAccess.open("res://data/data_song.json", FileAccess.READ)
 	if f: song = JSON.parse_string(f.get_as_text())
 	var f4 := FileAccess.open("res://data/data_vox.json", FileAccess.READ)
@@ -208,11 +211,22 @@ func play(name: String, o := {}) -> void:
 	var midi: int = o.get("midi", -1)
 	var pk := _pick(name, midi if midi >= 0 else 60)
 	if pk.is_empty(): return
+	# vox clips play whole-sample (dur 0 -> vstop 0), so a shared steal pool lets the next
+	# instrument note steal the vox voice and cut the word off ("Jeff" died mid-word).
+	# Two passes: steal within the same kind (vox vs instruments) first, any voice as fallback.
+	var want_vox := name.begins_with("vox/")
 	var p: AudioStreamPlayer = null; var oldest := 1e9; var oi := 0
-	for i in voices.size():
-		if not voices[i].playing: p = voices[i]; oi = i; break
-		if vstop[i] < oldest: oldest = vstop[i]; oi = i
+	if want_vox:
+		p = voices[VOX_VOICE]; oi = VOX_VOICE   # one vox line at a time; never stolen
+	else:
+		for same_kind in 2:
+			oldest = 1e9
+			for i in VOX_VOICE:
+				if not voices[i].playing: p = voices[i]; oi = i; break
+				if vstop[i] < oldest: oldest = vstop[i]; oi = i
+			if p != null: break
 	if p == null: p = voices[oi]
+	vname[oi] = name
 	p.stream = pk[0]
 	p.pitch_scale = pow(2.0, (midi - pk[1]) / 12.0) * o.get("rate", 1.0) if midi >= 0 and pk[1] > 0 else o.get("rate", 1.0)
 	var v: float = o.get("v", 1.0) * o.get("trim", TRIM.get(name, 1.0))
@@ -234,10 +248,12 @@ func play_stream(stream: AudioStream, o := {}) -> void:
 	if dl > 0.0:
 		later.append([now + dl, play_stream.bind(stream, o.merged({"dl": 0.0}, true))]); return
 	var p: AudioStreamPlayer = null; var oldest := 1e9; var oi := 0
-	for i in voices.size():
+	oldest = 1e9
+	for i in VOX_VOICE:
 		if not voices[i].playing: p = voices[i]; oi = i; break
 		if vstop[i] < oldest: oldest = vstop[i]; oi = i
 	if p == null: p = voices[oi]
+	vname[oi] = "vox/stream"
 	p.stream = stream
 	p.pitch_scale = o.get("rate", 1.0)
 	var v: float = o.get("v", 1.0)

@@ -26,6 +26,21 @@ import piper_sing as ps  # noqa: E402
 
 # Hand-authored phonics. The engine only needs `say`; the rest is for the sheet.
 MANUAL = {
+    "bate": {
+        "say": "bayt.",
+        "ipa": "beɪt",
+        "pron": "/beɪt/",
+    },
+    "jake": {
+        "say": "jayk",
+        "ipa": "dʒeɪk",
+        "pron": "/dʒeɪk/",
+    },
+    "lost": {
+        "say": "lost",
+        "ipa": "lɔst",
+        "pron": "/lɔst/",
+    },
     "gay": {
         "ipa": "ɡeɪ",
         "pron": "/ɡeɪ/",

@@ -30,6 +30,7 @@ Godot 4.6 game (desktop/Android/web). **Every session, read `HANDOFF.md`, `docs/
 **Paths and assets**
 - `res://` paths are case-sensitive; sample names must match the bank exactly.
 - Never hand-edit `*.import` or `*.uid`; rerun `--import`. A fresh import rewrites many tracked `.import` files with no real change: don't commit that churn (`git checkout -- '*.import'`).
+- **Stale-import trap (Greg v12):** a direct game run (mix harness, desktop play) serves `.godot/imported` audio and never reimports changed oggs — run `--import` before ANY mix review, not only before pushes. CI is safe (it imports fresh).
 - The web build source is archived in the separate `legacy` repo, not yet on GitHub. Legacy files (`docs/legacy*.md`, `scripts/legacy.gd`) stay here. The Godot build doesn't depend on the web build.
 
 **Character rig**
