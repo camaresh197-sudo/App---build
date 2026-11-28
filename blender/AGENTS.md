@@ -2,6 +2,7 @@
 Nested guide for `blender/`; the root `AGENTS.md` points here. Lessons from Wren v4-v5 (hero rework). When you make a new mistake, add one line here: symptom, cause, rule.
 
 **Setup**
+- **Installing Blender (standalone 5.2, from download.blender.org): always install `libegl1` and `libgl1` first** (`apt-get update`, then `apt-get install -y libegl1 libgl1`). Without `libEGL.so.1` Blender aborts at startup with "Couldn't open libEGL.so.1", even for background runs. Run renders under `xvfb-run -a` on this machine.
 - Godot is not installed by default (see Face and eyes below for running it). Blender runs as pip `bpy` (`python3 -I script.py`); render with Workbench. Scripts that worked are in `tools/hero_rig/` (edit the hard-coded `/home/claude/out` paths). Index: `views_neutral`/`closeup`/`bonevis` renders; `hipsbone`, `rootmove`, `centerlegs`, `straighten2`, `headback` body; `apose_rest`, `rolls2`, `limits4`, `twistbone`, `armposes`, `limrender4` arms; `pen2` penetration test; `bones`, `shoulders`, `bridge` surface detail.
 - Work in copies, one saved file per step (`_hips`, `_torso`, ...); keep the last good one. Claim `blender/character_rigged.blend` before editing the real file.
 - Zero every expression shape key before judging the face or body (the original has them at 1.0).
