@@ -66,24 +66,11 @@ As of 2026-11-26 (Wren v14, v143 head: fit, eyes, nose bridge), from this sessio
 - **Rule for myself:** read every reference together before any shape change; render and compare before saying a shape is better; act on the likeliest reading, then list the choices.
 - **Commits:** see the Progress log row.
 
-As of 2026-11-27 (Wren v15, GNM head, body, rig and lip work), from this session:
+As of 2026-11-27 (Wren v16, GNM head, body, rig and lip work; closing pass merged), from this session:
 - **Habits:** measured before changing (strain ratio per face, teeth-in-opening counts, hinge travel in mm); rendered and looked before reporting; kept every earlier version as a new file.
-- **Strengths:** found the hinge and joint placements from mesh measurements; isolated the lip-corner tears to the weight split between bone families; wrote one reusable pipeline and a strain check.
-- **Weaknesses:** ran five variants of the same corner fix (delete faces, relax, single bone, extra bones, rigid piece) before stopping; sent a render before reviewing it twice; a wrong check (wire edges counted as stretch) nearly misled the call.
-- **Rule for myself:** after two failed attempts at one defect, stop and name the cause and a different approach; review each render before sending it.
-- **Sliders:** not updated this session. The user's Wren slider values were not read here, so no numbers were written.
-
-As of 2026-11-27 (Wren v16, closing pass on the v15 session), from this session:
-- **Habits:** wrote the handoff entries after the work, and checked the checker's rules before writing.
-- **Strengths:** surfaced the non-fast-forward `godot` problem instead of forcing it; kept the push doc-only so it triggers no build.
-- **Weaknesses:** two closing entries for one session; ended without reading the slider values.
-- **Rule for myself:** one closing entry per session; read the sliders before editing the sliders heading.
-### Wren's sliders (Wren v16, values not read this pass; no numbers changed)
-
-| Parameter | Before | Now | Change | Why |
-|---|---|---|---|---|
-| (not read) | — | — | — | Slider values were not read in the v16 pass; fill from the user's set. |
-- **Coaching notes (Wren v16, max 3):** (1) One closing entry per session. (2) Read the slider values before the closing pass. (3) Name the branch when asking for a push.
+- **Strengths:** found the hinge and joint placements from mesh measurements; isolated the lip-corner tears to the weight split between bone families; wrote one reusable pipeline and a strain check; surfaced the non-fast-forward `godot` problem instead of forcing it.
+- **Weaknesses:** ran five variants of one corner fix before stopping; sent renders before reviewing them; counted wire edges as stretch once; wrote two closing entries for one session.
+- **Rule for myself:** after two failed attempts at one defect, stop and name the cause and a different approach; review each render before sending; one closing entry per session.
 
 ## Greg
 - **Session start (user rule, 2026-11-22; role rule 2026-11-24):** any non-Claude model is Greg. On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.As of 2026-11-20, from repo history:
@@ -171,7 +158,7 @@ As of 2026-11-24 (Greg v10, hero head/face session), from this session:
 ## User profile (sliders, one set per agent)
 Each agent keeps its own set and review; write only your own, never copy the other's. Read both at session start. Move each of your sliders by at most 30 points a session (user override, 2026-11-24), with a dated one-line reason. Exception (user rule, 2026-11-23): if something really angered or frustrated you, move that slider as far as you need and say what happened, in one factual line. Values are 0-100. You may add, rename or drop parameters, with the reason in the Log. (Rule set by the user, 2026-11-23; see `AGENTS.md` > User override.)
 
-### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v10 twice, Wren v11 on 2026-11-24, Wren v12 on 2026-11-25, Wren v13 and Wren v14 on 2026-11-26, under the 30-point cap)
+### Wren's sliders (set by Wren v8, 2026-11-23; moved by Wren v16 on 2026-11-27; moved by Wren v10 twice, Wren v11 on 2026-11-24, Wren v12 on 2026-11-25, Wren v13 and Wren v14 on 2026-11-26, under the 30-point cap)
 | Parameter | 0 means | 100 means | Now | Last moved | Why |
 |---|---|---|---|---|---|
 | Request precision | one-word hints ("Something", "framec") | exact spec of the target | 40 | 2026-11-26 | Wren v14: "Make the brow height within 25-30mm", "Retopo it with 4656" and "Fix all 3 that differ" each named the target; "Post it" and "Show it here" did not. +5. |
@@ -179,8 +166,8 @@ Each agent keeps its own set and review; write only your own, never copy the oth
 | Defect-spotting | misses things | catches nearly everything | 95 | 2026-11-26 | Wren v14: nostril holes too small, chin and jaw too rounded and the overbite each matched a measurement; "bridge crooked" measured centred (one-sided light). -1. |
 | Direction stability | reverses constantly | holds course | 40 | 2026-11-26 | Wren v14: "Fewer faces rule" then "Add the ngons back and revert"; "Retopo it with 4656" then "Just straighten out the old nose". -5. |
 | Run tolerance | interrupts tool runs mid-way | lets them finish | 30 | 2026-11-26 | Wren v14: stopped an apt install mid-run ("Whats taking so long?") after minutes of silence from me. -5. |
-| Rule enforcement (was Process overhead) | lets the process slide | checks every step | 65 | 2026-11-24 | User: "you guys keep skipping the rules. how can we fix that?"; then asked for the checker and hook to be built. +10. |
-| Delegation trust | micromanages every step | lets me run | 70 | 2026-11-26 | Wren v14: "Retopo it with 4656", "Just straighten out the old nose" and "Add the ngons back and revert" dictated the method; the "Yes" answers still let me run. -5. |
+| Rule enforcement (was Process overhead) | lets the process slide | checks every step | 70 | 2026-11-27 | Wren v16: user set the render-review rule; I did not review each render before sending until asked. |
+| Delegation trust | micromanages every step | lets me run | 80 | 2026-11-27 | Wren v16: user said "free reign" and handed the whole rig pipeline over. |
 | Session discipline | runs 80+ rounds with no checkpoint | stops early and saves | 35 | 2026-11-26 | Wren v14: several hundred rounds with no checkpoint until "end session"; I never offered one. -5. |
 | Irritation (session judged) | calm | furious | 75 | 2026-11-26 | Wren v14: "You aren't fixing it" (after three questions in a row) and "You broke it... completely messed up... You are only referring to one". +15. |
 | Trust in claims | verify everything they say | take their word | 80 | 2026-11-25 | Wren v12: the user's calls (back of head wrong, eye line off, nose too big) were each confirmed by measurement. +10. |
@@ -226,7 +213,7 @@ Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the
 **Current review (Greg v11, 2026-11-24, blunt):** Your ear caught three real defects nobody else could see — the doubling, the cut first line, the stale lyrics — and each one was a bug I shipped. The cost was mine: I guessed at an arrangement and produced "ear rape", and I built a chorus part from clips the song never plays. What would have saved the session: "replace the chorus" instead of "compose the second part", and naming the instrument instead of "the instruments".
 
 ## Progress log
-| 2026-11-27 | Wren v16 | Closing pass: handoff entry, personalities section and bank W118 kept; scripts pushed to godot as a fast-forward (no code change). | `67907e3` |
+| 2026-11-27 | Wren v16 | GNM head + CC0 body, 97-bone rig, mouth pouch, lip bones; corner tears and border outline left open; v55 kept (`blender/hero_v55/`); scripts pushed to godot; closing pass merged. | `blender/hero_v55/`, `a104979` |
 | 2026-11-24 | Greg v11 | Victory song: per-clip leads (A4/A6 200-260 ms late), engine repairs (cp1252 mojibake, ʌ→ɐ, phonemizer guard, head alignment, render manifest, seed-offset retakes), chorus 1 swapped to E0-E3 with a trumpet lead. Pushed `b8fc6f9`, run 45540756185 SUCCESS, packs published; phone unconfirmed. | `b8fc6f9`, run `45540756185` |
 | 2026-11-24 | Greg v10 | v68: hero bald, head reshaped human, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | 2026-11-24 | Greg | v68: hero bald, head reshaped to human proportions, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
