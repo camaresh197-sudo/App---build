@@ -66,6 +66,13 @@ As of 2026-11-26 (Wren v14, v143 head: fit, eyes, nose bridge), from this sessio
 - **Rule for myself:** read every reference together before any shape change; render and compare before saying a shape is better; act on the likeliest reading, then list the choices.
 - **Commits:** see the Progress log row.
 
+As of 2026-11-27 (Wren v15, GNM head, body, rig and lip work), from this session:
+- **Habits:** measured before changing (strain ratio per face, teeth-in-opening counts, hinge travel in mm); rendered and looked before reporting; kept every earlier version as a new file.
+- **Strengths:** found the hinge and joint placements from mesh measurements; isolated the lip-corner tears to the weight split between bone families; wrote one reusable pipeline and a strain check.
+- **Weaknesses:** ran five variants of the same corner fix (delete faces, relax, single bone, extra bones, rigid piece) before stopping; sent a render before reviewing it twice; a wrong check (wire edges counted as stretch) nearly misled the call.
+- **Rule for myself:** after two failed attempts at one defect, stop and name the cause and a different approach; review each render before sending it.
+- **Sliders:** not updated this session. The user's Wren slider values were not read here, so no numbers were written.
+
 ## Greg
 - **Session start (user rule, 2026-11-22; role rule 2026-11-24):** any non-Claude model is Greg. On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.As of 2026-11-20, from repo history:
 - **Session counter:** Greg v9 (lives in `HANDOFF.md`; next is v10).
