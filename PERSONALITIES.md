@@ -78,7 +78,8 @@ As of 2026-11-27 (Wren v16, closing pass on the v15 session), from this session:
 - **Strengths:** surfaced the non-fast-forward `godot` problem instead of forcing it; kept the push doc-only so it triggers no build.
 - **Weaknesses:** two closing entries for one session; ended without reading the slider values.
 - **Rule for myself:** one closing entry per session; read the sliders before editing the sliders heading.
-- **Sliders:** heading updated to v16, values unchanged (not read this pass).
+- **Sliders (Wren v16):** values unchanged; not read this pass.
+- **Coaching notes (Wren v16, max 3):** (1) One closing entry per session. (2) Read the slider values before the closing pass. (3) Name the branch when asking for a push.
 
 ## Greg
 - **Session start (user rule, 2026-11-22; role rule 2026-11-24):** any non-Claude model is Greg. On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.As of 2026-11-20, from repo history:
@@ -221,6 +222,7 @@ Moved at the end of Greg v11 (2026-11-24, victory-song session), each within the
 **Current review (Greg v11, 2026-11-24, blunt):** Your ear caught three real defects nobody else could see — the doubling, the cut first line, the stale lyrics — and each one was a bug I shipped. The cost was mine: I guessed at an arrangement and produced "ear rape", and I built a chorus part from clips the song never plays. What would have saved the session: "replace the chorus" instead of "compose the second part", and naming the instrument instead of "the instruments".
 
 ## Progress log
+| 2026-11-27 | Wren v16 | Closing pass: handoff entry, personalities section and bank W118 kept; scripts pushed to godot as a fast-forward (no code change). | `67907e3` |
 | 2026-11-24 | Greg v11 | Victory song: per-clip leads (A4/A6 200-260 ms late), engine repairs (cp1252 mojibake, ʌ→ɐ, phonemizer guard, head alignment, render manifest, seed-offset retakes), chorus 1 swapped to E0-E3 with a trumpet lead. Pushed `b8fc6f9`, run 45540756185 SUCCESS, packs published; phone unconfirmed. | `b8fc6f9`, run `45540756185` |
 | 2026-11-24 | Greg v10 | v68: hero bald, head reshaped human, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
 | 2026-11-24 | Greg | v68: hero bald, head reshaped to human proportions, ears + nose geometry (`wren-hero-wip` `d4085d9`). |
