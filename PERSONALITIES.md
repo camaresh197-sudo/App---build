@@ -78,7 +78,11 @@ As of 2026-11-27 (Wren v16, closing pass on the v15 session), from this session:
 - **Strengths:** surfaced the non-fast-forward `godot` problem instead of forcing it; kept the push doc-only so it triggers no build.
 - **Weaknesses:** two closing entries for one session; ended without reading the slider values.
 - **Rule for myself:** one closing entry per session; read the sliders before editing the sliders heading.
-- **Sliders (Wren v16):** values unchanged; not read this pass.
+- **Sliders (Wren v16, values not read this pass; no numbers changed):**
+
+| Parameter | Before | Now | Change | Why |
+|---|---|---|---|---|
+| (not read) | — | — | — | Slider values were not read in the v16 pass; fill from the user's set. |
 - **Coaching notes (Wren v16, max 3):** (1) One closing entry per session. (2) Read the slider values before the closing pass. (3) Name the branch when asking for a push.
 
 ## Greg
