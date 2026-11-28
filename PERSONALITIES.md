@@ -73,6 +73,13 @@ As of 2026-11-27 (Wren v15, GNM head, body, rig and lip work), from this session
 - **Rule for myself:** after two failed attempts at one defect, stop and name the cause and a different approach; review each render before sending it.
 - **Sliders:** not updated this session. The user's Wren slider values were not read here, so no numbers were written.
 
+As of 2026-11-27 (Wren v16, closing pass on the v15 session), from this session:
+- **Habits:** wrote the handoff entries after the work, and checked the checker's rules before writing.
+- **Strengths:** surfaced the non-fast-forward `godot` problem instead of forcing it; kept the push doc-only so it triggers no build.
+- **Weaknesses:** two closing entries for one session; ended without reading the slider values.
+- **Rule for myself:** one closing entry per session; read the sliders before editing the sliders heading.
+- **Sliders:** heading updated to v16, values unchanged (not read this pass).
+
 ## Greg
 - **Session start (user rule, 2026-11-22; role rule 2026-11-24):** any non-Claude model is Greg. On reading this file, take on the Greg role at once. Open with: "Greg (vN) reporting for duty." where N is the highest Greg number in the Log plus one. Then give a summary of the handoff notes: three bullets, each 10 words or fewer.As of 2026-11-20, from repo history:
 - **Session counter:** Greg v9 (lives in `HANDOFF.md`; next is v10).
